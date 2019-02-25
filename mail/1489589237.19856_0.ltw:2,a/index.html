@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] jack_get_client_pid inconsistent api?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] jack_get_client_pid inconsistent api?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1487179430.610_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1489909893.10337_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1489589237.19856_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 15 Mar 2017 15:46:52 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> yarl </span> &lt;[hidden] at hou-hou dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at jackaudio dot org </td></tr>
+</table>
+<pre>
+Hello,
+
+I am writing a program that needs jack_get_client_pid (I don't want to
+use dbus). I first tried to link with libjack, but that function is
+"not implemented on library side". So, after interpreting some mails in
+this list I tried linking with libjackserver, which worked.
+
+Just to remind:
+int jack_get_client_pid (const char *name);
+
+I do not completely understood what is libjackserver compared to
+libjack but what I do is that&#xA0;libjackserver defines a larger API and I
+noticed differences in number/ownage of threads and initialisation of
+the server. The best way to keep a client's code clean and simple seems
+to be to link with libjack.
+
+If I understood well, libjackserver is supposed to define functions in
+'jack/control.h'.
+
+What about jack_get_client_pid, then?&#xA0;jack_get_client_pid is declared
+in 'jack.h'.
+
+Moreover, it is declared in 'jack.h' for jack2 (line 225):
+https://github.com/jackaudio/jack2/blob/master/common/jack/jack.h
+but it is not in jack1's API:
+https://github.com/jackaudio/headers/blob/07f1ecf1ce119d861ec631cb4a6a81a1ab1e5657/jack.h
+
+I thought about implementing that function in jack2 on library side.
+I guess that this function is similar to, for instance,
+jack_get_uuid_for_client_name, even if the process identifier is sort
+of outside jack. Anyway, jack_get_client_pid seems a bit inconsistent
+with the rest of the API. Why is it not declared (and renamed):
+
+int jack_client_get_pid(jack_client_t* client, const char* name);
+&#xA0;
+? Moreover, declared like that, the implementation on library side is
+straightforward (because we have 'client'). But it's too late for the
+API to change.
+
+I actually implemented jack_client_get_pid (thus augmenting the API)
+and can request for a 'to review with care' pull if you are interested.
+
+bye
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1487179430.610_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1489909893.10337_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1489589237.19856_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1489589237.19856_0.ltw:2,a&nbsp;&lt;1489589212.3134.2.camel at hou-hou dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

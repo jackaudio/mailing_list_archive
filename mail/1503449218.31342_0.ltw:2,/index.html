@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack: "Too many servers already active"</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack: "Too many servers already active"</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1503448901.31113_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1503451048.1005_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1503449218.31342_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 23 Aug 2017 02:45:07 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Malik Costet </span> &lt;[hidden] at malikc dot neomailbox dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Yuri &lt;[hidden] at rawbw dot com&gt;, [hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Yuri
+<a href='../1503448901.31113_0.ltw:2,/index.html'>Re: [Jack-Devel] Jack: "Too many servers already active" </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Yuri
+<a href='../1503451048.1005_0.ltw:2,/index.html'>Re: [Jack-Devel] Jack: "Too many servers already active" </a></td></tr>
+</table>
+<pre>
+On 2017-08-23 02:41, Yuri wrote:
+&gt; On 08/22/17 17:21, Malik Costet wrote:
+&gt;&gt; Today, to my surprise, I seem to have hit upon some kind of limit, for
+&gt;&gt; attempts to launch a server (via the command-line) fail with the message
+&gt;&gt; "Too many servers already active". I haven't kept count, but I might
+&gt;&gt; have successfully started and stopped a couple dozen instances of JACK
+&gt;&gt; before that happened (only ever one at a time, though).
+&gt; 
+&gt; 
+&gt; Quick search through the Jack code shows that this message results from
+&gt; Jack attempting to be helpful that ends up being unhelpful:
+&gt; 
+&gt;&gt;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; case ENOSPC:
+&gt;&gt;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; fprintf (stderr, "too many servers already active\n");
+&gt;&gt;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; exit (2);
+&gt; 
+&gt; ...
+&gt; 
+&gt; #define&#xA0;&#xA0;&#xA0; ENOSPC&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; 28&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; /* No space left on device */
+&gt; 
+&gt; 
+&gt; You have a 'disk-full' condition. This most likely has nothing to do
+&gt; with having "too many servers already active".
+&gt; 
+&gt; Jack needs to use strerror() instead.
+
+Thanks for the quick reply, but... hmm. I'm gonna check this if and when
+I reproduce the situation, but my machine would seem to have bucketloads
+of space available:
+$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root        15G  3.8G   11G  27% /
+devtmpfs        459M     0  459M   0% /dev
+tmpfs           463M   76K  463M   1% /dev/shm
+tmpfs           463M  6.3M  457M   2% /run
+tmpfs           5.0M  4.0K  5.0M   1% /run/lock
+tmpfs           463M     0  463M   0% /sys/fs/cgroup
+/dev/mmcblk0p1   63M   21M   43M  33% /boot
+tmpfs            93M     0   93M   0% /run/user/1000
+
+Do you have any indication which filesystem/location JACK would be
+looking for the condition? Could it also be a case of flag misuse?
+
+M.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1503448901.31113_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1503451048.1005_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1503449218.31342_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1503449218.31342_0.ltw:2,&nbsp;&lt;43f6088d-0096-87de-d799-47c205caa246 at malikc dot neomailbox dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

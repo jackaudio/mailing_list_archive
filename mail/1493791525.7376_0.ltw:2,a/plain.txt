@@ -1,0 +1,59 @@
+Date:        Wed, 03 May 2017 08:05:04 +0200
+From:        David Kastrup  <[hidden] at gnu dot org>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Chris Caudle Re: [Jack-Devel] How does --hwmix work? (1493819118.17659_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] How does --hwmix work?
+
+Ralf Mardorf <[hidden]> writes:
+
+> On Tue, 02 May 2017 21:59:48 +0200, David Kastrup wrote:
+>>I have an RME Hammerfall DSP, a card that I believe supports --hwmix on
+>>jackd.  How does this work?  Does this require special support by the
+>>application?  If so, which applications exist using it via Jack?
+>
+> Hi,
+>
+> I don't know what this option should do [1], maybe you are confusing
+> it with hwmon. IIUC HWMIX is a feature to use a sound card without a
+> sound server, but since jack is a sound server, this option might be
+> irrelevant. I might be mistaken ;).
+>
+> However, if you want a hardware mixer, you don't need a jack option,
+> instead try running   hdspmixer   . I suspect hdspmixer doesn't work
+> with all RME cards.
+
+hdspmixer works with the Hammerfall DSP but it writes all over the mixer
+right on startup.  Not suitable for changing single settings: I am using
+alsactl for that right now.
+
+> [1]
+> [rocketmouse@archlinux ~]$ man jackd | grep hwmix -A3
+> [rocketmouse@archlinux ~]$ man jackd | grep hwmon -A3
+>        -H, --hwmon
+>               Enable hardware monitoring of capture ports.  This is a
+> method for obtaining "zero latency" mon‐ itoring  of  audio  input.
+> It requires support in hardware and from the underlying ALSA device
+> driver. --
+>               (M-Audio  Delta  series,  Terratec,  and  others) support
+> --hwmon.  In the future, some consumer cards may also be supported by
+> modifying their mixer settings.
+>
+>               Without --hwmon, port monitoring requires JACK to read
+>               audio into system memory,  then  copy  it back  out  to
+>               the  hardware  again,  imposing  the  basic JACK system
+>               latency determined by the --period and --nperiods
+>               parameters.
+
+Sigh, you are right.  But the question remains:  What applications will
+support this and what does it mean?  For example, the DSP Hammerfall has
+about two dozen inputs and about two dozen outputs.  What does "hardware
+monitoring of capture ports" mean then?  Where are they monitored to by
+which application?
+
+-- 
+David Kastrup
+
+1493791525.7376_0.ltw:2,a <87wp9yv5kf.fsf at fencepost dot gnu dot org>
+________________________________________________________________________________
+

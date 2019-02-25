@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Stack preallocation issues</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Stack preallocation issues</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1300195408.12983_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1300203877.27657_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1300199060.17436_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 15 Mar 2011 16:24:01 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Sampo Savolainen </span> &lt;[hidden] at iki dot fi&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1300195408.12983_0.ltw:2,a/index.html'>Re: [Jack-Devel] Stack preallocation issues </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1300203877.27657_0.ltw:2,a/index.html'>Re: [Jack-Devel] Stack preallocation issues </a></td></tr>
+</table>
+<pre>
+On Tue, Mar 15, 2011 at 3:23 PM, Fons Adriaensen &lt;[hidden]&gt;wrote:
+
+&gt; On Tue, Mar 15, 2011 at 01:57:41PM +0200, Sampo Savolainen wrote:
+&gt;
+&gt; &gt; Would doing this be unsafe?
+&gt; &gt;
+&gt; &gt; static void
+&gt; &gt; jack_thread_touch_stack()
+&gt; &gt; {
+&gt; &gt;  char foo;
+&gt; &gt;  memset(&amp;foo, 0, JACK_THREAD_STACK_TOUCH);
+&gt; &gt; }
+&gt;
+&gt; It would probably overwrite memset's return address,
+&gt; stack frame and internal variables.
+&gt;
+
+Heh. Extremely true..
+
+
+&gt; It could actually work on systems that keep the return
+&gt; address in a register and implement memset() using only
+&gt; registers and without its own stack frame (this would
+&gt; be possible on an ARM for example).
+&gt;
+&gt; Regarding the compiler optimising away the whole stack
+&gt; touching code, it clearly shouldn't do this if it assumes
+&gt; the code can have side effects, i.e. if the array is
+&gt; declared volatile.
+&gt;
+
+Volatile sounds like a good idea. This
+
+ memset(&amp;foo + ASSUMED_MEMSET_STACK_SIZE, 0, JACK_THREAD_STACK_TOUCH -
+ASSUMED_MEMSET_STACK_SIZE);
+
+should work as well. Volatile is however much more elegant if it indeed
+works as assumed with all compilers.
+
+
+  Sampo
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1300195408.12983_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1300203877.27657_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1300199060.17436_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1300199060.17436_0.ltw:2,a&nbsp;&lt;AANLkTikf75_Nr-oEVwB6REw8iz53DkxnRs8q9BJvywgF at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

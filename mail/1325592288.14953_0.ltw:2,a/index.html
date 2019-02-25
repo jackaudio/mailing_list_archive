@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Fwd: jack 1.9.8 + many many connections = problems?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Fwd: jack 1.9.8 + many many connections = problems?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325583004.32062_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325592304.14973_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325592288.14953_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 03 Jan 2012 07:04:32 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1325592631.15478_0.ltw:2,a/index.html'>Re: [Jack-Devel] Fwd: jack 1.9.8 + many many connections = problems? </a></td></tr>
+</table>
+<pre>
+i accidentally replied only to stephane.
+
+---------- Forwarded message ----------
+From: Paul Davis &lt;[hidden]&gt;
+Date: Tue, 3 Jan 2012 07:03:59 -0500
+Subject: Re: [Jack-Devel] jack 1.9.8 + many many connections = problems?
+To: St&#xE9;phane Letz &lt;[hidden]&gt;
+
+On 1/3/12, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+&gt;&gt;&gt; Le 2 janv. 2012 &#xE0; 20:41, Fernando Lopez-Lezcano a &#xE9;crit :
+ I finally traced the problem to a few un-initialized
+&gt;&gt; variables in a supercollider ugen (LR4 high pass and low pass filters used
+&gt;&gt; in the speaker crossover). Those were the cause of the big noises in the
+&gt;&gt; output stream. I still can't think how this could result in an audio port
+&gt;&gt; that stops working! Must be something inside alsa itself?
+
+we've seen this with plugins inside ardour that are able to
+"accidentally" silence all output from the ardour and even other JACK
+clients. the problem is rarely reproducable outside of the reporter's
+machine, until it happens to someone else.
+
+i suspect that its caused by a pointer walk that causes the plugin to
+overwrite all/some of the shared memory segment in which port buffers
+are held. if the plugin starts "early" enough in the memory segment,
+but "late" enough in the timing schedule, it gets to effectively
+silence whatever other clients did.
+
+i don't know of a way to stop this sort of thing - it seems one of the
+unfortunate downsides of (a) plugins and (b) a system like JACK in
+which several processes share access to the memory in which they all
+store (a specific kind of) data.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325583004.32062_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325592304.14973_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325592288.14953_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1325592288.14953_0.ltw:2,a&nbsp;&lt;CAFa_cK=OffXtb_15aY45dHftETXpTxhpOf9cogshHPm65Gus8w at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,70 @@
+Date:        Tue, 01 May 2012 20:54:43 -0400
+From:        Tim E. Real  <[hidden] at rogers dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Pedro Alves Re: [Jack-Devel] Intermittent internal crash (1335864694.10838_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Intermittent internal crash
+
+On May 1, 2012 10:31:21 AM you wrote:
+> On 05/01/2012 07:38 AM, Stéphane Letz wrote:
+> >> > [177/245] cprogram: build/example-clients/midi_latency_test.c.5.o
+> >> > ->
+> >> > build/example-clients/jack_midi_latency_test
+> >> > /usr/bin/ld: example-clients/midi_latency_test.c.5.o: undefined
+> >> > reference to symbol 'trunc@@GLIBC_2.2.5'
+> >> > /usr/bin/ld: note: 'trunc@@GLIBC_2.2.5' is defined in DSO
+> >> > /usr/lib/gcc/x86_64-
+> >> > linux-gnu/4.6.1/../../../x86_64-linux-gnu/libm.so so try adding
+> >> > it to the linker command line
+> >> > /usr/lib/gcc/x86_64-linux-gnu/4.6.1/../../../x86_64-linux-gnu/libm
+> >> > .so: could not read symbols: Invalid operation
+> >> > collect2: ld returned 1 exit status
+> >> > Waf: Leaving directory `/home/me/Source/jack2-git/build'
+> >> > Build failed
+> >> > 
+> >> > -> task in 'jack_midi_latency_test' failed (exit status 1):
+> >> >        {task 32119824: cprogram midi_latency_test.c.5.o ->
+> >> > 
+> >> > jack_midi_latency_test}
+> >> > ['/usr/bin/gcc', '-lm', '-lstdc++',
+> >> > 'example-clients/midi_latency_test.c.5.o', '-o',
+> >> > '/home/me/Source/jack2-git/build/example-
+> >> > clients/jack_midi_latency_test', '-Wl,-Bstatic', '-Wl,-Bdynamic',
+> >> > '-Lcommon', '-ljack', '-lpthread', '-lrt', '-ldl']
+> > 
+> > I was not aware of this one...
+> > 
+> > What is this undefined reference to sombol "'trunc@@GLIBC_2.2.5' "  ??
+> > Anybody knows?
+> Add or put "-lm" after the input object (.o).
+> 
+> https://fedoraproject.org/wiki/UnderstandingDSOLinkChange
+
+Without reading that link, and looking at the link line shown in the
+ error, I'd have to confer with this.
+MusE was hit with a similar problem several months ago.
+From what I could gather, the linker docs now say it is required to 
+ put the library names after the object name. 
+For us it was weird, I had to change one of our library names and 
+ change the way our cmake script linked it.
+
+Anyway, knowing nothing about waf, I rolled up my sleeves and 
+ tried to add the -lm after the object name in Jack GIT.
+No luck. So I simply removed building examples from top waf script.
+Success! Jack GIT built and installed.
+
+---
+Now on to the bug: After dozens of runs of my supplied test program...
+	I can report...
+		I'm happy to say no crash or corruption seen. Yay!
+Verified by going back to 1.9.8. Corruption, crash within a few runs.
+Will report again if anything changes.
+
+Holy side-streets! Back to work on the ol' app... Now, where was I...
+
+Merci beaucoup Stéphane, thanks.
+Tim.
+
+1335920105.3885_0.ltw:2,a <1357555.rvOaGmi4F7 at amd64-desktop>
+________________________________________________________________________________
+

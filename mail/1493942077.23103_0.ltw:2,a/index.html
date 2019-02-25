@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How does --hwmon work?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How does --hwmon work?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1493939286.20147_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1493970142.25384_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1493942077.23103_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 05 May 2017 01:52:35 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> David Kastrup </span> &lt;[hidden] at gnu dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Chris Caudle
+<a href='../1493937379.17997_0.ltw:2,a/index.html'>Re: [Jack-Devel] How does --hwmon work? </a></td></tr>
+</table>
+<pre>
+"Chris Caudle" &lt;[hidden]&gt; writes:
+
+&gt; I found this reply from Paul Davis (original jackd author/designer) for
+&gt; essentially the same question from many years back:
+&gt;
+&gt; ---------------------------
+&gt; On Fri, Aug 27, 2010 at 3:29 PM, Niels Mayer &lt;[hidden email]&gt; wrote:
+&gt;&gt; Finally reading the jackd manpage again (
+&gt;&gt; http://linux.die.net/man/1/jackd ) I notice
+&gt;&gt; -H, --hwmon
+&gt;
+&gt; Most people do not use this. It is entirely replaced by using a h/w
+&gt; specific utility (such as hdspmixer or envy2ctl) to control signal
+&gt; routing.
+
+The hardware specific utilities do a much less versatile job than Ardour
+could (for example, I can control Ardour using my nanoKontrol device,
+but not hdspmixer).  And having one utility for every card is a hopeless
+feat.
+
+&gt; The one benefit that it has is that it means that JACK *applications*
+&gt; can control that kind of routing, which early in the life of Ardour
+&gt; seemed kind of important. It no longer seems very important.  If
+&gt; you're already using a h/w specific utility for this purpose, then
+&gt; don't use -H.
+
+That doesn't really tell what the option does.  It just provides a bit
+of history around it.  And I suspect from the options Ardour provides me
+when using a Hammerfall card independent of the presence or absence of
+--hwmon that --hwmon is also a noop as an option and essentially
+unconditionally enabled when the card supports it.
+
+&gt; ---------------------------
+&gt;
+&gt; So it looks like this feature never really became common, and it
+&gt; appears that the jackd hardware monitor option only works on ICE or
+&gt; hdsp based cards.  Maybe a few others, but unfortunately you would
+&gt; have to inspect the ALSA driver source to make sure.
+
+And likely the Ardour source to figure out what it does.  Assuming that
+it is related to the "via Audio Driver" monitoring option.
+
+&gt; On Thu, May 4, 2017 4:17 am, David Kastrup wrote:
+&gt;&gt; I am currently in the process of Frankensteining a Roland FR1b "virtual
+&gt;&gt; accordion" with soft- and hardware Midi expanders, and the Roland only
+&gt;&gt; has a single Midi connector that is either in- or output.  So when the
+&gt;&gt; registration calls for the Roland to be silent, I have to access the
+&gt;&gt; mixer programmatically.
+&gt;
+&gt; Which mixer?  The mixer in the audio interface?
+
+Yes.  The audio interface gets the line outs from the Roland and
+provides a line out of itself.  This line out is mixed from the output
+of the Aeolus organ and the line outs from the Roland.  When the Midi
+program switches from the Roland signal that it is changed to organ
+mode, its key signals are routed to the Aeolus organ and the Roland line
+outs are switched off in the audio interface mixer so that the Roland's
+undesired organ patches don't mess with the output from Aeolus.
+
+This allows replacing just part of the Roland's patches with stuff
+synthesized on my computer while retaining the Roland's selection and
+registration mechanisms and switches.
+
+&gt;&gt; Since I don't want the software to be tied to a particular soundcard,
+&gt;&gt; a more generic interface that _does_ use hardware monitoring/mixing
+&gt;&gt; of some kind internally when available would seem like the best fit.
+&gt;
+&gt; In practical terms it seems you will be tied to a particular
+&gt; soundcard, or at least family of cards, since it seems only the
+&gt; ICE/envy24 drivers and the RME drivers implemented this feature.
+
+So what?  If Jack transparently reverts to software monitoring in its
+realtime thread when hardware monitoring is not available, the program
+works as well as possible on either hardware.
+
+&gt; Maybe a few others, but good luck figuring out which.
+
+I consider that Jack's job.  That would be what makes sense.
+
+&gt;&gt; But it's not clear to me where which stuff is being done and whether,
+&gt;&gt; say, using jack_mix_box for the Roland sound control will magically
+&gt;&gt; buy me "zero-latency" monitoring or not.
+&gt;
+&gt; Only if the ALSA driver reports has_hw_monitoring as true.  Which
+&gt; driver does the Roland sound control use?
+
+Uh what?  The Roland is an accordion.  It has an analog line out and a
+digital Midi out.  It does not accept any feedback during normal
+operation.
+
+&gt;&gt; It really depends on what --hwmon does and what interfaces of Jack
+&gt;&gt; are involved.
+&gt;
+&gt; From a quick look at the jackd code it appears that the ALSA backend
+&gt; of jackd queries the ALSA driver, and if the drivers reports
+&gt; has_hw_monitoring then it sets the hw_monitoring property of the
+&gt; driver to on if requested.
+
+That's one bit?  Uh, that makes it hard to guess what it even does on a
+multi-channel card like the RME.
+
+&gt; If the driver reports has_hw_monitoring as false then it does nothing.
+&gt;
+&gt;&gt; the manual pages are vague and terribly outdated and
+&gt;
+&gt; That is unfortunately true.  For most uses for which jack was designed, it
+&gt; does what it is needed and has fallen into a barely maintained "just keep
+&gt; it compiling" kind of state.  There is a new jackd maintainer, but I think
+&gt; just working on it part time, and basic things like keeping man pages and
+&gt; web pages up to date is not being done currently.
+&gt;
+&gt;&gt; Many ALSA cards have some sort of hardware mixer
+&gt;
+&gt; Yes, but most of them have utilities for configuring the hardware
+&gt; mixer.
+
+Not really.  Most of them have amixer settings, and there are generic
+utilities that work with those.  But those utilities, again, don't have
+control interfaces feeding into them like Ardour has.  And jack_mixer,
+if I understand correctly, only does software volume control.
+
+&gt; The hwmon option to jackd is just on/off, it doesn't give any way to
+&gt; control the gain of the connection, or the routing if there are
+&gt; multiple inputs and multiple outputs.  I think the jackd option never
+&gt; caught on because it was too limited to be useful.
+
+Well, maybe.  In my ideal world, I'd tell Jack which channel I want to
+map to which output with which gain, and if it can map this to hardware,
+it will, and otherwise use software.  But of course this would require
+putting this kind of thing into Jack API and responsibility in the
+first place.  Jack can already connect in- and outputs.  Just the gain
+is missing...
+
+-- 
+David Kastrup
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1493939286.20147_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1493970142.25384_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1493942077.23103_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1493942077.23103_0.ltw:2,a&nbsp;&lt;87pofoji2k.fsf at fencepost dot gnu dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

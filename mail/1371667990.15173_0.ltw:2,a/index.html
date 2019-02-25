@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JackTransport vs VST ppqPos</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JackTransport vs VST ppqPos</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1371662259.5693_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1371716998.6960_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1371667990.15173_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 19 Jun 2013 20:53:02 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Pawel </span> &lt;[hidden] at wp dot pl&gt; </td></tr>
+<tr><td class='col1'>To</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+Dnia Sobota, 18 Maja 2013 11:52 Pawel &lt;[hidden]&gt; napisa&#xB3;(a) 
+&gt; Dnia Czwartek, 16 Maja 2013 15:02 Robin Gareus &lt;[hidden]&gt; napisa&#xB3;(a) 
+&gt; &gt; On 05/16/2013 06:39 AM, Pawel wrote:
+&gt; &gt; &gt; Is there any good reason to not sync BBT with frames ?
+&gt; &gt; 
+&gt; &gt; Yes. Tempo maps.
+&gt; &gt; 
+&gt; &gt; &gt; I made patch for jack_transport example client (actually it remove some unnecessary code ;-)
+&gt; &gt; &gt; 
+&gt; &gt; &gt; ... but I just realized that there is always one way for compute BBT 
+&gt; &gt; 
+&gt; &gt; That is only true if you have a single tempo and meter for the whole
+&gt; &gt; timeline.
+&gt; &gt; 
+&gt; &gt; The tempo can change in the middle of the song (accelerando,
+&gt; &gt; decellerando). The meter can change as well. You can also have multiple
+&gt; &gt; songs (or movements of the same song) on the same timeline with BBT offsets.
+&gt; &gt; 
+&gt; &gt; - so Jack should do this by self, and master client should change these
+&gt; &gt; values:
+&gt; &gt; &gt;                 pos-&gt;beats_per_bar = time_beats_per_bar;
+&gt; &gt; &gt;                 pos-&gt;beat_type = time_beat_type;
+&gt; &gt; &gt;                 pos-&gt;ticks_per_beat = time_ticks_per_beat;
+&gt; &gt; &gt;                 pos-&gt;beats_per_minute = time_beats_per_minute;
+&gt; &gt; &gt; 
+&gt; &gt; &gt; 
+&gt; &gt; &gt; What do you think ?
+&gt; &gt; 
+&gt; &gt; You'll need a tempo map.
+&gt; &gt; N entries like above that can be positioned at arbitrary points on the
+&gt; &gt; timeline. Furthermore, BPM can be hard or gradual.
+&gt; &gt; 
+&gt; &gt; It's not a trivial task for jackd to take care of. It is also against
+&gt; &gt; design: jackd only passes information between jack-clients. The daemon
+&gt; &gt; does nothing on its own (with few exceptions).
+&gt; &gt; 
+&gt; &gt; Now, if you like a challenge: tempo-ramps, flexible BBT offsets and
+&gt; &gt; arbitrary tempo/meter changes mid song is a major item on the Ardour3
+&gt; &gt; ToDo list :)
+&gt; &gt; 
+&gt; &gt; best,
+&gt; &gt; robiny
+&gt; 
+&gt; Thanks Robin, tempo map is what I'm missed in this story. I think tempo changes are not problem itself , because after each , recalculate is not problem. The problem is when some other than master client want jump to some location (i.e. reposition).
+&gt; 
+&gt; I made new patch for jack_transport example client - please discard this previous one. So the correct way for preserve fractional part of tick is store it internally. In theory bbt_offset should be enough and I even made such implementation, but still counters were late.
+&gt; 
+&gt; Well, please apply my patch (transport.c) - it improve two areas:
+&gt; - precisely calculate ticks between cycles
+&gt; - fixed problem with low tempos
+&gt; - bbt_offset support
+&gt; 
+&gt; P.
+
+Is there someone with good will who can commit my patch, from previous mail, to official repo ? Will be nice to know that my hard work was not cast-off ;-)
+
+P.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1371662259.5693_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1371716998.6960_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1371667990.15173_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1371667990.15173_0.ltw:2,a&nbsp;&lt;51c1fe0ed664d3.65965829 at wp dot pl&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

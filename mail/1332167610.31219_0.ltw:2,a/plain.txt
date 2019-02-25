@@ -1,0 +1,74 @@
+Date:        Mon, 19 Mar 2012 15:33:06 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>, [hidden] at lists dot linuxaudio dot org
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] First release of zita-ajbridge (1332170147.485_0.ltw:2,a)
+
+Subject:     Re: [LAD] First release of zita-ajbridge
+
+Le 19 mars 2012 à 15:20, Fons Adriaensen a écrit :
+
+> On Mon, Mar 19, 2012 at 01:19:25PM +0100, Stéphane Letz wrote:
+> 
+>> I'm wondering how your code could replace the "adapter" mechanism that I did in JACK2 for that never worked fully reliably. Basically the "adapter" idea is a bit more general in the sense that it aims at "adapting" streams in different context: like network <==> Audio API (CoreAudio for OSX, ALSA for Linux, PortAudio for Windows...), or several ALSA devices..etc.. 
+>> (The adapters are also developed as "in server" clients, this make a bit more easy to add them in a running session using "ladish" kind of studio management approaches...)
+> 
+>> How complex do you think it would be?
+> 
+> I'd never consider writing a2j and j2a as 'in-server' clients, they are far
+> too complex for that. An 'in-server' client should be so simple that there is 
+> essentially no risk that it could ever malfunction and take the entire server
+> down. As as long as it does simple audio processing that can probably be the
+> case (but even that isn't given - consider an app sending Nans and Infs to
+> an internal client).
+> 
+> Apart from Jack's thread, a2j and j2a have two other threads. One runs at
+> a higher priority than Jack (reading and writing the ALSA device), the
+> second is the 'main event loop', ATM only providing text output to the user,
+> but I'm considering GUI versions as well. There is also some non-trivial
+> state management involving messages between these threads - required mainly
+> to recover cleanly from anything that disrupts regular period timing, xruns,
+> skipped cycles, freewheeling, etc.
+> 
+> So the idea of making these 'in-server' was rejected quite early, also
+> because really nothing is gained by it.
+
+Well I think it does in some cases, and basically when controlled by the so called "Control API" 
+
+> 
+> Also, apps like these are 'fixed infrastructure', not something managed
+> on project/session level. In my 'ideal world' they would run as system
+> daemons, as would Jack itself.
+> 
+> What would be an interesting addition to Jack would be the possibility
+> to reduce the timing uncertainty for certain clients. At the moment
+> a client can run anywhere between the start of a cycle and the start
+> of the next one - no assumptions can be made. If a2j would always
+> run near the start of a cycle, and j2a never before e.g. 90% of the
+> cycle has passed, that would enable to reduce the minimum required
+> latency.
+
+Do you mean having the sever "decide" to run a2j/j2a before others in a given cycle?
+
+> 
+> 
+> Network versions (j2n and n2j) are in development. They are meant for
+> use on a LAN (not for the Internet at large). They use multicasting,
+> so you can e.g. distribute an audio signal to all machines in a lab
+> or classroom. Resampling is done by the receiver(s). I'll be doing a
+> real-life test in a few weeks, recording a concert in the CdS auditorium.
+> Eight mic signals will be sent by j2n connected to the nearest network
+> rack, from there using optical links to another network rack, and from
+> there to n2j running in the LABEL studio. 
+> 
+> Ciao,
+> 
+Well so now we are on the road for "another" netjack like application...;
+
+I'll still interested to see if your code can be used for the adapters, since it makes sense on others platforms than Linux.
+
+Stéphane
+
+1332167610.31219_0.ltw:2,a <8F0AB182-9B15-4EE6-BB1C-6CB52BD8DB2B at grame dot fr>
+________________________________________________________________________________
+

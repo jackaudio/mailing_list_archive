@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Segmentation fault using jackctl_server_start</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Segmentation fault using jackctl_server_start</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1318491863.5063_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1319027771.8417_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1319027245.7846_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 19 Oct 2011 14:26:18 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Royi Freifeld </span> &lt;[hidden] at bgu dot ac dot il&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1319027771.8417_0.ltw:2,a/index.html'>Re: [Jack-Devel] Segmentation fault using jackctl_server_start </a></td></tr>
+</table>
+<pre>
+Hey all,
+I'm developing an application using JACK (alsa as backend).
+After setting all parameters, the jackctl_server_start function is being
+called, the JACK outputs:
+
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 10
+creating alsa driver ... hw:0,0|hw:0,0|512|2|44100|0|2|nomon|swmeter|-|32bit
+Using ALSA driver HDA-Intel running on card 0 - HDA Intel at 0xfe020000 irq
+49
+configuring for 44100Hz, period = 512 frames (11.6 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: 32bit integer little-endian
+ALSA: use 2 periods for capture
+ALSA: final selected sample format for playback: 32bit integer little-endian
+ALSA: use 2 periods for playback
+Segmentation fault &lt;-----------------------
+
+Running through gdb:
+
+[New Thread 0xb7da9b70 (LWP 12279)]
+no message buffer overruns
+[Thread 0xb7da9b70 (LWP 12279) exited]
+[New Thread 0xb7da9b70 (LWP 12280)]
+no message buffer overruns
+[Thread 0xb7da9b70 (LWP 12280) exited]
+JACK server starting in realtime mode with priority 10
+[New Thread 0xb7fc8b70 (LWP 12281)]
+creating alsa driver ... hw:0,0|hw:0,0|512|2|44100|0|2|nomon|swmeter|-|32bit
+Using ALSA driver HDA-Intel running on card 0 - HDA Intel at 0xfe020000 irq
+49
+configuring for 44100Hz, period = 512 frames (11.6 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: 32bit integer little-endian
+ALSA: use 2 periods for capture
+ALSA: final selected sample format for playback: 32bit integer little-endian
+ALSA: use 2 periods for playback
+[New Thread 0xb7f47b70 (LWP 12282)]
+
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0xb7f47b70 (LWP 12282)]
+0x0048445f in Jack::JackThreadedDriver::Init() () from
+/usr/local/lib/libjackserver.so.0
+(gdb) where
+#0  0x0048445f in Jack::JackThreadedDriver::Init() () from
+/usr/local/lib/libjackserver.so.0
+#1  0x00476973 in Jack::JackPosixThread::ThreadHandler(void*) () from
+/usr/local/lib/libjackserver.so.0
+#2  0x0080ce99 in start_thread (arg=0xb7f47b70) at pthread_create.c:304
+#3  0x0077673e in clone () at ../sysdeps/unix/sysv/linux/i386/clone.S:130
+
+When I run qjackctl or through terminal "jackd -R -d alsa -d hw:0,0 -r 44100
+-p 512 -o 2" server works as it should:
+
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 10
+creating alsa driver ... hw:0,0|hw:0,0|512|2|44100|0|2|nomon|swmeter|-|32bit
+Using ALSA driver HDA-Intel running on card 0 - HDA Intel at 0xfe020000 irq
+49
+configuring for 44100Hz, period = 512 frames (11.6 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: 32bit integer little-endian
+ALSA: use 2 periods for capture
+ALSA: final selected sample format for playback: 32bit integer little-endian
+ALSA: use 2 periods for playback
+
+Exactly the same output and parameters to the server.
+
+I would appreciate your help!
+
+Royi
+
+
+-- 
+Carpe Diem
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1318491863.5063_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1319027771.8417_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1319027245.7846_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1319027245.7846_0.ltw:2,a&nbsp;&lt;CAD-ce50pLqOE4Qd+6KyR_ZVLehtRVFgA0zdRf_zHOBefdLr4CA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

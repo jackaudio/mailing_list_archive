@@ -1,0 +1,54 @@
+Date:        Sun, 25 Mar 2018 11:32:03 +0100
+From:        Christopher Obbard  <[hidden] at 64studio dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Robert Bielik Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes (1522050375.10479_0.ltw:2,)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes (1522071652.7308_0.ltw:2,)
+
+Subject:     [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes
+
+Hi Guys,
+
+Running jack with a small buffer (-p64 -n2), and connecting with any
+client causes issues.
+With higher buffer sizes, all is OK.
+
+This is on an ARM embedded system, with a single core 1MHz processor.
+I've set the cpu governor to performance.
+
+I have a custom compiled 4.14 kernel with omap2plus_defconfig with the
+following config settings:
+> CONFIG_PREEMPT_VOLUNTARY=y
+> HZ_100=y
+> CONFIG_NO_HZ_IDLE=y
+
+$ jackd -R -P95 -dalsa -dhw:0 -r48000 -p64 -n2
+> JackPosixProcessSync::LockedTimedWait error usec = 5000000 err = Connection timed out
+> Driver is not running
+> Cannot create new client
+> CheckSize error size = 32 Size() = 12
+> CheckRead error
+> CheckSize error size = -1 Size() = 4
+> CheckRead error
+> CheckSize error size = 0 Size() = 12
+> CheckRead error
+
+
+Also, with higher buffer sizes sometimes I get xruns. After enabling
+alsa debugging, the error is:
+> ALSA: PCM: [Q] Lost interrupts?: (stream=0, delta=221, new_hw_ptr=181343, old_hw_ptr=181122)
+
+Loosing the FIFO interrupts doesn't seem like a great thing.........
+
+
+I _think_ the issue is to do with the kernel scheduling, but this why
+I ask the experts :-).
+Can anyone suggest any kernel settings that will improve my situation?
+
+
+Many thanks,
+
+Chris
+
+1521973955.21072_0.ltw:2, <CAP03XepqtG1apU3G48jHCzyTEnqB8wH2V=ttb4_p0Qf7pMCtaA at mail dot gmail dot com>
+________________________________________________________________________________
+

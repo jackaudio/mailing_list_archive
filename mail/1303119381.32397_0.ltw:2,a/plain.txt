@@ -1,0 +1,61 @@
+Date:        Mon, 18 Apr 2011 09:35:57 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Chris Caudle <[hidden] at chriscaudle dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Chris Caudle [Jack-Devel] extra latency compensation was Re: is this latency coming from ALSA, jack, or ardour? (1303097663.26599_0.ltw:2,a)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] extra latency compensation (1303185014.20833_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] extra latency compensation was Re: is this latency coming from ALSA, jack, or ardour?
+
+On Sun, Apr 17, 2011 at 10:33:58PM -0500, Chris Caudle wrote:
+ 
+> I haven't really optimized this setup yet, so I'm running 1024
+> frames/period, 3 periods/buffer.
+> 
+> So according to jack_iodelay, the additional latency not due to the period
+> buffer is 3131 frames (4155 - 1024 frames per period).
+
+No, it is 
+
+4155 - 3 * 1024 = 1083    for jack1, or
+4155 - 4 * 1024 = 59      if you use jack2 in its default mode.
+
+ 
+> I changed the jackd settings to use 512 frames per period, 2 periods per
+> buffer, and jack_iodelay reports 1595 frames latency. 1595-512 = 1083
+> frames "extra" latency.
+ 
+No, 
+
+1595 - 2 * 512 = 571      for jack1, or
+1595 - 3 * 512 = 59       if you use jack2 in its default mode.
+
+
+These results make me think that you are indeed using jack2 in its
+default mode wich adds 1 extra period of latency.
+
+> I expected the "extra" latency to be due to the latency in the AD
+> conversion and DA conversion, and to be constant for a given sample rate. 
+> Why such a large difference in extra latency when the period size is
+> changed?
+> 
+> These results are confounding my expectations, and I have to think that
+> either there is something fundamental I missed in the setup, or the test
+> methodology has a big hole I can't see.  Anyone else see what is going on
+> that I'm missing?
+
+You are missing the correct way to calculate the extra latency.
+
+   measured_latency - n * p           for jack1 or
+   measured_latency - (n + 1) * p     for jack2 in its default mode. 
+
+where n and p are the values given to the -n and -p options. 
+
+Ciao,
+
+-- 
+FA
+
+1303119381.32397_0.ltw:2,a <20110418093557.GA4954 at linuxaudio dot org>
+________________________________________________________________________________
+

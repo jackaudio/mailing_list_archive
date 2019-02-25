@@ -1,0 +1,66 @@
+Date:        Sun, 16 Nov 2014 16:28:46 +0200
+From:        Athanasios Silis  <[hidden] at gmail dot com>
+To:          David Santamauro <[hidden] at gmail dot com>
+Cc:          Developers JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: David Santamauro Re: [Jack-Devel] connecting jack between a linux audio master and a windows slave (1416081585.13856_0.ltw:2,)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] connecting jack between a linux audio master and a windows slave (1416168562.17354_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] connecting jack between a linux audio master and a windows slave
+
+so I have run more tests.
+I unload "netmanager" in the linux jack master , but keep tcpdump running
+for packets on port 19000 on that pc.
+Then I run jack as master on the windows pc and also run a general purpose
+multicast packet sniffer on windows , set to listen for packets in the jack
+default address and port. Both tcpdump and the windows multicast packet
+sniffer do receive the packets.
+Additionally, using "netsh" I verified that multicast address is registered
+for 2 applications (reference=2) as expected. However, once again packets
+seem to be leaving from the linux jack client, they are intercepted by both
+linux and windows jack_master pc's , but the windows jack_master does not
+respond.
+
+What could be wrong? is it possible the jack application does not receive
+the packets for some reason? Do I have a way to check that?  is it possible
+that somewhere internally jack chooses not to send replies???
+
+thank you in advance for your help.
+
+
+On Sat, Nov 15, 2014 at 9:59 PM, David Santamauro <
+[hidden]> wrote:
+
+>
+>
+> On 11/15/2014 12:41 PM, Athanasios Silis wrote:
+>
+>> David , thank you very much for your help,
+>> is it possible that you run once tcpdump from your jack master and be
+>> listening on your windows client and send me some output?
+>> normally we should see exactly what I see on my linux clients , but just
+>> in case...
+>>
+>>
+> 14:54:31.830630 IP 192.168.10.123.igrid > faure.igrid: UDP, length 644
+> 14:54:31.831056 IP faure.52483 > 192.168.10.123.igrid: UDP, length 644
+> 14:54:31.832134 IP 192.168.10.123.igrid > faure.52483: UDP, length 644
+> 14:54:31.988086 IP faure.52483 > 192.168.10.123.igrid: UDP, length 1500
+> 14:54:31.988114 IP faure > 192.168.10.123: udp
+> 14:54:31.988126 IP faure.52483 > 192.168.10.123.igrid: UDP, length 44
+> 14:54:31.988507 IP 192.168.10.123.igrid > faure.52483: UDP, length 1500
+> 14:54:31.988524 IP 192.168.10.123 > faure: udp
+> 14:54:31.988617 IP 192.168.10.123.igrid > faure.52483: UDP, length 44
+> 14:54:31.990679 IP faure.52483 > 192.168.10.123.igrid: UDP, length 1500
+> 14:54:31.990690 IP faure > 192.168.10.123: udp
+>
+> .. and so you can can decipher the port:
+>
+> [root@faure ~]# grep igrid /etc/services
+> igrid           19000/tcp               # iGrid Server
+> igrid           19000/udp               # iGrid Server
+>
+>
+
+1416148135.16185_0.ltw:2, <CADgchnuJiYxCWUOK0C9MbFTpNos4t1hu94pT1-EGosT-K3zrPw at mail dot gmail dot com>
+________________________________________________________________________________
+

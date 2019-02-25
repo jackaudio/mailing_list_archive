@@ -1,0 +1,66 @@
+Date:        Sun, 16 Nov 2014 16:50:35 +0100
+From:        Hans Petter Selasky  <[hidden] at selasky dot org>
+To:          Robin Gareus <[hidden] at gareus dot org>, [hidden] at lists dot jackaudio dot org
+In-Reply-To: Hans Petter Selasky Re: [Jack-Devel] System signals and JACK (1414439643.19018_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] System signals and JACK
+
+On 10/27/14 20:54, Hans Petter Selasky wrote:
+> On 10/27/14 20:42, Hans Petter Selasky wrote:
+>> On 10/23/14 16:52, Robin Gareus wrote:
+>>> On 10/23/2014 09:46 AM, Hans Petter Selasky wrote:
+>>>> Hi,
+>>>>
+>>>> Some applications are using signals() and the jack client needs to
+>>>> ignore these. Consequently read/write calls should be wrapped. See
+>>>> attached patch. Can this be put upstream? Probably same issue with
+>>>> jack2.
+>>>>
+>>>
+>>> JACK is a *realtime* audio system, if application code changes the
+>>> behavior so that jack read/writes to be interrupted by a EINTR, it
+>>> really seems something is broken by design there.
+>>>
+>>> signal() is sent to the main process thread. It should not be able to
+>>> affect the jack-process callback thread at all. (Marking the jack thread
+>>> as TASK_UNINTERRUPTIBLE could be a way forward or explicitly using
+>>> pthread_sigmask() - but those are hacks and workarounds).
+>>>
+>>> Either way I cannot reproduce the problem in the first place, jltcgen
+>>> from https://github.com/x42/ltc-tools uses SIGHUP to re-sync and that
+>>> never caused issues here with jack2 on various architectures.
+>>>
+>>
+>> Hi,
+>>
+>> I have a QT4/5.x based application using JACK, and this is a race. On
+>> one machine the issue never triggered. On another it happens from time
+>> to time, and prevents the JACK-client from registering. Have have not
+>> seen a problem in the jack-process callback thread yet, but when the
+>> register call is done from the main() thread. Initially I thought there
+>> was a problem with jackd, and I did a "strace" / "ktrace" and the
+>> problem went away.
+>>
+>> QT4/5.x has similar wrappers around its read/write operations.
+>>
+>> --HPS
+>
+> Hi,
+>
+> I suspect QT is setting up SIGCHLD, and when treads are created, the
+> "main process" is receiving signals, which sometimes kill the jack
+> client register.
+>
+> One solution would be to move the jack client register into the
+> beginning of the process thread, to avoid this, or simply add the
+> wrappers I'm suggesting.
+>
+> --HPS
+
+Ping - any more comments on this issue?
+
+--HPS
+
+1416153022.24081_0.ltw:2, <5468C7CB.8000305 at selasky dot org>
+________________________________________________________________________________
+

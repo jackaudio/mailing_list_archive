@@ -1,0 +1,63 @@
+Date:        Thu, 17 Oct 2013 14:52:33 +0200
+From:        Christian Schoenebeck  <[hidden] at crudebyte dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Dan MacDonald Re: [Jack-Devel] JACK on mobile (1382000057.29391_0.ltw:2,)
+
+Subject:     [Jack-Devel] JACK iOS (RIP) (was: JACK on mobile)
+
+On Thursday 17 October 2013 10:54:11 Dan MacDonald wrote:
+> Christian:
+> 
+> JACK iOS is dead already? Why? There is no mention or explanation of its
+> passing on its homepage that I can see.
+
+Yes, you can consider JACK iOS dead, because starting with iOS 7.0 Apple 
+decided to block all IPC mechanisms between third party apps. So you can't 
+establish shared memory, native Mach port connections or any other way to 
+communicate with foreign apps anymore. That's the reason why the JACK app 
+won't launch on iOS 7 anymore. It crashes immediately right after the point 
+when it tries to establish shared memory. You can now (iOS7) only use specific 
+IPC APIs for processes that are part of apps signed with the same team profile 
+/ signature, that is IPC is now limited explicitly to your own and only to 
+your own apps.
+
+Stéphane filed a bug report (#14988888) at Apple's BTS and I also asked for 
+some statement from Apple's side i.e. on their Developer forum and Apple 
+engineers directly, but all requests concerning this particular issue were 
+ignored by them. Many other app developers have the problem of course, and 
+they also filed reports etc., but nobody got any reply. So it seems to be 
+consciously ignored.
+
+The reason why we haven't updated the website yet, was simply to wait a bit 
+for some potential "official" response still to come from Apple, but at this 
+point I don't actually expect this to happen anymore.
+
+I was actually a bit shocked how aggressively Apple enforced this new policy 
+(disallowing custom IPC that is). This is a very drastic change in the OS, 
+which was never officially announced, nor was it as of to date mentioned in 
+any developer resource like API docs, header files, API diffs or anything 
+else. And I would at least expect a deprecation / grace period for such a huge 
+new OS restriction.
+
+At this year's WWDC an Apple engineer mentioned in a personal conversation 
+(unofficially) that native Mach ports might get blocked in iOS 7, however I 
+was optimistic that this would not be applied to all IPCs facilities entirely. 
+But I was false.
+
+You might ask how Audiobus managed to solve it. To my knowledge they actually 
+dropped their previously used audio server backend (which was poor anyway) and 
+instead turned the Audiobus app simply to be an "Inter-App Audio" (IAA) host. 
+The latter is a new (quite limited) system introduced by Apple with iOS 7 for 
+connecting audio apps with each other. Unfortunately for JACK we cannot do as 
+the Audiobus authors did. Because JACK is far more powerful than IAA and 
+JACK's concept would not fit into the IAA framework at all. Of course we could 
+recycle the JACK iOS GUI for a new app on top of Apple's IAA system, but as 
+said this would then just be yet another IAA host app, not JACK anymore, and 
+accordingly would have the exact same limitations as any other IAA host app.
+
+CU
+Christian
+
+1382014024.20582_0.ltw:2, <201310171452.33575.schoenebeck at crudebyte dot com>
+________________________________________________________________________________
+

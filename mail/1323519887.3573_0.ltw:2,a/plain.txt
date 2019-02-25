@@ -1,0 +1,68 @@
+Date:        Sat, 10 Dec 2011 13:24:42 +0100
+From:        Florian Paul Schmidt  <[hidden] at gmx dot net>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] The Situation(s) With JACK (1323475090.1282_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] The Situation(s) With JACK
+
+On 12/10/2011 12:58 AM, Paul Davis wrote:
+> On Fri, Dec 9, 2011 at 6:47 PM, Florian Paul Schmidt
+> <[hidden]>  wrote:
+>> Personally I found the jack transport specification always lacking in this
+>> respect.
+> lacking? you say its lacking but then ask for a very simple protocol:
+
+Yes, because musical time is outside the range of what jack should IMHO 
+provide. What musical time is, and how it is shared between different 
+applications can be very application-specific.
+
+>> IMHO a better approach would be to just privide a very simple
+> which we have!
+
+True :D
+
+>> protocol, which is just framebased and provides just the states STOPPED,
+>> RUNNING and a shared frame number. Making assumptions about musical time,
+>> etc., is too restrictive.
+> STOPPED and RUNNING can't accomodate slow-sync clients.
+
+That's true. Here's a different approach maybe: Make clients share a map 
+of locations that can be relocated to (Slow sync clients could prebuffer 
+their state, so relocations/loops can be immediate). Make the update of 
+this shared map non-RT, but require clients to be able to relocate to 
+any of the shared locations immediately.
+
+My point is: How to implement looping/musical time/etc., is for me still 
+subject to discussion and therefore should not be cast in stone in the 
+jack spec. Rather I'd like to see an independent spec to emerge for this 
+and once it is ready and well tested, then one can think about 
+reintegrating it into jack itself..
+
+I have the feeling that the looping stuff and the musical time stuff are 
+instances of a more general problem: How can jack apps share state 
+besides the data passed around via ports? If there was a general 
+mechanism for jack apps to share (broadcast/pull) additional state, then 
+apps that want to provide notions of musical time or looping, etc, could 
+use this mechanism to implement this. Providing a playing ground for 
+experiments with this kind of things..
+
+Maybe i just need more coffee though ;D
+
+>> To provide musical time interoperation between different audio apps an
+>> independent protocol could emerge and once it has matured one could again
+>> think about integrating it into jack transport..
+> we've had the simple protocol for years now. we've also had MMC for
+> even longer, which is totally independent of JACK but has been
+> integrated into via jackmmcctl or whatever its called.
+>
+> i recommend reading the wiki page cited on this. it has an excellent
+> discussion of the entire issue.
+
+OK, will do so. Thanks for the pointer..
+
+Flo
+
+1323519887.3573_0.ltw:2,a <4EE34F8A.4010407 at gmx dot net>
+________________________________________________________________________________
+

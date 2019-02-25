@@ -1,0 +1,64 @@
+Date:        Tue, 12 Apr 2016 14:29:51 +0200
+From:        mdrslmr  <[hidden] at online dot de>
+To:          Jörn Nettingsmeier <[hidden] at stackingdwarves dot net>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jörn Nettingsmeier Re: [Jack-Devel] alsa_in/out increasing time between record and play on second card (1460463319.2031_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] alsa_in/out increasing time between record and play on second card
+
+Hi,
+
+thanks for the quick and sound response.
+
+On Tue, 12 Apr 2016, Jörn Nettingsmeier wrote:
+
+> On 04/12/2016 10:42 AM, mdrslmr wrote:
+
+>
+>>  We use a script starting:
+>>
+>>  aplay -q -D $channel Test-Ton.wav &
+>>  arecord -q -D $channel -f S16_LE -r 48000 -c 1 -d 8 $result/recorded.wav
+>
+> Why are you using alsa tools when you are otherwise working with JACK? This 
+> will make the problem analysis more complicated...
+Just because I'm, familiar with it. I'm not sure what to replace it
+with, jack.play, jack.record?
+>
+>>  The resulting wav file shows that the time between the start of the
+>>  recording
+>>  and the start of the actual sound continuously increases.
+>>  In the beginning (after starting the system up) the time difference is
+>>  just about 3ms. It increases
+>>  constantly to almost one second now
+>>  after 8 weeks of uptime.
+>
+> If audioadapter works by just providing a big buffer (without any 
+> resampling), the reason would be clock drift. Such a minuscule clock drift 
+> between two consumer cards however would be sensationally good.
+
+Yes I think it's just clocks drift.
+
+I did jack_unload/jack_load and got the channels back (almost) in synch.
+
+>
+> First of all, consider if you can actually sync the cards. If both have an 
+> SPDIF i/o, you can use that. Just connect the secondary card's SPDIF in to 
+> the master's SPDIF out (no matter whether you use toslink or RCA), and you 
+> can be sure your cards will be locked.
+
+Our cards M-Audio Delta44 don't have SPDIF ports.
+
+>
+> Secondly, try zita-ajbridge. If you can sync the cards in hardware, there is 
+> an option for zita-ajbridge to skip the resampling, which will conserve cpu 
+> power.
+
+I'll check it out.
+
+Cheers,
+Michael
+
+1460464205.4778_0.ltw:2, <alpine.LNX.2.20.1604121420330.8229 at mpslxdressel dot desy dot de>
+________________________________________________________________________________
+

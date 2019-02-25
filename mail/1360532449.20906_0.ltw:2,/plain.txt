@@ -1,0 +1,73 @@
+Date:        Sun, 10 Feb 2013 22:40:39 +0100
+From:        Ruslan N. Marchenko  <[hidden] at ruff dot mobi>
+To:          [hidden] at jackaudio dot org
+In-Reply-To: Ruslan N. Marchenko [Jack-Devel] [PATCH 0/4] Multicast interface selection (1360531851.20603_0.ltw:2,)
+
+Subject:     [Jack-Devel] [PATCH 2/4] Added multicast interface selection to NetInterface
+
+Added fMulticastIF field and it's basic handling to JackNetInterface
+---
+ common/JackNetInterface.cpp | 9 ++++++++-
+ common/JackNetInterface.h   | 2 ++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/common/JackNetInterface.cpp b/common/JackNetInterface.cpp
+index 3ad42b1..9f8ab95 100644
+--- a/common/JackNetInterface.cpp
++++ b/common/JackNetInterface.cpp
+@@ -57,6 +57,7 @@ namespace Jack
+         fSetTimeOut = false;
+         fTxBuffer = NULL;
+         fRxBuffer = NULL;
++	fMulticastIF[0]=0;
+         fNetAudioCaptureBuffer = NULL;
+         fNetAudioPlaybackBuffer = NULL;
+         fNetMidiCaptureBuffer = NULL;
+@@ -685,6 +686,12 @@ namespace Jack
+ 
+         if (fSocket.IsLocal(fMulticastIP)) {
+             jack_info("Local IP is used...");
++        } else if (fMulticastIF[0]) {
++            // bind the socket & interface
++            if (fSocket.Bind(fMulticastIF) == SOCKET_ERROR) {
++                jack_error("Can't bind the socket : %s", StrError(NET_ERROR_CODE));
++                return NET_SOCKET_ERROR;
++            }
+         } else {
+             // bind the socket
+             if (fSocket.Bind() == SOCKET_ERROR) {
+@@ -704,7 +711,7 @@ namespace Jack
+         }
+ 
+         // send 'AVAILABLE' until 'SLAVE_SETUP' received
+-        jack_info("Waiting for a master...");
++        jack_info("Waiting for a master on %s...",(fMulticastIF[0])?fMulticastIF:"default");
+         do {
+             // send 'available'
+             session_params_t net_params;
+diff --git a/common/JackNetInterface.h b/common/JackNetInterface.h
+index b20a4b8..480e4fb 100644
+--- a/common/JackNetInterface.h
++++ b/common/JackNetInterface.h
+@@ -27,6 +27,7 @@ namespace Jack
+ {
+ 
+ #define DEFAULT_MULTICAST_IP "225.3.19.154"
++#define DEFAULT_MULTICAST_IF "any"
+ #define DEFAULT_PORT    19000
+ #define DEFAULT_MTU     1500
+ 
+@@ -55,6 +56,7 @@ namespace Jack
+             session_params_t fParams;
+             JackNetSocket fSocket;
+             char fMulticastIP[32];
++            char fMulticastIF[32];
+ 
+             // headers
+             packet_header_t fTxHeader;
+-- 
+1.8.1.2
+
+1360532449.20906_0.ltw:2, <50a44c65b3c54ef2c7c59b18a3e41406be1fcb3a.1360530044.git.me at ruff dot mobi>
+________________________________________________________________________________
+

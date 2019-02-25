@@ -1,0 +1,86 @@
+Date:        Thu, 03 Nov 2011 08:00:58 +0100
+From:        Andreas Degert  <[hidden] at papyrus-gmbh dot de>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] (1320267103.30387_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash]
+
+On Wed, 2 Nov 2011 16:51:02 -0400
+Paul Davis <[hidden]> wrote:
+
+> On Wed, Nov 2, 2011 at 4:49 PM, Paul Davis
+> <[hidden]> wrote:
+> > On Wed, Nov 2, 2011 at 4:28 PM, Andreas Degert <[hidden]>
+> > wrote:
+> >
+> >> Hi Paul, I'm the original author of the mail that hermann
+> >> forwarded. Which part of my mail do you not understand? I thought
+> >> I explained the problem :-)
+> >
+> >> AFAICS jackweak.h defines JACK_OPTIONAL_WEAK_EXPORT and
+> >> JACK_OPTIONAL_WEAK_DEPRECATED_EXPORT, whereas the mentioned
+> >> functions from jack/session.h use JACK_WEAK_EXPORT, which is
+> >> defined in jack/weakmacros.h, which is included by session.h.
+> >
+> > fair point, i forgot that this was a mandatorily weakly linked
+> > symbol. this doesn't really make any difference to the point.
+> >
+> > what does this show:
+> >
+> >    nm YourExecutable | grep jack_
+> >
+>  just for reference, this is what I get:
+> 
+> paul@sextet[2930]>cc -o js js.c -l jack
+> paul@sextet[2931]>./js
+> jack_client_get_uuid = 0x400510, jack_get_uuid_for_client_name = (nil)
+> paul@sextet[2932]>nm js | grep jack_
+>                  w jack_client_get_uuid
+>                  w jack_get_uuid_for_client_name
+
+try this:
+
+------------------------------------------------------------
+$ nm -D a.out | grep jack
+         w jack_client_get_uuid
+$ objdump -R -d a.out
+[...]
+Disassembly of section .plt:
+
+080483f0 <printf@plt-0x10>:
+ 80483f0:       ff 35 f8 9f 04 08       pushl  0x8049ff8
+ 80483f6:       ff 25 fc 9f 04 08       jmp    *0x8049ffc
+ 80483fc:       00 00                   add    %al,(%eax)
+        ...
+
+08048400 <printf@plt>:
+ 8048400:       ff 25 00 a0 04 08       jmp    *0x804a000
+ 8048406:       68 00 00 00 00          push   $0x0
+ 804840b:       e9 e0 ff ff ff          jmp    80483f0 <_init+0x3c>
+
+08048410 <__gmon_start__@plt>:
+ 8048410:       ff 25 04 a0 04 08       jmp    *0x804a004
+ 8048416:       68 08 00 00 00          push   $0x8
+ 804841b:       e9 d0 ff ff ff          jmp    80483f0 <_init+0x3c>
+
+08048420 <__libc_start_main@plt>:
+ 8048420:       ff 25 08 a0 04 08       jmp    *0x804a008
+ 8048426:       68 10 00 00 00          push   $0x10
+ 804842b:       e9 c0 ff ff ff          jmp    80483f0 <_init+0x3c>
+
+08048430 <jack_client_get_uuid@plt>:
+ 8048430:       ff 25 0c a0 04 08       jmp    *0x804a00c
+ 8048436:       68 18 00 00 00          push   $0x18
+ 804843b:       e9 b0 ff ff ff          jmp    80483f0 <_init+0x3c>
+
+Disassembly of section .text:
+[...]
+------------------------------------------------------------
+
+ciao
+Andreas
+
+1320303700.16810_0.ltw:2,a <20111103080058.6be249e2 at pluto dot noname>
+________________________________________________________________________________
+

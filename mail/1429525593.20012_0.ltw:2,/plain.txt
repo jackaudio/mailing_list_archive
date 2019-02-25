@@ -1,0 +1,103 @@
+Date:        Mon, 20 Apr 2015 12:26:23 +0200
+From:        Jörn Nettingsmeier  <[hidden] at stackingdwarves dot net>
+To:          Jack devel <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] jack1 git FTBFS (1429526923.21086_0.ltw:2,)
+
+Subject:     [Jack-Devel] jack1 git FTBFS
+
+Hi *!
+
+
+While I'm hunting the recent breakage of JACK on openSUSE Tumbleweed, I 
+found I can't build jack1 from source.
+
+make distclean
+git submodule update
+git pull
+./autogen.sh
+./configure
+make
+
+/bin/sh ../libtool  --tag=CC   --mode=compile gcc -DHAVE_CONFIG_H -I. 
+-I..    -I../config -I.. -I.. -I../include -D_REENTRANT 
+-D_POSIX_PTHREAD_SEMANTICS -Wall  -O3 -fomit-frame-pointer -ffast-math 
+-funroll-loops -march=native -mtune=native -msse -mfpmath=sse 
+-DJACK_LOCATION=\"/usr/local/bin\" -I../config -I.. -I.. -I../include 
+-D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS -Wall  -O3 -fomit-frame-pointer 
+-ffast-math -funroll-loops -march=native -mtune=native -msse 
+-mfpmath=sse -MT libjack_la-metadata.lo -MD -MP -MF 
+.deps/libjack_la-metadata.Tpo -c -o libjack_la-metadata.lo `test -f 
+'metadata.c' || echo './'`metadata.c
+libtool: compile:  gcc -DHAVE_CONFIG_H -I. -I.. -I../config -I.. -I.. 
+-I../include -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS -Wall -O3 
+-fomit-frame-pointer -ffast-math -funroll-loops -march=native 
+-mtune=native -msse -mfpmath=sse -DJACK_LOCATION=\"/usr/local/bin\" 
+-I../config -I.. -I.. -I../include -D_REENTRANT 
+-D_POSIX_PTHREAD_SEMANTICS -Wall -O3 -fomit-frame-pointer -ffast-math 
+-funroll-loops -march=native -mtune=native -msse -mfpmath=sse -MT 
+libjack_la-metadata.lo -MD -MP -MF .deps/libjack_la-metadata.Tpo -c 
+metadata.c  -fPIC -DPIC -o .libs/libjack_la-metadata.o
+metadata.c: In function 'jack_set_property':
+metadata.c:202:15: error: 'DB' has no member named 'exists'
+          if (db->exists (db, NULL, &d_key, 0) == DB_NOTFOUND) {
+                ^
+metadata.c: In function 'jack_get_properties':
+metadata.c:322:29: error: 'DBC' has no member named 'get'
+          while ((ret = cursor->get(cursor, &key, &data, DB_NEXT)) == 0) {
+                              ^
+metadata.c:402:15: error: 'DBC' has no member named 'close'
+          cursor->close (cursor);
+                ^
+metadata.c: In function 'jack_get_all_properties':
+metadata.c:441:29: error: 'DBC' has no member named 'get'
+          while ((ret = cursor->get(cursor, &key, &data, DB_NEXT)) == 0) {
+                              ^
+metadata.c:532:15: error: 'DBC' has no member named 'close'
+          cursor->close (cursor);
+                ^
+metadata.c: In function 'jack_remove_properties':
+metadata.c:615:29: error: 'DBC' has no member named 'get'
+          while ((ret = cursor->get(cursor, &key, &data, DB_NEXT)) == 0) {
+                              ^
+metadata.c:636:34: error: 'DBC' has no member named 'del'
+                  if ((ret = cursor->del (cursor, 0)) != 0) {
+                                   ^
+metadata.c:646:15: error: 'DBC' has no member named 'close'
+          cursor->close (cursor);
+                ^
+Makefile:547: recipe for target 'libjack_la-metadata.lo' failed
+make[2]: *** [libjack_la-metadata.lo] Error 1
+make[2]: Leaving directory '/local/build/jack1/libjack'
+Makefile:544: recipe for target 'all-recursive' failed
+make[1]: *** [all-recursive] Error 1
+make[1]: Leaving directory '/local/build/jack1'
+Makefile:430: recipe for target 'all' failed
+make: *** [all] Error 2
+
+
+I made sure my BDB is ok, here are the relevant lines from the output of 
+./configure:
+[..]
+checking db.h usability... yes
+checking db.h presence... yes
+checking for db.h... yes
+[..]
+checking for db_create in -ldb... yes
+[..]
+
+Any hints?
+
+
+
+-- 
+Jörn Nettingsmeier
+Lortzingstr. 11, 45128 Essen, Tel. +49 177 7937487
+
+Meister für Veranstaltungstechnik (Bühne/Studio)
+Tonmeister VDT
+
+http://stackingdwarves.net
+
+1429525593.20012_0.ltw:2, <5534D44F.5080303 at stackingdwarves dot net>
+________________________________________________________________________________
+

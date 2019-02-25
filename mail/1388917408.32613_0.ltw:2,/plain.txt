@@ -1,0 +1,90 @@
+Date:        Sun, 05 Jan 2014 11:23:18 +0100
+From:        Kjetil Matheussen  <[hidden] at gmail dot com>
+To:          Dominique Michel <[hidden] at vtxnet dot ch>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Dominique Michel Re: [Jack-Devel] routing alsa through jack (1388865555.1217_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] routing alsa through jack
+
+On Sat, Jan 4, 2014 at 9:19 PM, Dominique Michel
+<[hidden]> wrote:
+> Le Fri, 3 Jan 2014 18:02:30 +0100,
+> Kjetil Matheussen <[hidden]> a écrit :
+>
+>> I used this setup a while too, but it didn't work
+>> very well. There was a latency on around a second,
+>> and I also got some scratching noises now and then.
+>>
+>> So a while ago (still), I changed my .asoundrc file like this:
+>>
+>> pcm.rawjack {
+>>     type jack
+>>     playback_ports {
+>>         0 system:playback_1
+>>         1 system:playback_2
+>>     }
+>>     capture_ports {
+>>         0 system:capture_1
+>>         1 system:capture_2
+>>     }
+>> }
+>>
+>> pcm.jack {
+>>     type plug
+>>     slave { pcm "rawjack" }
+>>     hint {
+>>   description "JACK Audio Connection Kit"
+>>     }
+>> }
+>>
+>> pcm.!default {
+>>     type plug
+>>     slave { pcm "rawjack" }
+>> }
+>>
+>>
+>> And suddenly I got no noticable delay, no scratching
+>> sounds now and then, and almost no trouble [1].
+>>
+>> What am I missing? Why run through the trouble
+>> of setting up alsa_in, do the loop-thing, scripting,
+>> and so forth?
+>>
+>> [1] Only trouble: I have to restart the chrome
+>> browser after stopping and starting jack.
+>
+> Thank you! I didn't get the time to try it before now. You are the best.
+>
+
+Thanks for the kind words, but this is not exactly my invention. :-)
+The jack alsa plugin is documented both at the alsa homepage
+and at the jack homepage:
+
+http://www.alsa-project.org/main/index.php/Asoundrc
+http://jackaudio.org/routing_alsa
+http://alsa.opensrc.org/Jack_(plugin)
+
+
+Regarding this sentence at the jack homepage:
+
+  "Some people have also found it quite buggy or unstable in some situations."
+
+Perhaps this should be changed to "Some people in the past ...", or removed
+completely. I also remember it was terribly buggy around 8 years ago (or so),
+but it seems stable now.
+
+
+And this sentence could also be a little bit misleading:
+
+  "Note that this solution will create some latency: the ALSA JACK
+plugin has to use a buffer between the data being sent by the
+application and JACK itself to avoid clicks and dropouts."
+
+This is of course true to other solutions as well (such as using the loop back
+device or using the pulseaudio jack sink). Besides, the latency seems to have
+been tweaked to be very small now. It can't be that many milliseconds
+any longer.
+
+1388917408.32613_0.ltw:2, <CAC6niEKgGJ0LatMUMaHJFevOBBghpRwkeoFDkrCw-O+O4R6+8Q at mail dot gmail dot com>
+________________________________________________________________________________
+

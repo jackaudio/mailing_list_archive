@@ -1,0 +1,62 @@
+Date:        Mon, 28 Jan 2013 21:37:47 +0100
+From:        Pawel  <[hidden] at wp dot pl>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Paul Davis Re: [Jack-Devel] Odp: Re: Re: Odp: Jack1 && jack_get_uuid_for_client_name (1359465992.23522_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Odp: Re: Re: Odp: Re: Re: Odp: Jack1 && jack_get_uuid_for_client_name
+
+OK now is clear ;-) Thanks for that. About "-w" there is two purposes for this flag:
+1) wait for ports. Example: session manager start some app and he know that it ports will appear. Therefore jack_connect will wait for this ports (which some timeout).
+
+2) when both ports appear, but at least one of them is not activated, then it still wait (for activation).
+
+I agree this second purpose is really ugly and this is what I say on start ... but first purpose is still valid and maybe someone want to use it.
+
+The alternative is making script that try connect in loop .. but "jack_connect -w30 A:out B:in" just looks better.
+
+Pawel
+
+Dnia Poniedzia³ek, 28 Stycznia 2013 21:11 Paul Davis <[hidden]> napisa³(a)
+> yes, i understood that. i will apply the rest of the patch, just not the added -w flag 
+> 
+> 
+> On Mon, Jan 28, 2013 at 3:10 PM, Pawel <[hidden]> wrote:
+> > Hi Paul,
+> >  
+> >  This jackd1 patch is for lack of jack_get_uuid_for_client_name API call. Workaround for inactive ports is in "connect.c" file and this is separate case.
+> >  
+> >  --
+> >  Pawel
+> >  
+> >  Dnia Poniedzia³ek, 28 Stycznia 2013 14:01 Paul Davis <[hidden]> napisa³(a)
+> > >
+> >  > On Sun, Jan 27, 2013 at 7:49 PM, Pawel <[hidden]> wrote:
+> >  > > Hi,
+> >  > >
+> >  > >  I made this patch (for master branch https://github.com/jackaudio/jack1). Please apply ASAP.
+> >  > >
+> >  > >  I have also improved version of two jack tools:
+> >  > >  * jack_lsp
+> >  > >  - add option "-u" for show current clients session uuid's. This code need mentioned patch (because of lack of one API call in current release). For me it is really useful for debug purposes.
+> >  > >
+> >  > >  * jack_connect
+> >  > >  - fix: jack_get_client_name_by_uuid must be freed by caller (not mentioned by doc, but code return strdup value)
+> >  > >
+> >  > >  - "-w" option for wait (with timeout) for ports. Because of bug in jack1 which return "inactive ports", if ports are available it try connect hard (i.e. in loop) during this time.
+> >  > i don't agree with this patch - we don't apply fixes to cover up bugs. i will fix the inactive port issue in jack1 separately.
+> >  >
+> >  > i hope to commit this all within 48hrs.
+> >  >
+> >  >
+> >  >
+> >  
+> >  
+> >  
+> >  
+> >  
+> > 
+
+1359405473.7282_0.ltw:2,a <5106e19b0c61b3.74120768 at wp dot pl>
+________________________________________________________________________________
+

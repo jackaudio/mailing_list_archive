@@ -1,0 +1,85 @@
+Date:        Fri, 03 May 2013 11:23:18 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          "MONTANARO Luciano (MM)" <[hidden] at magnetimarelli dot com>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: MONTANARO Luciano (MM) [Jack-Devel] Jack thread cancellation (1367593890.1594_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] Jack thread cancellation (1367596426.5814_0.ltw:2,a)
+Follow-Up:   MONTANARO Luciano (MM) [Jack-Devel] R: Jack thread cancellation (1367831621.28165_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack thread cancellation
+
+You should never, ever, ever rely on pthread cancellation. Not on any
+platform, not for any purpose.
+
+
+On Fri, May 3, 2013 at 11:11 AM, MONTANARO Luciano (MM) <
+[hidden]> wrote:
+
+> Hi list,
+>
+> I have an embedded application that makes use of jack (Version 1.9.8).
+> I have started seeing crashes from the clients in the JackError() call.
+>
+> The stack trace shows that the thread executing (Which is handling the
+> JackSocketChannel::Execute call) receives is being killed
+> (sigcancel_handler is called) and since the thread is in
+> CANCEL_ASYNCHRONOUS mode, it crashes since an unsafe function is
+> called (vnsprintf).
+>
+> The client I am using is actually unaware of using Jack at all, it is
+> using the alsa jack plugin, and it opens/closes the alsa devices many
+> times during its lifetime.
+>
+> Now, I have a few doubts:
+> - Why are threads created with cancellation type
+> PTHREAD_CANCEL_ASYNCHRONOUS?
+>   Is this because the realtime threads need this or is there some other
+> reason?
+> - Would it be possible to mark the threads used by the JackMessageBuffer
+> and
+>   JackSocketClientChannel as PTHREAD_CANCEL_DELAYED instead?
+> - Why is fThread.Kill() used in JackSocketClientChannel::Stop instead of
+> fThread.Stop()?
+>   The latter should still work, and allow the Execute() to terminate it
+> communication
+>   with the server.
+>
+> Thanks in advance,
+> Luciano
+> --
+> Luciano Montanaro
+> EntryNAV - Audio Software Integrator
+> Magneti Marelli Electronic Systems
+> Viale Carlo Emanuele II 150, Venaria Reale (To)
+> Tel. (+39) 011 6879765
+>
+>
+>
+>
+>
+> VISITA IL NOSTRO NUOVO SITO WEB! - VISIT OUR NEW WEB SITE!
+> www.magnetimarelli.com
+>
+> Confidential Notice: This message - including its attachments - may
+> contain proprietary, confidential and/or legally protected information and
+> is intended solely for the use of the designated addressee(s) above. If you
+> are not the intended recipient be aware that any downloading, copying,
+> disclosure, distribution or use of the contents of the above information is
+> strictly prohibited.
+> If you have received this communication by mistake, please forward the
+> message back to the sender at the email address above, delete the message
+> from all mailboxes and any other electronic storage medium and destroy all
+> copies.
+> Disclaimer Notice: Internet communications cannot be guaranteed to be safe
+> or error-free. Therefore we do not assure that this message is complete or
+> accurate and we do not accept liability for any errors or omissions in the
+> contents of this message.
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+
+1367594606.2807_0.ltw:2,a <CAFa_cK=fEf8J4598wJfe2iTvfBiTZJFoi3a59gxvFBgvhiDU3A at mail dot gmail dot com>
+________________________________________________________________________________
+

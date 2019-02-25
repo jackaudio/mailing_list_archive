@@ -1,0 +1,46 @@
+Date:        Sun, 03 Mar 2013 22:16:09 +0200
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Patrick Robin <[hidden] at hotmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Patrick Robin [Jack-Devel] Mixing inside process callback (1362327081.13677_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Mixing inside process callback
+
+Patrick Robin <[hidden]> writes:
+> I am writing a Jack client ( a drum instrument using the NDK samples
+> library )
+
+Is this some Google/Andoid thing? Can you link please?
+
+> The client is polyphonic, 42-60 voices since many drum hits need to
+> play at the same time.
+>
+> It is my understanding that all audio samples we write to the jack
+> audio buffers must be in the -1.0 1.0 range?
+>
+> How does jack deal with values outside of this range , clipping?
+> normalize?
+
+Samples are clipped when they reach the audio hardware. Between JACK
+apps, samples can exceed the -1.0 1.0 range.
+
+> To stay within the -1.0 1.0 range, I need to mix all active voices. I
+> tried multiplying all active voices by 1/n (where n is the number of
+> voices) but it is not realistic sounding since very quiet drums will
+> bring down the volume of louder cymbals for examples. Also if n= the
+> total number of possible voices (active or not) a single playing voice
+> gets way too quiet. If I use n= active voices only, the volume will
+> shift during playback as voices become active or dead.
+>
+> Is there a more realistic way to mix various voices?
+
+Just mix them. You may want to provide a master level control for
+adjusting the total level. If the result must be suitable for DAC,
+consider using a some dynamics effect like limiter or compressor.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1362341790.31210_0.ltw:2, <87ppzgz1bq.fsf at arnaudov dot name>
+________________________________________________________________________________
+

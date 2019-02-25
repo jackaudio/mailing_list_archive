@@ -1,0 +1,95 @@
+Date:        Tue, 11 Dec 2018 12:27:34 +0100
+From:        [hidden] at microfx dot de  <[hidden] at microfx dot de>
+To:          [hidden] at notam02 dot no
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: [hidden] at microfx dot de Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service (1544490092.25996_0.ltw:2,)
+Follow-Up:   [hidden] at microfx dot de Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service (1544536141.16354_0.ltw:2,)
+Follow-Up:   [hidden] at microfx dot de Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service (1544537765.18284_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service
+
+It seems like I made a loop with little success but I couldn’t get rid of the crackling. So I reverted everything so I get clean sound. But I am still stuck at launching jack_capture - even as root.
+
+sudo jack_capture --daemon -c 5 -mb -tm -f flac 
+
+Cannot read socket fd = 5 err = Success
+CheckRes error
+JackSocketClientChannel read fail
+Cannot open jack_capture client
+JackShmReadWritePtr1::~JackShmReadWritePtr1 - Init not done for -1, skipping unlock
+JackShmReadWritePtr::~JackShmReadWritePtr - Init not done for -1, skipping unlock
+JackShmReadWritePtr::~JackShmReadWritePtr - Init not done for -1, skipping unlock
+
+Any further ideas what I could inspect / try?
+
+
+> On 11. Dec 2018, at 02:01, [hidden] wrote:
+> 
+> I removed the User / Group part from the .service file and the crackling is gone. Reading this now where it is explained: https://github.com/jackaudio/jackaudio.github.com/wiki/Cgroups … Thank you so much for your time and really helpful tips&tricks - learned a lot! 
+> 
+> This is my first mailing list and I hope I am not too much of a bugger because not following common rules I don’t know yet. 
+> 
+>> On 11. Dec 2018, at 01:48, [hidden] wrote:
+>> 
+>> somehow the file is not being created - but yes, I can see in journalctl those warnings:
+>> 
+>> Dec 11 01:47:07 MICROLABS-P1 jackd[11977]: Jack: JackAlsaDriver::Read warning fBufferSize = 128 nframes = 256
+>> Dec 11 01:47:10 MICROLABS-P1 jackd[11977]: Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 11
+>> Dec 11 01:47:14 MICROLABS-P1 jackd[11977]: Jack: JackAlsaDriver::Read warning fBufferSize = 128 nframes = 256
+>> Dec 11 01:47:20 MICROLABS-P1 jackd[11977]: Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 11
+>> 
+>>> On 11. Dec 2018, at 01:38, Kjetil Matheussen <[hidden]> wrote:
+>>> 
+>>> Maybe you can do this in your service configuration:
+>>> 
+>>> ExecStart=/usr/local/bin/jackd -t 2000 -P 75 -d alsa -d hw:pisound -r
+>>> 48000 -p 128 -n 2 -X seq -s > /tmp/jackd_output.txt
+>>> 
+>>> And then check /tmp/jackd_output.txt if there's anything wrong.
+>>> (by the way, doesn't services log to some file?)
+>>> 
+>>> 
+>>> 
+>>> 
+>>> On Tue, Dec 11, 2018 at 1:20 AM [hidden] <[hidden]> wrote:
+>>>> 
+>>>> Hmm… nope. Sorry for the spam. Still crackling after reboot + daemon-reload. This could have been so easy.
+>>>> 
+>>>>> On 11. Dec 2018, at 01:17, [hidden] wrote:
+>>>>> 
+>>>>> ah.. reboot … heh … that’s it. I just rebooted - but I forgot to systemctl daemon-reload - thanks!
+>>>>> 
+>>>>>> On 11. Dec 2018, at 01:14, Kjetil Matheussen <[hidden]> wrote:
+>>>>>> 
+>>>>>> On Tue, Dec 11, 2018 at 1:12 AM [hidden] <[hidden]> wrote:
+>>>>>>> 
+>>>>>>> I just changed it to Group=audio …same
+>>>>>>> 
+>>>>>>> 
+>>>>>> 
+>>>>>> Maybe this helps:
+>>>>>> 
+>>>>>> * - rtprio 99
+>>>>>> * - memlock unlimited
+>>>>>> 
+>>>>>> You might also have to reboot after changing this file, don't know.
+>>>>> 
+>>>>> 
+>>>>> Jack-Devel mailing list
+>>>>> [hidden]
+>>>>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>>>> 
+>> 
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> 
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1544527686.5301_0.ltw:2, <C5E0ABAE-286E-40E6-8043-D5DECEEC04D5 at microfx dot de>
+________________________________________________________________________________
+

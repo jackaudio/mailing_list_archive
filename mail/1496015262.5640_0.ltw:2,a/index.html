@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Looking for help setting up NetJack over WLAN from a Windoze box</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Looking for help setting up NetJack over WLAN from a Windoze box</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1495901312.753_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1496022578.13103_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1496015262.5640_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 28 May 2017 18:47:17 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Malik Costet
+<a href='../1495561756.2582_0.ltw:2,a/index.html'>Re: [Jack-Devel] Looking for help setting up NetJack over WLAN from a Windoze box </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Kenneth Fields
+<a href='../1496022578.13103_0.ltw:2,a/index.html'>Re: [Jack-Devel] Looking for help setting up NetJack over WLAN from a Windoze box </a></td></tr>
+</table>
+<pre>
+On Tue, May 23, 2017 12:47 pm, Malik Costet wrote:
+&gt; On 2017-05-23 18:22, Hanspeter Portner wrote:
+&gt;&gt;&gt; ...But it only works great over Ethernet. And I'd very much like it to
+&gt;&gt;&gt; work over WLAN, which it doesn't. Over wireless, the sound is
+&gt;&gt;&gt; completely garbled. AFAICT, it's a network issue.
+&gt;&gt;
+&gt;&gt; NetJACK sends its audio data via UDP [1], e.g. there's no resending of
+&gt;&gt; lost
+&gt;&gt; packets like in TCP. If packets are lost (which is *very* likely over
+&gt;&gt; wireless), the packets are really lost and you miss a chunk of audio
+&gt;&gt; frames, hence your garbled sound at the receiver.
+
+&gt; So your view is that packet loss is the cause? I had naively assumed it
+&gt; might be due to latency or congestion, but packet loss would make a lot
+&gt; of sense. Although -- I hadn't mentioned this explicitly, but my setup
+&gt; is with both boxes connected on the same local network, in other words
+&gt; both to the same WiFi router; can there really be such a dramatic amount
+&gt; of packet loss in that context for the result to be completely garbled
+&gt; sound? I'm not talking about clicks here and there, but really little
+&gt; better than static.
+
+If the sound is always garbled, it never even starts out with decent
+quality, then you may be right, latency could be causing every cycle to
+not have enough time.  Do you get a lot of under-run notifications when
+starting?  If latency is the only problem you may be able to set a larger
+number of network cycles and get around that.
+You should be able to get some packet loss statistics from ifconfig, it
+would be worth checking to see if there are lots of RX errors or RX
+dropped notifications.  I don't know how well that information is gathered
+for UDP packets, so using iperf to generate traffic and then looking how
+many dropped packets were detected would be good.  You could probably get
+an idea from iperf of the average and maximum latency as well.
+
+In general real time audio transmission over Wi-Fi is going to be
+difficult.  I have no trouble streaming FLAC files to music players over
+Wi-Fi, but those buffer over half a second of audio, and are using TCP so
+the TCP layer will just send again any packets which get dropped. When
+using jack the network connection has to be able to send packets reliably
+with low latency, and no matter what you do Wi-Fi is still going to be a
+shared medium, so every time another device anywhere in the local vicinity
+transmits, your devices are going to have to listen to see if they need to
+switch to a different channel, or pause to allow fair time for another
+device.  That other device might belong to your neighbor, so you can't
+assume that just because you have only two devices connected to your
+router that there will not be other interference.
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1495901312.753_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1496022578.13103_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1496015262.5640_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1496015262.5640_0.ltw:2,a&nbsp;&lt;d0f3752b34fd53bea4683ba8f9f98730.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,68 @@
+Date:        Wed, 15 Jan 2014 17:42:16 +1100
+From:        Matt Flax  <[hidden] at flatmax dot org>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Matt Flax Re: [Jack-Devel] driver_null_cycle (1389758221.6074_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] driver_null_cycle
+
+I think I understand what the driver_wait function is doing ...
+It appears that the driver_wait function is trying to work out how much 
+time has passed since the last transport_cycle_start and if it has taken 
+too long, then it reports an error.
+
+But the null_cycle is still confusing.
+
+Matt
+
+On 15/01/14 14:53, Matt Flax wrote:
+> Is Jack requesting samples to be dropped in the null_cycle ? For 
+> example if I am using a ring_buffer with a DMA loading it ... is it 
+> necessary to fast forward the beginning of the ring buffer by nframes ?
+>
+> W.r.t. the driver_wait function, on the understanding that the system 
+> I am looking at uses a ring buffer and DMA, in your opinion, is it 
+> possible to re-use the dummy_driver_wait function ?
+>
+> thanks
+> Matt
+>
+>
+>
+> On 15/01/14 14:11, Paul Davis wrote:
+>>
+>>
+>>
+>> On Tue, Jan 14, 2014 at 10:01 PM, Matt Flax <[hidden] 
+>> <mailto:[hidden]>> wrote:
+>>
+>>     Hi there,
+>>
+>>     Can someone please clarify the driver_null_cycle function for me ?
+>>
+>>     The function is defined as so :
+>>     static int you_driver_null_cycle (you_driver_t *driver,
+>>     jack_nframes_t nframes);
+>>
+>>     My question is w.r.t. the nframes. Is this function meant to
+>>     flush nframes from the audio stream ?
+>>
+>>     Here is what is written in include/driver.h
+>>        The JACK engine will call this after the wait function (above) has
+>>        been called, but for some reason the engine is unable to execute
+>>        a full "cycle". the driver should do whatever is necessary to
+>>        keep itself running correctly, but cannot reference ports
+>>        or other JACK data structures in any way.
+>>
+>>
+>> "the driver should do whatever is necessary to keep itself running 
+>> correctly"
+>>
+>> that's about the core of it. what that is depends on the driver and 
+>> in turn on the device.
+>>
+>
+
+1389768318.17078_0.ltw:2,a <52D62DC8.6030501 at flatmax dot org>
+________________________________________________________________________________
+

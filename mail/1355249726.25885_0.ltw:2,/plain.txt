@@ -1,0 +1,45 @@
+Date:        Tue, 11 Dec 2012 13:15:16 -0500
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Devin Anderson <[hidden] at gmail dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Devin Anderson Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355249148.24939_0.ltw:2,)
+Follow-Up:   Devin Anderson Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355250153.26606_0.ltw:2,)
+Follow-Up:   Jörn Nettingsmeier Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355250489.27204_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] ALSA PCM multi plugin and xruns
+
+On Tue, Dec 11, 2012 at 1:05 PM, Devin Anderson
+<[hidden]>wrote:
+
+>
+>
+> In the long term, I don't think this is the best way to solve this
+> issue.  The multi device is inherently broken because of the
+> assumption that only one card needs to be polled.  I think a better
+> way to solve this problem would be to write a new JACK driver that
+> aggregates the cards itself (no multi device), and waits until I/O is
+> available on both cards.
+
+
+jackd  [ ... args ... ] -d alsa -d hw:FIRST &
+alsa_in [ ... args ] -d hw:SECOND &
+alsa_out [ ... args ] -d hw:SECOND &
+
+[ .. repeat as needed]
+
+much more general than your brief summary, since alsa_in/alsa_out will
+resample as necessary, thus not requiring that the devices share a sample
+clock.
+
+there are also fons' version of alsa_in/out, which some people feel do an
+even better job with the resampling and more.
+
+now of course, if the devices are synced then none of this would be
+necessary. if they are synced and ALSA gets things things wrong, the ALSA
+needs fixing.
+
+--p
+
+1355249726.25885_0.ltw:2, <CAFa_cKks-VHBCJFBm9vYm3eWPs1=xY=h7+HAwFTJDZ_apBFH1g at mail dot gmail dot com>
+________________________________________________________________________________
+

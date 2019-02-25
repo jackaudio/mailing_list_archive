@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Noisy Signal - Fragmented Data</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Noisy Signal - Fragmented Data</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1460030251.27316_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1460343076.2983_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1460031707.30198_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 07 Apr 2016 07:21:37 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> David Nielson </span> &lt;[hidden] at naptastic dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Kenneth Fields
+<a href='../1460030251.27316_0.ltw:2,/index.html'>[Jack-Devel] Noisy Signal - Fragmented Data </a></td></tr>
+</table>
+<pre>
+The fragmenting can happen at literally any point between the two hosts. 
+There is almost certainly nothing you can do about it. Any "hop" along 
+the way has the right to split packets if it feels it's necessary. If 
+the trouble started recently, you should contact your ISPs to complain.
+
+For troubleshooting, you might try running a cable directly between the 
+two affected hosts. Make sure you choose a media format that supports 
+long distances. I don't think CAT6 will go to China without repeaters, 
+and that would defeat the purpose.
+
+If the issue is that the route your packets take has changed, maybe you 
+can find a VPN provider who will treat your packets better? I have many 
+friends here in Texas who pay monthly for a VPN to New York because 
+routing Netflix through it is faster than going straight to Comcast.
+
+David
+
+PS - I can't speak for the audio industry, as I'm in web hosting, where 
+dark humor is our only defense against the knowledge that the worst 
+technology will almost always win. JavaScript, PHP, VHS, x86 processors 
+with segment:offset addressing...
+
+On 04/07/16 06:57, Kenneth Fields wrote:
+&gt; Hi all,
+&gt; I&#x2019;ve been having a constant noisy signal lately using jacktrip 1.1 and 
+&gt; jack audio 0.92 beta3 on El Capitan.
+&gt; No noise running locally; but always from U.S. to China on ipv6. We&#x2019;ve 
+&gt; even had trouble with initializing an
+&gt; 8 channel stream; had to go with 4. Never had this trouble before.
+&gt;
+&gt; The connection is virtually jitter-less with 0 packet loss and 80M in 
+&gt; the clear.
+&gt;
+&gt; doing some experiments with jacktrip and Wireshark today - all on the 
+&gt; local network.
+&gt; I find that with larger data chunks (over about 1500k), the packets 
+&gt; can be fragmented 2 or 3 times or more.
+&gt; Where does the fragmenting happen, on sender side? In transit?
+&gt; Would the machine ever have any problem &#x2018;reassembling&#x201D; the chunks?
+&gt;
+&gt; Thanks,
+&gt; Ken
+&gt;
+&gt;
+&gt;
+&gt;
+&gt;
+&gt; *stereo 48k 24bit connection:*
+&gt; *buffer 512*
+&gt; *3 FRAGS*
+&gt;
+&gt; *OVER IPV6*
+&gt;
+&gt; 3153452454.5418572001:da8:22b:1506:12dd:b1ff:febd:8a2e2001:da8:22b:1506:ca2a:14ff:fe34:2bebIPv61510IPv6 
+&gt; fragment (off=0 more=y ident=0xf68b8b47 nxt=17)
+&gt; 315346 2454.541861 2001:da8:22b:1506:12dd:b1ff:febd:8a2e 
+&gt; 2001:da8:22b:1506:ca2a:14ff:fe34:2beb                    IPv6 1510     
+&gt;     IPv6 fragment (off=1448 more=y ident=0xf68b8b47 nxt=17)
+&gt; 3153472454.5418632001:da8:22b:1506:12dd:b1ff:febd:8a2e2001:da8:22b:1506:ca2a:14ff:fe34:2bebUDP262  
+&gt;      4464 &#x2192; 4464  Len=308844644464
+&gt;
+&gt;
+&gt; *OVER IPV4*
+&gt;
+&gt; 4883132895.58937110.1.8.3210.1.8.39IPv4 1514Fragmented IP protocol 
+&gt; (proto=UDP 17, off=0, ID=2841) [Reassembled in #488315]
+&gt; 4883142895.58938310.1.8.3210.1.8.39IPv41514        Fragmented IP 
+&gt; protocol (proto=UDP 17, off=1480, ID=2841) [Reassembled in #488315]
+&gt; 4883152895.58938510.1.8.3210.1.8.39UDP 170      4464 &#x2192; 4464 
+&gt;  Len=308844644464
+&gt;
+&gt;
+&gt; [3 IPv4 Fragments (3096 bytes): #744530(1480), #744531(1480), 
+&gt; #744532(136)]
+&gt;     [Frame: 744530, payload: 0-1479 (1480 bytes)]
+&gt;     [Frame: 744531, payload: 1480-2959 (1480 bytes)]
+&gt;     [Frame: 744532, payload: 2960-3095 (136 bytes)]
+&gt;     [Fragment count: 3]
+&gt;     [Reassembled IPv4 length: 3096]
+&gt;     [Reassembled IPv4 data: 
+&gt; 117011700c18119cc7a5b325e02f050002a7000203180200...]
+&gt;
+&gt;
+&gt;
+&gt; *MONO 44k 16 bit, buffer 128 - NO FRAGS*
+&gt;
+&gt; 8788063832.93222910.1.8.3910.1.8.32UDP3144464 &#x2192; 4464  Len=27244644464
+&gt;
+&gt; 10063864103.0787452001:da8:22b:1506:ca2a:14ff:fe34:2beb2001:da8:22b:1506:12dd:b1ff:febd:8a2eUDP3344465 
+&gt; &#x2192; 4465  Len=27244654465
+&gt;
+&gt;
+&gt; *STEREO 16 bit, buffer 128 - NO FRAGS*
+&gt;
+&gt; 10883524253.3886862001:da8:22b:1506:ca2a:14ff:fe34:2beb2001:da8:22b:1506:12dd:b1ff:febd:8a2eUDP5904464 
+&gt; &#x2192; 4464  Len=52844644464
+&gt;
+&gt; *
+&gt; *
+&gt; *Buffer 256 16bit - NO FRAGS*
+&gt;
+&gt; 12671274884.0161932001:da8:22b:1506:ca2a:14ff:fe34:2beb2001:da8:22b:1506:12dd:b1ff:febd:8a2eUDP11024469 
+&gt; &#x2192; 4469  Len=104044694469
+&gt;
+&gt; *Buffer 256 24bit - 2 FRAGS*
+&gt; *
+&gt; *
+&gt; 13267255095.5115282001:da8:22b:1506:ca2a:14ff:fe34:2beb2001:da8:22b:1506:12dd:b1ff:febd:8a2eIPv61510IPv6 
+&gt; fragment (off=0 more=y ident=0x486bd035 nxt=17)
+&gt; 13267265095.5115292001:da8:22b:1506:ca2a:14ff:fe34:2beb2001:da8:22b:1506:12dd:b1ff:febd:8a2eUDP1744471 
+&gt; &#x2192; 4471  Len=155244714471
+&gt;
+&gt;
+&gt; 15283635497.52935810.1.8.3210.1.8.39IPv41514Fragmented IP protocol 
+&gt; (proto=UDP 17, off=0, ID=a448) [Reassembled in #1528364]
+&gt; 15283645497.52936110.1.8.3210.1.8.39UDP1144473 &#x2192; 4473  Len=155244734473
+&gt;
+&gt;
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1460030251.27316_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1460343076.2983_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1460031707.30198_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1460031707.30198_0.ltw:2,&nbsp;&lt;570650D1.8010104 at naptastic dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack1 version jack2 public headers comparison</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack1 version jack2 public headers comparison</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1330105025.2827_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1330106139.4689_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1330105507.3609_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 24 Feb 2012 18:44:50 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1330101711.29556_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack1 version jack2 public headers comparison </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1330208989.1876_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack1 version jack2 public headers comparison </a></td></tr>
+</table>
+<pre>
+Le 24 f&#xE9;vr. 2012 &#xE0; 17:41, Paul Davis a &#xE9;crit :
+
+&gt; We're starting the merge of the header files used by all
+&gt; implementations of JACK, following setting up several git repositories
+&gt; that make this possible.
+&gt; 
+&gt; This is a review of the differences between the header files, initally
+&gt; done by Stephane, with new comments by me ...
+&gt; 
+&gt; 
+&gt;&gt; control.h  :
+&gt;&gt; 
+&gt;&gt; New :
+&gt;&gt; =====
+&gt;&gt; 
+&gt;&gt; /** Driver types */
+&gt;&gt; typedef enum
+&gt;&gt; {
+&gt;&gt;    JackMaster = 1,     /**&lt; @brief master driver */
+&gt;&gt;    JackSlave               /**&lt; @brief slave driver */
+&gt;&gt; } jackctl_driver_type_t;
+&gt;&gt; 
+&gt;&gt; jackctl_driver_type_t
+&gt;&gt; jackctl_driver_get_type(
+&gt;&gt;        jackctl_driver_t * driver);
+&gt; 
+&gt; Seems like a reasonable addition, especially since its specifically
+&gt; only for the control API.
+
+OK.
+
+
+&gt; 
+&gt;&gt; Reworked :
+&gt;&gt; ==========
+&gt;&gt; 
+&gt;&gt; /jackctl_sigmask_t *
+&gt;&gt; jackctl_setup_signals(
+&gt;&gt;    unsigned int flags);
+&gt;&gt; 
+&gt;&gt; void
+&gt;&gt; jackctl_wait_signals(
+&gt;&gt;    jackctl_sigmask_t * signals);
+&gt; 
+&gt; can you or nedko explain the need for this change? again, since its
+&gt; for the control API the issue is not that significant but i recall
+&gt; that this part of the API attracted some significant criticism from
+&gt; torben.
+
+Well at the beginning this jackctl_setup_signals/jackctl_wait_signals was an abstraction of the "setup signal"/"wait for quit" (Ctrl-c..) that was implemented in jackd. The same kind of abstraction was also needed on Windows for jackd.
+
+&gt; 
+&gt;&gt; 
+&gt;&gt; Reworked :
+&gt;&gt; ==========
+&gt;&gt; 
+&gt;&gt; jackctl_server_start/jackctl_server_close reworked in a jackctl_server_open/jackctl_server_start/jackctl_server_stop/jackctl_server_close
+&gt; 
+&gt; seems reasonable, though what's the justification?
+
+
+(Not completely sure anymore), but I think it was related to slave backend management when Devin Anderson did the MIDI backend rewrite in JACK2. This open/start/stop/close scheme was a better way to separated the steps.
+
+&gt; 
+&gt;&gt; New :
+&gt;&gt; =====
+&gt;&gt; 
+&gt;&gt; int
+&gt;&gt; jackctl_driver_params_parse(
+&gt;&gt;    jackctl_driver_t * driver,
+&gt;&gt;    int argc,
+&gt;&gt;    char* argv[]);
+&gt; 
+&gt; seems reasonable and sensible.
+&gt; 
+&gt;&gt; =========================================================================================
+&gt;&gt; 
+&gt;&gt; jack.h :
+&gt;&gt; 
+&gt;&gt; New :
+&gt;&gt; =====
+&gt;&gt; 
+&gt;&gt; void
+&gt;&gt; jack_get_version(
+&gt;&gt;    int *major_ptr,
+&gt;&gt;    int *minor_ptr,
+&gt;&gt;    int *micro_ptr,
+&gt;&gt;    int *proto_ptr) JACK_OPTIONAL_WEAK_EXPORT;
+&gt;&gt; 
+&gt;&gt; 
+&gt;&gt; const char *
+&gt;&gt; jack_get_version_string() JACK_OPTIONAL_WEAK_EXPORT;
+&gt;&gt; 
+&gt;&gt; ==&gt; not really used? Should they be removed?
+&gt; 
+&gt; i am opposed to any such API in JACK. providing version information
+&gt; like this encourages bad/stupid/unnecessary behaviour by developers.
+&gt; as the docs for automake describe, if you're interested in whether or
+&gt; not a particular feature exists in something you want to use, test for
+&gt; the *feature* not some arbitrary version number.
+
+OK, so can be safely removed (not used anyway...)
+
+
+&gt; 
+&gt;&gt; int jack_get_client_pid (const char *name) JACK_OPTIONAL_WEAK_EXPORT;
+&gt; 
+&gt; needed for?
+
+I think session management.
+
+&gt; 
+&gt;&gt; jack_port_type_id_t jack_port_type_id (const jack_port_t *port) JACK_OPTIONAL_WEAK_EXPORT;
+&gt; 
+&gt; needed for?
+
+
+I see it used in jackdbus code. I guess Nedko can comment more.
+
+
+&gt; 
+&gt;&gt; =========================================================================================
+&gt;&gt; 
+&gt;&gt; jslist.h: same API, code reworked a bit to be compilable without too much warning in  a C++ context.
+&gt; 
+&gt; ok, we should merge the jack2 version.
+
+OK.
+
+&gt; 
+&gt;&gt; =========================================================================================
+&gt;&gt; 
+&gt;&gt; ringbuffer.h
+&gt;&gt; 
+&gt;&gt; New :
+&gt;&gt; =====
+&gt;&gt; 
+&gt;&gt; void jack_ringbuffer_reset_size (jack_ringbuffer_t * rb, size_t sz);
+&gt; 
+&gt; what's the need or use case for this? when can the ringbuffer be reset safely?
+
+Well I added that when developing this "adapter" mechanism. Not sure of the real reason anymore. I'll need to look again.
+
+&gt; 
+&gt;&gt; =========================================================================================
+&gt;&gt; 
+&gt;&gt; in thread.h
+&gt;&gt; 
+&gt;&gt; 
+&gt;&gt; New :
+&gt;&gt; =====
+&gt;&gt; 
+&gt;&gt; int jack_client_stop_thread(jack_client_t* client, jack_native_thread_t thread) JACK_OPTIONAL_WEAK_EXPORT;
+&gt;&gt; 
+&gt;&gt; int jack_client_kill_thread(jack_client_t* client, jack_native_thread_t thread) JACK_OPTIONAL_WEAK_EXPORT;
+&gt; 
+&gt; what's the use case for these? AFAIK, its not possible to do what the
+&gt; first one suggests in the general case (it requires that the thread
+&gt; hits a cancellation point). similar objections for the second one,
+&gt; though i think that maybe that works more reliably.
+
+Well I see that jack_client_stop_thread is not used at all...but jack_client_kill_thread is use in NetJack2 netmanager, which use jack_client_create_thread API. jack_client_kill_thread does basically pthread_cancel/pthread_join on POSIX thread.
+
+So jack_client_stop_thread could be removed and jack_client_kill_thread possibly kept.
+
+
+&gt; 
+&gt;&gt; =========================================================================================
+&gt;&gt; 
+&gt;&gt; transport.h and types.h
+&gt;&gt; 
+&gt;&gt; ==&gt; jack2 version moved some type definition from transport.h to types.h (don't remember the reason.... maybe not a good idea..)
+&gt; 
+&gt; so this won't matter, probably.
+&gt; 
+&gt;&gt; New :
+&gt;&gt; =====
+&gt;&gt; 
+&gt;&gt; typedef uint32_t jack_port_type_id_t;
+&gt; 
+&gt; use?
+
+Needed for jack_port_type_id API.
+
+&gt; 
+&gt;&gt; typedef pthread_t            jack_native_thread_t;  ==&gt; moved in  systemdeps.h file
+&gt; 
+&gt; agreed.
+&gt; 
+&gt;&gt; POST_PACKED_STRUCTURE is uses in jack1 transport, and missing in jack2 version.
+&gt;&gt; 
+&gt;&gt; This POST_PACKED_STRUCTURE should probably go in systemdeps.h
+&gt; 
+&gt; agreed.
+&gt; 
+&gt;&gt; =========================================================================================
+&gt;&gt; 
+&gt;&gt; New systemdeps.h that abstract systems dependencies
+&gt; 
+&gt; agreed.
+&gt; 
+&gt;&gt; =========================================================================================
+&gt;&gt; 
+&gt;&gt; weakmacro.h ==&gt; some WIN32 specific
+&gt; 
+&gt; agreed,  i think.
+&gt; 
+&gt;&gt; When files are the same, jack2 version something have some more documentation. It should be better to take them.
+&gt; 
+&gt; seems OK except that i think i've done updates and improvements to
+&gt; jack.h in the last several months that should not get lost.
+
+I hope I have reported them. But a check is needed.
+
+&gt; 
+&gt;&gt; 2) How to we proceed now?
+&gt; 
+&gt; another round of email, then i'll start merging it all into the
+&gt; "headers" repo. once that's done someone can try a build of jack2
+&gt; against the new headers.
+
+St&#xE9;phane
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1330105025.2827_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1330106139.4689_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1330105507.3609_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1330105507.3609_0.ltw:2,a&nbsp;&lt;A5301633-C8C7-4B6B-92C1-C6747BE0A3B0 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

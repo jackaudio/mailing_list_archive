@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack shutdown action</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack shutdown action</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1332018537.19218_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1332019955.20103_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1332018928.19495_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 17 Mar 2012 17:15:16 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1332018537.19218_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack shutdown action </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1332019955.20103_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack shutdown action </a></td></tr>
+</table>
+<pre>
+On Sat, Mar 17, 2012 at 5:08 PM, Fons Adriaensen &lt;[hidden]&gt; wrote:
+&gt; On Sat, Mar 17, 2012 at 04:47:09PM -0400, Paul Davis wrote:
+&gt;&gt; On Sat, Mar 17, 2012 at 4:44 PM, Fons Adriaensen &lt;[hidden]&gt; wrote:
+&gt;&gt; &gt; A simple question (reading jack.h doesn't answer it):
+&gt;&gt; &gt;
+&gt;&gt; &gt; If a client does not register a shutdown callback using
+&gt;&gt; &gt; jack_on_shutdown(), what is supposed to happen when the
+&gt;&gt; &gt; server is terminated ?
+&gt;&gt; &gt;
+&gt;&gt; &gt; Apparently the process containing the client is terminated
+&gt;&gt; &gt; in some way, but can this be relied on ?
+&gt;&gt;
+&gt;&gt; the server will not terminate any clients. the thread(s) created by
+&gt;&gt; libjack will exit at some point when/if they discover that the server
+&gt;&gt; is gone, but that may never happen.
+&gt;&gt;
+&gt;&gt; the whole point of the shutdown callback is that &#xA0;the client has no
+&gt;&gt; way to differentiate between "the server has gone" and "the server
+&gt;&gt; hasn't called me in a very, very long time.
+&gt;
+&gt; Indeed. I'm asking because I noticed that an app (in development
+&gt; and not having a shutdown callback) terminates if the server is
+&gt; stopped, even while it has other active threads. None of its code
+&gt; watching stop conditions is ever called. &#xA0;Removing the shutdown
+&gt; handler in other apps (e.g. jaaa) leads to the same result. Now I'm
+&gt; pretty sure that did not happen before. It looks as if Jack's thread
+&gt; is calling exit() or something similar when it terminates... Have
+&gt; there been recent changes in that area ?
+
+if you run this command:
+
+   find . -name \*.c -o -name \*.h | xargs grep '[^a-zA-Z]exit'
+
+on the JACK1 source tree, you'll find that the only place that the
+libjack code calls exit is immediately after a fork() to start the
+server (auto-starting).
+
+all other exits from within libjack are via pthread_exit() which
+should not take down a process. running inside gdb() with a breakpoint
+at _exit and then a backtrace may prove revealing.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1332018537.19218_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1332019955.20103_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1332018928.19495_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1332018928.19495_0.ltw:2,a&nbsp;&lt;CAFa_cKnS46XvbifGABagsjz4ez9U1y6B6EHyrFTKshW-pEir+A at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

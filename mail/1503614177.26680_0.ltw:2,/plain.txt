@@ -1,0 +1,34 @@
+Date:        Thu, 24 Aug 2017 17:35:33 -0500
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Malik Costet Re: [Jack-Devel] Jack server keeps playing sound after client disconnetcs (1503609272.21374_0.ltw:2,)
+Follow-Up:   David Kastrup Re: [Jack-Devel] Jack server keeps playing sound after client disconnetcs (1503616906.29331_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Jack server keeps playing sound after client disconnetcs
+
+On Thu, August 24, 2017 4:12 pm, Malik Costet wrote:
+> the server should not make it
+> possible for one misbehaving client to impair functionality of behaving
+> clients.
+
+In general that should be the case.  When clients are too slow in
+processing you will sometimes see jackd messages about removing
+"zombified" clients.
+The behavior you described seems like jackd for some reason was processing
+the buffers as if the client app was still filling the buffers with new
+data, when in fact it had not.
+
+I think the original message said that jackd kept playing old audio. If it
+was just jack playing out the buffers with old data I would expect at most
+maybe 30 ms of audio (e.g. 512 samples per period, 3 periods, 48k
+samples/second) which would not really be recognizable audio.  Was that
+what was meant by playing back old audio, or did it mean a recognizable
+section of audio, like 250 ms or more?  In that case I would suspect the
+application was mismanaging the buffers in some way.
+
+-- 
+Chris Caudle
+
+1503614177.26680_0.ltw:2, <5aaba6ff8abb5db03c713d7bcf2fff1a.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

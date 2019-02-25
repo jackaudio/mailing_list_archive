@@ -1,0 +1,39 @@
+Date:        Tue, 22 Aug 2017 17:41:29 -0700
+From:        Yuri  <[hidden] at rawbw dot com>
+To:          Malik Costet <[hidden] at malikc dot neomailbox dot net>, [hidden] at lists dot jackaudio dot org
+In-Reply-To: Malik Costet [Jack-Devel] Jack: "Too many servers already active" (1503448107.30378_0.ltw:2,)
+Follow-Up:   Malik Costet Re: [Jack-Devel] Jack: "Too many servers already active" (1503449218.31342_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Jack: "Too many servers already active"
+
+On 08/22/17 17:21, Malik Costet wrote:
+> Today, to my surprise, I seem to have hit upon some kind of limit, for
+> attempts to launch a server (via the command-line) fail with the message
+> "Too many servers already active". I haven't kept count, but I might
+> have successfully started and stopped a couple dozen instances of JACK
+> before that happened (only ever one at a time, though).
+
+
+Quick search through the Jack code shows that this message results from 
+Jack attempting to be helpful that ends up being unhelpful:
+
+ >         case ENOSPC:
+ >                 fprintf (stderr, "too many servers already active\n");
+ >                 exit (2);
+
+...
+
+#define    ENOSPC        28        /* No space left on device */
+
+
+You have a 'disk-full' condition. This most likely has nothing to do 
+with having "too many servers already active".
+
+Jack needs to use strerror() instead.
+
+
+Yuri
+
+1503448901.31113_0.ltw:2, <00ccde48-c9b0-ae28-827b-2ab6b2082cb4 at rawbw dot com>
+________________________________________________________________________________
+

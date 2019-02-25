@@ -1,0 +1,68 @@
+Date:        Mon, 18 May 2009 18:08:33 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Fons Adriaensen <[hidden] at kokkinizita dot net>
+Cc:          Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>, JACK Developers <[hidden] at jackaudio dot org>
+In-Reply-To: Fons Adriaensen Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments (1242657984.740_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments (1242661294.6467_0.ltw:2,a)
+Follow-Up:   Rui Nuno Capela Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments (1242662259.8170_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments
+
+Fons Adriaensen <[hidden]> writes:
+
+> On Mon, May 18, 2009 at 05:13:19PM +0300, Nedko Arnaudov wrote:
+>
+>> Fons I think we can both read C code, right?
+>> 
+>> From posix/JackPosixServerLaunch.cpp, line 166:
+>> 
+>> static int start_server(const char* server_name, jack_options_t options)
+>> {
+>>     if ((options & JackNoStartServer) || getenv("JACK_NO_START_SERVER")) {
+>>         return 1;
+>>     }
+>> 
+>> #if defined(JACK_DBUS)
+>>     return start_server_dbus(server_name);
+>> #else
+>> ....
+>>     jackd fork/exec stuff
+>> ....
+>
+> I can read this and it can mean different things.
+>
+> - This code is not involved in what happens
+> - The value of the options argument is wrong.
+
+It is involved in what happenes. At least from what I've got about the
+problem you have.
+
+You have installed jack package that does not work well with
+qjackctl (dbus enabled one). Your application autostarted jack server
+through dbus. But you havent configured it. QJackCtl is dbus
+ignorant. You should not use qjackctl with jackdbus system. Unless you
+know what you are doing. Or unless qjackctl gets jackdbus support.
+
+jackdrc style commandline options for jackd are for jackd. They are not
+used for jackdbus. They cant be used for jackdbus. Because of the object
+activation works in all distributed object systems I know. This includes
+DCOM and D-Bus.
+
+>> presence of process with "jackdbus auto' commandline those not mean that
+>> *server* is started. This is the dbus service, not the jack server
+>> running.
+>
+> I know that. The fact remains that when the 'jackdus auto'
+> daemon is running a jackd is started whenever qjackctl is
+> started. You can go on to deny this, but that doesn't 
+> change the facts.
+
+So you complain about qjackctl missing support for jackdbus? Having that
+will be nice :)
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: DE1716B0>
+
+1242659373.3273_0.ltw:2,a <87ljouh2j2.fsf at usbix dot spacelabs dot org>
+________________________________________________________________________________
+

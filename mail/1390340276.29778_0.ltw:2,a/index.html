@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] new IIO driver added to jack - large overruns</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] new IIO driver added to jack - large overruns</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1390338769.28875_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1390340677.30109_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1390340276.29778_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 22 Jan 2014 08:37:42 +1100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Matt Flax </span> &lt;[hidden] at flatmax dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Adrian Knoth
+<a href='../1390310507.11620_0.ltw:2,a/index.html'>Re: [Jack-Devel] new IIO driver added to jack - large overruns </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Matt Flax
+<a href='../1391662245.12392_0.ltw:2,a/index.html'>Re: [Jack-Devel] new IIO driver added to jack - large overruns </a></td></tr>
+</table>
+<pre>
+Thanks for the suggestions...
+
+On 22/01/14 00:21, Adrian Knoth wrote:
+&gt; On Tue, Jan 21, 2014 at 11:48:55PM +1100, Matt Flax wrote:
+&gt; If so:
+&gt;
+&gt;&gt; I have found that jack isn't pulling much cpu time at all when
+&gt;&gt; operating the iio driver. Top reports that it chews about 3% of the
+&gt;&gt; cpu power. This suggests that a lot of the delay is coming from
+&gt;&gt; kernel related servicing of the iio read calls.
+&gt;&gt;
+&gt;&gt; The small overruns can probably be removed by reading from the DMA
+&gt;&gt; buffer in the background, but I would need to do some form of
+&gt;&gt; locking and unlocking ... whether it be polling in user space or
+&gt;&gt; some atomic lock system ...
+&gt; The usual approach is to be woken up from the kernel whenever some parts
+&gt; of the buffer (let's say one half for a start) are ready for processing.
+&gt;
+&gt; This doesn't require locking. Thing is, it's a bit hard to give useful
+&gt; hints, since you're developing an entirely new driver, that is, only you
+&gt; know the details.
+&gt;
+&gt; So as a general advice, here's what you can do:
+&gt;
+&gt;     1.) Have a look at some PCI ALSA drivers and/or read the ALSA driver
+&gt;         tutorial. Even if you really don't want to write an ALSA driver,
+&gt;         you'll at least understand the basic approach taken in jackd.
+&gt;
+&gt;
+&gt;     2.) If you're dealing with a userspace driver, maybe have a look at
+&gt;         FFADO and its jackd integration. Note that the FFADO project has
+&gt;         shown that you really want kernel-level streaming, so userspace
+&gt;         drivers are generally more headache than necessary.
+I have been referencing all drivers for information and ideas ... it has 
+been very helpful.
+Bare in mind that IIO is already implemented using DMA into kernel 
+memory space. There is a driver which streams all of the samples over 
+/dev/iio:device0, /dev/iio:device1 and so on.
+
+&gt;     3.) Take a shortcut and hire Paul Davis, Clemens Ladisch or Daniel
+&gt;         Mack. No idea if any of these guys is available for freelancing
+&gt;         at the moment. They know Linux audio inside out and hence know
+&gt;         how to do it right.
+&gt;
+&gt;
+&gt; I don't know your hardware at hand, but unless you have very good
+&gt; reason, I strongly encourage you to write an ALSA driver. This way, your
+&gt; audio device would automatically work with jack1 AND jack2, so no need
+&gt; for porting.
+Yep - that was my first thought, however as there is already a nice iio 
+driver with ring buffers and so on, the thought is to simply use them.
+
+&gt;
+&gt; Just my &#x20AC;0.02
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1390338769.28875_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1390340677.30109_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1390340276.29778_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1390340276.29778_0.ltw:2,a&nbsp;&lt;52DEE8A6.5050000 at flatmax dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

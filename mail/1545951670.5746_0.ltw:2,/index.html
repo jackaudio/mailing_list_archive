@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Sudden Pulseaudio Faulure reported due to jack</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Sudden Pulseaudio Faulure reported due to jack</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1545860519.29259_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1545969144.17441_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1545951670.5746_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 28 Dec 2018 01:00:40 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Nedko Arnaudov </span> &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>[hidden] at grossmann-venter dot com
+<a href='../1545614412.17865_0.ltw:2,/index.html'>Re: [Jack-Devel] Sudden Pulseaudio Faulure reported due to jack </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Holger Marzen
+<a href='../1545979314.25227_0.ltw:2,/index.html'>Re: [Jack-Devel] Sudden Pulseaudio Faulure reported due to jack </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Chris Caudle
+<a href='../1546021019.28653_0.ltw:2,/index.html'>Re: [Jack-Devel] Sudden Pulseaudio Faulure reported due to jack </a></td></tr>
+</table>
+<pre>
+&gt;&gt; I cannot tell from the error messages whether the problem is jackd
+&gt;&gt; is not
+&gt;&gt; running when expected, or if jackd is running but for some reason Pulse
+&gt;&gt; cannot make a connection.
+
+The history of calling both jackd and jackdbus jack servers "jackd" did
+not make things clearer. Naming of module-jackdbus-detect.so already
+suggests that PulseAudio uses shared library to communicate with
+jackdbus (not jackd) and detect something (whether jack server in
+jackdbus is running). Whether suggestion is a fact or not is best
+checked in the source code, when documentation is not available.
+
+&gt; I am using AVLinux which is Debian9 Stretch.
+&gt;
+&gt; I cannot edit config files if I dont know how all these
+&gt; pulseaudio/jack/alsa daemons interact.
+
+IIRC the information used to be in the jackaudio.org trac wiki.
+Maybe someone else on this list knows if the trac wiki is still
+accessible somehow.
+
+&gt; Therefore,
+&gt; Do you have a suggestion how I should approach the startup of these
+&gt; daemons.
+
+To my knowledge PulseAudio works better with jackdbus over D-Bus
+than with jackd. I'm even surprised it works at all with jackd. After
+all jackdbus is "jack server" that can be autolaunched, controlled and
+monitored over D-Bus :)
+
+When D-Bus was introduced to jackd, it was only for reservation protocol
+used for coordination (with PulseAudio) of audio device ownership/use.
+The purpose of this reservation protocol is/was to allow jack server
+take audio device ownership from PulseAudio.
+
+In contrast, jackdbus exposes jack server control API over D-Bus and
+also uses the audio device reservation protocol (which also works over
+D-Bus).
+
+PulseAudio (still?) uses the jackdbus control API.
+
+Also, systems with both jackdbus and jackd executables, while possible,
+are more complex to setup than ones with jackd or jackdbus only and at
+least some of linux distros keep proving this for years.
+
+Another common issue with such complex setups comes from the fact that
+libjack.so that is used by JACK applications, can autostart the jack
+server. libjack.so (source) code can autostart jack server in
+jackd or in jackdbus but which one is proper depends on particular
+system setup.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1545860519.29259_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1545969144.17441_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1545951670.5746_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1545951670.5746_0.ltw:2,&nbsp;&lt;85efa21so7.fsf at arnaudov dot name&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

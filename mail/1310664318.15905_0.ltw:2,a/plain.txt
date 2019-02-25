@@ -1,0 +1,33 @@
+Date:        Thu, 14 Jul 2011 19:25:00 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          JACK Mailing List <[hidden] at lists dot jackaudio dot org>
+
+Subject:     [Jack-Devel] jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT"
+
+Hi there,
+
+I'm occasionally experiencing
+  JackActivationCount::Signal value = 0 ref = <INT>
+errors with jackdmp 1.9.8
+
+They seem more frequent when running in synchronous mode
+ 'jackd -S ..' or 'jackcfg engine sync boolean true'
+and mostly with (but not limited to) ardour3.
+
+I hazard a guess that it's related to high DSP load:
+  I can almost always reproduce it by adding a couple of CPU intense
+foo-yc20 organs as LV2 plugin in ardour3. It works OK for a while
+but once the first of these messages appear it goes downward:
+ardour3 adds to the [CPU] load by printing those frequent messages to
+the log-window; which in turn produces more "JackActivationCount"
+messages until the ardour becomes almost completely unresponsive.
+
+Is the assumption right that "JackActivationCount" is related to
+DSP-load/x-runs?  How could one track this down?
+
+TIA,
+robin
+
+1310664318.15905_0.ltw:2,a <4E1F266C.30607 at gareus dot org>
+________________________________________________________________________________
+

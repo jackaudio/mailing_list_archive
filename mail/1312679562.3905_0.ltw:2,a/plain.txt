@@ -1,0 +1,80 @@
+Date:        Sat, 06 Aug 2011 19:12:15 -0600
+From:        Dan Swain  <[hidden] at gmail dot com>
+To:          Jeroen Van den Keybus <[hidden] at gmail dot com>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Dan Swain Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1312661721.1266_0.ltw:2,a)
+Follow-Up:   Dan Swain Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1313356915.31433_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea
+
+On Sat, Aug 6, 2011 at 2:15 PM, Dan Swain <[hidden]> wrote:
+
+>
+>
+> On Sat, Aug 6, 2011 at 10:22 AM, Dan Swain <[hidden]> wrote:
+>
+>> On Sat, Aug 6, 2011 at 3:17 AM, Jeroen Van den Keybus <
+>> [hidden]> wrote:
+>>
+>>> In my original post, I proposed slave hardware that would synchronize its
+>>> local clock to sync packets from a regular Jack server (digital PLL),
+>>> advertise a fixed amount of (floating point) and MIDI channels to the
+>>> server, get packet/period/... data from the server and start sending
+>>> receiving data over UDP continuously. The software needs to emulate a
+>>> fixed-configuration NetJack2 client, which can eventually be done without an
+>>> IP stack, since the initial communication is done using broadcasts.
+>>> Therefore: small software footprint ==> no EEPROM or DRAM on the board
+>>> ==> low pin-count FPGA ==> low cost. Since we're trying to digitize
+>>> precision analog signals, reduction of power (no high-current
+>>> switching voltage regulators) and omission of memory (no noisy digital
+>>> memory lines) is also a good thing for circuit design.
+>>>
+>>
+>>>
+>> ...
+>
+>>
+>> Jeroen, are the components you listed in your first response still
+>> applicable for this method?
+>>
+>
+> I've just been researching the parts that you've listed, and I'll make sure
+> to download and read the data sheet for the EP3C10.
+>
+> As for the Ethernet, I've found two controllers that may be worth looking
+> at - either the Microchip ENC424J600 (10/100 Base-T), or the Marvell Yukon
+> Ultra II (8E8057, which is 1000 Base-T). The microchip design sounds quite
+> promising, as I came across its 10Base-T 'cousin' when looking at the Open
+> Open Sound Controller project.
+>
+> I may be thinking about this incorrectly, but my approach to have the ADC
+> talk to JACK on the FPGA was to have some kind of ALSA 'driver' for that
+> chip running in the FPGA, passing the data through JACK to the Ethernet
+> controller. Alas, the CS5368 chip isn't supported in ALSA, but we could use
+> the CMI8788 chip, which is almost exactly the same.
+>
+> Then again, am I thinking about this incorrectly? If we could pass the
+> signals directly to the JACK system (literally give the data it wants), that
+> would circumvent another software layer in the FPGA...
+>
+
+I apologise, I misread the datasheet for the CS5368, so I change my
+viewpoint on that IC, as it would be perfect for this project (which is why
+you recommended it!). Actually, one of the circuits I came across for the
+ADC section of the device uses that chip:
+http://www.beis.de/Elektronik/ADDA24QS/ADDA24QS.html <-- The designer is
+aiming for quality rather than cost savings, so again I'm sorry for the
+false analysis!
+
+I was also looking more at Altera's tutorial videos on YouTube, and if the
+Cyclone III chip has enough space left, maybe we could create a device on
+the chip itself, so that the digital audio signals can be sent to the JACK
+server on the chip correctly. From what I've seen of this chip's
+capabilities, I'm not sure that we'd be stressing it too much (for a
+relative example, one of the video capture cards we use at my workplace has
+the first Cyclone chip, which can handle 16 channels of 704x480, 16-bit
+video at 7fps per channel)!
+
+1312679562.3905_0.ltw:2,a <CABhkv4MXY0ZZP066gptGFCUMEdOOiZbdBjs+pH=htmvVk0nq=Q at mail dot gmail dot com>
+________________________________________________________________________________
+

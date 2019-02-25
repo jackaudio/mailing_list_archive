@@ -1,0 +1,52 @@
+Date:        Tue, 09 Apr 2013 16:45:42 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Harry van Haaren <[hidden] at gmail dot com>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Harry van Haaren Re: [Jack-Devel] Graph callback and client state (1365540096.16917_0.ltw:2,a)
+Follow-Up:   Harry van Haaren Re: [Jack-Devel] Graph callback and client state (1365540517.17286_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Graph callback and client state
+
+On Tue, Apr 9, 2013 at 4:41 PM, Harry van Haaren <[hidden]>wrote:
+
+> On Tue, Apr 9, 2013 at 9:29 PM, Paul Davis <[hidden]>
+> wrote:
+> > the graph order callback only reflects changes in connectivity.
+> Essentially an "active" flag change would signify an chance in
+> connectivity though right?
+> Perhaps not directly, but a possible change in connectivity, since a port
+> getting deactivated would have its connections cut?
+> I'll agree its slightly changing the exact meaning of the
+> GraphOrderCallback, but only to include a new feature?
+>
+> > even if you use other callbacks, they arrive in specific threads,
+> probably not the thread that got the port info.
+> That's for the (patchbay) client to deal with..? Enter the apps messaging
+> system or trylock()?
+>
+
+you're really missing the point here.
+
+the only way you could possibly solve this issue is if the JACK API allowed
+for something like this:
+
+   jack_lock_graph (client_handle);
+   jack_get_ports (client_handle, ....);
+   DO_SOMETHING_WITH_PORTS (client_handle, ports, ...)
+   jack_unlock_graph (client_handler);
+
+but oops, now the client has locked the graph meaning nothing can be added,
+removed or reconnected and no client can arrive or depart. so now you have
+to have the notion of an
+"all-other-clients-can't-touch-graph-but-i-can-lock" which is absurd, and
+baroque.
+
+the API in this type of system is inherently racy. you can't fix that with
+bandaids. the state of the world can change at ANY time, and even if you
+get told about it, that wiill not help you deal with the fact that some of
+the ports you've been told about have changed state or that there may be
+new ports that you don't know about.
+
+1365540349.17135_0.ltw:2,a <CAFa_cKm4h75EvrEv1Hat5E8nNdyN7md+rbJeDUTFa8xO=ZJPRg at mail dot gmail dot com>
+________________________________________________________________________________
+

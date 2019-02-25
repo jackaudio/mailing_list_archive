@@ -1,0 +1,85 @@
+Date:        Wed, 11 Sep 2013 16:33:17 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Wolfgang Lorenz <[hidden] at gmx dot de>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Wolfgang Lorenz Re: [Jack-Devel] Using the callback free API with self-created RT-threads (1378902559.23297_0.ltw:2,)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Using the callback free API with self-created RT-threads (1378911073.31237_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Using the callback free API with self-created RT-threads
+
+The better way would be to use the JACK RT thread and implement the real code in the function given with jack_set_process_thread. (so in your case in  JackDriver::threads). This function would use the  jack_cycle_wait/jack_cycle_signal API. Then you can create additional workers threads, and add the proper synchronization mechanism between the JACK RT "master" thread at the worker threads.
+
+Stéphane
+
+Le 11 sept. 2013 à 14:29, Wolfgang Lorenz <[hidden]> a écrit :
+
+> Thanks Stéphane and Paul for your replies.
+> 
+> Am Tue, 10 Sep 2013 16:49:24 +0200
+> schrieb Stéphane Letz <[hidden]>:
+> 
+>> AFAIR the jack_cycle_wait function is supposed to fail (and so properly
+>> quit the thread) if the server is shutdown. On which OS are you
+>> testing?
+> 
+> I'm on Linux (mainly Fedora) with the current stable version of JACK,
+> built from the sources. (JACK 1.9.9.5, that is.)
+> http://www.jackaudio.org/downloads/jack-1.9.9.5.tar.bz2
+> 
+>> Can you send me tour jack_cycle_wait/jack_cycle_signal based code?
+> 
+> I've attached an example file, with a setup similar to the project, I'm
+> working on. But not quite: For simplicity I only create one thread, as
+> the synchronization with other threads is not my problem ;-). Also, in
+> this example I don't require RT threads. As I am currently operating
+> only in user space (for testing purposes), I don't have the permissions
+> anyway: The same applies to the JACK server.
+> 
+> The program simply sets up one thread, in which a loop is run, that
+> uses jack_cycle_wait() and jack_cycle_signal(), to synchronize the
+> reading and writing of audio data.
+> 
+>> Thanks.
+>> 
+>> Stéphane
+> 
+> Am Tue, 10 Sep 2013 10:54:57 -0400
+> schrieb Paul Davis <[hidden]>:
+> 
+>> On Tue, Sep 10, 2013 at 10:35 AM, Wolfgang Lorenz <[hidden]> wrote:
+>> 
+>>> 
+>>> But what I wanted to know is: Is this really the way the callback-free
+>>> API is supposed to work? Does anybody else see this as a problem or bug
+>>> that should be fixed?
+>>> 
+>> 
+>> (1) for reference, ardour has used the "callback free API" for years
+>> without issues (including server shutdown)
+> 
+> I had a look at the sources: Ardour is using the JACK-provided thread.
+> That's what I wanted to avoid, as I could simply have used the callback
+> API. I've tried to start it to see how it behaves, but the current
+> git-version crashes instantly SIGSEGVs at startup. I currently don't
+> have the time to investigate much further, but thank you for the hint.
+> 
+>> (2) your use of JACK sounds odd. whether you use the callback API or the
+>> callback-free one, audio processing
+>>       needs to be driven by the audio interface, not your code. the way
+>> you have described doesn't make it
+>>      clear to me that this is the case.
+> 
+> Please, have a look at the attached file, for an example, of how I
+> wanted to use it.
+> 
+> 
+> Greetings,
+>  Wolfgang
+> <jackPipe.cpp>
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1378910013.29467_0.ltw:2, <D5D0438F-BC8C-4343-83B8-58FE05BB43DD at grame dot fr>
+________________________________________________________________________________
+

@@ -1,0 +1,64 @@
+Date:        Thu, 02 Aug 2012 22:54:25 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Devin Anderson <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org, [hidden] at yahoogroups dot com
+In-Reply-To: Devin Anderson Re: [Jack-Devel] OS X jack midi message issues between jack and core midi (1343936461.17368_0.ltw:2,a)
+Follow-Up:   Devin Anderson Re: [Jack-Devel] OS X jack midi message issues between jack and core midi (1343958269.2064_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] OS X jack midi message issues between jack and core midi
+
+Le 2 août 2012 à 21:40, Devin Anderson a écrit :
+
+> On Mon, Jul 16, 2012 at 12:00 AM, Stéphane Letz <[hidden]> wrote:
+> 
+>> JackOSX indeed uses jack2, but building the whole stuff is a bit of
+>> pain... I'll try to do that and prepare a new package this week.
+> 
+> I got around to looking at the JACK 2 code on github.com/jackaudio,
+> and I don't see the fix applied for duplicate messages that I sent
+> over.  I think the fix should be applied.
+
+The patch has been applied on my private tree and is part of latest JackOSX package, but it does not seem to fix the issue.
+> 
+> As far as dropped messages go, I noticed that the ProcessRead() and
+> ProcessWrite() calls in JackCoreMidiDriver now have TryLock() calls:
+> 
+>    int
+>    JackCoreMidiDriver::ProcessRead()
+>    {
+>        int res;
+>        if (Trylock()) {
+>            res = (fEngineControl->fSyncMode) ? ProcessReadSync() :
+> ProcessReadAsync();
+>            Unlock();
+>        } else {
+>            res = -1;
+>        }
+>        return res;
+>    }
+> 
+>    int
+>    JackCoreMidiDriver::ProcessWrite()
+>    {
+>        int res;
+>        if (Trylock()) {
+>            res = (fEngineControl->fSyncMode) ? ProcessWriteSync() :
+> ProcessWriteAsync();
+>            Unlock();
+>        } else {
+>            res = -1;
+>        }
+>        return res;
+>    }
+> 
+> Could this be the reason for the dropped messages?
+
+This lock was added to avoid race when the CoreMIDI setup is dynamically changed, causing the JackCoreMidiDriver::Restart function to be called. It is not happening in this specific case.
+
+So the issue still seems there...
+
+Stephane 
+
+1343940887.24252_0.ltw:2,a <9CEAF81F-C954-4CE0-A9B0-5C7BD8233227 at grame dot fr>
+________________________________________________________________________________
+

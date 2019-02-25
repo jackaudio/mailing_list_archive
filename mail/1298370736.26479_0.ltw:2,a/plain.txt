@@ -1,0 +1,50 @@
+Date:        Tue, 22 Feb 2011 11:31:50 +0100
+From:        torbenh  <[hidden] at gmx dot de>
+To:          Florian Faber <[hidden] at faberman dot de>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Florian Faber Re: [Jack-Devel] issues with latency management with "complex" clients (1298364309.12688_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] issues with latency management with "complex" clients
+
+On Tue, Feb 22, 2011 at 09:44:51AM +0100, Florian Faber wrote:
+> Paul,
+> 
+> > So the question is: should anything be done about this? Should ardour
+> > force a recompute of the latencies when a track changes modes? This is
+> > quite expensive and definitely non-RT in jack1; its doable with
+> > tschak. jack2 does not have an implementation of this latency API yet.
+> > Could we just redefine the latency specifications into something that
+> > is still useful, but avoids this issue? Or something else?
+> 
+> The question is: Does jack want to stay confined to a single system? If
+> not, I'd propose using timestamps on incoming samples and defininition
+> of a system latency. This not only allows to specify exactly when data
+> is to be played out (sample synchronicity across all clients, even with
+> different path lengths), it also would allow jack to keep in touch with
+> upcoming audio standards.
+
+as long as jack doesnt do latency compensation, this is not possible.
+
+iff jack does latency compensation, things might look different.
+(i am not against this, but its a pretty deep change, and i am not sure
+about all implications of this, its a new api, and i dont really know if
+we can make legacy jack clients compatible with this (maybe all clients
+that dont do latency comp))
+
+when we start dealing with timestamped audio buffers, there is not much
+point in still executing the graph in a synchronous way, like we are
+doing now. so i basically think, that this is a good candidate for jack3
+
+
+what is possible with this new latency api is to extend the latency
+computation to a whole netjack graph.
+
+but i think this is off topic for this thread.
+
+
+-- 
+torben Hohn
+
+1298370736.26479_0.ltw:2,a <20110222103150.GB11548 at siel dot b>
+________________________________________________________________________________
+

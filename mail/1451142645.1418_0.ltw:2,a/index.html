@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack dsp load calculation</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack dsp load calculation</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1451140920.32184_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1451144317.3107_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1451142645.1418_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 26 Dec 2015 15:10:37 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> John Emmas </span> &lt;[hidden] at tiscali dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1451140920.32184_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack dsp load calculation </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1451144317.3107_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack dsp load calculation </a></td></tr>
+</table>
+<pre>
+On 26/12/2015 14:41, Robin Gareus wrote:
+&gt; I like Nedko's idea: Allow to query all: min, average, max  over a long
+&gt; time compared to the process-cycle (think second or seconds).
+&gt;
+
+Hmm...  I didn't get that email for some reason.  But yes - as a feature 
+update, that sounds promising.  I'm just pointing out that (a) the 
+averaging mechanism / hybrid approach is NOT the underlying cause of the 
+problem you described - and (b) in Mixbus and Ardour, we can already 
+make a solution which wouldn't need us to tinker with Jack.  i.e. the 
+following strategy instead of our current one:-
+
+       if ( the_client-&gt;got_notified_about_an_xrun() ) {
+             //  We know that an xrun occurred since we last checked
+             //  the CPU load - so do something to accommodate that.
+
+             //  and then reset the notification flag
+             reset_the_xrun_notification_flag ();
+       } else {
+             //  No xrun was encountered - so we can update normally...
+             update_cpu_load ();
+       }
+
+That would be very simple to implement and I honestly think we should 
+try that first, before tinkering too much with Jack.
+
+John
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1451140920.32184_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1451144317.3107_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1451142645.1418_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1451142645.1418_0.ltw:2,a&nbsp;&lt;567EADED.3040400 at tiscali dot co dot uk&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

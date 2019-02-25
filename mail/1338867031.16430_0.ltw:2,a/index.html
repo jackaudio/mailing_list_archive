@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] [LAU] jack2 turned verbose</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] [LAU] jack2 turned verbose</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1338858367.12131_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1338869538.18103_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338867031.16430_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 05 Jun 2012 06:30:13 +0300 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Nedko Arnaudov </span> &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Brendan Jones &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Brendan Jones
+<a href='../1338840383.2949_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Brendan Jones
+<a href='../1338869538.18103_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+</table>
+<pre>
+Brendan Jones &lt;[hidden]&gt; writes:
+
+&gt;&gt; http://lists.linuxaudio.org/listinfo/linux-audio-user
+&gt;
+&gt; I've had a closer look at this and this patch seems to be working for
+&gt; me (their's no equivalent bool in jack_driver_param_value_t)
+&gt;
+&gt; diff -Nurp '-x*~' jack-1.9.8.orig/common/JackControlAPI.cpp
+&gt; jack-1.9.8/common/JackControlAPI.cpp
+&gt; --- jack-1.9.8.orig/common/JackControlAPI.cpp	2011-12-19
+&gt; 12:54:02.000000000 +0100
+&gt; +++ jack-1.9.8/common/JackControlAPI.cpp	2012-06-04 21:57:59.264581780 +0200
+&gt; @@ -246,7 +246,7 @@ jackctl_add_driver_parameters(
+&gt;              break;
+&gt;          case JackDriverParamBool:
+&gt;              jackctl_type = JackParamBool;
+&gt; -            jackctl_value.b = descriptor_ptr-&gt;value.i;
+&gt; +            jackctl_value.b = (descriptor_ptr-&gt;value.i &gt; 0);
+&gt;              break;
+&gt;          default:
+&gt;              jack_error("unknown driver parameter type %i",
+&gt; (int)descriptor_ptr-&gt;type);
+
+Does "working for me" mean that verbose is not enabled by default anymore?
+
+The verbose parameter is not driver parameter, so it should not
+be affected by this code at all.
+
+My reading of the C++ standard is that the implicit conversion is
+valid. C++11, section 4.12 states:
+
+"A prvalue of arithmetic, unscoped enumeration, pointer, or pointer to
+member type can be converted to a prvalue of type bool. A zero value,
+null pointer value, or null member pointer value is converted to false;
+any other value is converted to true. A prvalue of type std::nullptr_t
+can be converted to a prvalue of type bool; the resulting value is
+false."
+
+Of course, explicit conversion is valid as well. I still claim that the
+generated code for jackctl_add_parameter() calls for "temporary" and
+"verbose" engine parameters is wrong because it pushes union
+jackctl_parameter_value with value of 10 (for both bool and integer
+members) while it should push false/0. both 1 and 10 are true, not
+false. the default value for both parameters is false.
+
+-- 
+Nedko Arnaudov &lt;GnuPG KeyID: 5D1B58ED&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1338858367.12131_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1338869538.18103_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338867031.16430_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1338867031.16430_0.ltw:2,a&nbsp;&lt;87aa0ixwoq.fsf at arnaudov dot name&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

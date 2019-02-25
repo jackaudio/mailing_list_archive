@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack 0.120 - ALSA backend</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack 0.120 - ALSA backend</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302962987.23835_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302967294.32137_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302966386.30389_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 16 Apr 2011 17:06:07 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> torbenh </span> &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1302947251.24326_0.ltw:2,a/index.html'>[Jack-Devel] Jack 0.120 - ALSA backend </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1303037298.3718_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 0.120 - ALSA backend </a></td></tr>
+</table>
+<pre>
+On Sat, Apr 16, 2011 at 09:47:18AM +0000, Fons Adriaensen wrote:
+&gt; A second quick question: have there been changes to
+&gt; the ALSA backend recently ?
+
+the diff is attached.
+i dont really see anything that might cause it.
+
+the most possible i am currently seeing is 
+http://trac.jackaudio.org/changeset/4126
+
+i dont have a loopback here.
+but if the problem is easily reproducible, you could just bisect it.
+
+http://eu.kernel.org/pub/software/scm/git/docs/git-bisect.html
+
+i updated the master branch on
+git://hochstrom.endofinternet.org/jack.git
+
+git bisect start
+git bisect bad
+git bisect good 0.118.0 
+
+should get you going.
+
+&gt; 
+&gt; 
+&gt; I can now trigger the problem reported before quite
+&gt; easily.
+&gt; 
+&gt; 1. Start jack using the ALSA backend and with -n 3.
+&gt; 
+&gt; 2. Start and wire up jack_iodelay. Make the required
+&gt;    external loopback.&#xA0;There is already a chance that
+&gt;    it will show the latency for -n 2 instead of the
+&gt;    expected one. In any case leave it running.
+&gt; 
+&gt; 3. Start a second jack client, one that will not 
+&gt;    exit cleanly but trigger a 'subgraph time out'
+&gt;    when termintated with ctl-C. Jack_iodelay itself
+&gt;    will do fine. No need to connect its ports.
+&gt; 
+&gt; 4. Terminate the second app. There is a good chance
+&gt;    that the measured delay will switch between the
+&gt;    expected values for -n 2 and -n 3.
+&gt; 
+&gt; 5. When the latency is the -n 2 value, check that
+&gt;    the signal is still passing via the external
+&gt;    loopback by disconnecting it for a second.
+&gt; 
+&gt; 6. Repeat 3,4,5 to taste.
+
+So it randomly siwtches between 2 and 3 ?
+
+&gt; 
+&gt; 
+&gt; Conclusions:
+&gt; 
+&gt; * Measuring the latency for -n 2 while it should be
+&gt;   the one for -n 3, and the signal used *is* the one
+&gt;   via the external loopback is possible only if there
+&gt;   is some error in setting up the ALSA device in the
+&gt;   backend. There is no way the jack engine could 
+&gt;   'short circuit' the loop if signal being measured
+&gt;   is passing via the external loopback.
+&gt; 
+&gt; * This is confirmed by a 'subgraph timeout' triggering
+&gt;   a change in measured latency. IIRC this means a
+&gt;   restart of the ALSA device. 
+&gt; 
+&gt; So I'm now pretty sure there is some problem in the
+&gt; ALSA backend.
+
+dont really have an idea on this one.
+
+&gt; 
+&gt; Ciao,
+&gt; 
+&gt; -- 
+&gt; FA
+&gt; 
+&gt; 
+&gt;    
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+-- 
+torben Hohn
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302962987.23835_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302967294.32137_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302966386.30389_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1302966386.30389_0.ltw:2,a&nbsp;&lt;20110416150607.GE21881 at siel dot b&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

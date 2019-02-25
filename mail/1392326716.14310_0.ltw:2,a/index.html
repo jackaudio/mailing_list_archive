@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] [PATCH 2/6] systemdeps.h added a new defined case __ARM__ to clear the POST_PACKED_STRUCTURE for ARM compilation. Downgraded eigen3 and sox version requirements for building iio. Switched to using IIOMMap to access the IIO subsystem. Added the overloaded methods for JackIIODriver::Attach, JackIIODriver::Detach, JackIIODriver::Read and JackIIODriver::Write. Rewrite the JackIIODriver.C code to work properly.</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] [PATCH 2/6] systemdeps.h added a new defined case __ARM__ to clear the POST_PACKED_STRUCTURE for ARM compilation. Downgraded eigen3 and sox version requirements for building iio. Switched to using IIOMMap to access the IIO subsystem. Added the overloaded methods for JackIIODriver::Attach, JackIIODriver::Detach, JackIIODriver::Read and JackIIODriver::Write. Rewrite the JackIIODriver.C code to work properly.</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1392326713.14291_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1392326720.14312_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1392326716.14310_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 14 Feb 2014 08:24:43 +1100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Matt Flax </span> &lt;[hidden] at flatmax dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Matt Flax
+<a href='../1392326701.14272_0.ltw:2,a/index.html'>[Jack-Devel] [PATCH 0/6] Jack2 IIO driver </a></td></tr>
+</table>
+<pre>
+---
+ codeBlocks/jack2.cbp      |   1 +
+ codeBlocks/jack2.layout   | 187 ++++++++++++++++++++----------
+ common/jack/systemdeps.h  |   2 +-
+ linux/iio/JackIIODriver.C | 288 +++++++++++++++++++++++++++-------------------
+ linux/iio/JackIIODriver.H |  36 +++---
+ linux/wscript             |  31 +----
+ 6 files changed, 323 insertions(+), 222 deletions(-)
+
+diff --git a/codeBlocks/jack2.cbp b/codeBlocks/jack2.cbp
+index f2f56db..8d49beb 100644
+--- a/codeBlocks/jack2.cbp
++++ b/codeBlocks/jack2.cbp
+@@ -570,6 +570,7 @@
+ 		&lt;Unit filename="../tests/testSynchroServerClient.cpp" /&gt;
+ 		&lt;Unit filename="../tests/testThread.cpp" /&gt;
+ 		&lt;Unit filename="../tests/wscript" /&gt;
++		&lt;Unit filename="../waf" /&gt;
+ 		&lt;Unit filename="../windows/JackAtomic_os.h" /&gt;
+ 		&lt;Unit filename="../windows/JackCompilerDeps_os.h" /&gt;
+ 		&lt;Unit filename="../windows/JackMMCSS.cpp" /&gt;
+diff --git a/codeBlocks/jack2.layout b/codeBlocks/jack2.layout
+index 5246258..ce7dad1 100644
+--- a/codeBlocks/jack2.layout
++++ b/codeBlocks/jack2.layout
+@@ -1,44 +1,54 @@
+ &lt;?xml version="1.0" encoding="UTF-8" standalone="yes" ?&gt;
+ &lt;CodeBlocks_layout_file&gt;
+ 	&lt;ActiveTarget name="Debug" /&gt;
+-	&lt;File name="../common/JackAudioDriver.cpp" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../common/JackAudioDriver.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="4660" topLine="27" /&gt;
++			&lt;Cursor1 position="3119" topLine="7" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/Jackdmp.cpp" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../linux/firewire/JackFFADODriver.cpp" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="4598" topLine="118" /&gt;
++			&lt;Cursor1 position="31011" topLine="804" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackThreadedDriver.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="2427" topLine="63" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/JackArgParser.cpp" open="1" top="0" tabpos="15" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../common/JackAudioAdapterInterface.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="5240" topLine="36" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackArgParser.cpp" open="0" top="0" tabpos="15" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+ 			&lt;Cursor1 position="6777" topLine="174" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/JackThreadedDriver.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../common/Jackdmp.cpp" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="1045" topLine="18" /&gt;
++			&lt;Cursor1 position="4598" topLine="118" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/netjack.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../linux/driver.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="2364" topLine="63" /&gt;
++			&lt;Cursor1 position="1320" topLine="25" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../linux/iio/JackIIODriver.C" open="1" top="1" tabpos="5" split="0" active="1" splitpos="0" zoom_1="2" zoom_2="0"&gt;
++	&lt;File name="../common/netjack.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="6665" topLine="143" /&gt;
++			&lt;Cursor1 position="2364" topLine="63" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../wscript" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../common/shm.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="6258" topLine="129" /&gt;
++			&lt;Cursor1 position="17836" topLine="711" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../linux/firewire/JackFFADODriver.cpp" open="1" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../dbus/wscript" open="0" top="0" tabpos="14" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="30896" topLine="804" /&gt;
++			&lt;Cursor1 position="814" topLine="44" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+ 	&lt;File name="../common/JackDummyDriver.cpp" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+@@ -46,14 +56,29 @@
+ 			&lt;Cursor1 position="950" topLine="15" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/JackError.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../common/JackLoopbackDriver.cpp" open="0" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="2588" topLine="78" /&gt;
++			&lt;Cursor1 position="2289" topLine="93" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/JackDriver.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../common/JackArgParser.h" open="0" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="0" topLine="108" /&gt;
++			&lt;Cursor1 position="836" topLine="0" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../waf" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="43" topLine="1" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../linux/alsa/JackAlsaAdapter.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="3500" topLine="23" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../linux/freebob/JackFreebobDriver.h" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="2786" topLine="41" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+ 	&lt;File name="../linux/alsa/JackAlsaDriver.h" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+@@ -61,99 +86,109 @@
+ 			&lt;Cursor1 position="1319" topLine="36" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/JackControlAPI.cpp" open="0" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../linux/wscript" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="10513" topLine="360" /&gt;
++			&lt;Cursor1 position="4882" topLine="94" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/driver_interface.h" open="1" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../linux/JackLinuxTime.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="4239" topLine="0" /&gt;
++			&lt;Cursor1 position="0" topLine="93" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../linux/driver.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../solaris/oss/JackBoomerDriver.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="1320" topLine="25" /&gt;
++			&lt;Cursor1 position="0" topLine="122" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../linux/freebob/freebob_driver.h" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../common/JackInternalClient.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="0" topLine="0" /&gt;
++			&lt;Cursor1 position="877" topLine="13" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/JackLoopbackDriver.cpp" open="0" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../common/JackDriver.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="2289" topLine="93" /&gt;
++			&lt;Cursor1 position="0" topLine="108" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/JackAudioAdapterFactory.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../linux/freebob/JackFreebobDriver.cpp" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="2313" topLine="68" /&gt;
++			&lt;Cursor1 position="0" topLine="929" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../linux/iio/JackIIODriver.H" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../macosx/coreaudio/JackCoreAudioAdapter.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="1872" topLine="26" /&gt;
++			&lt;Cursor1 position="0" topLine="111" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../linux/freebob/JackFreebobDriver.cpp" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../common/JackDriverLoader.cpp" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="0" topLine="24" /&gt;
++			&lt;Cursor1 position="18913" topLine="586" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/JackInternalClient.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../common/JackAPI.cpp" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="877" topLine="13" /&gt;
++			&lt;Cursor1 position="15232" topLine="275" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/JackDriverLoader.cpp" open="1" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../common/driver_interface.h" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="23261" topLine="752" /&gt;
++			&lt;Cursor1 position="4239" topLine="0" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/JackAudioDriver.h" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../macosx/coreaudio/JackCoreAudioDriver.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="3119" topLine="37" /&gt;
++			&lt;Cursor1 position="0" topLine="243" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/JackTools.cpp" open="1" top="0" tabpos="16" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../common/JackTools.cpp" open="0" top="0" tabpos="16" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+ 			&lt;Cursor1 position="3683" topLine="118" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../dbus/wscript" open="1" top="0" tabpos="14" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../common/JackAudioAdapterFactory.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="814" topLine="0" /&gt;
++			&lt;Cursor1 position="2313" topLine="68" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../linux/firewire/ffado_driver.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../linux/freebob/freebob_driver.h" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="5335" topLine="170" /&gt;
++			&lt;Cursor1 position="0" topLine="208" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../linux/wscript" open="1" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../macosx/coreaudio/JackCoreAudioDriver.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="1135" topLine="30" /&gt;
++			&lt;Cursor1 position="0" topLine="179" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../linux/alsa/JackAlsaAdapter.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../linux/alsa/JackAlsaDriver.cpp" open="0" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="3500" topLine="23" /&gt;
++			&lt;Cursor1 position="0" topLine="24" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/JackNetDriver.cpp" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../dbus/reserve.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="27095" topLine="694" /&gt;
++			&lt;Cursor1 position="2044" topLine="36" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/JackArgParser.h" open="1" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../common/JackControlAPI.cpp" open="0" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="836" topLine="0" /&gt;
++			&lt;Cursor1 position="10607" topLine="359" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/JackAPI.cpp" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../linux/iio/JackIIODriver.C" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="15232" topLine="275" /&gt;
++			&lt;Cursor1 position="1827" topLine="120" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackNetDriver.cpp" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="27095" topLine="694" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../solaris/oss/JackBoomerDriver.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="5835" topLine="166" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+ 	&lt;File name="../linux/firewire/JackFFADODriver.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+@@ -161,19 +196,49 @@
+ 			&lt;Cursor1 position="0" topLine="2" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../linux/alsa/JackAlsaDriver.cpp" open="0" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../linux/firewire/ffado_driver.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="0" topLine="24" /&gt;
++			&lt;Cursor1 position="5335" topLine="170" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../common/JackDriver.cpp" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../common/JackDriver.cpp" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+ 			&lt;Cursor1 position="2693" topLine="64" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../linux/freebob/JackFreebobDriver.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../linux/iio/JackIIODriver.H" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="1872" topLine="11" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/jack/systemdeps.h" open="0" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="4452" topLine="74" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackAudioAdapter.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="0" topLine="34" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../posix/JackCompilerDeps_os.h" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="2786" topLine="43" /&gt;
++			&lt;Cursor1 position="810" topLine="0" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../wscript" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="10408" topLine="225" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackError.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="2588" topLine="78" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackAudioDriver.cpp" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="4660" topLine="27" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+ &lt;/CodeBlocks_layout_file&gt;
+diff --git a/common/jack/systemdeps.h b/common/jack/systemdeps.h
+index b4a1472..27906f7 100644
+--- a/common/jack/systemdeps.h
++++ b/common/jack/systemdeps.h
+@@ -120,7 +120,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ 
+ #endif /* __APPLE__ || __linux__ || __sun__ || sun */
+ 
+-#if defined(__arm__)
++#if defined(__arm__) || defined(__ARM__)
+     #undef POST_PACKED_STRUCTURE
+     #define POST_PACKED_STRUCTURE
+ #endif /* __arm__ */
+diff --git a/linux/iio/JackIIODriver.C b/linux/iio/JackIIODriver.C
+index 1b598c9..4f93480 100644
+--- a/linux/iio/JackIIODriver.C
++++ b/linux/iio/JackIIODriver.C
+@@ -19,26 +19,90 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ 
+ #include "JackIIODriver.H"
+ #include "driver_interface.h"
++#include "JackEngineControl.h"
++#include "JackGraphManager.h"
+ 
+-#define IIO_DEFAULT_SAMPLERATE 1e6; ///&lt; The default sample rate for the default chip
+-#define IIO_DEFAULT_PERIODSIZE 1024; ///&lt; The defaul period size
++#include &lt;values.h&gt;
++
++#define IIO_DEFAULT_CHIP "AD7476A" ///&lt; The default IIO recording chip to look for.
++#define IIO_DEFAULT_READ_FS 1.e6 ///&lt; The default IIO sample rate for the default chip.
++#define IIO_DEFAULT_PERIOD_SIZE 2048 ///&lt; The default period size is in the ms range
++#define IIO_DEFAULT_PERIOD_COUNT 2 ///&lt; The default number of periods
++#define IIO_DEFAULT_CAPUTURE_PORT_COUNT MAXINT ///&lt; The default number of capture ports is exceedingly big, trimmed down to a realistic size in driver_initialize
++//#define IIO_SAFETY_FACTOR 2./3. ///&lt; The default safety factor, allow consumption of this fraction of the available DMA buffer before we don't allow the driver to continue.
++#define IIO_SAFETY_FACTOR 1. ///&lt; The default safety factor, allow consumption of this fraction of the available DMA buffer before we don't allow the driver to continue.
+ 
+ namespace Jack {
+ 
+-int JackIIODriver::Open(jack_nframes_t buffer_size,
+-                          jack_nframes_t samplerate,
+-                          bool capturing,
+-                          bool playing,
+-                          int inchannels,
+-                          int outchannels,
+-                          bool monitor,
+-                          const char* capture_driver_name,
+-                          const char* playback_driver_name,
+-                          jack_nframes_t capture_latency,
+-                          jack_nframes_t playback_latency)
+-{
+-    return JackAudioDriver::Open(buffer_size, samplerate, capturing, playing, inchannels, outchannels,
+-        monitor, capture_driver_name, playback_driver_name, capture_latency, playback_latency);
++int JackIIODriver::Attach() {
++    //cout&lt;&lt;"JackIIODriver::Attach\n";
++    JackAudioDriver::SetSampleRate((jack_nframes_t)IIO_DEFAULT_READ_FS);
++
++    int ret;
++    if ((ret=iio.enable(true))!=NO_ERROR) { // start the DMA
++        iio.close();
++        return ret;
++    }
++    return JackAudioDriver::Attach();
++}
++
++int JackIIODriver::Detach() {
++    //cout&lt;&lt;"JackIIODriver::Detach\n";
++    iio.enable(false); // stop the DMA
++    return JackAudioDriver::Detach();
++}
++
++int JackIIODriver::Read() {
++    //cout&lt;&lt;"JackIIODriver::Read\n";
++
++    if (iio.getDeviceCnt()&lt;1) {
++        jack_error("JackIIODriver:: No IIO devices are present ");
++        return -1;
++    }
++    uint devChCnt=iio[0].getChCnt(); // the number of channels per device
++
++    jack_nframes_t nframes=data.rows()/devChCnt;
++    if (nframes != fEngineControl-&gt;fBufferSize)
++        jack_error("JackIIODriver::Read warning : Jack period size = %ld IIO period size = %ld", fEngineControl-&gt;fBufferSize, nframes);
++
++//    cout&lt;&lt;"processing buffer size : "&lt;&lt;fEngineControl-&gt;fBufferSize&lt;&lt;endl;
++//    cout&lt;&lt;"processing channel count : "&lt;&lt;fCaptureChannels&lt;&lt;endl;
++
++    int ret=iio.read(nframes, data); // read the data from the IIO subsystem
++    if (ret!=NO_ERROR)
++        return -1;
++
++
++    // Keep begin cycle time
++    JackDriver::CycleTakeBeginTime(); // is this necessary ?
++
++    int maxAvailChCnt=data.cols()*devChCnt;
++    jack_default_audio_sample_t scaleFactor=1./32768.;
++
++    if (fCaptureChannels&gt;maxAvailChCnt)
++        jack_error("JackIIODriver::Read warning : Jack period size = %ld IIO period size = %ld", fEngineControl-&gt;fBufferSize, nframes);
++
++    for (int i = 0; i &lt; fCaptureChannels; i++) {
++        int col=i/devChCnt; // find the column and offset to read from
++        int rowOffset=i%devChCnt;
++        if (fGraphManager-&gt;GetConnectionsNum(fCapturePortList[i]) &gt; 0) {
++            jack_default_audio_sample_t *dest=GetInputBuffer(i);
++
++            for (jack_nframes_t j=0; j&lt;nframes; j++){
++//                dest[j]=(float)j/(float)nframes;
++                dest[j]=(jack_default_audio_sample_t)(data(j*devChCnt+rowOffset, col))*scaleFactor;
++//                cout&lt;&lt;dest[j]&lt;&lt;'\t'&lt;&lt;data(j*devChCnt+rowOffset, col)&lt;&lt;"\t\t";
++            }
++        }
++    }
++
++    return 0;
++}
++
++int JackIIODriver::Write() {
++    //        cout&lt;&lt;"JackIIODriver::Write\n";
++    JackDriver::CycleTakeEndTime(); // is this necessary ?
++    return 0;
+ }
+ 
+ } // end namespace Jack
+@@ -49,123 +113,111 @@ extern "C"
+ {
+ #endif
+ 
+-    SERVER_EXPORT const jack_driver_desc_t *
+-    driver_get_descriptor () {
+-        jack_driver_desc_t * desc;
+-        jack_driver_desc_filler_t filler;
+-        jack_driver_param_value_t value;
++SERVER_EXPORT const jack_driver_desc_t *
++driver_get_descriptor () {
++    jack_driver_desc_t * desc;
++    jack_driver_desc_filler_t filler;
++    jack_driver_param_value_t value;
+ 
+-        desc = jack_driver_descriptor_construct("iio", JackDriverMaster, "Linux Industrial IO backend", &amp;filler);
++    desc = jack_driver_descriptor_construct("iio", JackDriverMaster, "Linux Industrial IO backend", &amp;filler);
+ 
+-        strcpy(value.str, "AD7476");
+-        jack_driver_descriptor_add_parameter(
+-            desc,
+-            &amp;filler,
+-            "device",
+-            'd',
+-            JackDriverParamString,
+-            &amp;value,
+-            NULL,
+-            "The IIO chip to use.",
+-            "The IIO chip to use. Specifies which chip name to scan for on all devices present in /sys/bus/iio.");
++    strcpy(value.str, IIO_DEFAULT_CHIP);
++    jack_driver_descriptor_add_parameter(desc, &amp;filler, "chip", 'C', JackDriverParamString, &amp;value, NULL, "The name of the chip to search for in the IIO devices", NULL);
+ 
+-        value.ui = IIO_DEFAULT_PERIODSIZE;
+-        jack_driver_descriptor_add_parameter(desc, &amp;filler, "period", 'p', JackDriverParamUInt, &amp;value, NULL, "Frames per period", NULL);
++    value.ui = IIO_DEFAULT_CAPUTURE_PORT_COUNT;
++    jack_driver_descriptor_add_parameter(desc, &amp;filler, "capture", 'i', JackDriverParamUInt, &amp;value, NULL, "Provide capture count (block size).", NULL);
+ 
+-        value.ui = 2;
+-        jack_driver_descriptor_add_parameter(desc, &amp;filler, "nperiods", 'n', JackDriverParamUInt, &amp;value, NULL, "Number of periods of playback latency", NULL);
++    value.ui = IIO_DEFAULT_PERIOD_SIZE;
++    jack_driver_descriptor_add_parameter(desc, &amp;filler, "period", 'p', JackDriverParamUInt, &amp;value, NULL, "Frames (samples per channel) per period", NULL);
+ 
+-        value.ui = (IIO_DEFAULT_SAMPLERATE)U;
+-        jack_driver_descriptor_add_parameter(desc, &amp;filler, "rate", 'r', JackDriverParamUInt, &amp;value, NULL, "Sample rate", NULL);
++    value.ui = IIO_DEFAULT_PERIOD_COUNT;
++    jack_driver_descriptor_add_parameter(desc, &amp;filler, "nperiods", 'n', JackDriverParamUInt, &amp;value, NULL, "Number of available periods (block count)", NULL);
+ 
+-        value.i = 0;
+-        jack_driver_descriptor_add_parameter(desc, &amp;filler, "capture", 'C', JackDriverParamBool, &amp;value, NULL, "Provide capture ports.", NULL);
+-        jack_driver_descriptor_add_parameter(desc, &amp;filler, "playback", 'P', JackDriverParamBool, &amp;value, NULL, "Provide playback ports.", NULL);
+-
+-        value.i = 0;
+-        jack_driver_descriptor_add_parameter(desc, &amp;filler, "duplex", 'D', JackDriverParamBool, &amp;value, NULL, "Provide both capture and playback ports.", NULL);
+-
+-        value.ui = 0;
+-        jack_driver_descriptor_add_parameter(desc, &amp;filler, "input-latency", 'I', JackDriverParamUInt, &amp;value, NULL, "Extra input latency (frames)", NULL);
+-        jack_driver_descriptor_add_parameter(desc, &amp;filler, "output-latency", 'O', JackDriverParamUInt, &amp;value, NULL, "Extra output latency (frames)", NULL);
+-
+-        value.ui = 0;
+-        jack_driver_descriptor_add_parameter(desc, &amp;filler, "inchannels", 'i', JackDriverParamUInt, &amp;value, NULL, "Number of input channels to provide (note: currently ignored)", NULL);
+-        jack_driver_descriptor_add_parameter(desc, &amp;filler, "outchannels", 'o', JackDriverParamUInt, &amp;value, NULL, "Number of output channels to provide (note: currently ignored)", NULL);
++    return desc;
++}
+ 
+-        value.ui = 3;
+-        jack_driver_descriptor_add_parameter(desc, &amp;filler, "verbose", 'v', JackDriverParamUInt, &amp;value, NULL, "gtkIOStream verbose level", NULL);
++SERVER_EXPORT Jack::JackDriverClientInterface* driver_initialize(Jack::JackLockedEngine* engine, Jack::JackSynchro* table, const JSList* params) {
++
++    // As of this implementation the IIO driver is only capture... to be expanded.
++
++    string chipName(IIO_DEFAULT_CHIP); // the default chip name to search for in the IIO devices.
++    float fs = IIO_DEFAULT_READ_FS; // IIO sample rate is fixed.
++    jack_nframes_t periodSize = IIO_DEFAULT_PERIOD_SIZE; // default block size
++    jack_nframes_t periodCount    = IIO_DEFAULT_PERIOD_COUNT; // default block count
++    uint inChCnt = IIO_DEFAULT_CAPUTURE_PORT_COUNT; // The default number of physical input channels - a very large number, to be reduced.
++
++    for (const JSList *node = params; node; node = jack_slist_next (node)) {
++        jack_driver_param_t *param = (jack_driver_param_t *) node-&gt;data;
++
++        switch (param-&gt;character) {
++        case 'C': // we are specifying a new chip name
++            chipName = param-&gt;value.str;
++            break;
++        case 'i': // we are specifying the number of capture channels
++            inChCnt = param-&gt;value.ui;
++            break;
++        case 'p':
++            periodSize = param-&gt;value.ui;
++            break;
++        case 'n':
++            periodCount = param-&gt;value.ui;
++            break;
++        }
++    }
+ 
+-//        value.i = 0;
+-//        jack_driver_descriptor_add_parameter(desc, &amp;filler, "snoop", 'X', JackDriverParamBool, &amp;value, NULL, "Snoop firewire traffic", NULL);
++    // create the driver which contains the IIO class
++    Jack::JackIIODriver* iio_driver = new Jack::JackIIODriver("system", "iio_pcm", engine, table);
++    if (!iio_driver) {
++        jack_error("\nHave you run out of memory ? I tried to create the IIO driver in memory but failed!\n");
++        return NULL;
++    }
+ 
+-        return desc;
++    // interrogate the available iio devices searching for the chip name
++    if (iio_driver-&gt;iio.findDevicesByChipName(chipName)!=NO_ERROR) { // find all devices with a particular chip which are present.
++        jack_error("\nThe iio driver found no devices by the name %s\n", chipName.c_str());
++        return NULL;
+     }
+ 
+-    SERVER_EXPORT Jack::JackDriverClientInterface* driver_initialize(Jack::JackLockedEngine* engine, Jack::JackSynchro* table, const JSList* params) {
+-        const JSList * node;
+-        const jack_driver_param_t * param;
+-
+-        char *device_name=(char*)"AD7476";
+-
+-        for (node = params; node; node = jack_slist_next (node)) {
+-            param = (jack_driver_param_t *) node-&gt;data;
+-
+-            switch (param-&gt;character) {
+-                case 'd':
+-                    device_name = const_cast&lt;char*&gt;(param-&gt;value.str);
+-                    break;
+-                case 'p':
+-                    cmlparams.period_size = param-&gt;value.ui;
+-                    cmlparams.period_size_set = 1;
+-                    break;
+-                case 'n':
+-                    cmlparams.buffer_size = param-&gt;value.ui;
+-                    cmlparams.buffer_size_set = 1;
+-                    break;
+-                case 'r':
+-                    cmlparams.sample_rate = param-&gt;value.ui;
+-                    cmlparams.sample_rate_set = 1;
+-                    break;
+-                case 'i':
+-                    cmlparams.capture_ports = param-&gt;value.ui;
+-                    break;
+-                case 'o':
+-                    cmlparams.playback_ports = param-&gt;value.ui;
+-                    break;
+-                case 'I':
+-                    cmlparams.capture_frame_latency = param-&gt;value.ui;
+-                    break;
+-                case 'O':
+-                    cmlparams.playback_frame_latency = param-&gt;value.ui;
+-                    break;
+-                case 'x':
+-                    cmlparams.slave_mode = param-&gt;value.ui;
+-                    break;
+-//                case 'X':
+-//                    cmlparams.snoop_mode = param-&gt;value.i;
+-//                    break;
+-                case 'v':
+-                    cmlparams.verbose_level = param-&gt;value.ui;
+-            }
+-        }
++    if (iio_driver-&gt;iio.getDeviceCnt()&lt;1) { // If there are no devices found by that chip name, then indicate.
++        jack_error("\nThe iio driver found no devices by the name %s\n", chipName.c_str());
++        return NULL;
++    }
+ 
+-        /* duplex is the default */
+-        if (!cmlparams.playback_ports &amp;&amp; !cmlparams.capture_ports) {
+-            cmlparams.playback_ports = 1;
+-            cmlparams.capture_ports = 1;
+-        }
++    iio_driver-&gt;iio.printInfo(); // print out detail about the devices which were found ...
+ 
+-        iio.findDevicesByChipName(chipName);
++    // if the available number of ports is less then the requested number, then restrict to the number of physical ports.
++    if (iio_driver-&gt;iio.getChCnt()&lt;inChCnt)
++        inChCnt=iio_driver-&gt;iio.getChCnt();
+ 
+-        // Special open for FFADO driver...
+-        if (ffado_driver-&gt;Open(&amp;cmlparams) == 0) {
+-            return threaded_driver;
+-        } else {
+-            delete threaded_driver; // Delete the decorated driver
+-            return NULL;
+-        }
++    // resize the data buffer column count to match the device count
++    int colCnt=(int)ceil((float)inChCnt/(float)iio_driver-&gt;iio[0].getChCnt()); // check whether we require less then the available number of channels
++    int ret=iio_driver-&gt;iio.getReadArray(periodSize, iio_driver-&gt;data); // resize the array to be able to read enough memory
++    if (ret!=NO_ERROR) {
++        jack_error("iio::getReadArray couldn't create the data buffer, indicating the problem.");
++        return NULL;
+     }
++    if (iio_driver-&gt;data.cols()&gt;colCnt) // resize the data columns to match the specified number of columns (channels / channels per device)
++        iio_driver-&gt;data.resize(iio_driver-&gt;data.rows(), colCnt);
++
++    ret=iio_driver-&gt;iio.open(periodCount, periodSize); // try to open all IIO devices
++    if (ret!=NO_ERROR)
++        return NULL;
++
++    Jack::JackDriverClientInterface* threaded_driver = new Jack::JackThreadedDriver(iio_driver);
++    if (threaded_driver) {
++        bool capture=true, playback=false, monitor=false;
++        int outChCnt=0;
++        jack_nframes_t inputLatency = periodSize*periodCount, outputLatency=0;
++        // Special open for OSS driver...
++        if (iio_driver-&gt;Open(periodSize, periodCount, capture, playback, inChCnt, outChCnt, monitor, "iio:device", "iio:device", inputLatency, outputLatency)!=0) {
++            delete threaded_driver;
++            threaded_driver=NULL;
++        }
++    } else
++        jack_error("\nHave you run out of memory ? I tried to create Jack's standard threaded driver in memory but failed! The good news is that you had enough memory to create the IIO driver.\n");
++
++    return threaded_driver;
++}
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/linux/iio/JackIIODriver.H b/linux/iio/JackIIODriver.H
+index d93e599..1642656 100644
+--- a/linux/iio/JackIIODriver.H
++++ b/linux/iio/JackIIODriver.H
+@@ -23,7 +23,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ #include "JackAudioDriver.h"
+ #include "JackThreadedDriver.h"
+ 
+-#include &lt;IIO/IIO.H&gt;
++#include &lt;IIO/IIOMMap.H&gt;
+ 
+ namespace Jack {
+ 
+@@ -32,9 +32,10 @@ Currently this driver only supports capture.
+ */
+ class JackIIODriver : public JackAudioDriver {
+ 
+-    IIO iio; ///&lt; The actual IIO device
+-
+ public:
++    IIOMMap iio; ///&lt; The actual IIO devices
++    Eigen::Array&lt;unsigned short int, Eigen::Dynamic, Eigen::Dynamic&gt; data; ///&lt; When we grab a mmapped buffer, store it here.
++
+     /** Constructor
+     */
+     JackIIODriver(const char* name, const char* alias, JackLockedEngine* engine, JackSynchro* table) : JackAudioDriver(name, alias, engine, table) {
+@@ -45,20 +46,23 @@ public:
+     virtual ~JackIIODriver() {
+     }
+ 
+-    /**
+-    */
+-    virtual int Open(jack_nframes_t buffer_size,
+-                    jack_nframes_t samplerate,
+-                    bool capturing,
+-                    bool playing,
+-                    int inchannels,
+-                    int outchannels,
+-                    bool monitor,
+-                    const char* capture_driver_name,
+-                    const char* playback_driver_name,
+-                    jack_nframes_t capture_latency,
+-                    jack_nframes_t playback_latency);
++//    virtual int Process(){
++////        cout&lt;&lt;"JackIIODriver::Process\n";
++//        return JackAudioDriver::Process();
++//    }
++//
++    virtual int Attach(); ///&lt; Enables the IIO system.
++
++    virtual int Detach(); ///&lt; Disables the IIO system.
+ 
++    virtual int Read(); ///&lt; Read from the IIO sysetm and load the jack buffers
++
++    virtual int Write(); ///&lt; Not implemented.
++
++    virtual int SetBufferSize(jack_nframes_t buffer_size){
++        cout&lt;&lt;"JackIIODriver::SetBufferSize("&lt;&lt;buffer_size&lt;&lt;")\n";
++        return JackAudioDriver::SetBufferSize(buffer_size);
++    }
+ };
+ 
+ } // end of Jack namespace
+diff --git a/linux/wscript b/linux/wscript
+index 3cd9426..314d5b3 100644
+--- a/linux/wscript
++++ b/linux/wscript
+@@ -15,33 +15,11 @@ def configure(conf):
+ 
+     conf.check_cfg(package='gtkIOStream', atleast_version='1.4.0', args='--cflags --libs', mandatory=False)
+     conf.env['BUILD_DRIVER_IIO'] = conf.is_defined('HAVE_GTKIOSTREAM')
+-    conf.check_cfg(package='eigen3', atleast_version='3.2.0', args='--cflags --libs', mandatory=False)
++    conf.check_cfg(package='eigen3', atleast_version='3.1.2', args='--cflags --libs', mandatory=False)
+     conf.env['BUILD_DRIVER_IIO'] += conf.is_defined('HAVE_EIGEN3')
+-    conf.check_cfg(package='sox', atleast_version='14.4.1', args='--cflags --libs', mandatory=False)
++    conf.check_cfg(package='sox', atleast_version='14.4.0', args='--cflags --libs', mandatory=False)
+     conf.env['BUILD_DRIVER_IIO'] += conf.is_defined('HAVE_SOX')
+-    #conf.env['BUILD_DRIVER_IIO'] += conf.is_defined('HAVE_EIGEN3')
+-    #print conf.env
+-    #conffile.write("\n".join(myconf))
+-    #conf.define('HAVE_PPOLL', 1 )
+-
+-    conf.find_program("mkoctfile", var="MKOCTFILE")
+-    if conf.env.MKOCTFILE:
+-        conf.env['HAVE_OCTAVE']=1
+-        conf.env['define_key'] += ['HAVE_OCTAVE']
+-        conf.env['DEFINES'] += ['HAVE_OCTAVE=1']
+-        #conf.env('Octave')
+-        conf.env['INCLUDES_OCTAVE'] = conf.cmd_and_log([conf.env.MKOCTFILE, "--print", "INCFLAGS" ],
+-                                   output=Context.STDOUT).replace('\n', '').replace('-I','').split()
+-        lflags = conf.cmd_and_log([conf.env.MKOCTFILE, "--print", "LFLAGS" ],
+-                                   output=Context.STDOUT)
+-        conf.env['LIB_OCTAVE'] = conf.cmd_and_log([conf.env.MKOCTFILE, "--print", "OCTAVE_LIBS" ],
+-                                   output=Context.STDOUT).replace('\n', '').replace('-l','').split()
+-        #conf.append("INCFLAGS: " + incflags)
+-        #conf.append("LFLAGS: " + lflags)
+-        #conf.append("LIBS: " + libs)
+-        print conf.env
+-    #import pdb; pdb.set_trace()
+-
++ 
+ 
+ def create_jack_driver_obj(bld, target, sources, uselib = None):
+     driver = bld(features = ['c', 'cxx', 'cxxshlib', 'cshlib'])
+@@ -118,7 +96,8 @@ def build(bld):
+         create_jack_driver_obj(bld, 'firewire', ffado_driver_src, ["LIBFFADO"])
+ 
+     if bld.env['BUILD_DRIVER_IIO'] == True:
+-        create_jack_driver_obj(bld, 'iio', iio_driver_src, ["GTKIOSTREAM", "EIGEN3", "OCTAVE"])
++        create_jack_driver_obj(bld, 'iio', iio_driver_src, ["GTKIOSTREAM", "EIGEN3"])
++        #create_jack_driver_obj(bld, 'iio', iio_driver_src, ["GTKIOSTREAM", "EIGEN3", "OCTAVE"])
+ 
+     create_jack_driver_obj(bld, 'net', '../common/JackNetDriver.cpp')
+ 
+-- 
+1.8.3.2
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1392326713.14291_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1392326720.14312_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1392326716.14310_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1392326716.14310_0.ltw:2,a&nbsp;&lt;1392326687-3964-3-git-send-email-flatmax at flatmax dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

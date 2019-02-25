@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack shutdown action</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack shutdown action</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1332018928.19495_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1332021302.20739_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1332019955.20103_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 17 Mar 2012 21:32:23 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1332018928.19495_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack shutdown action </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1332025744.23494_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack shutdown action </a></td></tr>
+</table>
+<pre>
+On Sat, Mar 17, 2012 at 05:15:16PM -0400, Paul Davis wrote:
+ 
+&gt; all other exits from within libjack are via pthread_exit() which
+&gt; should not take down a process. running inside gdb() with a breakpoint
+&gt; at _exit and then a backtrace may prove revealing.
+
+Indeed:
+
+jack_client_thread zombified - exiting from JACK
+
+Program received signal SIGPIPE, Broken pipe.
+[Switching to Thread 0xb72bbb40 (LWP 6529)]
+0xb7fdd424 in __kernel_vsyscall ()
+(gdb) where
+#0  0xb7fdd424 in __kernel_vsyscall ()
+#1  0xb7e947db in write () from /lib/libpthread.so.0
+#2  0xb7f9d670 in oop_client_deliver_request (ptr=0x8059008, req=0xb72b9e0a) at client.c:253
+#3  0xb7f9d767 in jack_client_deliver_request (client=0x8059008, req=0xb72b9e0a) at client.c:286
+#4  0xb7fa0e78 in jack_deactivate_aux (client=0x8059008) at client.c:2533
+#5  0xb7fa0eb7 in jack_client_close_aux (client=0x8059008) at client.c:2552
+#6  0xb7fa0085 in jack_client_thread_suicide (client=0x8059008) at client.c:1687
+#7  0xb7fa08bf in jack_client_thread_aux (arg=0x8059008) at client.c:2075
+#8  0xb7fa09a4 in jack_client_thread (arg=0x8059008) at client.c:2125
+#9  0xb7fa5a5f in jack_thread_proxy (varg=0x8058218) at thread.c:136
+#10 0xb7e8dcac in start_thread () from /lib/libpthread.so.0
+#11 0xb7c9378e in clone () from /lib/libc.so.6
+(gdb)
+
+Again, I'm pretty sure that this is something new. And I wouldn't
+have added a shutdown callback to e.g. jaaa if it would terminate
+cleanly without one - there's nothing to save etc.
+
+Could it be that some (relatively recent) changes in jackd result
+in this SIGPIPE while that did not happen before ?
+
+Ciao,
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1332018928.19495_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1332021302.20739_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1332019955.20103_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1332019955.20103_0.ltw:2,a&nbsp;&lt;20120317213223.GC406 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

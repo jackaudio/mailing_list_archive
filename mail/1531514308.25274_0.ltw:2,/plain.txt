@@ -1,0 +1,54 @@
+Date:        Fri, 13 Jul 2018 16:37:54 -0400
+From:        Tim  <[hidden] at rogers dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: oleg68 Re: [Jack-Devel] How to profile jack cpu load? (1531513319.24249_0.ltw:2,)
+Follow-Up:   oleg68 Re: [Jack-Devel] How to profile jack cpu load? (1531554117.6578_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] How to profile jack cpu load?
+
+On 07/13/2018 04:21 PM, oleg68 wrote:
+> I'd maken a file test.sh, that downloads, builds and runs jackd.
+> ------------------------------------------
+> #/usr/bin/sh
+> rm -rf jack2
+> git clone git://github.com/jackaudio/jack2.git
+> cd jack2
+> ./waf configure --profile
+> ./waf build
+> echo
+> echo "Running jackd"
+> build/jackd -v -R -P40 -dalsa -d hw:Pro -r 48000 -p 1024 -n 2 -s -P
+> ------------------------------------------
+> 
+> Than I ran:
+> 
+> ./test.sh | tee test.log
+> 
+> The resulting  test.log
+> <http://jack-audio.10948.n7.nabble.com/file/t1525/test.log>   does not
+> contain any 'Engine profiling activated' message
+
+
+Hm, no ./waf install step?
+
+Although it appears that the jackd you built is in fact
+  the one that is running, it seems possible to me that
+  it may be loading all of its libraries from a previous jack
+  installation such as in /usr or /usr/local - libraries that
+  were not built with the profiling.
+
+Try the install step which should replace those libraries.
+
+I find that it is always a good idea to run "sudo ldconfig"
+  after playing around with jack install steps, so that the
+  system really can find the correct libraries.
+That is supposed to happen automatically with most software,
+  but I found sometimes it doesn't with jack, possibly with
+  just one of the jack versions, I can't recall which.
+
+Tim.
+The MusE sequencer project.
+
+1531514308.25274_0.ltw:2, <fc3d49e9-f4b7-efc8-2445-4162c39ec0d3 at rogers dot com>
+________________________________________________________________________________
+

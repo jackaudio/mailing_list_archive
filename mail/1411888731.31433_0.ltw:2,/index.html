@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack2 alsarawmidi slave: Pluggable device registration problem?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack2 alsarawmidi slave: Pluggable device registration problem?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1411872226.16651_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1411918451.25609_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1411888731.31433_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 28 Sep 2014 09:18:38 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"Tim E. Real" &lt;[hidden] at rogers dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Tim E. Real
+<a href='../1411872226.16651_0.ltw:2,/index.html'>Re: [Jack-Devel] Jack2 alsarawmidi slave: Pluggable device registration problem? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Tim E. Real
+<a href='../1411918451.25609_0.ltw:2,/index.html'>Re: [Jack-Devel] Jack2 alsarawmidi slave: Pluggable device registration problem? </a></td></tr>
+</table>
+<pre>
+The reason is that this is probably no "dynamic plug/unplug" handing code in the JackALSARawMidiDriver backend.
+
+St&#xE9;phane 
+
+Le 28 sept. 2014 &#xE0; 04:43, Tim E. Real &lt;[hidden]&gt; a &#xE9;crit :
+
+&gt; On September 27, 2014 07:47:01 PM Tim E. Real wrote:
+&gt;&gt; Hi!
+&gt;&gt; 
+&gt;&gt; When I plug in my USB midi device after starting Jack2 with alsarawmidi,
+&gt;&gt; it does not register at all, as jack_lsp shows.
+&gt;&gt; 
+&gt;&gt; But if I instead start Jack2 after the device is plugged in, ports are
+&gt;&gt; there.
+&gt;&gt; 
+&gt;&gt; But then if I unplug the device, strangely the ports do not unregister and
+&gt;&gt; I can even make connections to them in qjctl.
+&gt;&gt; 
+&gt;&gt; Having seen the second problem first, I thought it might be a new 'feature'
+&gt;&gt; - Persistent Ports!
+&gt;&gt; 
+&gt;&gt; But now having seen the first problem I guess not...
+&gt;&gt; 
+&gt;&gt; What could be wrong?
+&gt;&gt; Thanks. Tim.
+&gt; 
+&gt; 
+&gt; Here we go, some output:
+&gt; 
+&gt; 
+&gt; Start Jack, USB device is already plugged in:
+&gt; 
+&gt; ...
+&gt; Not shown: Early startup stuff, we pick it up at last USB midi port...
+&gt; ...
+&gt; 
+&gt; JackALSARawMidiDriver::Attach - output port registered 
+&gt; (name='system:midi_playback_2', alias='system:2-1 MidiSport 2x2 2 out').
+&gt; Jack: JackEngine::PortRegister ref = 2 name = system:midi_playback_3 type = 8 
+&gt; bit raw midi flags = 21 buffer_size = 256
+&gt; Jack: JackGraphManager::AllocatePortAux port_index = 28 name = 
+&gt; system:midi_playback_3 type = 8 bit raw midi
+&gt; Jack: JackConnectionManager::AddInputPort ref = 2 port = 28
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; JackALSARawMidiDriver::Attach - output port registered 
+&gt; (name='system:midi_playback_3', alias='system:3-1 M Audio Delta 1010LT MIDI 1 
+&gt; out').
+&gt; Jack: JackServer::Start
+&gt; Jack: JackThreadedDriver::Start
+&gt; JackALSARawMidiDriver::Start - Starting 'alsarawmidi' driver.
+&gt; JackALSARawMidiDriver::Start - starting ALSA thread ...
+&gt; Jack: JackPosixThread::StartImp : create non RT thread
+&gt; Jack: JackPosixThread::ThreadHandler : start
+&gt; Jack: JackPosixThread::AcquireRealTimeImp priority = 31
+&gt; JackALSARawMidiDriver::Start - started ALSA thread.
+&gt; Jack: JackPosixThread::StartImp : create non RT thread
+&gt; Jack: JackPosixThread::ThreadHandler : start
+&gt; Jack: JackThreadedDriver::Init real-time
+&gt; Jack: JackPosixThread::AcquireRealTimeImp priority = 30
+&gt; Jack: JackPosixThread::StartImp : create non RT thread
+&gt; Jack: JackPosixThread::ThreadHandler : start
+&gt; Jack: JackSocketServerChannel::ClientCreate socket
+&gt; Jack: JackSocketServerChannel::BuildPoolTable size = 2
+&gt; Jack: JackSocketServerChannel::BuildPoolTable fSocketTable i = 1 fd = 29
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 29
+&gt; Jack: JackRequest::Notification
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel 
+&gt; notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel 
+&gt; notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel 
+&gt; notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel 
+&gt; notify = 18
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; 
+&gt; ...
+&gt; Idle
+&gt; ...
+&gt; 
+&gt; 
+&gt; Now unplug USB device:
+&gt; 
+&gt; JackALSARawMidiPort::GetIOPollEvents - the file descriptor is invalid.
+&gt; JackALSARawMidiDriver::Execute - a fatal error occurred while processing ALSA 
+&gt; output events.
+&gt; JackALSARawMidiDriver::Execute - ALSA thread exiting.
+&gt; Jack: JackPosixThread::ThreadHandler : exit
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 29
+&gt; 
+&gt; ...
+&gt; Idle
+&gt; ...
+&gt; 
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 29
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 29
+&gt; 
+&gt; ...
+&gt; 
+&gt; Now re-plug USB device:
+&gt; 
+&gt; No output, nothing changes.
+&gt; 
+&gt; ...
+&gt; 
+&gt; 
+&gt; Thanks. Tim.
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1411872226.16651_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1411918451.25609_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1411888731.31433_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1411888731.31433_0.ltw:2,&nbsp;&lt;A78A40CD-3AFA-4E68-BF4A-0F1589920182 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

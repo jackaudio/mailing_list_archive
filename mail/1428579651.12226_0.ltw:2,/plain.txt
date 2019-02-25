@@ -1,0 +1,91 @@
+Date:        Thu, 09 Apr 2015 13:38:10 +0200
+From:        Markus Seeber  <[hidden] at spectralbird dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Johannes Lorenz Re: [Jack-Devel] Avoiding spinlocks in a parallel sequencer (1428559319.8932_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Avoiding spinlocks in a parallel sequencer
+
+On 04/09/2015 08:01 AM, Johannes Lorenz wrote:
+> Hi,
+> 
+>> I try to understand your plan:
+>>
+>> simple data flow example:
+>>
+>> zynaddsubfx_1_output
+>>
+>>           V
+>> sequencer_client_1_input
+>>
+>>           V
+>> sequencer_input_ringbuffer
+>>
+>>           V
+>> (sequencer processing stuff)
+>>
+>>           V
+>> sequencer_output_ringbuffer
+>>
+>>           V
+>> sequencer_client_output
+>>
+>>           V
+>> system_client_input(hardware output)
+> 
+> Your picture is indeed correct. To add some more examples:
+> 
+>   * Something like this is also possible
+> 
+>         sequencer_input_ringbuffer_1     sequencer_input_ringbuffer_2
+>                 V                                V
+>         plus (i.e. addition of sound-waves)
+>                 V
+>         plus_effect_ringbuffer
+> 
+>   * The part that you labeled "(sequencer processing stuff)" might be filled with:
+> 
+>                 V
+>         peak_controller_effect        some lfo generator
+>                 V (lfo)                       V (lfo)
+>         zynaddsubfx_2_volume_input    zynaddsubfx_2_filter_freq_input
+>                 V
+>         (zynaddsubfx_2)
+>                 V
+>         zynaddsubfx_2_output
+>                 V
+>         sequencer_client_2_input
+>                 V
+> 
+>> Maybe also what you envision to happen in which thread or which
+>> callback?
+> 
+> Let's take the second example. zynaddsubfx itself is in another process, so we don't need to run this at all. For feeding each ringbuffer from zyn, I planned to use a separate jack client. E.g., if process() of sequencer_client_1_input is being called, it simply copies "nframes" into sequencer_input_ringbuffer.
+> 
+> Everything that now remains (e.g. lfo generator, peak_controller_effect, sending input to zynaddsubfx_2) is done by a process() callback of sequencer_client_output. I call this one the master jack client.
+> 
+> About the problem:
+> 
+> A point where I think spinlocks can't be avoided would be, e.g., reading from sequencer_output_ringbuffer. The sequencer's master jack client would need to do that in process(), but it can not guess when the ringbuffer reader from sequencer_client_2_input has even started to feed the ringbuffer.
+> 
+>> Do you want to do some signal processing in your sequencer or would it
+>> be ok to delegate this to other jack clients? (may be easier)
+> 
+> Hopefully you got it from the explenations above: the master jack client would do this right now, as I planned. Other ideas will be fine, too. Though, I guess, for "some lfo generator", e.g., a separate jack client would be overkill, as this generator simply does, e.g., f(x) = sin(x).
+> 
+
+The lfo input for zyn nr 2
+So a part of the dependencies in the signal processing flow is only
+known to your sequencer, which leads to a situation where jack can not
+know, if all dependencies for running a certain client process function
+are satisfied?
+I personally would try to avoid that so that things will become easier,
+which means no need for ringbuffers (input and output buffers that
+depend on each other are passed together to the process function) and
+spinlocks (jack always calls the clients callback, if data is definitely
+available) for synchronization.
+
+Not sure if this helps much, I hope it does :)
+
+1428579651.12226_0.ltw:2, <552664A2.9000402 at spectralbird dot de>
+________________________________________________________________________________
+

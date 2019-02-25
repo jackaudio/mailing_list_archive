@@ -1,0 +1,60 @@
+Date:        Fri, 15 May 2015 19:51:47 +0200
+From:        André Pinto  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   André Pinto Re: [Jack-Devel] Netjack 2: how to improve reliability by allowing greater latency? (1432149473.16909_0.ltw:2,)
+
+Subject:     [Jack-Devel] Netjack 2: how to improve reliability by allowing greater latency?
+
+Hello,
+
+I've been playing around with Jack/Netjack and the Opus codec in order to
+setup a "low latency" WiFi audio stream at home.
+
+After compiling Opus with custom modes and Jack2 with Opus support (both
+from the master branches of the respective repositories), I was able to run
+the Master-Slave setup:
+
+Master.
+jackd -R -d alsa -d hw:1 -D=false -r44100 -S -n16
+jack_load netmanager
+
+Slave:
+jackd -R -d net -C0 -P2 -o0 -i0 -O320 -M1200 -l5
+
++ jack_connect to route the net input on the master to the speakers
+
+But as I was getting quite frequent audio deterioration, with the master
+showing messages like these:
+
+Packet(s) missing from... -1 1
+Wrong packet type : a
+JackEngine::XRun: client = SLAVE_HOSTNAME was not finished, state = Running
+JackEngine::XRun: client netmanager finished after current callback
+JackAudioDriver::ProcessGraphAsyncMaster: Process error
+Wrong packet type : a
+Packet(s) missing from... -1 1
+JackAudioDriver::ProcessGraphAsyncMaster: Process error
+JackEngine::XRun: client = SLAVE_HOSTNAME was not finished, state =
+Triggered
+
+I've thought that maybe I should just try increasing the network latency
+argument on the slave, as, for my use case, I'm happy with latency < 200
+ms.
+
+By using something like -l30 (the maximum I'm allowed to set) on the slave
+I was able to greatly diminish the Process errors (I still get the same
+lots of wrong packet type and packet missing messages though) but it didn't
+fix the audio artifacts. Actually sometimes this change makes the playback
+even worse with ms pauses every second.
+
+So I would like to know if there is any other way to relax the low latency
+requirement in order to improve playback reliability. Or is there some kind
+of incompatibility in the configuration I'm passing to both endpoints that
+is causing these problems?
+
+Thanks!
+André.
+
+1431712314.25085_0.ltw:2, <CAHesbncX48QyTDJ-EEM5m0Hs5SEkt0cziRKnYe2_pnSF8c+UhA at mail dot gmail dot com>
+________________________________________________________________________________
+

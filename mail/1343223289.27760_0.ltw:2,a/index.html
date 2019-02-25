@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Strange overrun behaviour</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Strange overrun behaviour</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1343136309.32399_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1343242550.25958_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1343223289.27760_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 25 Jul 2012 15:34:36 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jeroen Van den Keybus </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+Using Jack 1.9.8 on Ubuntu 12.04 (vanilla kernel 3.2.16, no
+preempt-RT), I noticed that
+
+jack -S -R -dalsa -dhw:0,3 -r48000 -p1024
+
+produces a continuous series of small (0.1 to 0.3 ms) overrun events.
+It is not possible to send audio. I tried using a larger frame buffer:
+
+jack -S -R -dalsa -dhw:0,3 -r48000 -p2048
+
+and voil&#xE0;, the overruns disappear, at the expense of a large latency
+(around 50ms). Out of curiosity, I also tried
+
+jack -S -R -dalsa -dhw:0,3 -r48000 -p512
+jack -S -R -dalsa -dhw:0,3 -r48000 -p256
+
+which, not surprisingly, also cause overruns and resulted in a
+nonworking Jack. However,
+
+jack -S -R -dalsa -dhw:0,3 -r48000 -p128
+
+does not suffer from overruns !? In this case the sound is distorted,
+which could apparently be fixed by:
+
+jack -S -R -dalsa -dhw:0,3 -r48000 -p128 -n4
+
+I believe that the reported overruns could be due to some other timing
+issue, rather than the inability of the PC to handle the buffers. The
+CPU (AMD E-450) load is around 7% for Jack when playing audio in the
+above scenario.
+
+Is there a way to diagnose this issue ? The audio card is an "ATI
+Wrestler HDMI audio" device.
+
+
+J.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1343136309.32399_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1343242550.25958_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1343223289.27760_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1343223289.27760_0.ltw:2,a&nbsp;&lt;CAPRPZsCFwCjgJRwm1HOnWHM8z30BQSzpPc-LoYP=q4c-H7aFLA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

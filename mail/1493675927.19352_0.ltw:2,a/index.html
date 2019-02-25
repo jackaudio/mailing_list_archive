@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1493330599.15681_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1493730703.23332_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1493675927.19352_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 01 May 2017 11:00:26 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Chris Caudle
+<a href='../1493330599.15681_0.ltw:2,a/index.html'>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Frodo Jedi
+<a href='../1493730703.23332_0.ltw:2,a/index.html'>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2 </a></td></tr>
+</table>
+<pre>
+I had some firewall configuration problems preventing successful multicast
+packet exchange between my test machines, but I got that sorted out by
+temporarily just disabling the firewall on one machine.
+
+This is the output I see from each machine.
+
+On machine with USB interface attached (jackd master):
+
+]$ /usr/bin/jackd -P70 -t2000 -dalsa -dhw:Lambda -r48000 -p1024 -n3 -Xseq
+-zt -I376 -O376
+jackdmp 1.9.10
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2014 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+no message buffer overruns
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 70
+self-connect-mode is "Don't restrict self connect requests"
+audio_reservation_init
+Acquire audio card Audio0
+creating alsa driver ...
+hw:Lambda|hw:Lambda|1024|3|48000|0|0|nomon|swmeter|-|32bit
+configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 3 periods
+ALSA: final selected sample format for capture: 24bit little-endian
+ALSA: use 3 periods for capture
+ALSA: final selected sample format for playback: 24bit little-endian
+ALSA: use 3 periods for playback
+Using port names patch v0.1 (07.04.2010)
+Trying to load portnames from /home/chris/.config/jack/cards/Lexicon
+Lambda.ss.ports.in
+Trying to load portnames from /home/chris/.config/jack/cards/Lexicon
+Lambda.ports.in
+Trying to load portnames from /etc/jack/cards/Lexicon Lambda.ss.ports.in
+Trying to load portnames from /etc/jack/cards/Lexicon Lambda.ports.in
+Trying to load portnames from /home/chris/.config/jack/cards/Lexicon
+Lambda.ss.ports.out
+Trying to load portnames from /home/chris/.config/jack/cards/Lexicon
+Lambda.ports.out
+Trying to load portnames from /etc/jack/cards/Lexicon Lambda.ss.ports.out
+Trying to load portnames from /etc/jack/cards/Lexicon Lambda.ports.out
+port created: Midi-Through:midi/playback_1
+port created: Midi-Through:midi/capture_1
+port created: Lexicon-Lambda:midi/playback_1
+port created: Lexicon-Lambda:midi/capture_1
+
+--------------------
+in separate console loaded netmanager at this point.
+output from netmanager load:
+$ jack_load netmanager
+netmanager is running.
+client name = netmanager
+--------------------
+
+Starting Jack NetManager
+Listening on '225.3.19.154:19000'
+
+---------------------
+slave machine jackd started at this point
+This is still output from master side, just making a timing notation
+---------------------
+
+Takes physical 2 audio input(s) for slave
+Takes physical 2 audio output(s) for slave
+Takes physical 2 MIDI input(s) for slave
+Takes physical 2 MIDI output(s) for slave
+Sending parameters to oldchubb...
+New NetMaster started
+**************** Network parameters ****************
+Name : oldchubb
+Protocol revision : 8
+MTU : 1500
+Master name : chubb.cc-net
+Slave name : oldchubb
+ID : 1
+Transport Sync : no
+Send channels (audio - midi) : 2 - 2
+Return channels (audio - midi) : 2 - 2
+Sample rate : 48000 frames per second
+Period size : 1024 frames per period
+Network latency : 5 cycles
+SampleEncoder : Float
+Slave mode : async
+****************************************************
+Waiting for a slave...
+Synching with latency = 0
+Synching with latency = 1
+Synching with latency = 2
+Synching with latency = 3
+Synching with latency = 4
+
+
+Output from slave side:
+
+$ /usr/bin/jackd -dnet
+jackdmp 1.9.10
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2014 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+no message buffer overruns
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 20
+self-connect-mode is "Don't restrict self connect requests"
+NetDriver started in async mode without Master's transport sync.
+Waiting for a master...
+Initializing connection with chubb.cc-net...
+**************** Network parameters ****************
+Name : oldchubb
+Protocol revision : 8
+MTU : 1500
+Master name : chubb.cc-net
+Slave name : oldchubb
+ID : 1
+Transport Sync : no
+Send channels (audio - midi) : 2 - 2
+Return channels (audio - midi) : 2 - 2
+Sample rate : 48000 frames per second
+Period size : 1024 frames per period
+Network latency : 5 cycles
+SampleEncoder : Float
+Slave mode : async
+****************************************************
+
+
+So it seems that contrary to the documentation netjack2 will create MIDI
+channels by default, and at least on my system (where the interface does
+support duplex mode) I can start netjack with no arguments and the default
+behavior will successfully create a connection.
+
+So I think at this point my guess is that the last output shown by the
+original poster indicates some kind of mismatch between the jack ALSA
+parameters and the allowed netjack parameters:
+&gt;&gt; Can't set net buffer sizes : Invalid argument
+&gt;&gt; SetParams error...
+&gt;&gt; Can't init new NetMaster...
+
+I thought maybe the buffer size was too large, but the original post was
+using -p128 -n2, and at least on my machine I use -p1024 -n3 and that did
+not have a problem.
+
+But again, the last message from the original post did not show the
+"configuring for..." output line from jackd, so either the jackd output
+was truncated in the posting, removing information necessary to help
+debug, or the ALSA backend did not actually start correctly.
+
+-- 
+Chris
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1493330599.15681_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1493730703.23332_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1493675927.19352_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1493675927.19352_0.ltw:2,a&nbsp;&lt;d40ded620e6ac00ca5eceb904f0b124b.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

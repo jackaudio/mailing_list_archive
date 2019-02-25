@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack on ARM with low-latency USB</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack on ARM with low-latency USB</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1385053520.21667_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1385117795.28215_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1385060829.26332_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 21 Nov 2013 20:06:57 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jeremy Jongepier </span> &lt;[hidden] at autostatic dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fabian Schlieper
+<a href='../1385053520.21667_0.ltw:2,a/index.html'>[Jack-Devel] Jack on ARM with low-latency USB </a></td></tr>
+</table>
+<pre>
+On 11/21/2013 05:17 PM, Fabian Schlieper wrote:
+&gt; Hi everyone,
+&gt; 
+&gt; I'm trying to build a low-latency audio processor on ODROID-X2 with an 
+&gt; external USB sound card (Behringer UCA-202).
+&gt; I can't get jack working stable with a period size of 128 samples.
+&gt; 
+&gt; I compiled a real-time kernel (with full preemption) and installed the rtirq 
+&gt; script.
+&gt; Command line starting jack:
+&gt; jackd -R -P80 -p16 -t2000 -dalsa -dhw:$USB_SOUND_CARD_INDEX,0 -p128 -n3 -
+&gt; r4441000 -i2 -o2 -s
+&gt; 
+&gt; It's running without audio glitches, but after some time (or when other USB 
+&gt; devices are heavily active) the sound gets disturbed and keeps crackling until 
+&gt; jack is restarted.
+&gt; 
+&gt; I know I could increase the period size, but I want to have low-latency, Is 
+&gt; 128 period size even realistic with USB sound?
+&gt; 
+&gt; Thanks for any comments and hints.
+
+Hello Fabian,
+
+What other optimizations did you do besides running a real-time kernel
+and installing rtirq? Which RT kernel are you using? And could you post
+the contents of /etc/default/rtirq? What software are you using to test?
+And I assume -r4441000 is a typo :) And you don't need the -R option,
+it's a JACK default.
+
+Other things you could try:
+* Setting CPU scaling governor to performance
+* Overclocking the CPU
+* Check if the USB controller shares its IRQ or not and on which bus it
+sits. For instance on my Cubieboard the ethernet controller sits on the
+same bus as the audio codec. If network traffic goes up (ssh -X and then
+opening Hydrogen for example) audio can get distorted.
+* Increase IO by using a good SD card and Ext4 with the noatime and
+nobarrier flags and the rootflags=data=writeback kernel parameter.
+
+You can try to get clean audio again by reseting the buffer size with
+jack_bufsize 128. And yes, -p128 should be realistic, I can run a
+UCG-102 with -p64 on a Cubieboard2 (Allwinner A20).
+
+Best,
+
+Jeremy
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1385053520.21667_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1385117795.28215_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1385060829.26332_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1385060829.26332_0.ltw:2,a&nbsp;&lt;528E59D1.2030607 at autostatic dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

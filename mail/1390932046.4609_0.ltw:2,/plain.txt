@@ -1,0 +1,54 @@
+Date:        Tue, 28 Jan 2014 18:58:07 +0100
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+Cc:          [hidden] at bugs dot debian dot org
+In-Reply-To: franklyn berry [Jack-Devel] howto: jackdbus && jack_control (1390930247.2397_0.ltw:2,)
+
+Subject:     Bug#728710: [Jack-Devel] howto: jackdbus && jack_control
+
+On Tue, Jan 28, 2014 at 11:30:41AM -0600, franklyn berry wrote:
+
+> <powerpc: ubuntu 12.04; opus-1.1; jack-1.9.9.5; ffado-2.1>
+
+I assume it's a hand-rolled jackd. If so, I remember a Debian bug report
+claiming the same alignment issue on ppc32 as seen on ARM:
+
+     http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=728710
+
+No guarantees, but maybe the following patch helps (also attached to
+prevent corruption when displayed in web interfaces).
+
+
+Please report back any findings.
+
+
+diff --git a/common/jack/systemdeps.h b/common/jack/systemdeps.h
+index b4a1472..0b5a749 100644
+--- a/common/jack/systemdeps.h
++++ b/common/jack/systemdeps.h
+@@ -120,7 +120,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, 
+USA.
+
+  #endif /* __APPLE__ || __linux__ || __sun__ || sun */
+
+-#if defined(__arm__)
++#if defined(__arm__) || defined(__ppc__) || defined(__powerpc__)
+      #undef POST_PACKED_STRUCTURE
+      #define POST_PACKED_STRUCTURE
+  #endif /* __arm__ */
+
+
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+
+pkg-multimedia-maintainers mailing list
+[hidden]
+http://lists.alioth.debian.org/cgi-bin/mailman/listinfo/pkg-multimedia-maintainers
+* Attachment: '1390932046.4609_0.ltw:2,/files/ppc.patch'
+content-type: text/x-diff
+
+1390932046.4609_0.ltw:2, <52E7EFAF.4040703 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

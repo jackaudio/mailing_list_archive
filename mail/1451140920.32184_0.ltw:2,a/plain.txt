@@ -1,0 +1,46 @@
+Date:        Sat, 26 Dec 2015 15:41:52 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          John Emmas <[hidden] at tiscali dot co dot uk>, JACK devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: John Emmas Re: [Jack-Devel] jack dsp load calculation (1451140464.31543_0.ltw:2,a)
+Follow-Up:   John Emmas Re: [Jack-Devel] jack dsp load calculation (1451142645.1418_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack dsp load calculation
+
+On 12/26/2015 03:34 PM, John Emmas wrote:
+> On 26/12/2015 14:16, Robin Gareus wrote:
+>> There are cases when there *are* xruns, while jack wrongly reports a DSP
+>> usage of < 50% while it fact it peaks over 100%.
+>>
+> 
+> I very much doubt that.
+> 
+> The top-level application might be reporting < 50% (if it isn't querying
+> Jack often enough).  And I think you've made a very good case for that. 
+> But you haven't produced any evidence to suggest that Jack itself is
+> missing the xruns. 
+
+This part is correct. The x-run counter increases correctly.
+
+> What's needed is to make sure that the app will
+> notice them if they occur (in between update calls).  Removing the
+> averaging isn't the way to achieve that.  I know that's what you've done
+> in the PortAudio backend - but it's not the right approach.
+
+I think we're talking cross-purpose.
+
+Effectively it boils down to this: Is the reported DSP load supposed to
+be "average" or "worst-case" or a "hybrid" (current implementation)?
+
+I like Nedko's idea: Allow to query all: min, average, max  over a long
+time compared to the process-cycle (think second or seconds).
+
+That leaves it to the application which of those are displayed to the
+user, but at least the mechanism in the underlying infrastructure (here
+jack) is well defined.
+
+2c,
+robin
+
+1451140920.32184_0.ltw:2,a <567EA730.4020001 at gareus dot org>
+________________________________________________________________________________
+

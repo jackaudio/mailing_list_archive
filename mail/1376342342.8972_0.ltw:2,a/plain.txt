@@ -1,0 +1,48 @@
+Date:        Mon, 12 Aug 2013 14:18:56 -0700
+From:        matthias  <[hidden] at bejocama dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] JACK_PROMISCUOUS_SERVER not working (1369401238.3347_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK_PROMISCUOUS_SERVER not working
+
+Hi,
+
+addtional remarks are perhaps interesting. If I'm running jackd under a
+specific user and other users are in the group
+of this jackd user, there are still connection problems. The reason is that
+the group of the jackd user isn't the primary group
+of that specific user and the client application - like qjackctl - creates a
+server socket, which isn't accessible by the
+jackd daemon (I'am regarding a debian environment here). Therefore "umask
+0000" also works in such a situation more or less . Beside the assumption
+that this is a conceptual problem, a simple solution could be: 
+
+JACK_PROMISCUOUS_SERVER=jackd 
+
+Setting the environment variable to the group of the jackd daemon. According
+to the patches handling the  JACK_PROMISCUOUS_SERVER environment variable it
+is not very difficult to change the ownership of the server-socket file to
+that group and the access rights 0770 - posix/JackSocket.cpp.
+
+Another variant:
+Create a subdirectory /run/shm/jackd (debian) with the jackd permissions and
+"chmod g+s /run/shm/jackd". All
+files created in that directory will get the right ownership but the
+permissions 0770 for server sockets are still necessary.
+
+Perhaps it's better to provide the idea than a patch in this situation
+because of a lack of experiences.
+
+Cheers
+Matthias
+
+
+
+
+--
+View this message in context: http://jack-audio.10948.n7.nabble.com/Jack-Devel-JACK-PROMISCUOUS-SERVER-not-working-tp16662p16981.html
+Sent from the Jackit mailing list archive at Nabble.com.
+
+1376342342.8972_0.ltw:2,a <1376342336220-16981.post at n7 dot nabble dot com>
+________________________________________________________________________________
+

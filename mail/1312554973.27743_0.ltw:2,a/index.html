@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack session API implementation in jack2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack session API implementation in jack2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1312538348.29777_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1312569286.24253_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1312554973.27743_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 05 Aug 2011 16:35:42 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> torbenh </span> &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1311327981.9831_0.ltw:2,a/index.html'>[Jack-Devel] Jack session API implementation in jack2 </a></td></tr>
+</table>
+<pre>
+On Fri, Jul 22, 2011 at 11:46:09AM +0200, St&#xE9;phane Letz wrote:
+&gt; Hi, 
+&gt; 
+&gt; Looking at Jack session API implementation in jack2 (the goal being to add support for internal server clients also...) I see at least two issues:
+&gt; 
+&gt; - if a client calls jack_session_notify and a client fails to answer what happens? As far as I understand the code the initial jack_session_notify call will possibly block infinitely in the "while(true)" loop...
+&gt; 
+&gt; int Read(JackChannelTransaction* trans)
+&gt;     {
+&gt;         CheckRes(JackResult::Read(trans));
+&gt;         while (true) {
+&gt;             JackSessionCommand buffer;
+&gt; 
+&gt;             CheckRes(trans-&gt;Read(buffer.fUUID, sizeof(buffer.fUUID)));
+&gt;             if (buffer.fUUID[0] == '\0')
+&gt;                 break;
+&gt; 
+&gt;             CheckRes(trans-&gt;Read(buffer.fClientName, sizeof(buffer.fClientName)));
+&gt;             CheckRes(trans-&gt;Read(buffer.fCommand, sizeof(buffer.fCommand)));
+&gt;             CheckRes(trans-&gt;Read(&amp;(buffer.fFlags), sizeof(buffer.fFlags)));
+&gt; 
+&gt;             fCommandList.push_back(buffer);
+&gt;         }
+&gt;         return 0;
+&gt;     }
+
+well... a client not calling jack_session_reply and still living, will
+hold back the reply.
+we might add a timeout for this.
+right now, the only solution is killing the offending client.
+
+feel free to propose a better interface for the SM interface. We didnt
+declare it stable anyways.
+
+&gt; 
+&gt; - if a first client calls jack_session_notify and a second one does jack_session_notify before the first "asynchronous server/clients round trip" is finished, the code here JackEngine.cpp line 942 is called AFAICS: 
+&gt; 
+&gt;    if (fSessionPendingReplies != 0) {
+&gt;         JackSessionNotifyResult res(-1);
+&gt;         res.Write(socket);
+&gt;         jack_log("JackEngine::SessionNotify ... busy");
+&gt;         return;
+&gt;     }
+&gt; 
+&gt; Agin don't this code finally enter the possibly blocking Read given just before?
+
+No it doesnt.
+
+&gt; 
+&gt; Comments? How this design can be improved?
+&gt; 
+&gt; Thanks.
+&gt; 
+&gt; Stephane 
+&gt; 
+
+-- 
+torben Hohn
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1312538348.29777_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1312569286.24253_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1312554973.27743_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1312554973.27743_0.ltw:2,a&nbsp;&lt;20110805143542.GA23575 at siel dot b&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

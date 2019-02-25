@@ -1,0 +1,99 @@
+Date:        Fri, 03 Oct 2014 01:10:04 -0400
+From:        Tim E. Real  <[hidden] at rogers dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Tim E. Real Re: [Jack-Devel] Jack2 alsarawmidi slave: Pluggable device registration problem? (1412331149.7906_0.ltw:2,)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Jack2 alsarawmidi slave: Pluggable device registration problem? (1412344221.5584_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Jack2 alsarawmidi slave: Pluggable device registration problem?
+
+[Oops, to the list not just Devin:]
+
+On October 2, 2014 08:56:50 PM Chris Caudle  wrote:
+> I thought Paul said the new jack1 driver just needed to be ported to jack2
+> as an internal client.  I wasn't paying close attention, but I thought he
+> said something about it already being in git, someone just needed to
+> integrate to jack2.   I probably missed a lot of necessary details that go
+> along with that since I wasn't paying attention, but seems like that would
+> be the place to start rather than trying to band-aid the old hacks.
+
+D'oh! Just a few days ago. And I read it.
+From the current discussion in LAD  "Bridging alsa and jack midi":
+
+Paul Davis wrote:
+> the actual implementation is nothing to do with the old -X seq
+> code, and is actually a2jmidid converted into an internal client.
+> Note that JACK2 could use this client too - its source code is
+> even in the theoretically "shared" git repo for JACK tools.
+
+Sorry about that.
+Came upon this problem in a haphazard way, was too focused on it.
+Great stuff! Thanks.
+
+No really, this is so ironic. 
+
+Weeks ago someone made a simple request for an option in MusE.
+
+I began to add it, then realized MusE has been missing something a long time:
+Persistent ports.
+That is, unplug and re-plug a device and we automatically reconnect to it. 
+I cache the port names and use them to match up with the re-appearing ports.
+
+But that's when I began investigating how Jack drivers name their ports.
+There's trouble.
+
+Side note:
+Please please, don't add numbers in the port names, like alsa addresses.
+And please don't ever use an auto-incrementing numbering scheme
+ like in the alsa raw and seq drivers.
+Each time the device is re-plugged, it gets a new name!
+Canonical schemes are fine but this cannot be satisfied for alsa midi.
+Actually because of that, I think canonical scheme needs to be abandoned.
+Look at it this way: You're going to have to do something about port names 
+ if you deprecate aliases in favour of the metadata because it would make
+ no sense having some drivers use canonical names and others full names
+ already similar to the metadata.
+The most sensible names I saw so far were the two aliases for the seq driver.
+If a user sees two identical port names due to identical cards, it is up to 
+ them to fix the problem at the source - using udev device re-naming which 
+ I just learned about. 
+
+So anyway, I looked at the drivers and bridges out there.
+At the same time I followed the LAD thread on "Bridging alsa and jack midi".
+Where Paul talked about the new alsamidi driver, and metadata.
+Ironically it's that thread which led me to try the alsarawmidi driver,
+ being a Jack2 user.
+
+So I fired up alsarawmidi and what did I see? As I said in my first post:
+
+>But then if I unplug the device, strangely the ports do not unregister and 
+> I can even make connections to them in qjctl.
+>
+> ... I thought it might be a new 'feature' - 
+> Persistent Ports!
+
+See the irony? "Wow, Jack added my Persistent Ports idea!" 
+
+Also ironic that persistent ports are discussed briefly on the Jack site.
+It says very few clients do this kind of thing. I think port naming is why.
+It mentions session managers. Should a session manager deal with this 
+ reconnect stuff? If so, why - everything I need is in normal Jack itself, no?
+And not even a session manager could deal with bad port naming/reordering.
+
+Anyway I feel better now knowing more about metadata :-)
+
+I think drivers should fill in 'hardware' and maybe 'pretty name' with 
+ default values. And as above, if numbers such as midi indexing are 
+ desired they should be made separate properties since they might 
+ change day to day.
+
+Question: Some metadata such as the 'hardware' property might be 
+ crucial and should not change.
+How about adding a read-only 'lock' to metadata?
+
+As usual I'm either waaay off or just off.
+Thanks for listening, thanks for your help. Good weekend to all.
+Tim.
+
+1412319419.20560_0.ltw:2, <3065917.XyVcjHsFnH at col-desktop>
+________________________________________________________________________________
+

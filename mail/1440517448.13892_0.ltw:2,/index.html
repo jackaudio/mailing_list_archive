@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Fwd: Bug#786737: jackd1: crashes with -n option specified</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Fwd: Bug#786737: jackd1: crashes with -n option specified</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1440420215.17025_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1440520277.17459_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1440517448.13892_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 25 Aug 2015 17:43:57 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Adrian Knoth </span> &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+Hi!
+
+This just caught my attention. I didn't look into it, yet, but maybe
+somebody has some cycles to investigate.
+
+
+Cheers
+
+-------- Forwarded Message --------
+Subject: Bug#786737: jackd1: crashes with -n option specified
+Resent-Date: Mon, 25 May 2015 02:57:01 +0000
+Resent-From: Frank Heckenbach &lt;[hidden]&gt;
+Resent-To: [hidden]
+Resent-CC: Debian Multimedia Maintainers 
+&lt;[hidden]&gt;
+Date: Mon, 25 May 2015 04:53:18 +0200
+From: Frank Heckenbach &lt;[hidden]&gt;
+Reply-To: Frank Heckenbach &lt;[hidden]&gt;, [hidden]
+To: [hidden]
+
+Package: jackd1
+Version: 1:0.124.1+20140122git5013bed0-3
+Severity: normal
+Tags: upstream patch
+
+When the "-n" option is given, jackd crashes when accessing
+properties (which it seems to do implicitly for any client, e.g.
+jack_lsp).
+
+To reproduce:
+
+   jackd -nfoo -dalsa
+or
+   JACK_DEFAULT_SERVER=bar jackd -nfoo -dalsa
+
+While jackd is running, repeat this:
+
+   JACK_DEFAULT_SERVER=foo jack_lsp
+
+After a few tries, jackd crashes:
+
+   /dev/shm/jack-0/default/__db.001: No such file or directory
+   cannot open DB environment: No such file or directory
+   Segmentation fault
+
+I found several problems in the code:
+
+- jack_property_init():
+
+   Returns early if db_env != NULL. However, on failure later returns
+   with db_env != NULL, but db == NULL. Callers assume db != NULL
+   after it returns.
+
+   Patch below. This fixes at least the segfault, but the error
+   message remains (and whatever consequences it may have, I don't
+   know).
+
+- 7 places in metadata.c:
+
+         if (jack_property_init (NULL)) {
+
+   If NULL is passed for server_name, of course it won't use the
+   actual server name.
+
+   How is this supposed to work at all? Was it ever tested?
+
+   A fix should consist of passing the actual server name from the
+   callers.
+
+--- libjack/metadata.c
++++ libjack/metadata.c
+@@ -45,11 +45,11 @@
+
+          /* idempotent */
+
+-        if (db_env) {
++        if (db) {
+                  return 0;
+          }
+
+-        if ((ret = db_env_create(&amp;db_env, 0)) != 0) {
++        if (!db_env &amp;&amp; (ret = db_env_create(&amp;db_env, 0)) != 0) {
+                  jack_error ("cannot initialize DB environment: %s\n", 
+db_strerror(ret));
+                  return -1;
+          }
+
+
+pkg-multimedia-maintainers mailing list
+[hidden]
+http://lists.alioth.debian.org/cgi-bin/mailman/listinfo/pkg-multimedia-maintainers
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1440420215.17025_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1440520277.17459_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1440517448.13892_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1440517448.13892_0.ltw:2,&nbsp;&lt;55DC8D3D.2000303 at drcomp dot erfurt dot thur dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

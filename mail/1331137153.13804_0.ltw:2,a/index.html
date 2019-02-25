@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Compiling QjackCtl 0.3.8 on Windows</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Compiling QjackCtl 0.3.8 on Windows</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1331132217.5730_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1331139001.16654_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1331137153.13804_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 07 Mar 2012 17:18:41 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Rui Nuno Capela &lt;[hidden] at rncbc dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Rui Nuno Capela
+<a href='../1331132217.5730_0.ltw:2,a/index.html'>Re: [Jack-Devel] Compiling QjackCtl 0.3.8 on Windows </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Rui Nuno Capela
+<a href='../1331139001.16654_0.ltw:2,a/index.html'>Re: [Jack-Devel] Compiling QjackCtl 0.3.8 on Windows </a></td></tr>
+</table>
+<pre>
+Le 7 mars 2012 &#xE0; 15:57, Rui Nuno Capela a &#xE9;crit :
+
+&gt; On 03/07/2012 12:39 PM, St&#xE9;phane Letz wrote:
+&gt;&gt; 
+&gt;&gt; Le 2 mars 2012 &#xE0; 17:00, Rui Nuno Capela a &#xE9;crit :
+&gt;&gt; 
+&gt;&gt;&gt; On 03/02/2012 01:22 PM, St&#xE9;phane Letz wrote:
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; Hi all,
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; The binary version of  QjackCtl included in JACK for Windows
+&gt;&gt;&gt;&gt; package is now quite old and a bit buggy. I need to compile the
+&gt;&gt;&gt;&gt; latest version.
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; Has anybody succeeded in compiling QjackCtl 0.3.8 on WIndows?
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; As I understand src.pri  and config.h have to be setup correctly.
+&gt;&gt;&gt;&gt; Anybody with a version of those files I could reuse? Can
+&gt;&gt;&gt;&gt; QTCreator be used?
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; Thanks in advance for any info on how to setup the compilation
+&gt;&gt;&gt;&gt; environement and build the application.
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt; 
+&gt;&gt;&gt; hi Stephane, you should know this better ;)
+&gt;&gt;&gt; 
+&gt;&gt;&gt; but, ntl
+&gt;&gt;&gt; 
+&gt;&gt;&gt; edit the files here attached, rewrite those placeholders with the
+&gt;&gt;&gt; windows thing, like drive:\directory\to\whatever
+&gt;&gt;&gt; 
+&gt;&gt;&gt; &lt;/path/to/jack/includes&gt; &lt;/path/to/portaudio/includes&gt;
+&gt;&gt;&gt; &lt;/path/to/jack/libs&gt; &lt;/path/to/portaudio/libs&gt;
+&gt;&gt;&gt; 
+&gt;&gt;&gt; disclaimer: these have been NOT tested (i don't do windoze for
+&gt;&gt;&gt; ages:)) but i guess it gets plain str8 fwd to use qtcreator
+&gt;&gt;&gt; anywhere,
+&gt;&gt;&gt; 
+&gt;&gt;&gt; yada yada -- rncbc aka Rui Nuno Capela [hidden]
+&gt;&gt; 
+&gt;&gt; 
+&gt;&gt; Thanks a lot Rui.
+&gt;&gt; 
+&gt;&gt; I finally succeeded compiling the project directly from QT Creator
+&gt;&gt; (which is just fine...). The resulting QjackCtl works fine, but for
+&gt;&gt; some reason the start logic has changed a bit. if a just put "jackd
+&gt;&gt; -S" in server path, then QjackCtl tries to start
+&gt;&gt; "c:/Windows/system32/jackd.exe", which is wrong. I would like
+&gt;&gt; QjackCtl to just use the jackd.exe that is located in the same folder
+&gt;&gt; where QjackCtl is. This was working this way before. I can use a
+&gt;&gt; complete path, but this is not so practical.
+&gt;&gt; 
+&gt;&gt; Is there a way to get back to the old way? An option at compilation
+&gt;&gt; time? Or will I need to hack the "start jackd" code?
+&gt;&gt; 
+&gt; 
+&gt; gosh! lookout for those #ifdef WIN32's in qjackctlMainForm.cpp
+&gt; 
+&gt; most suspicious are that kind that appears in
+&gt; qtractorMainForm::startJack() ... for which a lookup through the PATH
+&gt; environment variable takes place when the server executable path (nee
+&gt; server prefix on svn trunk) is given in relative terms ("jackd" vs.
+&gt; "drive:/path/to/jackd.exe"
+&gt; 
+&gt; byee
+&gt; -- 
+&gt; r
+
+OK . Basically commenting this block, it works again.
+
+if (fi.isRelative()) {
+	#if defined(WIN32)
+		const char chPathSep = ';';
+		if (fi.suffix().isEmpty())
+			sCommand += ".exe";
+	#else
+		const char chPathSep = ':';
+	#endif
+		const QString sPath = ::getenv("PATH");
+		QStringList paths = sPath.split(chPathSep);
+		QStringListIterator iter(paths);
+		while (iter.hasNext()) {
+			const QString&amp; sDirectory = iter.next();
+			fi.setFile(QDir(sDirectory), sCommand);
+			if (fi.isExecutable()) {
+				sCommand = fi.filePath();
+				break;
+			}
+		}
+	}
+
+But now I have a "non systematic" crash when I quit QjackCtl with the server running. It crashes in  qjackctlMainForm::jackCleanup , for instance in :
+
+	appendMessages(tr("JACK was stopped")
+			+ formatExitStatus(m_pJack-&gt;exitCode()));
+
+or when deleting the m_pJack.
+	
+Basically it sees the m_pJack is just NULL . Here is a backtrace.
+
+0	QProcessPrivate::cleanup	qprocess.cpp	801	0x6a1be639	&#13;
+1	QProcess::~QProcess	qprocess.cpp	1162	0x6a1bf4cb	&#13;
+2	qjackctlMainForm::jackCleanup	qjackctlMainForm.cpp	1433	0x43a818	&#13;
+3	qjackctlMainForm::stopJackServer	qjackctlMainForm.cpp	1330	0x43a1f3	&#13;
+4	qjackctlMainForm::queryClose	qjackctlMainForm.cpp	824	0x4368d8	&#13;
+5	qjackctlMainForm::closeEvent	qjackctlMainForm.cpp	834	0x4368f7	&#13;
+6	QWidget::event	qwidget.cpp	8519	0x1206bc9	&#13;
+7	QApplicationPrivate::notify_helper	qapplication.cpp	4550	0x11bc020	&#13;
+8	QApplication::notify	qapplication.cpp	4515	0x11bbea1	&#13;
+9	QCoreApplication::notifyInternal	qcoreapplication.cpp	876	0x6a213252	&#13;
+10	QCoreApplication::sendEvent	qcoreapplication.h	231	0x185029a	&#13;
+11	QWidgetPrivate::close_helper	qwidget.cpp	7927	0x120596a	&#13;
+12	QWidget::close	qwidget.cpp	7996	0x1205c0d	&#13;
+13	qjackctlMainForm::quitMainForm	qjackctlMainForm.cpp	3567	0x445ec9	&#13;
+14	qjackctlMainForm::qt_static_metacall	moc_qjackctlMainForm.cpp	135	0x463f9f	&#13;
+15	QMetaObject::activate	qobject.cpp	3547	0x6a22928b	&#13;
+16	QAbstractButton::clicked	moc_qabstractbutton.cpp	220	0x17ea460	&#13;
+17	QAbstractButtonPrivate::emitClicked	qabstractbutton.cpp	546	0x154d9b3	&#13;
+18	QAbstractButtonPrivate::click	qabstractbutton.cpp	539	0x154d931	&#13;
+19	QAbstractButton::mouseReleaseEvent	qabstractbutton.cpp	1121	0x154eddd	&#13;
+20	QToolButton::mouseReleaseEvent	qtoolbutton.cpp	718	0x16228d4	&#13;
+...	&lt;plus&gt;				&#13;
+
+
+Any idea?
+
+Thanks.
+
+St&#xE9;phane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1331132217.5730_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1331139001.16654_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1331137153.13804_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1331137153.13804_0.ltw:2,a&nbsp;&lt;2DF645CA-3636-4832-B372-DBBE1C1DFA27 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

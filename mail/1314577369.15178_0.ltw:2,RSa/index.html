@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1314558808.29990_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1314601187.8487_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1314577369.15178_0.ltw:2,RSa'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 28 Aug 2011 18:22:25 -0600 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Dan Swain </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Dan Swain
+<a href='../1314462065.27152_0.ltw:2,a/index.html'>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1315317438.15864_0.ltw:2,a/index.html'>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea </a></td></tr>
+</table>
+<pre>
+So, while we continue the discussion as to which hardware to go with for
+this project, I've been looking into the code with my minimal knowledge of
+C. Given my lack of experience, I wanted to clarify that I'm looking at the
+right elements of the JACK code, and whether I need to refer to these parts
+at all if I'm only creating the relevant data.
+
+The central point of my investigations has been on netjack_packet.c - from
+JACK1. The first 518 lines seem to show what I want to be looking at, if
+indeed I need to be that JACK-specific!
+
+I've been reading up on UDP, and having the FPGA write data into UDP packets
+would be quite simple I'd imagine, given the simplified structure of a UDP
+packet compared to, say, TCP.
+
+This is where I need the advice of those who are experienced with the inner
+workings of netJACK:
+
+If JACK sends uncompressed audio, is it in a particular format (WAV or raw
+PCM)?
+
+Assuming that both the master and slave are connected to each other and no
+further identification needs to be made, what data does JACK send along with
+that audio data?
+
+At more of an opinion level, if I were to use this for our 8-channel system,
+would each channel be dealt with in separate packets (series processing), or
+should one packet send data from all eight channels (parallel processing)?
+
+Again, if I have missed the scope of anything hear, please let me know, and
+I'll do some more relevant research - this is still very new to me, as you
+can probably tell :-)
+
+Thanks for your help!
+
+Dan
+On Sat, Aug 27, 2011 at 10:20 AM, Dan Swain &lt;[hidden]&gt; wrote:
+
+&gt; I've been reading the manual for the Altera DE1 board, and given its
+&gt; expense, would it be worth looking into finding a used one to work with on
+&gt; this project? I appears to have two clock sources of its own (27 and 50MHz),
+&gt; and the expansion connectors would provide me with (more than enough) the
+&gt; inputs we'd require to connect from the ADC. Maybe, if the clocks on the dev
+&gt; board are good enough, we could use those in our project-specific version of
+&gt; the circuit.
+&gt;
+&gt; It also has an array of LEDs and 7-segment displays, so there's the option
+&gt; of programming activity lights and numerical read-outs (for the sample rate,
+&gt; for example) further down the line.
+&gt;
+&gt; I keep watching youtube videos on the Quartus software, and it looks more
+&gt; and more appealing to program this way. I suppose I need to start saving up!
+&gt;
+&gt; However, there is also the Xilinx-based board that Jeri recommended to me
+&gt; in the first instance (the Avenet LX9 micro board) is a lot cheaper, but
+&gt; because everyone has been discussing mainly the Altera products, I've not
+&gt; looked into their feasibility, and whether they would be more or less
+&gt; difficult to work with than the Cyclone boards. Their cost is less, so it's
+&gt; still something I've been considering.
+&gt;
+&gt; I'll continue to look for sources on good clock sources, but thanks
+&gt; everyone so far for the discussions and the experience!
+&gt;
+&gt; Dan
+&gt;
+&gt;
+&gt; On Thu, Aug 18, 2011 at 11:40 AM, Fons Adriaensen &lt;[hidden]&gt;wrote:
+&gt;
+&gt;&gt; On Wed, Aug 17, 2011 at 12:41:00PM +0200, Jeroen Van den Keybus wrote:
+&gt;&gt;
+&gt;&gt; &gt; In fact, my idea was to use one of the FPGA analog PLLs with slow loop
+&gt;&gt; &gt; setting to lock onto the
+&gt;&gt; &gt; jittery (but not as jittery as the sync packets) DPLL output. So I will
+&gt;&gt; be
+&gt;&gt; &gt; using the FPGA analog PLL as a VCO.
+&gt;&gt; &gt;
+&gt;&gt; &gt; The main question remains whether or not the PLL will be able to
+&gt;&gt; properly
+&gt;&gt; &gt; lock on a DPLL output signal that is - indeed - fairly jittery. That
+&gt;&gt; &gt; probably calls for an experiment.
+&gt;&gt;
+&gt;&gt; That indeed remains to be seen. You can probably make it lock, the
+&gt;&gt; question is what BW it requires.
+&gt;&gt;
+&gt;&gt; Anyway creating a master sample clock from low frequency sync
+&gt;&gt; messages using a PLL is not easy. But since you have the computing
+&gt;&gt; power of an FPGA at your disposal there are alternatives in the
+&gt;&gt; form of open-loop solutions.
+&gt;&gt;
+&gt;&gt; Put a timestamp (using the current clock) on the sync messages,
+&gt;&gt; unwrap any modulo on the time stamps and perform a linear
+&gt;&gt; regression on a few hundred of them - this is equivalent to
+&gt;&gt; filtering in a PLL but doesn't have the stability problems
+&gt;&gt; as it is open loop. Repeat for each incoming sync packet,
+&gt;&gt; low-pass filter the result to drive a VC(X)O.
+&gt;&gt;
+&gt;&gt; Ciao,
+&gt;&gt;
+&gt;&gt; --
+&gt;&gt; FA
+&gt;&gt;
+&gt;&gt; 
+&gt;&gt; Jack-Devel mailing list
+&gt;&gt; [hidden]
+&gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;&gt;
+&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1314558808.29990_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1314601187.8487_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1314577369.15178_0.ltw:2,RSa'>Index</a></td></tr>
+</table>
+<p><small>1314577369.15178_0.ltw:2,RSa&nbsp;&lt;CABhkv4OfKZ-foHYwmQrOBEDZoQK-kEriY2NmiXYMTkmmnrAsyA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

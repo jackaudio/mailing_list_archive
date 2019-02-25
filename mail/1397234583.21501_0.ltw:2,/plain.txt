@@ -1,0 +1,63 @@
+Date:        Fri, 11 Apr 2014 18:42:48 +0200
+From:        Leonardo Gabrielli  <[hidden] at univpm dot it>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Paul Davis Re: [Jack-Devel] jackd + /dev/inputevent sounds bad (1397236195.24642_0.ltw:2,)
+
+Subject:     [Jack-Devel] jackd + /dev/inputevent sounds bad
+
+Dear devels,
+I am facing a strange issue with jackd.
+
+I'm running a debian armhf board with the latest jackd2 from git. By 
+default I loopback the capture and playback ports, the audio sounds good 
+at low period size and everything runs smooth when I startup jackd and 
+connect the ports using a custom script (called jackaudio). Now, the 
+sound is crippled if an init script I recently made is running in 
+background. The guilty init script is called read_usrbutton and reads a 
+gpio line for button press (BeagleBoard xM rev.C).
+What it does mainly
+
+   BUTTONPATH="/dev/input/event0"
+   cat $BUTTONPATH > /tmp/dump 2>1&
+   THIS_VALUE=`tail -n1 /tmp/dump`
+
+Then THIS_VALUE is checked for changes in a while loop every 50ms.
+
+Why could this be? For crippled audio I mean that buffers are scrambled 
+up. Neither read_usrbutton nor 'cat' use much CPU so it's not a problem 
+of XRUNS.
+
+FYI, jackaudio looks like
+
+   killall jackd
+   # setup McBSP2
+   echo threshold | tee /sys/devices/68000000.ocp/49022000.mcbsp/dma_op_mode
+   echo 320 | tee /sys/devices/68000000.ocp/49022000.mcbsp/max_rx_thres
+   echo 320 | tee /sys/devices/68000000.ocp/49022000.mcbsp/max_tx_thres
+   # enable max CPU freq
+   echo -n performance | tee 
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+   # start jack
+   sudo -u debian jackd -P62 -t2000 -dalsa -dhw:0 -r44100 -p64 -n2 -s 
+-i4 -o4 > /var/log/jackaudio.log 2>&1 &
+   sleep 8
+   sudo -u debian jack_connect system:capture_1 system:playback_1 > 
+/dev/null
+   sudo -u debian jack_connect system:capture_3 system:playback_3 > 
+/dev/null
+
+Ideas?
+Cheers
+-- 
+
+Dr. Leonardo Gabrielli, PhD student
+A3Lab - Dept. Information Engineering
+Università Politecnica delle Marche
+via Brecce Bianche 12, 60131, Ancona, Italy
+Skype: leonardo.gabrielli
+Web: a3lab.dii.univpm.it/people/leonardo-gabrielli 
+<http://a3lab.dii.univpm.it/people/leonardo-gabrielli>
+
+1397234583.21501_0.ltw:2, <53481B88.6080503 at univpm dot it>
+________________________________________________________________________________
+

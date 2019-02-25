@@ -1,0 +1,33 @@
+Date:        Wed, 16 Feb 2011 16:33:35 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] buffer size callback, revisit (1297869716.26054_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] buffer size callback, revisit (1297870777.28402_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] buffer size callback, revisit
+
+> 
+>> Is this really the case? It means you'd have to allocate new buffers and
+>> then somehow send those to the process thread in a lock-free way...?
+>> What if the process callback has already been called with the new buffer
+>> size, while the other thread is still reallocating the buffers?
+> 
+> this sounds like an artifact of jack2 calling everything (?) but the
+> process callback from a 2nd non-RT client thread. if it does this,
+> then its wrong, in the sense that as you noted, its unworkable. buffer
+> size changes and the process callback MUST be synchronous, i think.
+
+Buffer size callback is a case where the RT audio thread is stopped. Basically JACK2 does:
+
+- stop audio driver 
+- change buffer size in audio driver
+- notify all clients of the buffer size change (synchronous call that "wait" for client answer)
+- then start the audio driver again, 
+- this runs the graph again
+
+Stéphane 
+
+1297870434.27550_0.ltw:2,a <BB7A15E1-F360-4988-B24B-BC5BD870B825 at grame dot fr>
+________________________________________________________________________________
+

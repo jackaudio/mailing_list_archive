@@ -1,0 +1,47 @@
+Date:        Tue, 16 Apr 2013 23:27:17 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Bob van Loosen <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Bob van Loosen Re: [Jack-Devel] Cleanup of clients in libjack2 causes crash (1366146800.13844_0.ltw:2,a)
+Follow-Up:   Bob van Loosen Re: [Jack-Devel] Cleanup of clients in libjack2 causes crash (1366148740.16956_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Cleanup of clients in libjack2 causes crash
+
+>> 
+>> 
+> The example code I wrote, such a change would be trivial.
+
+Trivial changes are not always good. Especially if they are done to mask badly designed code...
+
+> 
+> However, I'm allocating jack clients from two threads,
+
+Why that?
+
+> so now I have to put locks around every libjack call,
+
+libjack API is *not* multi-threads aware in general.
+
+
+> check if any jack client has gotten a shutdown message, or if jack_client_open returns NULL in case jackd decides to exit while I'm in the middle of allocating clients.
+
+jackd does not "decide" to exit  But jackd may have a bug that could cause a crash. Then this bug should be fixed. Is that what you see?
+
+> Then I would have to make sure that all jack clients are deallocated before attempting to make new clients.
+
+Maybe you should simplify your code yes?
+
+> I would also have to check if my program is using libjack1 or libjack2, since libjack1 does not do this.
+> 
+> All this so that programs can save maybe a kilobyte of ram when not following the API correctly.
+> 
+> Bob.
+> 
+
+Yep exactly your specific needs are not so common.
+
+Stéphane 
+
+1366147649.15231_0.ltw:2,a <E1C89861-34E1-48D9-A467-011B6D20E88A at grame dot fr>
+________________________________________________________________________________
+

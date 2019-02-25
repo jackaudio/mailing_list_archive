@@ -1,0 +1,94 @@
+Date:        Fri, 14 Dec 2018 13:06:27 -0600
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: [hidden] at grossmann-venter dot com [Jack-Devel] Bitrate from Jack or USB driver (1544773674.25227_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Bitrate from Jack or USB driver
+
+On Fri, December 14, 2018 1:47 am, [hidden] wrote:
+> My presonus 1818vsl seemingly defaults to 44100 Hz never mind if you
+> configure it to 96000Hz with the windows mixer.
+> It seems as soon as you close down the windows based presonus audiobox
+> software it defaults back to 44100Hz and doesn't keep it in memory when
+> you use it on Linux.
+
+Most USB devices will use whatever the driver requests if possible.  The
+driver will request whatever the application which  opens the ALSA driver
+requests if the driver accepts the request as supported by the card (USB
+devices return a parameter list which shows what rates are supported).
+
+> Questions:
+> 1) I need to confirm the above.
+> Is there any way jack can report the bitrate of the data it receives
+> from usb driver and therefore the bitrate by which the presonus 1818vsl
+> send the data.
+
+Check the /proc/asound/ entry for your card.  See below, in my case it was
+card0/pcm0p/info, depending on your card configuration it may be something
+other than card0 and pcm0.
+The script that Robin mentioned will dump that info for you.
+
+> 2) If the 1818vsl does revert back after a windows config at a higher
+> rate, is there any current facility in jack to configure the presonus to
+> work with 96000Hz ?
+
+Sure, just specify what sample rate you want to use when you start jackd
+and it will send that request to the ALSA driver, which should send that
+request to the hardware.
+
+Startup with 48k requested:
+
+$ jackd -dalsa -dhw:Lambda -r48000
+jackdmp 1.9.12
+...startup messages, copyright, blah blah...
+Acquire audio card Audio0
+creating alsa driver ...
+hw:Lambda|hw:Lambda|1024|2|48000|0|0|nomon|swmeter|-|32bit
+configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: 24bit little-endian in
+3bytes format
+
+Startup with 44.1k requested:
+$ jackd -dalsa -dhw:Lambda -r44100
+...startup messages, copyright, blah blah...
+Acquire audio card Audio0
+creating alsa driver ...
+hw:Lambda|hw:Lambda|1024|2|44100|0|0|nomon|swmeter|-|32bit
+configuring for 44100Hz, period = 1024 frames (23.2 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: 24bit little-endian in
+3bytes format
+
+Startup with 96k requested (note this is not supported, so defaults to
+closest supported value, which in this case is 48k):
+$ jackd -dalsa -dhw:Lambda -r96000
+...startup messages, copyright, blah blah...
+Acquire audio card Audio0
+creating alsa driver ...
+hw:Lambda|hw:Lambda|1024|2|96000|0|0|nomon|swmeter|-|32bit
+configuring for 96000Hz, period = 1024 frames (10.7 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: 24bit little-endian in
+3bytes format
+
+Note that jackd does not warn the rates do not match, which is not what I
+expected.
+
+$ cat /proc/asound/card0/pcm0p/sub0/hw_params
+access: MMAP_INTERLEAVED
+format: S24_3LE
+subformat: STD
+channels: 2
+rate: 48000 (48000/1)
+period_size: 1024
+buffer_size: 2048
+
+I thought that the ALSA driver would return the value of the actual sample
+rate used, and jackd would check that and display if the rate in use did
+not match the requested rate.  Apparently not, at least not for all cards,
+maybe driver dependent.
+
+-- 
+Chris Caudle
+
+1544814418.4258_0.ltw:2, <37d05d118b6e92766b072ab2c252f4e5.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,184 @@
+Date:        Tue, 02 Jul 2013 14:18:19 +0200
+From:        Stefano Rossi  <[hidden] at stefanorossi dot me>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   John Rigg Re: [Jack-Devel] Jack crashes, maybe a bug? (1372771767.31142_0.ltw:2,)
+
+Subject:     [Jack-Devel] Jack crashes, maybe a bug?
+
+Hello everybody,
+
+I'm not sure this is the right place to post bugs. Please apologize me if
+it's not, I wasn't sure where to post.
+
+This is my version of jackd:
+
+> $ jackd --version
+> jackdmp 1.9.9.5
+
+
+I currently have an alsa device, called "multi", which groups two cards:
+
+> $ cat /etc/asound.conf
+> pcm.multi {
+>         type multi;
+>         slaves.a.pcm "hw:Live";
+>         slaves.a.channels 2;
+>         slaves.b.pcm "hw:Intel";
+>         slaves.b.channels 2;
+>         bindings.0.slave a;
+>         bindings.0.channel 0;
+>         bindings.1.slave a;
+>         bindings.1.channel 1;
+>         bindings.2.slave b;
+>         bindings.2.channel 0;
+>         bindings.3.slave b;
+>         bindings.3.channel 1;
+> }
+> ctl.multi {
+>         type hw;
+>         card 0;
+> }
+> pcm.jack2x4 {
+>      type asym
+>      playback.pcm {
+>           type route
+>           slave.pcm "multi"
+>           ttable.0.0 1
+>           ttable.1.1 1
+>           ttable.2.2 1
+>           ttable.3.3 1
+>      }
+>      capture.pcm {
+>           type hw
+>           card 0
+>      }
+> }
+> ctl.jack2x4 {
+>      type hw
+>      card 0
+> }
+
+
+My cards:
+
+> $ cat /proc/asound/cards
+>  0 [Live           ]: EMU10K1 - SB Live! Value [CT4670]
+>                       SB Live! Value [CT4670] (rev.5, serial:0x201102) at
+> 0xef00, irq 16
+>  1 [Intel          ]: HDA-Intel - HDA Intel
+>                       HDA Intel at 0xfdff8000 irq 44
+
+
+This is my jackdrc:
+
+> $ cat /etc/jackdrc
+> /usr/bin/jackd -d alsa -d jack2x4
+
+
+If I start jackd either via dbus or via /usr/bin/jackd, it crashes after a
+while. I was able to see it from the "Messages" window of qjackctrl. This
+is a small part of that window (you can see the full window at
+http://pastebin.com/k776zEmX), the errors are repeated very often:
+
+> Tue Jul 2 13:48:40 2013: ERROR: Unknown request 4294967295
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 32 Size() = 12
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 32 Size() = 4
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = -1 Size() = 4
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 32 Size() = 12
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = -1 Size() = 4
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = -1 Size() = 4
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 32 Size() = 12
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = -1 Size() = 4
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 32 Size() = 12
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = -1 Size() = 4
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: Unknown request 0
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 32 Size() = 12
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = -1 Size() = 4
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: Unknown request 0
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 32 Size() = 12
+> Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+> Tue Jul 2 13:48:40 2013: ERROR: Abort!
+> Tue Jul 2 13:48:40 2013: ERROR: info.si_signo = 6
+> Tue Jul 2 13:48:40 2013: ERROR: info.si_errno = 0
+> Tue Jul 2 13:48:40 2013: ERROR: info.si_code = -6 (unknown)
+> Tue Jul 2 13:48:40 2013: ERROR: info.si_addr = 0x3e900005a1e
+> Tue Jul 2 13:48:40 2013: ERROR: reg[00] = 0x0000000000000000
+> Tue Jul 2 13:48:40 2013: ERROR: reg[01] = 0x0000000000000000
+> Tue Jul 2 13:48:40 2013: ERROR: reg[02] = 0x0000000000000008
+> Tue Jul 2 13:48:40 2013: ERROR: reg[03] = 0x0000000000000206
+> Tue Jul 2 13:48:40 2013: ERROR: reg[04] = 0x00007f542f0fe8ce
+> Tue Jul 2 13:48:40 2013: ERROR: reg[05] = 0x00007f542f0ff260
+> Tue Jul 2 13:48:40 2013: ERROR: reg[06] = 0x0000000000000003
+> Tue Jul 2 13:48:40 2013: ERROR: reg[07] = 0x00007f542f3ff700
+> Tue Jul 2 13:48:40 2013: ERROR: reg[08] = 0x0000000000005a1e
+> Tue Jul 2 13:48:40 2013: ERROR: reg[09] = 0x00000000000063f4
+> Tue Jul 2 13:48:40 2013: ERROR: reg[10] = 0x00007f542e27f9c0
+> Tue Jul 2 13:48:40 2013: ERROR: reg[11] = 0x00007f542f377000
+> Tue Jul 2 13:48:40 2013: ERROR: reg[12] = 0x0000000000000006
+> Tue Jul 2 13:48:40 2013: ERROR: reg[13] = 0x0000000000000000
+> Tue Jul 2 13:48:40 2013: ERROR: reg[14] = 0xffffffffffffffff
+> Tue Jul 2 13:48:40 2013: ERROR: reg[15] = 0x00007f542f3fe4c8
+> Tue Jul 2 13:48:40 2013: ERROR: reg[16] = 0x00007f542e1491e5
+> Tue Jul 2 13:48:40 2013: ERROR: reg[17] = 0x0000000000000206
+> Tue Jul 2 13:48:40 2013: ERROR: reg[18] = 0x0000000000000033
+> Tue Jul 2 13:48:40 2013: ERROR: reg[19] = 0x0000000000000000
+> Tue Jul 2 13:48:40 2013: ERROR: reg[20] = 0x0000000000000000
+> Tue Jul 2 13:48:40 2013: ERROR: reg[21] = 0x0000000000005a07
+> Tue Jul 2 13:48:40 2013: ERROR: reg[22] = 0x0000000000000000
+> Tue Jul 2 13:48:40 2013: ERROR: Stack trace:
+> Tue Jul 2 13:48:40 2013: ERROR: 1: 0x7f542e1491e5 <gsignal+53>
+> (/lib/x86_64-linux-gnu/libc.so.6)
+> Tue Jul 2 13:48:40 2013: ERROR: End of stack trace
+
+
+I forgot to mention, I also use pulseaudio with the jack sink:
+
+> $ cat /etc/pulse/default.pa | grep jack
+> load-module module-jack-sink channels=4
+> channel_map=front-left,front-right,rear-left,rear-right
+> load-module module-jack-source
+
+
+I'm running Debian testing with a 3.9 kernel.
+
+
+Any idea you might have is greatly appreciated.
+Thanks!
+
+Stefano
+
+1372767511.23505_0.ltw:2, <CAOCAckkLuejf=0GvR0zXDLNTkecqPbQMydRetWVQjdgGLghoSQ at mail dot gmail dot com>
+________________________________________________________________________________
+

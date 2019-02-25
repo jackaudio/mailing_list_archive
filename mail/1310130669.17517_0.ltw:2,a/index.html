@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack ringbuffer, what to do when bytes returned < expected?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack ringbuffer, what to do when bytes returned < expected?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1310122011.5603_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1310333657.2796_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1310130669.17517_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 08 Jul 2011 09:10:45 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>James Morris &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack-Devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>James Morris
+<a href='../1310122011.5603_0.ltw:2,a/index.html'>[Jack-Devel] jack ringbuffer, what to do when bytes returned &lt; expected? </a></td></tr>
+</table>
+<pre>
+On Fri, Jul 8, 2011 at 6:46 AM, James Morris &lt;[hidden]&gt; wrote:
+&gt; Hi,
+&gt;
+&gt; The documentation of jack_ringbuffer_read and jack_ringbuffer_write
+&gt; suggest failures to write an entire 'item' to the buffer might occur.
+&gt; Can I assume - in what I shall label as 'regular circumstances' - that
+&gt; if a ring buffer is created which is a multiple of sizeof(item), that
+&gt; the read/write on the buffer will never be partial, that is, it will
+&gt; either fail completely, or succeed completely - the return value will
+&gt; either be 0 or sizeof(item).
+
+the jack ringbuffers are sized in bytes, not items. if you were using
+an "item-sized" buffer and only writing whole items, then you could
+assume this, but the jack ringbuffers are not item-sized. Ardour has a
+C++ ringbuffer (actually two of them) that work that way. for jack,
+the "item" is 1 byte, and since you can't write less than a byte on
+any relevant machine the same rules apply, but the result is not that
+useful.
+
+&gt; Can I assume that the return value of these functions would be &gt;0 &amp;&amp; &lt;
+&gt; expected only in 'irregular circumstances' where items of differing
+&gt; sizeof()s are read/written (though who'd want the pain of that I'll
+&gt; never (want to) know)?
+
+yes, but the return value could be 0 if the buffer is full.
+
+&gt; If in 'regular circumstances' I can expect the return values to be &gt; 0
+&gt; &amp;&amp; &#xA0;&lt; expected, I take it another call should take care of it, without
+&gt; having to resort to the more manual methods of accessing the
+&gt; ringbuffer?
+
+no, because time plays a role. if it returns &lt; expected, there's no
+way to know when you will be able to write the remaining data. you
+need to either sleep, or do something else for a while, or block on
+some kind of communication/sync primitive that will let you know when
+space is available.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1310122011.5603_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1310333657.2796_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1310130669.17517_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1310130669.17517_0.ltw:2,a&nbsp;&lt;CAFa_cKnYQ8JX86gY58yeVCT0BCQ+gpkkTkincQvAfrb6+v9+Rg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

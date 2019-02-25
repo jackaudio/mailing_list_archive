@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How does jackdmp set CPU affinity ?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How does jackdmp set CPU affinity ?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1310072291.2635_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1310073897.4123_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1310073687.3977_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 07 Jul 2011 16:20:56 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> karthik poduval </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1310072291.2635_0.ltw:2,a/index.html'>Re: [Jack-Devel] How does jackdmp set CPU affinity ? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1310073897.4123_0.ltw:2,a/index.html'>Re: [Jack-Devel] How does jackdmp set CPU affinity ? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1310099251.31680_0.ltw:2,a/index.html'>Re: [Jack-Devel] How does jackdmp set CPU affinity ? </a></td></tr>
+</table>
+<pre>
+Thanks a lot for the prompt reply St&#xE9;phane.
+
+Please correct me if my understanding is incorrect.
+
+Let me refer to Figure 1 in
+http://www.grame.fr/Ressources/pub/Jackdmp-lac2005.pdf. Once client Input's
+out ports are filled, it signals both  A and B by signalling their
+JackSynchro objects. A and B  may run on different CPU's as the actual CPU
+assignment is managed by the underlying Linux scheduler. After A and B
+complete, both try to Signal client C, however client C only gets signalled
+only once its activation counter gets decremented twice and reaches the
+expected value.
+
+I have not studied jack1, but was this scenario serialized in jack1 ? Would
+jack1 have signal client A which would run and then signal client B which
+would run and then signal client C ?
+
+Regards,
+Karthik Poduval
+
+
+On Thu, Jul 7, 2011 at 3:57 PM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+
+&gt;
+&gt; Le 7 juil. 2011 &#xE0; 22:50, karthik poduval a &#xE9;crit :
+&gt;
+&gt; &gt; Hi All,
+&gt; &gt;
+&gt; &gt; I have been reading about jackdmp and how it can run client process
+&gt; callbacks(that are independent) on different cpu's on an smp machine from
+&gt; this document.
+&gt; &gt; http://www.grame.fr/Ressources/pub/Jackdmp-lac2005.pdf
+&gt; &gt;
+&gt; &gt; I had a couple of questions about it.
+&gt; &gt;
+&gt; &gt; 1. How does jackdmp assign a process callback thread to a given CPU ? I
+&gt; was expecting a call to pthread_setaffinity somewhere in the code but did
+&gt; not find it being used.
+&gt;
+&gt; Is does not. What jack2 does is a "data flow like" client graph activation
+&gt; model, then use the regular scheduler without any more tricks.
+&gt;
+&gt; &gt;
+&gt; &gt; 2. From which version of jack2 is this mp feature enabled ? I am using
+&gt; jack1.9.5, is this version mp capable ?
+&gt;
+&gt; From jackdmp "day one" (back in 2005)
+&gt;
+&gt; &gt;
+&gt; &gt; 3. Do I need to specify any command line option while starting the jackd
+&gt; to enable this feature or perhaps set some command line option to waf while
+&gt; compiling it  ?
+&gt;
+&gt; Nope.
+&gt;
+&gt; &gt;
+&gt; &gt; I am running jackd on a Linux machine that runs a Fedora 12 distro. The
+&gt; CPU is a dual core Intel Atom (Intel(R) Atom(TM) CPU D510   @ 1.66GHz).
+&gt; &gt;
+&gt; &gt; I checked the cpu assignment for jackd and its clients using the ps
+&gt; command and found the cpu assignment to vary every time I ran the command.
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; 2853   1  FF     10  50   - jackd -dalsa -P
+&gt; &gt; 2857   1  FF      5  45   - jack_multiple_metro
+&gt; &gt; 2857   1  FF      5  45   - jack_multiple_metro
+&gt; &gt; 2857   1  FF      5  45   - jack_multiple_metro
+&gt; &gt; 2857   1  FF      5  45   - jack_multiple_metro
+&gt; &gt; 2857   1  FF      5  45   - jack_multiple_metro (This time all threads on
+&gt; CPU1)
+&gt; &gt;
+&gt; &gt; 2853   0  FF     10  50   - jackd -dalsa -P
+&gt; &gt; 2857   0  FF      5  45   - jack_multiple_metro
+&gt; &gt; 2857   0  FF      5  45   - jack_multiple_metro
+&gt; &gt; 2857   0  FF      5  45   - jack_multiple_metro
+&gt; &gt; 2857   1  FF      5  45   - jack_multiple_metro
+&gt; &gt; 2857   1  FF      5  45   - jack_multiple_metro (2 threads on CPU 1 and 4
+&gt; on CPU0)
+&gt; &gt;
+&gt; &gt;
+&gt;
+&gt; Yep. No CPU affinitiy.
+&gt;
+&gt; St&#xE9;phane
+
+
+
+
+-- 
+Regards,
+Karthik Poduval
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1310072291.2635_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1310073897.4123_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1310073687.3977_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1310073687.3977_0.ltw:2,a&nbsp;&lt;CAFP0Ok9pC+P-UruMdoSm7kkhtApiBh=SJw+Zc5Jx0o5J4_htYQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297842576.1424_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297857408.2483_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297850780.20132_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 16 Feb 2011 11:06:01 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Valerio Pilo &lt;[hidden] at akhela dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>"[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Valerio Pilo
+<a href='../1297842576.1424_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client </a></td></tr>
+</table>
+<pre>
+Le 16 f&#xE9;vr. 2011 &#xE0; 08:49, Valerio Pilo a &#xE9;crit :
+
+&gt; In data marted&#xEC; 15 febbraio 2011 17:29:28, St&#xE9;phane Letz ha scritto:
+&gt; &gt; Le 15 f&#xE9;vr. 2011 &#xE0; 15:44, Valerio Pilo a &#xE9;crit :
+&gt; &gt; &gt; Hi guys; thanks a lot for your invaluable support! The patch,
+&gt; &gt; &gt; unfortunately, does nothing to fix or even improve the problem, which
+&gt; &gt; &gt; appears being completely unrelated to killing  clients...
+&gt; &gt; 
+&gt; &gt; Well the real problem is that the ALSA backend returns an error (-1) that
+&gt; &gt; is considered "non recoverable" by the upper layer (the
+&gt; &gt; JackAudioDriver::ProcessSync function), then the wrapper ALSA backend
+&gt; &gt; thread is just stopped. When this wrapper thread is not running anymore,
+&gt; &gt; no client can connect anymore.
+&gt; &gt; 
+&gt; &gt; Now the *reason* the ALSA backend returns an error may be caused by several
+&gt; &gt; different events:
+&gt; &gt; 
+&gt; &gt; - either an issue in ALSA backend code (the thing you're trying to debug)
+&gt; &gt; 
+&gt; &gt; - or a "late graph" occurrence (for instance by killing a client in
+&gt; &gt; synchronous mode, that was not correctly handled, the AUDIO_DRIVER.diif
+&gt; &gt; patch from yesterday was supposed to fix this specific issue.
+&gt; &gt; 
+&gt; 
+&gt; mmm, ok, i'll try debugging the alsa code. We're convinced there's something fishy being done by the hw supplier's ALSA driver.
+
+
+Possibly, but since it is working with JACK1 *and* JACK1/JACK2 ALSA backend share something like 99,9% of their code, then the final behaviour difference is probably a slight difference in the interaction with the upper layer (JackAudioDriver class).
+
+
+&gt; 
+&gt; &gt; &gt; Let me explain. We did never try booting up our ARM box and just leaving
+&gt; &gt; &gt; JACK running without any clients connected, until yesterday. It happened
+&gt; &gt; &gt; by chance and we noticed that JACK *was already blocked*! We didn't
+&gt; &gt; &gt; connect any client to it yet!
+&gt; &gt; 
+&gt; &gt; So it means the ALSA backend and/or the interaction with the upper layer
+&gt; &gt; (the JackAudioDriver::ProcessSync function) still has an issue.
+&gt; &gt; 
+&gt; 
+&gt; That or JackAudioDriver::ProcessAsync(), am I right?
+
+No: JackAudioDriver::ProcessAsync() is used when the server runs in "asynchronous" mode (default mode) and JackAudioDriver::ProcessSync() is used when the the server runs in "synchronous" mode (with -S)
+
+As Torben explained in a previous mail, in "synchronous " mode, the server should not write back in the driver if the "graph is late". This is the way JACK1 works and I changed JackAudioDriver::ProcessSync()  in the AUDIO_DRIVER.diff patch to have the same behaviour now in JACK2.
+
+&gt; 
+&gt; Of course, I'll try doing this myself in the meantime, and I'll hop on IRC right now :)
+&gt; 
+Ok, next week only for me.
+
+St&#xE9;phane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297842576.1424_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297857408.2483_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297850780.20132_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1297850780.20132_0.ltw:2,a&nbsp;&lt;8A73848C-67EE-4CA7-91B1-7923587C8EFB at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

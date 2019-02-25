@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1299213799.26685_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1299244744.27531_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1299232614.13730_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 04 Mar 2011 10:56:36 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> torbenh </span> &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Chris Caudle &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Chris Caudle
+<a href='../1299213799.26685_0.ltw:2,a/index.html'>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Duncan Gray
+<a href='../1299246018.28885_0.ltw:2,a/index.html'>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Chris Caudle
+<a href='../1299262027.12554_0.ltw:2,a/index.html'>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2 </a></td></tr>
+</table>
+<pre>
+On Thu, Mar 03, 2011 at 10:42:32PM -0600, Chris Caudle wrote:
+&gt; On Thu, March 3, Duncan Gray wrote:
+&gt; &gt; If the NIC doesn't have one, the timestamp resolution
+&gt; &gt; of a kernel PTP is one jiffy.
+&gt; 
+&gt; I think Torben already pointed out that you would probably use high
+&gt; resolution timers, and not the jiffy based timers.
+
+yeah. they have nanoseconds resolution, and the only problem is that
+querying them takes some time. but i think we are in the order of a few
+ns here.
+
+but i think its true, that the current software time stamping is jiffy
+based. i fix that on the way, though.
+
+&gt; 
+&gt; &gt; The AES-11 frequency accuracy (Grade-2) spec of 10 ppm for a
+&gt; &gt; clock is nice, but probably won't be present in any PTP stream
+&gt; &gt; from anyone I know of except Apogee.
+&gt; 
+&gt; The time and instrumentation guys will definitely have better than that.  
+&gt; You can already get PTP clocks from Symmetricom which will lock to GPS and
+&gt; give you long term accuracies better than 1ppb (10^-9).
+&gt; http://www.symmetricom.com/products/ieee-1588-ptp-solutions/
+&gt; 
+&gt; &gt; Absolute frequency is not AVB's strength. The local clock
+&gt; &gt; on the motherboard, servoed to NTP will be good enough.
+&gt; &gt; What application might demand such low jitter RTC?
+&gt; 
+&gt; Absolute frequency accuracy and jitter are independent concepts.  There is
+&gt; no reason that the long term average frequency could not approach
+&gt; trivially close to 0 error if you are locked to a stratum 1 source such as
+&gt; GPS.
+&gt; Jitter is a more difficult issue, and you will have the same kinds of
+&gt; problems deriving a frame or bit clock from PTP as from Firewire. 
+&gt; Probably worse, you will definitely need a lot of jitter attenuation on
+&gt; your sampling clock PLL.
+&gt; 
+&gt; I think we're getting off track here, though. This is jack-devel, not
+&gt; network-attached-audio-equipment-devel.  Let's start with the expectation
+&gt; that someone else (or at least on a different mailing list) will make some
+&gt; hardware that uses PTP to synchronize sampling clocks, does it properly
+&gt; with lots of jitter attenuation, does it in a way that is AVB compliant,
+&gt; and has some higher level protocol that we can use, probably based on
+&gt; RTP/UDP/IP.
+&gt; At that point, JACK just has to make sure it sends groups of packets with
+&gt; audio samples, not too fast to overrun the buffers, not too slow to
+&gt; underrun the buffers.  That should be feasible with a software clock
+&gt; implementation, either using hardware assist in the NIC, or (hopefully)
+&gt; using a fully software implemented solution so that current generation
+&gt; hardware without explicit PTP support can be used.
+
+my question about the suitability of the ptp clock to drive
+clock_realtime is based on the fact that the kernel people do not want
+to introduce different timebases (posix clocks) into the kernel, if
+there are no real reasons. 
+
+if the ptp clock, was derived from gps, and was epoch based. there is
+actually no reason. we can just servo CLOCK_REALTIME to it, and do our
+timing based on this.
+
+but if that clock was crap. (iE out of some network loudspeakers with a
+future $10 avb chip...) i wouldnt want that to be clock_realtime. 
+
+if we can cite the standard draft with some requirements for the clock,
+which are unacceptable for clock_realtime, we would have a good argument
+for maintaining the avb clock as a different timebase inside the kernel.
+
+&gt; 
+&gt; -- 
+&gt; Chris Caudle
+&gt; 
+&gt; 
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+-- 
+torben Hohn
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1299213799.26685_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1299244744.27531_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1299232614.13730_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1299232614.13730_0.ltw:2,a&nbsp;&lt;20110304095636.GG4903 at siel dot b&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

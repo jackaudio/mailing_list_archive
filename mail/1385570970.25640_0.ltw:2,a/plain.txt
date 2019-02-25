@@ -1,0 +1,138 @@
+Date:        Wed, 27 Nov 2013 16:48:56 +0000
+From:        Fabian Schlieper  <[hidden] at fabi dot me>
+To:          [hidden] at jackaudio dot org
+
+Subject:     Re: [Jack-Devel] Jack on ARM with low-latency USB
+
+Jeremy Jongepier <jeremy <at> autostatic.com> writes:
+
+> 
+> On 11/21/2013 05:17 PM, Fabian Schlieper wrote:
+> > Hi everyone,
+> > 
+> > I'm trying to build a low-latency audio processor on ODROID-X2 with an 
+> > external USB sound card (Behringer UCA-202).
+> > I can't get jack working stable with a period size of 128 samples.
+> > 
+> > I compiled a real-time kernel (with full preemption) and installed the 
+rtirq 
+> > script.
+> > Command line starting jack:
+> > jackd -R -P80 -p16 -t2000 -dalsa -dhw:$USB_SOUND_CARD_INDEX,0 -p128 -n3 
+-
+> > r4441000 -i2 -o2 -s
+> > 
+> > It's running without audio glitches, but after some time (or when other 
+USB 
+> > devices are heavily active) the sound gets disturbed and keeps crackling 
+until 
+> > jack is restarted.
+> > 
+> > I know I could increase the period size, but I want to have low-latency, 
+Is 
+> > 128 period size even realistic with USB sound?
+> > 
+> > Thanks for any comments and hints.
+> 
+> Hello Fabian,
+> 
+> What other optimizations did you do besides running a real-time kernel
+> and installing rtirq? Which RT kernel are you using? And could you post
+> the contents of /etc/default/rtirq? What software are you using to test?
+> And I assume -r4441000 is a typo :) And you don't need the -R option,
+> it's a JACK default.
+> 
+> Other things you could try:
+> * Setting CPU scaling governor to performance
+> * Overclocking the CPU
+> * Check if the USB controller shares its IRQ or not and on which bus it
+> sits. For instance on my Cubieboard the ethernet controller sits on the
+> same bus as the audio codec. If network traffic goes up (ssh -X and then
+> opening Hydrogen for example) audio can get distorted.
+> * Increase IO by using a good SD card and Ext4 with the noatime and
+> nobarrier flags and the rootflags=data=writeback kernel parameter.
+> 
+> You can try to get clean audio again by reseting the buffer size with
+> jack_bufsize 128. And yes, -p128 should be realistic, I can run a
+> UCG-102 with -p64 on a Cubieboard2 (Allwinner A20).
+> 
+> Best,
+> 
+> Jeremy
+> 
+> 
+> 
+> 
+> Jack-Devel mailing list
+> Jack-Devel <at> lists.jackaudio.org
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> 
+
+Hi Jeremy,
+
+Yes mad sampling rate -r4441000 is a typo ;)
+
+Good hint with the jack_bufsize! I can get rid of distortions when 
+increasing the buffer size and setting it back to 128 (jack_bufsize 256 & 
+jack_bufsize 128)
+Altough, distortions start again after some time.
+
+Here are some more details about the system:
+Linux Kernel: 3.8.4-rt2 #4 SMP PREEMPT RT Tue Nov 12 11:59:47 CET 2013 
+armv7l GNU/Linux 
+CPU governors is performance.
+
+Results from https://github.com/raboof/realtimeconfigquickscan all good 
+except:
+
+Checking access to the high precision event timer... not found - not good
+/dev/hpet not found.
+Checking access to the real-time clock... not found - not good
+/dev/rtc not found.
+Checking if kernel system timer is set to 1000 hz... not found - not good
+Try setting CONFIG_HZ to 1000
+
+AFAIK the timers are only relevant for MIDI, so this should not cause any 
+issues here.
+
+Content of rtirq.conf:
+
+RTIRQ_NAME_LIST="rtc snd usb i8042"
+# Highest priority.
+RTIRQ_PRIO_HIGH=99
+# Priority decrease step.
+RTIRQ_PRIO_DECR=2
+# Lowest priority.
+RTIRQ_PRIO_LOW=51
+# Whether to reset all IRQ threads to SCHED_OTHER.
+RTIRQ_RESET_ALL=1
+# On kernel configurations that support it,
+# which services should be NOT threaded
+# (space separated list).
+RTIRQ_NON_THREADED="rtc snd"
+# Process names which will be forced to the
+# highest realtime priority range (99-91)
+# (space separated list, from highest to lower priority).
+# RTIRQ_HIGH_LIST="timer"
+
+Running the script sets the IRQ thread for ehci_usb RT priority to -96, 
+jackd has -81 and the jack client process -70.
+The client applies a FIR convolution on the signal. Thats simple though, 
+keeping CPU usage at 0.x%.
+After starting jackd, im settings the process priority:
+sudo chrt --fifo -p 80 `pidof jackd`
+Although, I'm not 100% sure if this is actually necessary, and passing the -
+P80 is enough?
+
+There's only one single ehci USB bus (which shares the IRQ with an ohci USB 
+OTG bus). No chance to get ethernet and audio on different buses.
+
+What kernel version and realtime patch are you running on the Cubieboard?
+Did you enable full preemption? And did you do any further optimizations?
+
+Thanks & Regards
+Fabian
+
+1385570970.25640_0.ltw:2,a <loom.20131127T174736-607 at post dot gmane dot org>
+________________________________________________________________________________
+

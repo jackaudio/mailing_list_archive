@@ -1,0 +1,106 @@
+Date:        Thu, 26 Jan 2012 00:48:51 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Daniel Reurich <[hidden] at centurion dot net dot nz>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Daniel Reurich [Jack-Devel] netjack for thinclients instead of pulseaudio. (1327531185.18041_0.ltw:2,a)
+Follow-Up:   David Nielson Re: [Jack-Devel] netjack for thinclients instead of pulseaudio. (1327541791.8503_0.ltw:2,a)
+Follow-Up:   Daniel Reurich Re: [Jack-Devel] netjack for thinclients instead of pulseaudio. (1327558173.28861_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] netjack for thinclients instead of pulseaudio.
+
+Hi Daniel,
+
+On 01/25/2012 11:39 PM, Daniel Reurich wrote:
+> Hi,
+> 
+> I'm wondering whether netjack could solve a problem I have with some
+> resource constrained thin clients in a ltsp setup.
+
+LTSP? as in Long-Term Surveillance Plan (which superseded Linux Terminal
+Server Projects :))
+
+> The problem I have:
+> 
+> The default ltsp setup uses pulseaudio for pushing the audio for each
+> user to the respective thin client.  However the pulseaudio daemon dies
+> on the thinclients due to resource constraints.  Pulseaudio does all the
+> resampling on the daemon on the thinclient which is probably what is
+> killing it.
+
+That's not the problem _you_ have. That's a problem _pulseaudio_ has :)
+
+What services do you want to provide to users of the terminal-server? Is
+it for audio-production or a general-purpose system?
+
+
+jackd (here jack2) uses ~50-100MB RSS memory, which is also not lightweight.
+
+> The Questions:
+> 
+> Could jack2/netjack be a potential solution to this problem?
+
+maybe, but not out-of-the box.
+
+> *To do so it would need to be able the following:
+> a) run a separate jack daemon for each user in their session on the
+> server and connect via netjack to the jackd running on the thinclient.
+
+AFAIK netjack does not [yet?] include authentication. A client can
+connect to any session on a server.
+
+You can [auto-]start multiple netjack 'slaves' on the server using
+different UDP ports and possibly different multi-cast addresses for each
+session on the terminal server.
+
+You could implement authentication with per-user firewall rules?!
+
+> b) do all the resampling in the jack daemon running in the session on
+> the server
+
+check. but note: JACK does not do any resampling. Ever. The player
+application (mplayer, Flash,...) running on the server needs to do
+resampling before sending data to JACK in the first place.
+
+> c) use minimal resources on the thinclient to interface the netjack
+> sink/sources with the real hardware
+
+check. Here: it's basically only compression/encoding (speex) that
+requires CPU on the thin-client.
+
+> *latency shouldn't be a big issue with 100ms being more then acceptable
+
+actually you will have a hard time to convince jack to run with
+latencies > 100ms :) -- well, only half joking.
+
+> *audio quality can be quite low (headsets on the thinclients) and xruns
+> due to network latency are preferred over daemons stopping
+> 
+> I am assuming that the netjack master should be at the thin-client end.
+
+yes. The master needs to provide the clock. And JACK uses the
+audio-interface's clock/oscillator as source for that (which in your
+case is on the thin-client).
+
+
+http://trac.jackaudio.org/wiki/WalkThrough/User/NetJack2
+
+> Your thoughts would be appreciated.
+
+Unless the main-use case for the terminal server is audio-production; I
+don't think this will fly.
+
+If you provide terminal-services to some radio, music or media company.
+Yes, JACK is the way to go.
+If you build a terminal-server for e.g. a university computer pool or
+general public use: get in touch with the pulseaudio devs and see if
+there's something that can be done about the crashes (you should
+probably do that anyway, at least make them aware of the problem).
+Connecting Desktop-Audio (in-browser playback, flash-applets, live-chat)
+to JACK is not trivial; more so for in multi-user setups.
+
+2c,
+robin
+
+1327535355.22136_0.ltw:2,a <4F2094E3.5050908 at gareus dot org>
+________________________________________________________________________________
+

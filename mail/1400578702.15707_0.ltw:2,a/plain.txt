@@ -1,0 +1,63 @@
+Date:        Tue, 20 May 2014 11:38:10 +0200
+From:        Leonardo Gabrielli  <[hidden] at univpm dot it>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Leonardo Gabrielli [Jack-Devel] CPU load with top is inconsistent (1400576018.13105_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] CPU load with top is inconsistent (1400587265.23676_0.ltw:2,Sa)
+
+Subject:     Re: [Jack-Devel] CPU load with top is inconsistent
+
+Also, other two related questions:
+
+1- To conduct the CPU tests I have a bash script that starts jackd. If I 
+launch the script as user "debian", jackd gets correctly scheduled with 
+realtime prio. If I launch the script as superuser with:
+   sudo -u debian myscript
+then jackd can't lock down memory and get the realtime priority. As if 
+it was not launched by debian but the superuser. However if I put a 
+"whoami" in the script I can see the script is executed as debian.
+
+2- when jack tells me it's got realtime prio, "top" tells jackd has the 
+same priority as any other tasks scheduled with the CFS.
+I'm getting to think that Jack is wrong about its realtime priority: in 
+any case on the current machine it is not assigned rt priority (top 
+always says it's like any other task).
+
+System: debian wheezy, armhf, jackdmp 1.9.10 compiled a couple of weeks 
+ago from git
+
+Regards
+
+
+On 20/05/2014 10:53, Leonardo Gabrielli wrote:
+> Dear all,
+> I've been trying to track down how the CPU usage is affected by Jack 
+> under different conditions of sample rate and period size. Of course I 
+> am aware low-level stuff such as how ALSA handles the hardware and how 
+> it transfers the data is relevant, and it may also show higher 
+> performance with some specific combinations of sample rate and sample 
+> size.
+>
+> Nonetheless, I'd like to have a qualitative comparison between 
+> different conditions. What I do is run "top" and average the values I 
+> find for jackd. Unfortunately - and this is startling - when combining 
+> jack with other clients, such as jacktrip, the measure changes a lot. 
+> An example:
+> -r44100 -p64 with jack only: jack takes 74% CPU
+> -r44100 -p64 with jack+jacktrip: jack takes 30%, jacktrip takes 33%
+>
+> I really can't understand why.
+>
+> By now I'm quite aware that audio software is not subject to regular 
+> physical laws, is not susceptible of common software engineer best 
+> practices and does not bend down to any debugger or debug tool but 
+> printf and the likes. It's a tricky world. But some insight on this 
+> would be nice. BTW I remember even with Puredata (under both Linux and 
+> Windows) was impossible to get a correct CPU measure: any tool would 
+> say different numbers... But maybe it's me! ;)
+>
+> Regards
+>
+
+1400578702.15707_0.ltw:2,a <537B2282.60406 at univpm dot it>
+________________________________________________________________________________
+

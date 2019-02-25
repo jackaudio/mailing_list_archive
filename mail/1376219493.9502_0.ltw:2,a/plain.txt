@@ -1,0 +1,50 @@
+Date:        Sun, 11 Aug 2013 13:11:03 +0200
+From:        Anders Tornvig  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Paul Davis Re: [Jack-Devel] S24_3LE (1376229839.22788_0.ltw:2,)
+
+Subject:     [Jack-Devel] S24_3LE
+
+Dear list,
+
+I'm writing a full-duplex program (2in/2out) which will output something,
+record it as a block of data (1024-3268 samples), analyze it and decide
+what to output next. I'm on Ubuntu, at the moment with a UA-25ex USB audio
+interface, speaking S24_3LE.
+
+The Jack API looks fantastic except for one thing: I prefer working with
+integers and not float. In ALSA I can set the sample format to
+SND_PCM_FORMAT_S24_3LE and then I can give it data in that format directly,
+3 bytes per sample per channel. On the capture side, I receive nice 24-bit
+integers.
+
+In Jack, there appears to be one available format, "32 bit float", even
+though the driver is ALSA. My jackd looks like this:
+atc@atc-nb:~$ jackd --name dpoae -d alsa -d hw:1
+<snip>
+JACK server starting in realtime mode with priority 10
+control device hw:1
+control device hw:1
+audio_reservation_init
+Acquire audio card Audio1
+creating alsa driver ... hw:1|hw:1|1024|2|48000|0|0|nomon|swmeter|-|*32bit*
+control device hw:1
+configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: *24bit little-endian*
+ALSA: use 2 periods for capture
+ALSA: final selected sample format for playback: *24bit little-endian*
+ALSA: use 2 periods for playback
+
+and I stumbled upon some format-converter functions in the jack source.
+
+I'm sure that jack is very capable of converting between the format, but is
+there a way that I, as a user, can get to work with the 24-bit host format
+directly?
+
+Thanks for your time.
+
+Best, Anders
+
+1376219493.9502_0.ltw:2,a <CAMeZe4HYCo_gJ0JnY4Ays+_175DnGKvFsekGyzj_r3jpETrfaQ at mail dot gmail dot com>
+________________________________________________________________________________
+

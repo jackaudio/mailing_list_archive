@@ -1,0 +1,34 @@
+Date:        Tue, 22 May 2012 23:09:58 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Robin Gareus [Jack-Devel] su, limits, PAM and JACK (1337705611.24758_0.ltw:2,)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] su, limits, PAM and JACK (1337725687.23110_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] su, limits, PAM and JACK
+
+On 05/22/2012 06:52 PM, Robin Gareus wrote:
+
+> This is somewhat off-topic, but I think someone here may know the answer.
+
+Lennart probably does. ;)
+
+> If I change /etc/pam.d/su and add (or un-comment)
+> "session    required   pam_limits.so"
+>
+>    su user -l -c 'jackd ..'  # works now (also from init on boot.)
+>
+> Well. Next step is to not use 'su' but proper POSIX setgid(), setuid().
+
+man setrlimit clearly says that you either have to inherit the
+privileges or need CAP_SYS_RESOURCE. From man sched_setscheduler, I read
+that you can also use CAP_SYS_NICE instead.
+
+setcap(8) can be used to flag a certain executable (here: jackd) with
+CAP_SYS_NICE, and that's it.
+
+
+HTH
+
+1337721026.16132_0.ltw:2, <4FBC00A6.8090605 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

@@ -1,0 +1,74 @@
+Date:        Sun, 31 May 2015 20:52:33 +0200
+From:        Holger Marzen  <[hidden] at marzen dot de>
+To:          Miguel Martin <[hidden] at miguel-martin dot com>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] Jack Audio Question (1432201137.27140_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Jack Audio Question
+
+On Thu, 21 May 2015, Adrian Knoth wrote:
+
+> On 05/20/15 11:49, Miguel Martin wrote:
+> 
+> > Hi there,
+> > 
+> > I'm asking about your API jack audio. I'm not sure if you are the lead
+> > developers or not, but you're the only emails I could find that
+> > contributed to this project. I just want to ask: is it possible to
+> > control application level volume in OS X and Linux? If so, can you give
+> > me any resources or point me in the right direction?
+> 
+> You are looking for jack-devel@. CCed now.
+> 
+> And the answer is no, JACK does not control application level volume, it
+> just forwards and merges audio streams.
+
+> If you want volume control, use a mixer (maybe one of not too many
+> jack-based mixers), so you can adjust each jack client's volume in one
+> place.
+
+My audio interface has no hardware mixer, so I asked for such a feature.
+I'd appreciate a "master volume" in jackd, but no developer wants jackd
+to deal with that.
+
+I found a solution that works for me:
+
+- I start a mixer, e.g. jack_mixer
+- I start jack.plumbing with a ruleset that disconnects my jack clients
+  (even ALSA-clients that use jack via .asoundrc) and connects them to
+  jack_mixer's input. jack.plumbing stays active permanently in my
+  X-session.
+
+My ruleset (.jack.plumbing) looks like:
+
+(connect    "alsa-jack\..*jackP\..*:out_000" "jack_mixer:ALSA L")
+(connect    "alsa-jack\..*jackP\..*:out_001" "jack_mixer:ALSA R")
+(disconnect "alsa-jack\..*jackP\..*:out_000" "system:playback_1")
+(disconnect "alsa-jack\..*jackP\..*:out_001" "system:playback_2")
+
+(connect    "Clementine:out_jackaudiosink-.*_1" "jack_mixer:JACK L")
+(connect    "Clementine:out_jackaudiosink-.*_2" "jack_mixer:JACK R")
+(disconnect "Clementine:out_jackaudiosink-.*_1" "system:playback_1")
+(disconnect "Clementine:out_jackaudiosink-.*_2" "system:playback_2")
+
+(connect    "Qtractor:Master/out_1" "jack_mixer:JACK L")
+(connect    "Qtractor:Master/out_2" "jack_mixer:JACK R")
+(disconnect "Qtractor:Master/out_1" "system:playback_1")
+(disconnect "Qtractor:Master/out_2" "system:playback_2")
+
+(connect    "rosegarden:master out L" "jack_mixer:JACK L")
+(connect    "rosegarden:master out R" "jack_mixer:JACK R")
+(disconnect "rosegarden:master out L" "system:playback_1")
+(disconnect "rosegarden:master out R" "system:playback_2")
+
+(connect    "MPlayer.*:out_0" "jack_mixer:ALSA L")
+(connect    "MPlayer.*:out_1" "jack_mixer:ALSA R")
+(disconnect "MPlayer.*:out_0" "system:playback_1")
+(disconnect "MPlayer.*:out_1" "system:playback_2")
+
+(connect "jack_mixer:MAIN L" "system:playback_1")
+(connect "jack_mixer:MAIN R" "system:playback_2")
+
+1433098363.29852_0.ltw:2, <alpine.DEB.2.20.1505312044110.15828 at regen dot intern dot marzen dot de>
+________________________________________________________________________________
+

@@ -1,0 +1,47 @@
+Date:        Tue, 03 Dec 2013 20:51:04 -0800
+From:        Gabriel M. Beddingfield  <[hidden] at gmail dot com>
+To:          Clemens Ladisch <[hidden] at ladisch dot de>, Dominique Michel <[hidden] at vtxnet dot ch>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Clemens Ladisch Re: [Jack-Devel] ALSA PCM substreams (1386104898.18859_0.ltw:2,)
+Follow-Up:   Paul Davis Re: [Jack-Devel] ALSA PCM substreams (1386162753.26607_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] ALSA PCM substreams
+
+On 12/03/2013 01:07 PM, Clemens Ladisch wrote:
+>> If I compare it with the emu10k1 driver, hw:0,1 will provide you
+>> the "normal" PCM device, and hw:0,2 provide 16 separated in and out
+>> into one PCM device.
+>
+> This is how the Emu10k1 chip actually works.
+
+OK. Are hw:0,1 and hw:0,2 mutually exclusive?  Or do they get mixed 
+together?  Can I set independent sample rates?
+
+>>> Unfortunately... these drivers have been out for a while and making
+>>> big changes like this likely break userspace.
+>>
+>> So, the driver must provide hw:0,3 with 4 separated in and out for use
+>> with JACK.
+>
+> The caiaq devices have independent stereo streams, so that is what the
+> driver implements.
+
+I don't think independent.  From inspecting the code... if you open up 
+any substream and set the rate -- all other substreams (playback and 
+capture) will then be constrained to that rate.
+
+So... maybe this would make sense...
+
+    hw:n,0,0 and hw:n,0,1 - "stereo pairs" (legacy)
+    hw:n,1 - "multichannel"
+
+...and hw:n,1 and hw:n,0 would be mutually exclusive.
+
+It wouldn't "just work" with JACK... but a little googling would return 
+"use hw:1,1" instead of "open ~/.asoundrc in an editor...."
+
+-gabe
+
+1386132680.4702_0.ltw:2, <529EB4B8.9060709 at gmail dot com>
+________________________________________________________________________________
+

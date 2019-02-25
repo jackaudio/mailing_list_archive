@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How to get mplayer and firefox/flash to play</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How to get mplayer and firefox/flash to play</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324418292.8575_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324419778.9839_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324418665.8895_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 20 Dec 2011 23:03:57 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1324411942.2205_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to get mplayer and firefox/flash to play </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1324419778.9839_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to get mplayer and firefox/flash to play </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Geoff Beasley
+<a href='../1324419794.9849_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to get mplayer and firefox/flash to play </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robert M. Riches Jr.
+<a href='../1324421036.10783_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to get mplayer and firefox/flash to play </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1324422416.11759_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to get mplayer and firefox/flash to play </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robert M. Riches Jr.
+<a href='../1324437645.10833_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to get mplayer and firefox/flash to play </a></td></tr>
+</table>
+<pre>
+On 12/20/2011 09:12 PM, Fons Adriaensen wrote:
+&gt; On Tue, Dec 20, 2011 at 10:02:03AM -0800, Robert M. Riches Jr. wrote:
+&gt;  
+&gt;&gt; BINGO!!!  The ALSA loopback page is a winner!  At only 1% CPU
+&gt;&gt; each for alsa_in, alsa_out, and jackd, the CPU load is definitely
+&gt;&gt; tolerable.  Some time, I'll have to study up on ALSA loopback to
+&gt;&gt; see whether I can have multiple loopback cards, but a single one
+&gt;&gt; will be good enough for now.
+
+Hi Robert,
+
+Yes, you can. Up to SNDRV_CARDS (=32 with CONFIG_SND_DYNAMIC_MINORS else
+=8) defined in the alsa kernel source.
+Use the snd-aloop module 'enable=1,1,[1|0],..' option.
+
+http://www.alsa-project.org/main/index.php/Matrix:Module-aloop#The_module_options_for_snd-aloop
+
+You may also want to set 'pcm_substreams=2[,...]' to limit the loopback
+device to two channels, because e.g. /wine/ currently does not recognize
+any sound-card with more than two channels..
+
+&gt; Which still leaves the question why things don't just work
+&gt; with the alsa-&gt;jack plugin. 
+
+Hi Fons,
+Do you really think that this is interesting and important?
+Why don't you have a look?
+
+I assume that it's due to the multitude of possible ways that clients
+can interact with ALSA: some push, some pull, some request specific
+buffer-sizes and/or bit-depth,... others use weird workarounds for
+internal [timing] issues: In particular closed source apps like flash,
+skype..
+
+Frankly, I think that the alsa-jack plugin was a design mistake to begin
+with (sorry Maarten). It was a certainly a cool hack in 2003, but
+it has not been fixed in 8 years and I doubt it ever will.
+
+&gt; For one, it doesn't show up in aplay -L or -l. Which probably
+&gt; means some apps won't ever use it (anything based on juce for
+&gt; example).
+
+Indeed, they're created dynamically.
+
+The loopback device ports OTOH are persistent: The port connections
+[with jack] remain, even when the alsa-app goes away. And similarly: the
+loopback-device is still there even when jackd is down. Nicely
+decoupled. No auto-connect either. ++
+
+The only criticism is that there's re-sampling involved (aloop uses
+jiffies as clock source) and that it adds a bit more latency.
+
+I've been thinking to address these issues by patching snd-aloop. Yet
+found that it is much easier and more convenient to jackify applications
+instead. For skype, flash and f[r]iends those are non-issues anyway.
+
+&gt; OTOH, when I plug in my Edirol USB interface, aplay -L shows
+&gt; surround40,41,50,51 devices based on it which is plain nonsense
+&gt; as the interface hase just two channels.
+
+I get those for every audio interface, independent of the number of
+channels it has.
+
+They're generic definitions that likely come in handy for the multitude
+of people who switch between headphones at work and their consumer-grade
+surround systems at home. You can change them in
+/usr/share/alsa/alsa.conf (or where-ever your ALSA-lib resides).
+
+&gt; All of this just doesn't make any sense to me.
+
+Just ask upstream for the motivation.. run `git blame` on
+http://git.alsa-project.org/?p=alsa-lib.git;a=blob;f=src/conf/alsa.conf
+
+ciao,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324418292.8575_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324419778.9839_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324418665.8895_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1324418665.8895_0.ltw:2,a&nbsp;&lt;4EF1064D.6090704 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

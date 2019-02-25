@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] questions about latency ranges</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] questions about latency ranges</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1510714014.21597_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1510961798.19908_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1510756424.5476_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 15 Nov 2017 15:33:29 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Xavier Mendez </span> &lt;[hidden] at jmendeth dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1510714014.21597_0.ltw:2,/index.html'>Re: [Jack-Devel] questions about latency ranges </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Markus Grabner
+<a href='../1510962617.20661_0.ltw:2,/index.html'>Re: [Jack-Devel] questions about latency ranges </a></td></tr>
+</table>
+<pre>
+I still don't understand what's happening on the OP example. If both A 
+and B are connected to C, you really should be getting capture latency 
+of [ 337 867 ] there.
+
+I created a quick test setup:
+
+$ jackd -d dummy -r 48000 -p 2048 -C 0 -P 1 &amp;
+$ jack_lset -n source1 --capture 337 &amp;
+$ jack_lset -n source2 --capture 867 &amp;
+$ jack_connect source2:output_1 system:playback_1
+$ jack_connect source1:output_1 system:playback_1
+$ jack_lsp -l
+system:playback_1
+	port latency = 4096 frames
+	port playback latency = [ 4096 4096 ] frames
+	port capture latency = [ 337 867 ] frames
+source1:output_1
+	port latency = 0 frames
+	port playback latency = [ 4096 4096 ] frames
+	port capture latency = [ 337 337 ] frames
+source2:output_1
+	port latency = 0 frames
+	port playback latency = [ 4096 4096 ] frames
+	port capture latency = [ 867 867 ] frames
+
+JACK should always set the minimum value of the pair to the minimum 
+among its connected ports, not set both values to the maximum. Am I 
+missing something here?
+
+ &gt; You could add a jack-client in-between that delays the signal and sets
+ &gt; port-latencies to include the delay.
+
+(shameless self-citation) I made jack_lsync that does this, both 
+jack_lset and jack_lsync can be found in:
+https://github.com/jmendeth/jack-tools/tree/latency-tools
+
+Xavi
+
+El 15/11/17 a les 03:46, Robin Gareus ha escrit:
+&gt; On 11/14/2017 11:50 PM, Markus Grabner wrote:
+&gt;&gt; 	Hi!
+&gt;&gt;
+&gt;&gt; I have some questions about the minimum and maximum values of a port's latency
+&gt;&gt; (i.e., its latency range). The documentation states the following:
+&gt;&gt;
+&gt;&gt; "Both latencies might potentially have more than one value because there may
+&gt;&gt; be multiple pathways to/from a given port and a terminal port."
+&gt;&gt;
+&gt;&gt; Does this also apply to a setup with two output ports "A" and "B"
+&gt;&gt; (representing two distinct physical devices) with different capture latency,
+&gt;&gt; which are both connected to the same input port "C"?
+&gt;&gt;
+&gt;&gt; Here are some details of an example setup (useful for demonstration purposes,
+&gt;&gt; but probably not for doing any real recording work) as reported by jack_lsp:
+&gt;&gt;
+&gt;&gt; "A" (Focusrite Saffire PRO 14 Firewire audio interface):
+&gt;&gt; firewire_pcm:00130e0402403491_1394/Out:01 (Mic/Lin/Inst:01)_in
+&gt;&gt;          port latency = 337 frames
+&gt;&gt;          port playback latency = [ 0 1792 ] frames
+&gt;&gt;          port capture latency = [ 337 337 ] frames
+&gt;&gt;          properties: output,physical,terminal,
+&gt;&gt;
+&gt;&gt; "B" (Line6 PODxt Live guitar effects processor synchronized by zita-ajbridge):
+&gt;&gt; line6_in:capture_1
+&gt;&gt;          port latency = 867 frames
+&gt;&gt;          port playback latency = [ 1792 1792 ] frames
+&gt;&gt;          port capture latency = [ 867 867 ] frames
+&gt;&gt;          properties: output,physical,terminal,
+&gt;&gt;
+&gt;&gt; "C" (Ardour track):
+&gt;&gt; ardour:track 1/audio_in 1
+&gt;&gt;          port latency = 0 frames
+&gt;&gt;          port playback latency = [ 1792 1792 ] frames
+&gt;&gt;          port capture latency = [ 867 867 ] frames
+&gt;&gt;          properties: input,
+&gt;&gt;
+&gt;&gt; Under the assumption that the physical inputs of "A" and "B" represent the
+&gt;&gt; same time scale, the correct answer for the port capture latency at port "C"
+&gt;&gt; would be [ 337 867 ] and not [ 867 867 ].
+&gt;&gt;
+&gt;&gt; So my questions are:
+&gt;&gt; *) What is the rationale behind jack reporting the larger of the two latencies
+&gt;&gt; of "A" and "B" both as the minimum and maximum latency of "C", and ignoring
+&gt;&gt; the smaller one?
+&gt; 
+&gt; In this case it's Ardour (not JACK) that sets the port latencies. I
+&gt; guess you use Ardour5 which [wrongly] always reports the worst-case latency.
+&gt; 
+&gt;&gt; *) Is it possible to provide additional information to jack to state that the
+&gt;&gt; signals at "A" and "B" originate from the same physical source (or from
+&gt;&gt; different physical sources sharing the same time scale), such that both
+&gt;&gt; latencies of "A" and "B" are taken into account for the latency range of "C"?
+&gt; 
+&gt; I guess you use alsa_in or zita-aj2 for port "B", the latter tool has
+&gt; options to set additional systemic latencies.
+&gt; 
+&gt; Just forcing the values to some different number won't help you.
+&gt; You could add a jack-client in-between that delays the signal and sets
+&gt; port-latencies to include the delay.
+&gt; Or wait for Ardour6 which already does this, but but at this point in
+&gt; time is still far from a release, and the session format is not stable)
+&gt; 
+&gt; ciao,
+&gt; robin
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt; 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1510714014.21597_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1510961798.19908_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1510756424.5476_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1510756424.5476_0.ltw:2,&nbsp;&lt;2925ecba-c387-a25d-b1e1-21b830d6f7a4 at jmendeth dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

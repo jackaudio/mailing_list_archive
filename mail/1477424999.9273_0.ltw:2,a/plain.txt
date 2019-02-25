@@ -1,0 +1,50 @@
+Date:        Tue, 25 Oct 2016 12:49:44 -0700
+From:        Fernando Lopez-Lezcano  <[hidden] at ccrma dot Stanford dot EDU>
+To:          "[hidden] at jackaudio dot org" <[hidden] at jackaudio dot org>
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] jack vs. motu (usb) (1477427330.11509_0.ltw:2,a)
+
+Subject:     [Jack-Devel] jack vs. motu (usb)
+
+Hi all!,
+
+Has anyone seen this and hopefully found a workaround?
+
+To make a long story short, it takes a Motu card of the new generation 
+(24ao, 1248, etc) about 6 seconds to change the sampling rate (!). That 
+happens when switching from one sampling rate to another, and also after 
+first connecting the card to a Linux system over USB (Fedora 23).
+
+When Jack is started for the first time after changing sampling rate, or 
+right after the card is plugged into the system, it probably asks the 
+ALSA driver "can this card do this sampling rate with these other 
+parameters?" and the answer is "yes", but when actually setting it it 
+apparently fails and jack does not start.
+
+Now, if after that you slowly count to 7 (just to be safe) and try to 
+start Jack again, it just works (I presume the card has already finished 
+switching sampling rates in the background while you wait, and 
+everything is fine).
+
+When using aplay to help debug this it turns out that aplay does not 
+complain, and it happily plays the soundfile, but nothing comes out of 
+the speakers for the first few seconds - I presume until the card 
+switches sampling rate.
+
+Once the sampling rate has been defined at least _once_ then Jack has no 
+problem to start (over and over again) and aplay plays files with sound 
+from the beginning.
+
+If you access the status and configuration web server in the Motu you 
+can switch the sampling rate and you see the clock lock icon turn 
+blinking red and then solid white once the change is done. Also, 
+alsamixer and amixer show a single read only "control" that is actually 
+the lock status indicator (the lsusb descriptors also show another r/w 
+control that can be used to _set_ the frequency but that is somehow not 
+reflected in the alsamixer/amixer interface).
+
+Suggestions? Patches? :-)
+-- Fernando
+
+1477424999.9273_0.ltw:2,a <44ebd20a-9437-ec5a-1cb3-6023c6813546 at ccrma dot stanford dot edu>
+________________________________________________________________________________
+

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Some observations re Jack and systemd</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Some observations re Jack and systemd</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1545511250.4616_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1545525051.15231_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1545511730.4977_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 22 Dec 2018 21:48:21 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> J&#xF6;rn Nettingsmeier </span> &lt;[hidden] at stackingdwarves dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Chris Caudle
+<a href='../1545426553.10488_0.ltw:2,/index.html'>Re: [Jack-Devel] Some observations re Jack and systemd </a></td></tr>
+</table>
+<pre>
+On 12/21/18 10:08 PM, Chris Caudle wrote:
+&gt; On Fri, December 21, 2018 2:24 pm, J&#xC3;&#xB6;rn Nettingsmeier wrote:
+&gt;&gt; Example service file:
+&gt;&gt;
+&gt;&gt; [Unit]
+&gt;&gt; Description=JACK Audio Connection Kit
+&gt;&gt; After=sound.target
+&gt;&gt; After=ntp.service
+&gt;&gt; After=time-sync.target
+&gt;&gt; Before=jackd.target
+&gt;&gt; Requires=jackd.target
+&gt; 
+&gt; 
+&gt; I assume your service file would be jackd.service, can you explain how the
+&gt; requires jackd.target works?  I am familiar with service files, but only
+&gt; vaguely have seen target in reference to systemd (mostly in using
+&gt; runlevel3.target or runlevel5.target as replacement for old init commands
+&gt; to change runlevel).
+&gt; 
+
+To be honest, I don't have a full understanding yet. Looking at the 
+behaviour of standard targets of the distro has helped me, and there's 
+man systemd.special.
+
+The quick summary is this:
+A target itself knows nothing and does nothing interesting.
+
+Mine looks like:
+[Unit]
+Description=jackd sound server target
+After=sound.target jackd.service
+Requires=sound.target jackd.service
+
+So all it does is it needs other things, _and_ they need to happen 
+first, hence the duplication in After= and Requires=.
+(It took me a while to understand that for systemd, "Requires=" doesn't 
+mean it has to be there when this unit is started, only that it will be 
+activated eventually...)
+
+My jackd.target knows it can only become active after the sound.target 
+is reached and the jackd.service is active.
+
+The semantics I gleaned from man systemd.special are these:
+
+For a "passive" target like this, only the provider(s) of the necessary 
+services should pull it in (in systemd lingo, this means "Requires=" or 
+at least "Wants="). In this case, that's jackd.service.
+Other services that need jack.target to be reached should not pull it 
+in, but only order themselves after it (using "After=").
+
+
+-- 
+J&#xF6;rn Nettingsmeier
+Tuinbouwstraat 180, 1097 ZB Amsterdam, Nederland
+Tel. +49 177 7937487
+
+Meister f&#xFC;r Veranstaltungstechnik (B&#xFC;hne/Studio), Tonmeister VDT
+http://stackingdwarves.net
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1545511250.4616_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1545525051.15231_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1545511730.4977_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1545511730.4977_0.ltw:2,&nbsp;&lt;81aa19a2-5c14-e1be-dd48-5bac679323e7 at stackingdwarves dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

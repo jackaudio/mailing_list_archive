@@ -1,0 +1,69 @@
+Date:        Tue, 02 Aug 2011 15:06:49 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Dan Swain Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1312256923.16393_0.ltw:2,a)
+Follow-Up:   David Nielson Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1312307577.25160_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea
+
+On 08/02/11 05:48, Dan Swain wrote:
+
+>>  It looks to me that NetJack only relies on UDP. That will keep memory
+>> requirements in your IP stack down. But for 128 channels you need to
+>> transmit at least 4*128*48000 = 25MB/sec (Jack uses floats - just consider
+
+Given that you're most likely writing your own RX/TX code, you can
+forget about floats and stick to your ADC/DACs data format, which
+probably means 24bit integer, maybe 16.
+
+You then do float<->int conversion in your RX/TX software module. OTOH,
+any modern FPGA shouldn't be too stressed by floats, so you could
+offload this work to your hardware.
+
+>> The hard part is going to be the synchronisation. However, you're in the
+>> unique position to be able to vary your clock...
+>>
+>> Therefore: why not run your system as a *slave*
+
+I second this. Especially since the ADC should always be the driving
+clock. I assume the DAC shares the clock signal on the PCB.
+
+Of course, adding multiple of those boards to the same network without
+synchronization on the audio side could be cumbersome and sooner or
+later would lead to AVC, but let's keep things simple and assume a
+single unit or external (digital) syncing for now. (unless you're aiming
+for the one-fits-all solution)
+
+> I did also wonder about Leeloo's approach in terms of having the hardware
+> device being the master, rather than the computer.
+
+Go for it, it saves you a lot of trouble.
+
+> In one way I can understand it in that the hardware clock may be more
+> reliable, but with a Linux machine that has a programmable kernel
+> timer, so the flexibility there would definitely supersede that.
+
+See, time is just an idea, it only exists in the real world, the whole
+digital side has no notion of time whatsoever. It only counts state
+changes. And your only relation to the real world is at the ADC/DAC
+ports.
+
+That said, you clock inside the audio box, send it to the PC, let it
+process it and feed the result back to the audio box. No woe about
+resampling.
+
+> So, in your slave scenario, would you have the device instantly begin to
+> send UDP data once it starts?
+
+This should do the trick, yes. And if you add timestamps (in a sense of
+presentation time, IOW, when the audio signal hit (left) the ADC or will
+hit the DAC), you can reuse this timestamp in your RX/TX backend, add
+your jackd buffer size and send it back to the audio box for the
+outgoing stream. (mind the hw-rx buffers in your device)
+
+
+Cheers
+
+1312290438.5354_0.ltw:2,Sa <4E37F669.8040304 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

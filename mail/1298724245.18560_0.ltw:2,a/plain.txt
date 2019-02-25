@@ -1,0 +1,63 @@
+Date:        Sat, 26 Feb 2011 13:43:41 +0100
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Christoph Kuhr Re: [Jack-Devel] Jack-Devel Digest, Vol 56, Issue 47 (1298709775.4534_0.ltw:2,a)
+Follow-Up:   Arnold Krille Re: [Jack-Devel] Jack-Devel Digest, Vol 56, Issue 47 (1298743777.5462_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack-Devel Digest, Vol 56, Issue 47
+
+On Sat, Feb 26, 2011 at 09:41:52AM +0100, Christoph Kuhr wrote:
+
+> since there is the PTPv2 sw implementation  
+> (http://www.bartky.net/products.htm), the endpoint requirements of avb  
+> are met by most computer hardware, but requires extensive network kernel  
+> module modification.
+
+Hmm, not sure if I entirely understand what you mean here, but last time
+I had a look at PTP, I found at least three different versions with
+different features.
+
+To my knowledge, there are only thee NICs available which make sense to
+be used with PTP: some embedded blackfin, gianfar and the Intel 82576
+chips. All those support hardware timestamping, and support for it is
+already in the kernel (since 2.6.32, iirc)
+
+The ioctl in question is SIOCSHWTSTAMP, see
+Documentation/networking/timestamping.txt in the Linux kernel.
+
+IIRC, there is PTPv1 with SIOCSHWTSTAMP support and no PTPv2-HW except
+the bartky freescale thing, but that's tailored to a special embedded
+device and not using the common ioctl.
+
+Given that there is no clear PTP upstream, one should first start to
+merge all these three implementations and mabye forward-port the
+SIOCSHWTSTAMP implementation from PTPv1 to PTPv2 or modify bartky's
+v2-implementation to SIOCSHWTSTAMP (given that bartky is using a sane
+license, haven't checked that)
+
+
+So to me, I don't see the need for extensive network kernel module
+modifcations, because everything is either already there or won't work
+at all, because HW-timestamping needs to be supported physically in the
+NIC, and there are only three (grep -R for SIOCSHWTSTAMP in
+drivers/net).
+
+
+I'm also touching this field a bit at the moment, so if you like, it
+might make sense to coordinate our work, maybe even with Arnold and/or
+Florian who has probably the most experience in this area.
+
+
+I'll hopefully get my Intel NICs in early March, so I can provide you
+with a remote login if you want to work with PTPv2 capable hardware.
+
+
+
+Cheers
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1298724245.18560_0.ltw:2,a <20110226124341.GH15327 at ltw dot loris dot tv>
+________________________________________________________________________________
+

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Usage feasibility Q</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Usage feasibility Q</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1517412271.17210_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1517412838.17850_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1517412665.17710_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 31 Jan 2018 15:30:40 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robert Bielik </span> &lt;[hidden] at dirac dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"[hidden] at chriscaudle dot org" &lt;[hidden] at chriscaudle dot org&gt;, "[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Chris Caudle
+<a href='../1517412271.17210_0.ltw:2,/index.html'>Re: [Jack-Devel] Usage feasibility Q </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robert Bielik
+<a href='../1517412939.17969_0.ltw:2,/index.html'>Re: [Jack-Devel] Usage feasibility Q </a></td></tr>
+</table>
+<pre>
+&gt; How does the rc.local start jackd under the user account?  Maybe it could
+&gt; start a screen session at that point, and when you ssh in you can connect
+&gt; to the screen session.  If you are not familiar with screen it is an
+&gt; application that (among other features) will let you disconnect an ssh
+&gt; session while the underlying terminal session continues to run (usually
+&gt; breaking the ssh session will kill the terminal session associated with
+&gt; that login).  When you connect again with ssh you start screen with the -r
+&gt; argument to restore connection to the already running screen session
+&gt; rather than starting a new session.
+
+As shown here (I wrote that msg in the forum): http://forum.audioinjector.net/viewtopic.php?f=5&amp;t=2727&amp;e=1&amp;view=unread#p5749
+
+sudo runuser -u pi -- /home/pi/start_jack
+
+And right now everything works, strace gives me:
+...
+connect(3, {sa_family=AF_UNIX, sun_path="/dev/shm/jack_default_1000_0"}, 110) = 0
+...
+
+And jack_lsp works as expected. Contents in /dev/shm:
+pi@realtimepi:~ $ ls -al /dev/shm/
+total 69804
+drwxrwxrwt  2 root root      160 Jan 31 15:24 .
+drwxr-xr-x 14 root root     3300 Jan 31 15:19 ..
+-rw-r--r--  1 pi   pi   71390368 Jan 31 15:22 jack-1000-0
+-rw-r--r--  1 pi   pi       1240 Jan 31 15:22 jack-1000-1
+srwxr-xr-x  1 pi   pi          0 Jan 31 15:22 jack_default_1000_0
+-rwxr-xr-x  1 pi   pi         12 Jan 31 15:22 jack_sem.1000_default_freewheel
+-rwxr-xr-x  1 pi   pi         12 Jan 31 15:22 jack_sem.1000_default_system
+-rw-rw-rw-  1 pi   pi      70744 Jan 31 15:22 jack-shm-registry
+
+When it is not working, the "jack_default_1000_0" file does not exist anymore, but the jackd server is running.
+
+I'll lookup the screen option, although this feels like more fundametal problem. The files in /dev/shm aren't supposed to vanish during lifetime of jackd process, right ?
+
+Regards
+/Robert
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1517412271.17210_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1517412838.17850_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1517412665.17710_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1517412665.17710_0.ltw:2,&nbsp;&lt;4ac38b88ab5143958b12637e75cb5307 at hosted3-mb02 dot itm dot host&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

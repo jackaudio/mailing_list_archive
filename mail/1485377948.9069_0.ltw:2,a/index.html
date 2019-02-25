@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1485376668.7903_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1485425084.2779_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1485377948.9069_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 25 Jan 2017 20:58:57 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>J&#xF6;rg M&#xFC;ller &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>J&#xF6;rg M&#xFC;ller
+<a href='../1485353966.16378_0.ltw:2,a/index.html'>Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1485425084.2779_0.ltw:2,a/index.html'>Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels </a></td></tr>
+</table>
+<pre>
+On Wed, Jan 25, 2017 at 03:19:14PM +0100, J&#xF6;rg M&#xFC;ller wrote:
+
+&gt; In your first mail, you write
+&gt; &gt; Zita-ajbridge will detect the relative period phases, and insert
+&gt; buffering so as to ensure that the difference in latency is always the same.
+&gt; That sounds to me like the two cards get additional latency, but it will be
+&gt; exactly the same so their outputs remain in correct phase.
+&gt; 
+&gt; However, in your second mail, you write:
+&gt; &gt; Without resampling the samples will not be modified, but the latency of
+&gt; the two cards will not be the same (but the difference will be repeatable).
+&gt; That sounds like the very opposite.
+&gt; 
+&gt; So will there be any additional latency when using zita? Can it be
+&gt; configured to be the same for all cards? Could the latency be configured to
+&gt; something minimal like 64 samples?
+
+Let's assume that you configure Jack to use soundcard A, and then
+run zita-j2a using card B, word-cloclk synced to A, to have
+additional outputs. 
+
+Zita-j2a is just a Jack client like any other. Even if cards A
+and B are configured to use the same period size (this is not
+required) the period timing of B w.r.t A is completely random.
+So this would introduce a random additional latency on the
+outputs of B.
+
+What zita-j2a does in this case is to remove the random part.
+Since the periods are not synced, there must be some buffering
+between Jack and B. Zita-j2a will adjust the amount of buffering
+so as to make the additional latency independent of the random
+relative period timing. 
+
+When zita-j2a is resampling this compensation is very accurate,
+as the error of the additional delay compared to a fixed target
+value is what is driving the resampling ratio. 
+
+When zita-j2a is configured to not resample, the delay adjustment
+is made once when the first measurement is available, and fixed
+thereafter. This single, first measurement will not have the same
+accuracy as the filtered value used when resampling.
+
+The result of this is that if you want a the additional latency
+to be very well defined (i.e. having the same value each time
+you run the system) the best option is to enable resampling.
+
+Zita-a2j/j2a do set the port latencies so that apps like Ardour
+can take them into account. The value may not be sample-accurate,
+(it depends on unknown hardware parameters as well) but any error 
+on it will be repeatable, so you can measure it once and then rely
+on the measured value.
+
+Ciao,
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1485376668.7903_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1485425084.2779_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1485377948.9069_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1485377948.9069_0.ltw:2,a&nbsp;&lt;20170125205857.GC92434 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

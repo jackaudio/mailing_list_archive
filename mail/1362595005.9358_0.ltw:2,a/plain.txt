@@ -1,0 +1,70 @@
+Date:        Wed, 06 Mar 2013 19:36:30 +0100
+From:        Slavko Glamočanin  <[hidden] at gmail dot com>
+To:          Patrick Robin <[hidden] at hotmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Patrick Robin [Jack-Devel] Mixing inside process callback (1362327081.13677_0.ltw:2,a)
+Follow-Up:   John Rigg Re: [Jack-Devel] Mixing inside process callback (1362652560.31791_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Mixing inside process callback
+
+Dear sir!
+
+This is a basic sound design question and i feel you will have many more on
+the path you have chosen:)
+
+Jack doesn't care if you produce abnormal values and strange things start
+to happen if you do.
+
+Quite basically, when writing values to the jack buffer, if the value is
+below -1, set it to 1, if it's above 1 set it to 1.
+
+Everything else should be up to the user, set the default mixing volume
+around 0.8.
+
+You could also create a limiting curve to map actual values to limited
+values and so emulate a limiter.
+
+Good luck.
+Slavko
+
+On Sun, Mar 3, 2013 at 5:11 PM, Patrick Robin <[hidden]> wrote:
+
+>
+> Hi
+> <http://themail.com/ref.htm?ref=917508>
+> I am writing a Jack client  ( a drum instrument  using the NDK samples
+> library )
+>
+> The client is polyphonic, 42-60 voices since many drum hits need to play
+> at the same time.
+>
+> It is my understanding that all audio samples we write to the jack audio
+> buffers must be in the -1.0 1.0 range?
+>
+> How does jack deal with values outside of this range , clipping? normalize?
+>
+> To stay within the -1.0 1.0 range, I need to mix all active voices. I
+> tried multiplying all active voices by 1/n  (where n is the number of
+> voices) but it is not realistic sounding since very quiet drums will bring
+> down the volume of louder cymbals for examples. Also if n= the total number
+> of possible voices (active or not) a single playing voice gets way too
+> quiet. If I use n= active voices only, the volume will shift during
+> playback as voices become active or dead.
+>
+> Is there a more realistic way to mix various voices?
+>
+> Thank You
+>
+> Patrick Robin
+>
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+>
+
+1362595005.9358_0.ltw:2,a <CAKQ7E0q2BzT2K4RfnwAhVQ5X6ormGAh7gZ3eqvpjwEGrRKeA2A at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] [PATCH 0/4] Multicast interface selection</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] [PATCH 0/4] Multicast interface selection</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1362344775.3350_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1362349877.11205_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1362344776.3365_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 03 Mar 2013 22:06:03 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Ruslan N. Marchenko </span> &lt;[hidden] at ruff dot mobi&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org, [hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Ruslan N. Marchenko
+<a href='../1360531851.20603_0.ltw:2,/index.html'>[Jack-Devel] [PATCH 0/4] Multicast interface selection </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Ruslan N. Marchenko
+<a href='../1363299234.15518_0.ltw:2,a/index.html'>Re: [Jack-Devel] Multicast interface selection + IPv6 support </a></td></tr>
+</table>
+<pre>
+Hi there,
+
+I've opened a new pull request with a bit reworked interface selection and IPv6 support commits.
+
+Interface selection: slaves could be bound only to single interface so option 'all' for them not applicable.
+IPv6 - I've tried to implement the socket in most transparent way to avoid uplevel changes however there are fundamental obstacles: Multicast with IPv6 is not interoperable, hence changes in class usage are inevitable.
+The major point now is that socket should be probed before usage. With unicast addresses this will happen automaticallu once sufficient information is available (address/port). With multicast we cannot rely on delayed probe hence socket should be probed as soon as we got address data - before or together with NewSocket call.
+
+One bug in GLIBC socket implementation was revealed during the work, which resulted in patch submission to glibc upstream and ugly _workaround_ in the UnixSocket implementation. The outcome of the bug (without a kludge) will result in addressless passive probe (bind to any on localhost when no adddress was specified explicitly) using IPv4 family even when v6 is available, so the kludge just blindly reorders the result.
+
+Other than that - you can use https://launchpad.net/~rufferson/+archive/snd if interested in testing.
+
+The branch is under https://github.com/rufferson/jack2/tree/netjack-dev.
+
+Regards,
+Ruslan
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1362344775.3350_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1362349877.11205_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1362344776.3365_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1362344776.3365_0.ltw:2,a&nbsp;&lt;20130303210603.GA14326 at ruff dot mobi&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack alsa midi segfault</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack alsa midi segfault</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1435070556.10855_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1435328760.21122_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1435071186.11222_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 23 Jun 2015 10:52:55 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Tobias Hoffmann &lt;[hidden] at thax dot hardliners dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Tobias Hoffmann
+<a href='../1435070556.10855_0.ltw:2,/index.html'>[Jack-Devel] jack alsa midi segfault </a></td></tr>
+</table>
+<pre>
+This is fixed in jack1 git. I really should get a release out there.
+
+On the other hand, with that version of JACK, there's no excuse for using
+-X seq anyway. It is terrible.
+
+On Tue, Jun 23, 2015 at 10:42 AM, Tobias Hoffmann &lt;
+[hidden]&gt; wrote:
+
+&gt; Hi,
+&gt;
+&gt; I using debian's
+&gt;   jackd version 0.124.1  tmpdir /dev/shm protocol 25
+&gt;
+&gt; started via
+&gt;   jackd -t1500 -dalsa -dhw:2 -r44100 -p128 -n4 -s -Xseq
+&gt; (or "jackd -Xalsa_midi ...")
+&gt;
+&gt; Then jackd segfaults shortly after
+&gt;   creating alsa_midi driver ...
+&gt; - every time, e.g:
+&gt;   jackd[25175]: segfault at 0 ip           (null) sp 00000000ffb828ac
+&gt; error 14 in jackd[8048000+5000]
+&gt;
+&gt; It does not segfault when -Xseq (-Xalsa_midi) is removed from the argument
+&gt; list.
+&gt; The very same invocation (same jackd version!) used to work until now, but
+&gt; I did update quite a few packages (e.g. libc, ...) in the mean time.
+&gt; I did try a reinstall of the jackd1-package, but it did not help.
+&gt; But I have not restarted the computer yet...
+&gt;
+&gt; Analysis:
+&gt; Starting jackd in gdb yields:
+&gt;
+&gt; Program received signal SIGSEGV, Segmentation fault.
+&gt; 0x00000000 in ?? ()
+&gt;
+&gt; without any backtrace left.
+&gt; But with some single-stepping I managed to get to this point:
+&gt;
+&gt; #0  0xf7f960d7 in jack_client_handle_latency_callback () from
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0
+&gt; #1  0xf7f89466 in jack_deliver_event () from
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0
+&gt; #2  0xf7f8b5ca in ?? () from /usr/lib/i386-linux-gnu/libjackserver.so.0
+&gt; #3  0xf7f8bec1 in jack_sort_graph () from
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0
+&gt; #4  0xf7f8f792 in jack_client_activate () from
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0
+&gt; #5  0xf7f8d662 in ?? () from /usr/lib/i386-linux-gnu/libjackserver.so.0
+&gt; #6  0xf7f8e50a in internal_client_request () from
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0
+&gt; #7  0xf7f9563e in jack_client_deliver_request () from
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0
+&gt; #8  0xf7f9868b in jack_activate () from
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0
+&gt; #9  0xf6b47456 in ?? () from /usr/lib/i386-linux-gnu/jack/jack_alsa_midi.so
+&gt; #10 0xf7f88faa in jack_add_slave_driver () from
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0
+&gt; #11 0xf7f89097 in jack_engine_load_slave_driver () from
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0
+&gt; #12 0x0804a6d4 in ?? ()
+&gt; #13 0xf7bc8a63 in __libc_start_main
+&gt;
+&gt; The very next instruction crashes:
+&gt;   0xf7f960db &lt;jack_client_handle_latency_callback+459&gt;    call
+&gt;  *0x10f4(%eax)
+&gt; because *(eax+0x10f4)==0
+&gt;
+&gt; Starting jackd in valgrind:
+&gt; [...]
+&gt; ALSA: use 4 periods for playback
+&gt; creating alsa_midi driver ...
+&gt; ==25829== Conditional jump or move depends on uninitialised value(s)
+&gt; ==25829==    at 0x406EFAC: jack_client_handle_latency_callback (in
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+&gt; ==25829==    by 0x4062465: jack_deliver_event (in
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+&gt; ==25829==    by 0x40645C9: ??? (in
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+&gt; ==25829==    by 0x4064EC0: jack_sort_graph (in
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+&gt; ==25829==    by 0x4068791: jack_client_activate (in
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+&gt; ==25829==    by 0x4066661: ??? (in
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+&gt; ==25829==    by 0x1: ???
+&gt; ==25829==
+&gt; ==25829== Conditional jump or move depends on uninitialised value(s)
+&gt; ==25829==    at 0x406EFAC: jack_client_handle_latency_callback (in
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+&gt; ==25829==    by 0x4062465: jack_deliver_event (in
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+&gt; ==25829==    by 0x4064629: ??? (in
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+&gt; ==25829==    by 0x4064EC0: jack_sort_graph (in
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+&gt; ==25829==    by 0x4068791: jack_client_activate (in
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+&gt; ==25829==    by 0x4066661: ??? (in
+&gt; /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+&gt; ==25829==    by 0x1: ???
+&gt; ==25829==
+&gt;
+&gt; Does this make sense to anyone?
+&gt;
+&gt;   Tobias
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1435070556.10855_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1435328760.21122_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1435071186.11222_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1435071186.11222_0.ltw:2,&nbsp;&lt;CAFa_cKnLbfCeUt49UYOiekCGkmDH=jj66Nqf6+uQXisTRK+6xg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

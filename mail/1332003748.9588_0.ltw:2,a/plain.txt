@@ -1,0 +1,84 @@
+Date:        Sat, 17 Mar 2012 17:02:12 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Paul Davis Re: [Jack-Devel] Patches for jack-0.121-3 (1332004571.10879_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Patches for jack-0.121-3
+
+Hello all,
+
+I finally found the time to complete and test a set of patches
+started more than two months ago, see attachments. These provide:
+
+(jackd/engine.c  jack/internal.h)
+
+   Changes in the DLL implementation and its initialisation.
+
+1. The DLL now has a fixed bandwidth, independent of period
+   time.
+
+2. One if its internal variables now represents the current
+   best estimate of the actual period time, so this can be
+   made available to clients.
+
+3. The DLL is properly reset after freewheeling, so it will
+   provide correct information from the first normal cycle.
+   Previously this would take more than 10 seconds, with
+   'impossible' timing info being provided in the meantime
+   - in some cases the period start time would even appear
+   to go backwards.
+
+All changes are documented in engine.c. There remain some
+open issues which should be reviewed by the regular Jack
+devs, please see the comments in engine.c.
+
+(libjack/transclient.c)
+
+4. Fixed jack_time_to_frames() and jack_frames_to_time().
+   Both now use signed representation of frames or usecs
+   differences internally, ensuring they will return the
+   correct result also for events outside the current 
+   period.
+
+5. Added jack_get_cycle_times(). This provides atomic access
+   to 
+
+   - the frame time at the start of the current period,
+   - the microseconds time of the start of the current
+     period,
+   - the microseeconds time of the start of the next
+     period,
+   - the current best estimate of the actual period time
+     in microseconds.
+
+   All four are just copies of existing DLL variables. 
+   This allows clients to convert between frames and usecs
+   with full precision. The microseconds times previously
+   had to be computed while they were actually available
+   internally. 
+
+(jack/jack.h)
+
+6. Added documentation for jack_get_cycle_times().
+
+
+Everything tested and working to the best of my knowledge.
+
+Ciao,
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+* Attachment: '1332003748.9588_0.ltw:2,a/files/engine.c.diff'
+content-type: text/x-diff
+* Attachment: '1332003748.9588_0.ltw:2,a/files/internal.h.diff'
+content-type: text/x-diff
+* Attachment: '1332003748.9588_0.ltw:2,a/files/transclient.c.diff'
+content-type: text/x-diff
+* Attachment: '1332003748.9588_0.ltw:2,a/files/jack.h.diff'
+content-type: text/x-diff
+
+1332003748.9588_0.ltw:2,a <20120317170211.GA17438 at linuxaudio dot org>
+________________________________________________________________________________
+

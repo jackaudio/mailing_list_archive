@@ -1,0 +1,71 @@
+Date:        Thu, 06 Dec 2018 20:56:25 -0600
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: [hidden] at grossmann-venter dot com [Jack-Devel] Jack and thunderbolt (1544050058.12357_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Jack and thunderbolt
+
+On Wed, December 5, 2018 4:47 pm, [hidden] wrote:
+> I really battle to find the optimum solution for ultra low latency
+> monitoring using Linux.
+
+For monitoring while recording, hardware monitoring is often optimum
+
+> Since I am using Jack I have a few compatibility questions.
+> 1) Is jack known to be able to work with thunderbolt 3 on Linux ?
+
+The jackd server uses ALSA for interfacing to most audio devices, although
+it does have a way to directly use some Firewire devices.  Really the
+question should be is there a driver for a particular Thunderbolt device
+you want to use.
+My understanding is that Thunderbolt is basically PCIe with some slight
+modifications to allow hot plugging cables, determining whether the
+peripheral needs PCIe or DisplayPort protocol, a few other things, but the
+important point being it does not define audio transport as for example
+USB audio class does, so even if one Thunderbolt interface is supported by
+ALSA, that does not mean that other Thunderbolt interfaces would be
+supported, you would still need a driver that takes care of register level
+access to the specific device you want to use.
+
+
+> 2) Thunderbolt included, what is the lowest latency sound transport
+> format that jack can work within your opinion on Linux
+> e.g. thunderbolt / AES50 / Ultranet / Madi / etc
+
+That question is not well formed.  Thunderbolt is a data transport used in
+computers, not specifically an audio transport. AES50 and MADI are
+specifically an audio transports, and no computer has a direct AES50 or
+MADI connection.  So again, the question is what particular  audio device
+would you like to use, and then see if there is an ALSA driver available.
+
+The lowest latency would be PCIe connection from your processor to a
+device with analog converters on board.  Many people have reported good
+results from RME devices over the years.
+If you happen to already have an analog converter you like with AES3 or
+MADI interface, RME has cards with those transports as well.
+
+But that is specifically just addressing the lowest latency way to get
+data from your processor to an analog audio connection.  You did not
+explain what you are trying to achieve, so spending money on an interface
+that can run with low latency may not be the best way to achieve what you
+really want.  Not to mention that there are many more system
+considerations than just interface transport in determining latency, you
+can spend quite a bit of time optimizing your system for low latency, but
+there are still quite a few things out of your control on a modern Intel
+based system (such as system management mode firmware that runs outside of
+the control of the kernel scheduler).
+
+So do you need low latency for monitoring while recording?  Probably
+hardware monitoring is optimal (either with an interface that supports
+hardware monitoring, or by using an external analog mixer, preamp, etc.
+which supports monitoring features).
+For software synthesizers?  Then system latency will probably dominate
+over audio interface, you will have plenty to work on before nearly any
+interface is the limiting factor.
+
+-- 
+Chris Caudle
+
+1544151417.27192_0.ltw:2, <3d925cbad1761aab0ee2ce7f22912ca8.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Testing Update for Jack 1.9.8 (SVN 4300) for Windows 64 and 32 bits</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Testing Update for Jack 1.9.8 (SVN 4300) for Windows 64 and 32 bits</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302947251.24326_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302962987.23835_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302947456.24663_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 16 Apr 2011 11:50:43 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Graham Goode </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt;, Erik De Schrijver &lt;[hidden] at skynet dot be&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1302975407.15410_0.ltw:2,a/index.html'>Re: [Jack-Devel] Testing Update for Jack 1.9.8 (SVN 4300) for Windows 64 and 32 bits </a></td></tr>
+</table>
+<pre>
+Hi Stephane,
+
+I installed the new 32-bit (no redistributable) and things worked fine
+first time.
+
+Then I did some Midi testing with the -X winmme command option,
+
+By using jack_lsp -A I was able to write down a list of what the
+connections showing in Jack Control were matched to in regard to my
+MIDI ports. I was then able to correctly connect my three USB Midi
+devices to a virtual midi port and use that port in GrandOrgue,
+jOrgan, etc.
+
+The generic names are very non-user friendly, so I'm hoping that
+Qjackctl 0.3.7 does indeed show the actual device names.
+
+I then ran into a problem when attempting to exit Jack PortAudio and
+close the command prompt window. Ctrl-C usually allows Jack to exit
+gracefully. When using the -X winmme option with Ctrl-C, it does not
+exit but seems to be infinitely looping try to 'Discarding 0-byte
+sysex chunk' in an input port. Manually closing the command prompt
+ends Jack.
+
+I then loaded everything again and tried simply exiting the command
+prompt window, and that caused the computer to freeze. :(
+
+The freeze does not happen when just using the Audio interface (i.e.
+wtihout the -X winmme ).
+
+I hope to do the MIDI latency test later today or tomorrow, and will
+post the log when I do.
+
+Kind regards,
+GrahamG
+
+On 4/15/11, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+&gt;
+&gt; Le 15 avr. 2011 &#xE0; 02:25, Erik De Schrijver a &#xE9;crit :
+&gt;
+&gt;&gt; Hello St&#xE9;phane,
+&gt;&gt;
+&gt;&gt; I have started jackd with the command jackd -R -S -X winmme -d portaudio
+&gt;&gt; -p 512 -d "ASIO::Saffire 1394 x64"
+&gt;&gt; Then i start Jack Control.
+&gt;&gt; Then i start jOrgan and load a disposition (Panos' St. Clement Russell)
+&gt;&gt; with a fluidsynth instance that is ASIO capable
+&gt;&gt;
+&gt;&gt; In Jack Control i see:
+&gt;&gt;
+&gt;&gt; - under Audio:
+&gt;&gt;    - left pane: fluidsynth instance (javaw) and system with capture 1 to 4
+&gt;&gt; (2 microphone and 2 line inputs)
+&gt;&gt;    - right pane: system with playback 1 to 10 (10 audio channels)
+&gt;&gt;
+&gt;&gt; - under Midi:
+&gt;&gt;    - left pane: system_midi with capture 1 to 8
+&gt;&gt;        (6 virtual midi cables, midi input from Focusrite Saffire, M-Audio
+&gt;&gt; USB Keystation 61es)
+&gt;&gt;    - right pane: system_midi with playback 1 to 9
+&gt;&gt;        (6 virtual midi cables, midi output from Fucusrite Saffire, MS GS
+&gt;&gt; Wavetable Synth, Real Time Sequencer, Java Sound Synthesizer)
+&gt;&gt;
+&gt;&gt; This seems to work.
+&gt;
+&gt; OK.
+&gt;&gt;
+&gt;&gt; I have now to connect my keyboards to jOrgan via Jack Control.
+&gt;&gt; After some trial and much error i could find which input must be connected
+&gt;&gt; to which playback to have midi input to jOrgan, and have sound when
+&gt;&gt; playing.
+&gt;&gt;
+&gt;&gt; Some questions:
+&gt;&gt; - Is there a command to reveal the names of the midi devices winmme sees,
+&gt;&gt; something similar to jackd -d portaudio -l?
+&gt;
+&gt; Yes:
+&gt;
+&gt; jack_lsp -A
+&gt;
+&gt;
+&gt;&gt; - Is it posstble to introduce names of devices to replace capture x and
+&gt;&gt; playback y so that it is easier to know which is which?
+&gt;
+&gt; Hum not sure, i see, maybe latest QJackCtl can do that:
+&gt;
+&gt; http://qjackctl.sourceforge.net/qjackctl-ss1.html
+&gt;
+&gt; I'll have to check.
+&gt;
+&gt;&gt; - Are the different midi devices (capture as well as playback) always seen
+&gt;&gt; in the same order at start of jackd, do they stay that way if plugged out
+&gt;&gt; and later again plugged in, or is the correspondence between physical or
+&gt;&gt; virtual devices and their respective capture and playback numbers
+&gt;&gt; different each time jackd is started?
+&gt;
+&gt; Should be yes.
+&gt;
+&gt;&gt;
+&gt;&gt; What tests do you want me to do?
+&gt;
+&gt; 1) testing the MIDI out, so finding a JACK client that can play MIDI
+&gt;
+&gt; 2) test MIDI loopback latency: this a test program for that
+&gt; "jack_midi_latency_test" (to be used from a terminal)
+&gt;
+&gt; * do a loopback on the physical MIDI interface:
+&gt;
+&gt; * then use jack_midi_latency_test:
+&gt;
+&gt; jack_midi_latency_test --help
+&gt; Usage: jack_midi_latency_test [options] out-port-name in-port-name
+&gt;
+&gt;        -h, --help              print program usage
+&gt;        -m, --message-size=size set size of MIDI messages to send
+&gt;        -s, --samples=n         number of MIDI messages to send
+&gt;        -t, --timeout=seconds   wait time before giving up on message
+&gt;
+&gt; Then for instance:
+&gt;
+&gt; jack_midi_latency_test -m 3 -s 1024 -t 5 "system:ESI M8U XL MIDI 4 out"
+&gt; "system:ESI M8U XL MIDI 4 in"
+&gt;
+&gt; With adapted names to replace 'system:ESI M8U XL MIDI 4 out"  and
+&gt; "system:ESI M8U XL MIDI 4 in" (found with jack_lsp -A)
+&gt;
+&gt; Then send me the log.
+&gt;
+&gt; St&#xE9;phane
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302947251.24326_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302962987.23835_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302947456.24663_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1302947456.24663_0.ltw:2,a&nbsp;&lt;BANLkTinJm6t4GV+2=y4h4pFfyGcMX8-aeA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

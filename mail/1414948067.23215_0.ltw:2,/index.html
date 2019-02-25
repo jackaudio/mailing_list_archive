@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Multi-user desktop integration</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Multi-user desktop integration</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1414948007.23198_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1414949477.23971_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1414948067.23215_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 02 Nov 2014 18:07:39 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> C&#xE9;dric Schieli </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>C&#xE9;dric Schieli
+<a href='../1414947573.22914_0.ltw:2,/index.html'>[Jack-Devel] Multi-user desktop integration </a></td></tr>
+</table>
+<pre>
+It will be better with the PPA's URL :
+https://launchpad.net/~cschieli/+archive/ubuntu/jackaudio
+
+2014-11-02 17:59 GMT+01:00 C&#xE9;dric Schieli &lt;[hidden]&gt;:
+
+&gt; Hi all,
+&gt;
+&gt; Nowadays it's quite easy to make PulseAudio and Jack work together, mostly
+&gt; thanks to the dbus api, but as soon as a second user enters the scene, by
+&gt; means of the user switcher applet, it's once again an inferior user
+&gt; experience as compared to what a PulseAudio-only system gives. Generally
+&gt; the second user will get no sound at all, other problems arise when the
+&gt; second user wants to make use of some Jack applications...
+&gt;
+&gt; So I've been working lately on making it easier to use Jack as the default
+&gt; sound system on a shared workstation, with PulseAudio as a helper for
+&gt; desktop sounds. I've investigated 3 solutions which I'll present here.
+&gt;
+&gt; In all cases it was necessary to have a system-wide Jack server launched
+&gt; at boot time. First problem: there is no session dbus available at boot
+&gt; time. There are basically 3 ways of solving this:
+&gt; 1. use the system dbus instead by faking the DBUS_SESSION_BUS_ADDRESS.
+&gt; This will require some modification of system policies to allow the owning
+&gt; of the org.freedesktop.ReserveDevice1.Audio0 name
+&gt; 2. launch a session bus, which will be used only for this purpose
+&gt; 3. hack Jack to allow bypassing the whole thing
+&gt; I've chosen 3, the formers do no really reserve anything anyway as the
+&gt; buses are not connected to each other. By passing the
+&gt; JACK_NO_AUDIO_RESERVATION environment variable I can now disable the
+&gt; audio_acquire/audio_release callbacks.
+&gt;
+&gt; The first solution that comes to mind is to make this system-wide server
+&gt; run in promiscuous mode, so I've exported JACK_PROMISCUOUS_SERVER globally
+&gt; (in /etc/environment). Problem: for this to work, the server and every
+&gt; single Jack application (including the pulse-jack bridge) must be running
+&gt; with a 0000 umask, which sounds a bit scary to me. So I've hacked a little
+&gt; enhancement to the promiscuous mode which makes it possible to pass the
+&gt; name or gid of a group through the JACK_PROMISCUOUS_SERVER variable. In
+&gt; that case, the sockets, shared memory segments and semaphores have their
+&gt; permissions tightened so only members of that group will get access to
+&gt; them. More importantly, it is not needed anymore to fiddle with the umask,
+&gt; even if no group is given.
+&gt; With that in place, and after having changed the default PulseAudio
+&gt; configuration (/etc/pulse/default.pa) to statically load the pulse-jack
+&gt; bridge, each user session has its shiny desktop sounds working, and every
+&gt; user is able to run Jack applications whenever they want.
+&gt;
+&gt; One (big) con is that as everybody share the same Jack server the graph
+&gt; may easily become incomprehensible (jack_keyboard, jack_keyboard-01,
+&gt; jack_keyboard-02, all belonging to different users...). Also, if a user
+&gt; start the Jack transport, it will be started for all users !
+&gt;
+&gt; That's where the two other solutions comes into play (they really are to
+&gt; variants of the same solution).
+&gt; The idea is to have a main system-wide Jack server in charge of the
+&gt; hardware driver, and a second per-user Jack server launched through dbus
+&gt; api, connected by some way to the former, and handling the connections with
+&gt; the various Jack applications of that user session.
+&gt;
+&gt; This can easily be implemented by using NetJack bound to the loopback
+&gt; interface.
+&gt; In this solution, the promiscuous mode is not necessary anymore. The
+&gt; netmanager have to be loaded in the main server at boot time, bound to the
+&gt; 127.0.0.1 address, with the auto-connect feature enabled. The default.pa
+&gt; should use jackdbus-detect and a .config/jack/conf.xml must be put in each
+&gt; user's HOME so the net driver is loaded when a Jack server is spawned by
+&gt; the user.
+&gt;
+&gt; Now, each user will only see his/her own applications in the graph, but
+&gt; the Jack transport is still unique across the NetJack network. Another
+&gt; problem is the overhead introduced by NetJack.
+&gt;
+&gt; To address these, I've hacked a new JackProxyDriver which is similar to
+&gt; the JackNetDriver, but only uses plain Jack API to talk to its upstream
+&gt; server so the overhead is reduced to its minimum.
+&gt; In this solution, the promiscuous mode is again necessary, but only for
+&gt; the main server. The per-user server will run in normal mode toward its
+&gt; clients, and will use a promiscuous connection to talk to the main server.
+&gt; The .config/jack/conf.xml must be changed to load the proxy driver.
+&gt;
+&gt; Now that I'm happy with the state of my shared desktop I've sent two pull
+&gt; request for all the bits described above.
+&gt; https://github.com/jackaudio/jack2/pull/77 contains the reservation
+&gt; bypass and the promiscuous mode enhancement,
+&gt; https://github.com/jackaudio/jack2/pull/78 contains the JackProxyDriver.
+&gt;
+&gt; If someone is interested to try it out, I've setup a PPA (currently only
+&gt; for 14.04) with a jackd2 package based on KXStudio's one.
+&gt;
+&gt; Comments and suggestions are welcome.
+&gt;
+&gt; Regards,
+&gt;
+&gt; Sdrik
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1414948007.23198_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1414949477.23971_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1414948067.23215_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1414948067.23215_0.ltw:2,&nbsp;&lt;CAM-ziR5DcX1vQ-8A7iyguL6TnV3L2xTG7zo6_TxrCkTMc91qyg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

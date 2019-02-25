@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1299601879.17588_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1299744133.31893_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1299726957.15847_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 09 Mar 2011 21:15:04 -0600 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Duncan Gray </span> &lt;[hidden] at catraeus dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Chris Caudle
+<a href='../1299601879.17588_0.ltw:2,a/index.html'>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Arnold Krille
+<a href='../1299744133.31893_0.ltw:2,a/index.html'>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2 </a></td></tr>
+</table>
+<pre>
+On 03/04/2011 04:58 PM, Chris Caudle wrote:
+&gt; On Fri, March 4, Duncan Gray wrote:
+&gt;&gt; "It gets confusing now that both the PC and the audio
+&gt;&gt; equipment have network interfaces. " says it upside--down. The
+&gt;&gt; difficulty is when the PC and the Network both have audio
+&gt;&gt; interfaces. AVB puts Audio into Ethernet, which is to say that
+&gt;&gt; there is a virtual audio card at the other end of the Ethernet wire.
+&gt;&gt; This means that two word clocks need either SRC on their streams,
+&gt;&gt; or one needs to PLL to the other.
+&gt; That is just a case of two sound devices, same as two sound cards.  Always
+&gt; the case that if you have two sound cards, they need to have their
+&gt; conversion clocks synchronized. That doesn't change whether the transport
+&gt; is Ethernet, AES3, AES10, whatever.  I think everyone understands that if
+&gt; you are going to use two devices, then both have to be synchronized.
+Good.
+&gt; The point that Torben and I have been making is that clocking requirements
+&gt; for devices which are bulk data transport only should be different than
+&gt; devices which convert data to or from analog.  And obviously it can be,
+&gt; because there are multiple protocols which have specialized hardware on
+&gt; the audio equipment end, and virtual sound card software on a PC.  Dante
+&gt; has it, Lightwire.  Even the Ravenna web page talked about a virtual sound
+&gt; card driver.  I know that Lightwire and Dante don't require special NIC's
+&gt; in the PC's running the virtual sound card driver. The Ravenna page did
+&gt; not say, but you seem to be contending that anything participating in AVB
+&gt; transport of audio is going to need hardware time stamping in the NIC.  I
+&gt; hope that is not the case.
+&gt;
+&gt;
+Ravenna quote that they use IEEE 1588 under the hood. That requires 
+NIC-stamping.
+I wouldn't use Dante if I were you.
+&gt;&gt; Did you know that AVB is mostly specified, at the low level, by IEEE 1722?
+&gt; No, I did not. I wasn't familiar with that in-progress spec, hence the
+&gt; confusion.  Thank you for the reference, I've been reading some of the
+&gt; presentations this afternoon.  Another draft standard which I cannot get
+&gt; to.  Hopefully will get published soon so I can read the whole thing.
+&gt;
+&gt; [Chris C wrote:]
+&gt;&gt;&gt; Absolute frequency accuracy and jitter are independent
+&gt;&gt;&gt; concepts.  There is no reason that the long term average
+&gt;&gt;&gt; frequency could not approach trivially close to 0 error if you
+&gt;&gt;&gt; are locked to a stratum 1 source such as GPS.
+&gt;&gt; Phase is the integral of frequency, they are everything but independent.
+&gt; OK, that totally ignored the point.  Yes, phase is the integral of
+&gt; frequency.  That doesn't really get to the point that the&gt;long term&lt;
+&gt; frequency difference of two devices can be made arbitrarily close, but
+&gt; that may not be what is relevant if the short term jitter affects what you
+&gt; are trying to do.
+&gt;
+&gt; What you wrote was:
+&gt;&gt;&gt; Absolute frequency is not AVB's strength. The local clock
+&gt;&gt;&gt; on the motherboard, servoed to NTP will be good enough.
+&gt;&gt;&gt; What application might demand such low jitter RTC?
+&gt; Jitter is traditionally used to mean integrated phase noise, where
+&gt; depending on integration time it may even be instantaneous time interval
+&gt; error.  You can have a large positive error one cycle, a large negative
+&gt; error the next, and have very high short term jitter because of that, but
+&gt; the long term average of the frequency can be very accurate.  That was my
+&gt; point, that the question of what application might demand such an accurate
+&gt; RTC and what application might demand such a low jitter RTC are two
+&gt; separate questions and should be understood as such.
+&gt;
+Jitter is all phase noise with spectrum above 10 Hz.
+Wander is all phase noise with spectrum below 10 Hz.
+
+cycle-to-cycle jitter is a red herring. The Time Interval Error that 
+can't be tracked by any bandwidth+phase-detector of a PLL is what must 
+be engineered.
+&gt;&gt; I was actually trying to prevent any soft-only PTP
+&gt;&gt; or AVB implementation, which seemed to be on the way
+&gt;&gt; here at Jack.
+&gt; That I don't get at all.  Why would you want to prevent a software AVB
+&gt; implementation?
+&gt;
+Because it will not comply. The BMCA of other compliant NICs might kick 
+you out of the pool. You will definitely violate jitter, time inaccuracy 
+and total delay requirements of AVB.
+&gt;&gt; IEEE 1722 (I apologize for getting the number wrong perviously)
+&gt;&gt; specifies the PTP that is a subset for AVB. It most definitely
+&gt;&gt; does not have epoch in it and is not traceable to Greenwich.
+&gt;&gt; Don't try to use PTP as a replacement for NTP. Even
+&gt;&gt; IEEE1588 for instruments doesn't require epoch.
+&gt;&gt;
+&gt;&gt; Now we're way far afield of Jack.
+&gt; Actually I don't think we are are, at least not far.  This started out
+&gt; with a proposal to create an AVB backend for Jack, and understanding the
+&gt; clocking requirements and what existing kernel timing infrastructure can
+&gt; be reused and what needs to be created from scratch is very much on topic.
+&gt;
+&gt; And I think you are saying that it isn't really possible to create a
+&gt; software only implementation that fulfills the AVB requirements, primarily
+&gt; due to the 802.1AS synchronization requirements.  In that case then
+&gt; discussion of the specific requirements is definitely on topic before
+&gt; someone goes off and spends a few months working on it only to realize
+&gt; that there really isn't any chance of reliable inter-operation with
+&gt; compliant AVB equipment.
+&gt;
+OK, so we need to find the PTP NIC drivers of the Open world and use 
+them for whatever backend we put onto Jack. (Someone had asked whether 
+they could use PTP, generally, for a CLOCK_KERNEL, so that was the 
+off-topic.)
+
+I would envision a module detection scheme that would not let Jack even 
+try to use any NIC that wasn't under control of a PTP module. The scary 
+thing is that anyone can make a soft-implementation LOOK LIKE PTP, but 
+it would be violating the physics on which the hardware-timestamp 
+protocol depends. No lines of code can undo physics faux pas.
+
+Duncan
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1299601879.17588_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1299744133.31893_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1299726957.15847_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1299726957.15847_0.ltw:2,a&nbsp;&lt;4D784238.9000109 at catraeus dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

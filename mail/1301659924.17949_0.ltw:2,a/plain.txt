@@ -1,0 +1,63 @@
+Date:        Fri, 01 Apr 2011 14:11:31 +0200
+From:        StÃ©phane Letz  <[hidden] at grame dot fr>
+To:          torbenh Hohn <[hidden] at gmx dot de>, Jack devel <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Geoff Beasley Re: [Jack-Devel] NetOne driver in JACK2 (1301704031.30669_0.ltw:2,a)
+Follow-Up:   torbenh Re: [Jack-Devel] NetOne driver in JACK2 (1301741418.8465_0.ltw:2,a)
+
+Subject:     [Jack-Devel] NetOne driver in JACK2
+
+Hi Torben and jack-dev community.
+
+I received some bugs report (crash in server with "jackd -d netone"), like:
+
+	• NetOne driver started
+	• AutoConfig Override !!!
+	• MTU is set to 1400 bytes
+	• Cannot read socket fd = 10 err = Interrupted system call
+	• [Thread 0xb0862b70 (LWP 6381) exited]
+	• NotifyClient fails name = exaile.py event = 18 val1 = 1 val2 = 0
+	• netxruns... duration: 11ms
+	• jackd: ../common/JackEngine.cpp:932: int Jack::JackEngine::PortConnect(int, jack_port_id_t, jack_port_id_t): Assertion `ref >= 0' failed.
+
+
+	• jof@studio:~$ jack_netsource -c 120 -n 3 -H 192.168.1.13
+	• notification: uint decode error
+	• Connected :-)
+	• netjack: at frame 000085 -> total netxruns 1  (1%) queue time= 23221
+	• notification: uint decode error
+	• notification: uint decode error
+	• notification: uint decode error
+	• notification: uint decode error
+	• notification: uint decode error
+	• notification: uint decode error
+	• notification: uint decode error
+	• notification: uint decode error
+	• notification: uint decode error
+	• notification: uint decode error
+	• notification: uint decode error
+	• notification: uint decode error
+	• ^C*** glibc detected *** jack_netsource: double free or corruption (!prev): 0x09bd4830 ***
+	• ======= Backtrace: =========
+	•
+
+The last thing I did (before jack 1.9.7 release) was to synchronize NetJack1 code from JACK1 to JACK2, hoping I did that correctly (basically updating netjack.h,c  and netjack_packet,h,c)
+
+Reviewing the code I see:
+
+ - using  exit(1); in netjack.c instead of properly returning a proper error.
+
+- CELT : celt_mode_create should be matched with celt_mode_destroy. My feeling is that this is not done everywhere it should (especially in JackNetOneDriver.cpp)
+
+This is certainly not the cause of the bugs, but I think this should be fixed (along the "jack_netsource: double free or corruption")n before going anywhere else.
+
+Could you please have a look? 
+
+or if not Torben someone else?
+
+Thanks.
+
+Stéphane
+
+1301659924.17949_0.ltw:2,a <C65E91AB-6D96-46D3-A39A-7EF99770ED15 at grame dot fr>
+________________________________________________________________________________
+

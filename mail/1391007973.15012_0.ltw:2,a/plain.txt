@@ -1,0 +1,86 @@
+Date:        Thu, 30 Jan 2014 00:06:02 +0900
+From:        Takashi Sakamoto  <[hidden] at sakamocchi dot jp>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Paul Davis Re: [Jack-Devel] About ALSA drivers for Firewire sound devices (1391008987.15830_0.ltw:2,a)
+Follow-Up:   Chris Goddard Re: [Jack-Devel] About ALSA drivers for Firewire sound devices (1391009106.15877_0.ltw:2,a)
+
+Subject:     [Jack-Devel] About ALSA drivers for Firewire sound devices
+
+HI,
+
+I'm a newbie for this project. I'm a ALSA/FFADO developer and currently
+working for ALSA drivers of some firewire devices.
+
+[alsa-devel] [RFC v3] [PATCH 00/52] Enhancement for support of firewire
+devices
+http://mailman.alsa-project.org/pipermail/alsa-devel/2014-January/071820.html
+
+And call for testing in 'Linux Audio Devel':
+[LAD] Call for testing (final): ALSA driver for some firewire devices
+http://lists.linuxaudio.org/pipermail/linux-audio-dev/2014-January/034662.html
+
+The drivers have almost the same streaming functionality as FFADO has.
+The drivers are for some devices so-called 'GenericAVC', based on
+Fireworks/BeBoB/OXFORD.
+
+Currently they aren't going to be merged to upstream. i have some
+discussion about adjustment between the new drivers and related projects.
+
+At first, to PulseAudio.
+
+[pulseaudio-discuss] 'Failed to find a working profile' for firewire
+sound devices
+http://lists.freedesktop.org/archives/pulseaudio-discuss/2014-January/019685.html
+
+
+Next, to FFADO.
+http://sourceforge.net/mailarchive/forum.php?thread_name=52D8EE54.1040500%40sakamocchi.jp&forum_name=ffado-devel
+
+
+Finally, to JACK... I have no issue to JACK :p
+
+JACK is still a good friend to Firewire sound devices. But I inform
+three points to you.
+
+1. Daisy-caining
+With FFADO backend, jackd can handle some firewire devices. But with
+ALSA backend, jack can't. This rule is still applied to the new drivers.
+
+When users want to use several ALSA PCM devices for firewire sound
+devices, they must write ALSA configuration with 'multi' plugin. See in
+detail:
+http://www.alsa-project.org/alsa-doc/alsa-lib/pcm_plugins.html#pcm_plugins_multi
+
+
+2. conflict between ALSA/FFADO streaming functionality
+Both starts streaming. But generally, one device can handle a pair of
+streams (in and out).  So FFADO/ALSA can conflict for streaming.
+
+To prevent this, I post a patch to FFADO. If this patch is applied, when
+at least one of connected firewire devices is streaming, jackd with
+FFADO backend fails to start streaming.
+
+[FFADO-devel] Adjustment between FFADO/ALSA for Firewire drivers
+http://sourceforge.net/mailarchive/message.php?msg_id=31856195
+
+Here I have to mention about MIDI functionality. When users use ALSA
+MIDI functionality, the new drivers also start streaming because
+firewire streaming includes both of PCM samples/MIDI messages.
+
+Some graphical JACK application such as 'patchage' displays ALSA MIDI
+ports when jackd is running. But users can't do this. Vise versa, when
+users use any ALSA MIDI ports, then jackd always failed.
+
+
+3. control for internal mixer
+The new drivers don't give this functionality. So users still need
+applications for it, like FFADO Mixer.
+
+
+Regards
+
+Takashi Sakamoto
+
+1391007973.15012_0.ltw:2,a <52E918DA.6020303 at sakamocchi dot jp>
+________________________________________________________________________________
+

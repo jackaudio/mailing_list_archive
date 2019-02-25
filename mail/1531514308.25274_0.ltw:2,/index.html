@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How to profile jack cpu load?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How to profile jack cpu load?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1531513319.24249_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1531554117.6578_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1531514308.25274_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 13 Jul 2018 16:37:54 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Tim </span> &lt;[hidden] at rogers dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>oleg68
+<a href='../1531513319.24249_0.ltw:2,/index.html'>Re: [Jack-Devel] How to profile jack cpu load? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>oleg68
+<a href='../1531554117.6578_0.ltw:2,/index.html'>Re: [Jack-Devel] How to profile jack cpu load? </a></td></tr>
+</table>
+<pre>
+On 07/13/2018 04:21 PM, oleg68 wrote:
+&gt; I'd maken a file test.sh, that downloads, builds and runs jackd.
+&gt; ------------------------------------------
+&gt; #/usr/bin/sh
+&gt; rm -rf jack2
+&gt; git clone git://github.com/jackaudio/jack2.git
+&gt; cd jack2
+&gt; ./waf configure --profile
+&gt; ./waf build
+&gt; echo
+&gt; echo "Running jackd"
+&gt; build/jackd -v -R -P40 -dalsa -d hw:Pro -r 48000 -p 1024 -n 2 -s -P
+&gt; ------------------------------------------
+&gt; 
+&gt; Than I ran:
+&gt; 
+&gt; ./test.sh | tee test.log
+&gt; 
+&gt; The resulting  test.log
+&gt; &lt;http://jack-audio.10948.n7.nabble.com/file/t1525/test.log&gt;   does not
+&gt; contain any 'Engine profiling activated' message
+
+
+Hm, no ./waf install step?
+
+Although it appears that the jackd you built is in fact
+  the one that is running, it seems possible to me that
+  it may be loading all of its libraries from a previous jack
+  installation such as in /usr or /usr/local - libraries that
+  were not built with the profiling.
+
+Try the install step which should replace those libraries.
+
+I find that it is always a good idea to run "sudo ldconfig"
+  after playing around with jack install steps, so that the
+  system really can find the correct libraries.
+That is supposed to happen automatically with most software,
+  but I found sometimes it doesn't with jack, possibly with
+  just one of the jack versions, I can't recall which.
+
+Tim.
+The MusE sequencer project.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1531513319.24249_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1531554117.6578_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1531514308.25274_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1531514308.25274_0.ltw:2,&nbsp;&lt;fc3d49e9-f4b7-efc8-2445-4162c39ec0d3 at rogers dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

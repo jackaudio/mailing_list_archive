@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Debugging Jack Clients</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Debugging Jack Clients</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1315330558.30740_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1315363112.4200_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1315333811.1763_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 06 Sep 2011 11:29:42 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> ccrome </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>ccrome
+<a href='../1315330558.30740_0.ltw:2,a/index.html'>Re: [Jack-Devel] Debugging Jack Clients </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Gabriel Beddingfield
+<a href='../1315363112.4200_0.ltw:2,a/index.html'>Re: [Jack-Devel] Debugging Jack Clients </a></td></tr>
+</table>
+<pre>
+Ah, perhaps I've found the issue.  I guess when Jack try to re-start, it
+reconfigures the codec.  I'm using a custom audio card that takes some time
+to re-configure, and it seems to enter a continuous loop where it tries to
+configure the codec, then it gets an xrun, so it tries again.
+
+-Caleb
+
+
+On Tue, Sep 6, 2011 at 10:35 AM, ccrome &lt;[hidden]&gt; wrote:
+
+&gt; Thanks Paul.
+&gt;
+&gt; When I try that, it doesn't work properly.  Here's what happens:
+&gt;
+&gt; # jackd -r -t 50000 -d alsa .... &gt; jackd_log &amp;
+&gt;&gt; jackd 0.120.1
+&gt;&gt; Copyright 2001-2009 Paul Davis, Stephane Letz, Jack O'Quinn, Torben Hohn
+&gt;&gt; and others.
+&gt;&gt; jackd comes with ABSOLUTELY NO WARRANTY
+&gt;&gt; This is free software, and you are welcome to redistribute it
+&gt;&gt; under certain conditions; see the file COPYING for details
+&gt;&gt; JACK compiled with System V SHM support.
+&gt;&gt; loading driver ..
+&gt;&gt; creating alsa driver ... hw:0|hw:0|1024|2|48000|0|0|nomon|swmeter|-|16bit
+&gt;&gt; control device hw:0
+&gt;&gt; configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 2
+&gt;&gt; periods
+&gt;&gt; ALSA: final selected sample format for capture: 16bit little-endian
+&gt;&gt; ALSA: use 2 periods for capture
+&gt;&gt; ALSA: final selected sample format for playback: 16bit little-endian
+&gt;&gt; ALSA: use 2 periods for playback
+&gt;
+&gt;
+&gt;
+&gt; Then,* *I start the debugger
+&gt;
+&gt;&gt; # gdb client
+&gt;&gt; gdb&gt; break process
+&gt;&gt; gdb&gt; run
+&gt;&gt; Starting program:
+&gt;&gt; /home/caleb/mmfx/platform/platform_beagle/puppy_driver/jack_scripts/jack_sine
+&gt;&gt; [Thread debugging using libthread_db enabled]
+&gt;&gt; [New Thread 0x40a73470 (LWP 22052)]
+&gt;&gt; engine sample rate: 48000
+&gt;&gt; [New Thread 0x412f6470 (LWP 22055)]
+&gt;&gt;   ^C
+&gt;&gt; Program received signal SIGINT, Interrupt.
+&gt;&gt; 0x401e9f44 in nanosleep () from /lib/arm-linux-gnueabi/libc.so.6
+&gt;&gt; (gdb) bad status (254) for client sine handling event (type = 8)
+&gt;&gt; bad status (254) for client sine handling event (type = 8)
+&gt;&gt; bad status (254) for client sine handling event (type = 8)
+&gt;&gt; gdb&gt;
+&gt;&gt; gdb&gt; continue
+&gt;
+&gt;
+&gt; The callback 'process' is never called again, and the jackd_log file is
+&gt; filled with alsa xruns.
+&gt;
+&gt; Any thoughts?
+&gt;
+&gt; BTW, I'm running JACK 1 on an ARM.
+&gt;
+&gt; Thanks again,
+&gt;   -Caleb
+&gt;
+&gt;
+&gt;
+&gt; On Tue, Sep 6, 2011 at 9:45 AM, Paul Davis &lt;[hidden]&gt;wrote:
+&gt;
+&gt;&gt; On Tue, Sep 6, 2011 at 12:41 PM, ccrome &lt;[hidden]&gt; wrote:
+&gt;&gt; &gt; Hi,
+&gt;&gt; &gt;    Forgive me fi this has been asked before, but the tux archives seem
+&gt;&gt; to be
+&gt;&gt; &gt; broken (not responding) for me.
+&gt;&gt; &gt; I'm developing a Jack client on Linux (using the jackd sever with the
+&gt;&gt; ALSA
+&gt;&gt; &gt; backend), and need to be able to debug the client application.  How do
+&gt;&gt; you
+&gt;&gt; &gt; go about this in Jack?  I'm trying this:
+&gt;&gt; &gt; # jackd -d alsa .... &lt;startup options&gt;.... &amp;
+&gt;&gt;
+&gt;&gt; jackd -r -t 50000 -d alsa ......
+&gt;&gt;
+&gt;&gt; (-r =&gt; not Realtime, -t N =&gt; set client timeout (in msecs))
+&gt;&gt;
+&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1315330558.30740_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1315363112.4200_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1315333811.1763_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1315333811.1763_0.ltw:2,a&nbsp;&lt;CAG5mAdx7VNWF1tW-mwWLFdrDH-2DVkpg5nSxuAXNu5XLY1mk-Q at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

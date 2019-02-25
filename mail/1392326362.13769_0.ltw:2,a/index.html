@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] [PATCH 02/16] For the IIO driver : * Implemented the following functions - untested will contain bugs : iio_driver_attach, iio_driver_detach, iio_driver_start, iio_driver_stop, iio_driver_wait, iio_driver_run_cycle, iio_driver_delete, driver_get_descriptor * The function iio_driver_bufsize now checks that the requested buffer size is safe w.r.t. the iio subsystem. It also checks that the iio required read buffer is resized successfully. * driver_initialize : The driver now allows the period size option to be specified on the command line. Checks for acceptable period size and creates the required iio read buffer.</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] [PATCH 02/16] For the IIO driver : * Implemented the following functions - untested will contain bugs : iio_driver_attach, iio_driver_detach, iio_driver_start, iio_driver_stop, iio_driver_wait, iio_driver_run_cycle, iio_driver_delete, driver_get_descriptor * The function iio_driver_bufsize now checks that the requested buffer size is safe w.r.t. the iio subsystem. It also checks that the iio required read buffer is resized successfully. * driver_initialize : The driver now allows the period size option to be specified on the command line. Checks for acceptable period size and creates the required iio read buffer.</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1392326354.13744_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1392326368.13775_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1392326362.13769_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 14 Feb 2014 08:18:27 +1100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Matt Flax </span> &lt;[hidden] at flatmax dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Matt Flax
+<a href='../1392326340.13728_0.ltw:2,Sa/index.html'>[Jack-Devel] [PATCH 00/16] IIO driver for jack1 </a></td></tr>
+</table>
+<pre>
+---
+ codeBlocks/jack1.cbp     |  77 ++++++++++++++++-
+ codeBlocks/jack1.layout  | 192 +++++++++++++++++++++++++++-------------
+ drivers/iio/iio_driver.C | 221 ++++++++++++++++++++++++++++++++++++++++++++---
+ drivers/iio/iio_driver.h |  12 ++-
+ tools                    |   2 +-
+ 5 files changed, 429 insertions(+), 75 deletions(-)
+
+diff --git a/codeBlocks/jack1.cbp b/codeBlocks/jack1.cbp
+index 5f799df..c1edce0 100644
+--- a/codeBlocks/jack1.cbp
++++ b/codeBlocks/jack1.cbp
+@@ -211,7 +211,7 @@
+ 		&lt;/Unit&gt;
+ 		&lt;Unit filename="../drivers/freebob/freebob_driver.h" /&gt;
+ 		&lt;Unit filename="../drivers/iio/Makefile.am" /&gt;
+-		&lt;Unit filename="../drivers/iio/iio_driver.c"&gt;
++		&lt;Unit filename="../drivers/iio/iio_driver.C"&gt;
+ 			&lt;Option compilerVar="CC" /&gt;
+ 		&lt;/Unit&gt;
+ 		&lt;Unit filename="../drivers/iio/iio_driver.h" /&gt;
+@@ -353,6 +353,81 @@
+ 			&lt;Option compilerVar="CC" /&gt;
+ 		&lt;/Unit&gt;
+ 		&lt;Unit filename="../python/Makefile.am" /&gt;
++		&lt;Unit filename="../tools/Makefile.am" /&gt;
++		&lt;Unit filename="../tools/alias.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/alsa_in.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/alsa_out.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/bufsize.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/connect.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/evmon.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/freewheel.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/iodelay.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/ipload.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/ipunload.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/load_test.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/lsp.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/midi_dump.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/monitor_client.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/netsource.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/property.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/samplerate.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/session_notify.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/transport.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/tw.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/wait.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tools/zalsa/Makefile.am" /&gt;
++		&lt;Unit filename="../tools/zalsa/alsathread.cc" /&gt;
++		&lt;Unit filename="../tools/zalsa/alsathread.h" /&gt;
++		&lt;Unit filename="../tools/zalsa/jackclient.cc" /&gt;
++		&lt;Unit filename="../tools/zalsa/jackclient.h" /&gt;
++		&lt;Unit filename="../tools/zalsa/lfqueue.cc" /&gt;
++		&lt;Unit filename="../tools/zalsa/lfqueue.h" /&gt;
++		&lt;Unit filename="../tools/zalsa/pxthread.cc" /&gt;
++		&lt;Unit filename="../tools/zalsa/pxthread.h" /&gt;
++		&lt;Unit filename="../tools/zalsa/zita-a2j.cc" /&gt;
++		&lt;Unit filename="../tools/zalsa/zita-j2a.cc" /&gt;
+ 		&lt;Extensions&gt;
+ 			&lt;envvars /&gt;
+ 			&lt;code_completion /&gt;
+diff --git a/codeBlocks/jack1.layout b/codeBlocks/jack1.layout
+index b1fd9cc..b6060c6 100644
+--- a/codeBlocks/jack1.layout
++++ b/codeBlocks/jack1.layout
+@@ -1,24 +1,49 @@
+ &lt;?xml version="1.0" encoding="UTF-8" standalone="yes" ?&gt;
+ &lt;CodeBlocks_layout_file&gt;
+ 	&lt;ActiveTarget name="Debug" /&gt;
++	&lt;File name="../drivers/netjack/net_driver.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="1587" topLine="51" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../README.developers" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="818" topLine="0" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../jackd/engine.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="47427" topLine="1776" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../libjack/driver.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="3008" topLine="90" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../config/cpu/m68k/atomicity.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="3797" topLine="92" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
+ 	&lt;File name="../config/os/macosx/README" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="5518" topLine="135" /&gt;
++			&lt;Cursor1 position="877" topLine="13" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/coreaudio/coreaudio_driver.c" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../config/cpu/ia64/ia64intrin.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="21968" topLine="579" /&gt;
++			&lt;Cursor1 position="172" topLine="0" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../include/driver.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../drivers/oss/oss_driver.c" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="9697" topLine="252" /&gt;
++			&lt;Cursor1 position="4593" topLine="193" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../libjack/thread.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../jackd/controlapi.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="6722" topLine="268" /&gt;
++			&lt;Cursor1 position="8637" topLine="300" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+ 	&lt;File name="../drivers/sun/sun_driver.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+@@ -26,49 +51,59 @@
+ 			&lt;Cursor1 position="0" topLine="32" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../include/engine.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../Makefile.am" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="1373" topLine="40" /&gt;
++			&lt;Cursor1 position="308" topLine="0" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/sun/Makefile.am" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../jackd/jackstart.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="246" topLine="0" /&gt;
++			&lt;Cursor1 position="1384" topLine="61" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../drivers/alsa/hammerfall.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="7560" topLine="262" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/iio/iio_driver.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../include/port.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="4431" topLine="93" /&gt;
++			&lt;Cursor1 position="5953" topLine="148" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../jackd/engine.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../tools/Makefile.am" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="64641" topLine="2403" /&gt;
++			&lt;Cursor1 position="4777" topLine="138" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/portaudio/portaudio_driver.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../libjack/port.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="0" topLine="30" /&gt;
++			&lt;Cursor1 position="15137" topLine="574" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../jackd/jackd.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../include/driver.h" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="19263" topLine="728" /&gt;
++			&lt;Cursor1 position="9531" topLine="136" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/am/alsa_seqmidi.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../jackd/transengine.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="15067" topLine="601" /&gt;
++			&lt;Cursor1 position="14333" topLine="499" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/alsa_midi/alsa_midi.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../drivers/dummy/Makefile.am" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="18572" topLine="644" /&gt;
++			&lt;Cursor1 position="321" topLine="0" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/firewire/ffado_driver.c" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../drivers/iio/iio_driver.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="26116" topLine="765" /&gt;
++			&lt;Cursor1 position="1042" topLine="28" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../config/os/generic/time.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="967" topLine="2" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+ 	&lt;File name="../config/cpu/alpha/atomicity.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+@@ -76,64 +111,89 @@
+ 			&lt;Cursor1 position="2222" topLine="33" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/iio/iio_driver.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../configure.ac" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="1385" topLine="23" /&gt;
++			&lt;Cursor1 position="24477" topLine="755" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../README" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../drivers/sun/sun_driver.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="118" topLine="0" /&gt;
++			&lt;Cursor1 position="5219" topLine="1318" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../configure.ac" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../drivers/alsa/alsa_driver.c" open="1" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="6664" topLine="208" /&gt;
++			&lt;Cursor1 position="36028" topLine="1226" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../libjack/port.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../AUTHORS" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="15137" topLine="574" /&gt;
++			&lt;Cursor1 position="2313" topLine="53" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/sun/sun_driver.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../include/engine.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="33274" topLine="447" /&gt;
++			&lt;Cursor1 position="1373" topLine="40" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../include/port.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../drivers/iio/iio_driver.C" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="5953" topLine="148" /&gt;
++			&lt;Cursor1 position="4056" topLine="121" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../README.developers" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../drivers/firewire/ffado_driver.c" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="4198" topLine="110" /&gt;
++			&lt;Cursor1 position="20699" topLine="570" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/freebob/freebob_driver.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../drivers/am/alsa_rawmidi.c" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="29992" topLine="1037" /&gt;
++			&lt;Cursor1 position="7736" topLine="334" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/dummy/dummy_driver.c" open="1" top="1" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../libjack/client.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="11059" topLine="367" /&gt;
++			&lt;Cursor1 position="6596" topLine="284" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/alsa/hammerfall.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../drivers/am/alsa_midi_driver.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="7560" topLine="262" /&gt;
++			&lt;Cursor1 position="2611" topLine="68" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../config/cpu/ia64/ia64intrin.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../libjack/time.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="172" topLine="0" /&gt;
++			&lt;Cursor1 position="1648" topLine="49" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../libjack/driver.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../drivers/iio/Makefile.am" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="3008" topLine="90" /&gt;
++			&lt;Cursor1 position="246" topLine="0" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../drivers/coreaudio/coreaudio_driver.c" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="11306" topLine="627" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../drivers/alsa_midi/a2j.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="2337" topLine="56" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../drivers/firewire/ffado_driver.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="5805" topLine="176" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../drivers/dummy/dummy_driver.c" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="6236" topLine="184" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../README" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="118" topLine="0" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+ 	&lt;File name="../drivers/portaudio/portaudio_driver.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+@@ -141,34 +201,44 @@
+ 			&lt;Cursor1 position="1626" topLine="24" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/alsa/alsa_driver.c" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../drivers/portaudio/portaudio_driver.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="57783" topLine="2122" /&gt;
++			&lt;Cursor1 position="18461" topLine="558" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/oss/oss_driver.c" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../drivers/sun/Makefile.am" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="17712" topLine="444" /&gt;
++			&lt;Cursor1 position="246" topLine="0" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/alsa_midi/a2j.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../drivers/alsa_midi/alsa_midi.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="2337" topLine="56" /&gt;
++			&lt;Cursor1 position="23463" topLine="810" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/am/alsa_rawmidi.c" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../jackd/jackd.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="7736" topLine="334" /&gt;
++			&lt;Cursor1 position="10847" topLine="351" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../AUTHORS" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../drivers/freebob/freebob_driver.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="2313" topLine="53" /&gt;
++			&lt;Cursor1 position="29992" topLine="1037" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../drivers/dummy/dummy_driver.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="398" topLine="8" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+-	&lt;File name="../drivers/dummy/dummy_driver.h" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++	&lt;File name="../libjack/thread.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
+ 		&lt;Cursor&gt;
+-			&lt;Cursor1 position="1252" topLine="21" /&gt;
++			&lt;Cursor1 position="6722" topLine="268" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../drivers/am/alsa_seqmidi.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="15067" topLine="601" /&gt;
+ 		&lt;/Cursor&gt;
+ 	&lt;/File&gt;
+ &lt;/CodeBlocks_layout_file&gt;
+diff --git a/drivers/iio/iio_driver.C b/drivers/iio/iio_driver.C
+index fda1db6..05800f3 100644
+--- a/drivers/iio/iio_driver.C
++++ b/drivers/iio/iio_driver.C
+@@ -24,6 +24,7 @@
+ #include &lt;IIO/IIO.H&gt;
+ 
+ #include &lt;values.h&gt;
++#define __STDC_FORMAT_MACROS
+ #include &lt;inttypes.h&gt;
+ extern "C" {
+ #include "iio_driver.h"
+@@ -33,6 +34,8 @@ extern "C" {
+ #define IIO_DEFAULT_CHIP "AD7476A" ///&lt; The default IIO recording chip to look for.
+ #define IIO_DEFAULT_READ_FS 1.e6 ///&lt; The default IIO sample rate for the default chip.
+ #define IIO_DEFAULT_PERIOD_SIZE 3000 ///&lt; The default period size is in the ms range
++#define IIO_DEFAULT_CAPUTURE_PORT_COUNT MAXINT ///&lt; The default number of capture ports is exceedingly big, trimmed down to a realistic size in driver_initialize
++#define IIO_SAFETY_FACTOR 2./3. ///&lt; The default safety factor, allow consumption of this fraction of the available DMA buffer before we don't allow the driver to continue.
+ 
+ //#define IIO_DRIVER_N_PARAMS	2
+ //const static jack_driver_param_desc_t iio_params[IIO_DRIVER_N_PARAMS] = {
+@@ -57,19 +60,54 @@ extern "C" {
+ //};
+ 
+ static int iio_driver_attach (iio_driver_t *driver, jack_engine_t *engine) {
+-    //return jack_activate (driver-&gt;client);
+-    return 0;
++    IIO *iio = static_cast&lt;IIO *&gt;(driver-&gt;IIO_devices);
++    int ret=iio-&gt;open(); // try to open all IIO devices
++    if (ret!=NO_ERROR)
++        return ret;
++
++    return jack_activate (driver-&gt;client);
+ }
+ 
+ static int iio_driver_detach (iio_driver_t *driver, jack_engine_t *engine) {
++    static_cast&lt;IIO *&gt;(driver-&gt;IIO_devices)-&gt;close(); // close the IIO system
++
++    if (driver-&gt;engine == 0) {
++		return -1;
++    }
++
++    for (JSList *node = driver-&gt;capture_ports; node; node = jack_slist_next(node)) {
++		jack_port_unregister(driver-&gt;client, ((jack_port_t *) node-&gt;data));
++    }
++
++    jack_slist_free(driver-&gt;capture_ports);
++    driver-&gt;capture_ports = 0;
++
++    for (JSList *node = driver-&gt;playback_ports; node; node = jack_slist_next(node)) {
++		jack_port_unregister(driver-&gt;client, ((jack_port_t *) node-&gt;data));
++    }
++
++    jack_slist_free(driver-&gt;playback_ports);
++    driver-&gt;playback_ports = 0;
++
++    driver-&gt;engine = 0;
+     return 0;
+ }
+ 
+ static int iio_driver_start (iio_driver_t *driver) {
++    cout&lt;&lt;"iio_driver_start::   enabling IIO : enable(true)"&lt;&lt;endl;
++    static_cast&lt;IIO *&gt;(driver-&gt;IIO_devices)-&gt;enable(true); // start the DMA
++
++#ifdef HAVE_CLOCK_GETTIME
++	driver-&gt;next_wakeup.tv_sec = 0;
++#else
++	driver-&gt;next_time = 0;
++#endif
+     return 0;
+ }
+ 
+ static int iio_driver_stop (iio_driver_t *driver) {
++    cout&lt;&lt;"iio_driver_start:: disabling IIO : enable(false)"&lt;&lt;endl;
++    static_cast&lt;IIO *&gt;(driver-&gt;IIO_devices)-&gt;enable(false); // stop the DMA
+     return 0;
+ }
+ 
+@@ -88,7 +126,55 @@ static int iio_driver_null_cycle (iio_driver_t *driver, jack_nframes_t nframes)
+     return 0;
+ }
+ 
++/** The driver_wait function to work out if we have used more time then available to process one cycle.
++*/
++static jack_nframes_t iio_driver_wait(iio_driver_t *driver, int extra_fd, int *status, float *delayed_usecs){
++    float maxDelayTime=(IIO_SAFETY_FACTOR*driver-&gt;maxDelayUSecs); // this driver can handle this much delay between reads.
++	*status = 0;
++
++	jack_time_t now = driver-&gt;engine-&gt;get_microseconds();
++
++	if (driver-&gt;next_time &lt; now)
++		if (driver-&gt;next_time == 0) /* first time through */
++			driver-&gt;next_time = now + driver-&gt;wait_time;
++		else
++            if ((now - driver-&gt;last_wait_ust) &gt; maxDelayTime) { /* xrun */
++                jack_error("**** iio: xrun of %ju usec", (uintmax_t)now - driver-&gt;next_time);
++                driver-&gt;next_time = now + driver-&gt;wait_time;
++                *status=-1; // xruns are fatal
++            } else /* late, but handled by our "buffer" */
++                driver-&gt;next_time += driver-&gt;wait_time;
++	else {
++		jack_time_t wait = driver-&gt;next_time - now;
++		struct timespec ts = { .tv_sec = (time_t)wait / (time_t)1000000, .tv_nsec = ((time_t)wait % (time_t)1000000) * 1000 };
++		nanosleep(&amp;ts,NULL);
++		driver-&gt;next_time += driver-&gt;wait_time;
++	}
++
++    driver-&gt;last_wait_ust = driver-&gt;engine-&gt;get_microseconds(); // remember the time now
++	driver-&gt;engine-&gt;transport_cycle_start (driver-&gt;engine, driver-&gt;last_wait_ust);
++
++	*delayed_usecs = 0;
++	return driver-&gt;period_size;
++}
++
+ static int iio_driver_run_cycle (iio_driver_t *driver) {
++	int wait_status;
++	float delayed_usecs;
++
++	jack_nframes_t nframes = iio_driver_wait(driver, -1, &amp;wait_status, &amp;delayed_usecs);
++	if (nframes == 0) {
++		/* we detected an xrun and restarted: notify clients about the delay. */
++		driver-&gt;engine-&gt;delay(driver-&gt;engine, delayed_usecs);
++		return 0;
++	}
++
++	if (wait_status == 0)
++		return driver-&gt;engine-&gt;run_cycle(driver-&gt;engine, nframes, delayed_usecs);
++
++	if (wait_status &lt; 0)
++		return -1;
++	else
+ 		return 0;
+ }
+ 
+@@ -101,7 +187,29 @@ jack_time_t getUSecs(jack_nframes_t nframes, jack_nframes_t fs) {
+     return (jack_time_t) floor((((float) nframes) / fs) * 1000000.0f);
+ }
+ 
++/**
++*/
+ static int iio_driver_bufsize (iio_driver_t *driver, jack_nframes_t nframes) {
++    // Check we aren't exceeding the safety margin for the available DMA buffer ...
++    float requestedUS=(float)nframes*(float)driver-&gt;sample_rate/1.e6;
++    if (requestedUS&gt;(IIO_SAFETY_FACTOR*driver-&gt;maxDelayUSecs)){
++        jack_info("Bufsize requested of duration %.3f us which is larger the the plausible buffer size of %.3f us.", requestedUS, (IIO_SAFETY_FACTOR*driver-&gt;maxDelayUSecs));
++        return -1;
++    }
++
++    // Check that the read array is large enough to handle nframes and if not, then resize ...
++    Eigen::Array&lt;unsigned short int, Eigen::Dynamic, Eigen::Dynamic&gt; *data = static_cast&lt;Eigen::Array&lt;unsigned short int, Eigen::Dynamic, Eigen::Dynamic&gt; *&gt;(driver-&gt;data);
++    IIO *iio = static_cast&lt;IIO *&gt;(driver-&gt;IIO_devices);
++    int N=iio-&gt;getReadArraySampleCount(*data);
++    if (N&lt;nframes){ // if it is smaller then nframes then resize
++        int ret=iio-&gt;getReadArray(driver-&gt;period_size, *data); // resize the array to be able to read enough memory
++        if (ret!=NO_ERROR) {
++            jack_info("iio::getReadArray couldn't extend the data buffer, indicating the problem.");
++            return -1;
++        }
++    }
++
++    // all good, adjust the new variables...
+     driver-&gt;period_size = nframes;
+     driver-&gt;period_usecs = driver-&gt;wait_time = getUSecs(nframes, driver-&gt;sample_rate);
+ 
+@@ -114,9 +222,25 @@ static int iio_driver_bufsize (iio_driver_t *driver, jack_nframes_t nframes) {
+     return 0;
+ }
+ 
++/** free all memory allocated by a driver instance
++*/
++static void iio_driver_delete(iio_driver_t * driver){
++    IIO *iio = static_cast&lt;IIO *&gt;(driver-&gt;IIO_devices);
++    if (iio)
++        delete iio;
++    driver-&gt;IIO_devices=NULL;
++    Eigen::Array&lt;unsigned short int, Eigen::Dynamic, Eigen::Dynamic&gt; *data = static_cast&lt;Eigen::Array&lt;unsigned short int, Eigen::Dynamic, Eigen::Dynamic&gt; *&gt;(driver-&gt;data);
++    if (data)
++        delete data;
++    driver-&gt;data=NULL;
++    free(driver);
++}
++
+ jack_driver_t *driver_initialize (jack_client_t *client, const JSList * params) {
+     IIO *iio = NULL;
+     iio_driver_t *driver = (iio_driver_t *) calloc (1, sizeof (iio_driver_t));
++    driver-&gt;IIO_devices=NULL; // indicate that the iio class hasn't been created yet
++    driver-&gt;data=NULL; // indicate that the iio data matrix hasn't been created yet.
+ 
+     if (driver) {
+         jack_driver_nt_init((jack_driver_nt_t *) driver);
+@@ -138,9 +262,7 @@ jack_driver_t *driver_initialize (jack_client_t *client, const JSList * params)
+         driver-&gt;sample_rate = IIO_DEFAULT_READ_FS; // IIO sample rate is fixed.
+         driver-&gt;period_size = IIO_DEFAULT_PERIOD_SIZE;
+ 
+-        driver-&gt;period_usecs = driver-&gt;wait_time = getUSecs(driver-&gt;period_size, driver-&gt;sample_rate);
+-
+-        driver-&gt;capture_channels  = MAXINT; // The default number of physical input channels - a very large number, to be reduced.
++        driver-&gt;capture_channels  = IIO_DEFAULT_CAPUTURE_PORT_COUNT; // The default number of physical input channels - a very large number, to be reduced.
+         driver-&gt;capture_ports     = NULL;
+         driver-&gt;playback_channels = 0; // currently doesn't support playback.
+         driver-&gt;playback_ports    = NULL;
+@@ -162,6 +284,10 @@ jack_driver_t *driver_initialize (jack_client_t *client, const JSList * params)
+                 case 'i': // we are specifying the number of capture channels
+                     driver-&gt;capture_channels = param-&gt;value.ui;
+                     break;
++                case 'p':
++                  driver-&gt;period_size = param-&gt;value.ui;
++                  break;
++
+                 }
+                 pnode = jack_slist_next(pnode);
+             }
+@@ -170,23 +296,96 @@ jack_driver_t *driver_initialize (jack_client_t *client, const JSList * params)
+ 
+             iio-&gt;printInfo(); // print out detail about the devices which were found ...
+ 
++            // Find the maximum allowable delay and check whether the desired period is within the limit, otherwise report the error.
++            driver-&gt;period_usecs = driver-&gt;wait_time = getUSecs(driver-&gt;period_size, driver-&gt;sample_rate);
++            driver-&gt;maxDelayUSecs=(double)iio-&gt;getChannelBufferCnt()*driver-&gt;sample_rate/1.e6; // find the duration (in us) each channel can buffer
++
++            bool bufferSizeOK=true;
++            if (driver-&gt;period_usecs&gt;(IIO_SAFETY_FACTOR*driver-&gt;maxDelayUSecs)){
++                jack_info("iio driver requires a wait time/period of %.3f us, however the maximum buffer is %.3f us, which is more then the safety factor of %.2f.\nIndicating the problem.", driver-&gt;wait_time, driver-&gt;maxDelayUSecs, IIO_SAFETY_FACTOR);
++                bufferSizeOK=false; // indicate the error
++            }
++
++            // Try to create the data buffer and store it in the driver, if a problem is encountered, then report the error.
++            bool dataCreationOK=true;
++            Eigen::Array&lt;unsigned short int, Eigen::Dynamic, Eigen::Dynamic&gt; *data = new Eigen::Array&lt;unsigned short int, Eigen::Dynamic, Eigen::Dynamic&gt;;
++            if (data)
++                driver-&gt;data=data;
++                int ret=iio-&gt;getReadArray(driver-&gt;period_size, *data); // resize the array to be able to read enough memory
++                if (ret!=NO_ERROR) {
++                    jack_info("iio::getReadArray couldn't create the data buffer, indicating the problem.");
++                    dataCreationOK=false;
++                }
++
++            else {
++                jack_info("iio driver couldn't create the data buffer, indicating the problem.");
++                dataCreationOK=false;
++            }
++
+             // if the available number of ports is less then the requested number, then restrict to the number of physical ports.
+             if (iio-&gt;getChCnt()&lt;driver-&gt;capture_channels)
+                 driver-&gt;capture_channels=iio-&gt;getChCnt();
+ 
+             string name("iio_pcm");
+-            //jack_info("created iio driver ... %s|%" PRIu32 "|%" PRIu32 "|%lu|%u|%u", name.c_str(), driver-&gt;sample_rate, driver-&gt;period_size, driver-&gt;wait_time, driver-&gt;capture_channels, driver-&gt;playback_channels);
+-
++            if ((driver-&gt;capture_channels!=0 || driver-&gt;playback_channels!=0) &amp;&amp; bufferSizeOK){
++                jack_info("created iio driver ... %s|%" PRIu32 "|%" PRIu32 "|%lu|%u|%u", name.c_str(), driver-&gt;sample_rate, driver-&gt;period_size, driver-&gt;wait_time, driver-&gt;capture_channels, driver-&gt;playback_channels);
+                 return (jack_driver_t *) driver;
++            }
++            // if we get here without returning we have a problem ...
++            if (bufferSizeOK &amp;&amp; dataCreationOK) // if the buffer size and the data malloc aren't the problem, then we can't find any devices.
++                jack_info("couldn't find any iio devices with the chip name : %s", chipName.c_str());
+         } else
+             jack_error("iio driver_initialise: new IIO failed: %s: %s@%i", strerror(errno), __FILE__, __LINE__);
+     } else
+         jack_error("iio driver_initialise: iio_driver_t malloc() failed: %s: %s@%i", strerror(errno), __FILE__, __LINE__);
+ 
+     // if we get here, there was a problem.
+-    if (driver)
+-        free(driver);
+-    if (iio)
+-        delete iio;
++    iio_driver_delete((iio_driver_t *) driver);
+     return NULL;
+ }
++
++jack_driver_desc_t *driver_get_descriptor () {
++	jack_driver_desc_t * desc;
++	jack_driver_param_desc_t * params;
++	unsigned int i;
++
++	desc = calloc (1, sizeof (jack_driver_desc_t));
++	strcpy (desc-&gt;name, "iio");
++	desc-&gt;nparams = 3;
++
++	params = calloc (desc-&gt;nparams, sizeof (jack_driver_param_desc_t));
++
++	i = 0;
++	strcpy (params[i].name, "chip");
++	params[i].character  = 'C';
++	params[i].type       = JackDriverParamString;
++	strcpy (params[i].value.str, IIO_DEFAULT_CHIP);
++	strcpy (params[i].short_desc, "The name of the chip to search for in the IIO devices");
++	strcpy (params[i].long_desc, params[i].short_desc);
++
++	i++;
++	strcpy (params[i].name, "capture");
++	params[i].character  = 'i';
++	params[i].type       = JackDriverParamUInt;
++	params[i].value.ui   = IIO_DEFAULT_CAPUTURE_PORT_COUNT;
++	strcpy (params[i].short_desc, "Provide capture ports.");
++	strcpy (params[i].long_desc, params[i].short_desc);
++
++	i++;
++	strcpy (params[i].name, "period");
++	params[i].character  = 'p';
++	params[i].type       = JackDriverParamUInt;
++	params[i].value.ui   = 1024U;
++	strcpy (params[i].short_desc, "Frames per period");
++	strcpy (params[i].long_desc, params[i].short_desc);
++
++	desc-&gt;params = params;
++
++	return desc;
++}
++
++void driver_finish (jack_driver_t *driver){
++    iio_driver_delete((iio_driver_t *) driver);
++}
++
++const char driver_client_name[] = "iio_pcm";
+diff --git a/drivers/iio/iio_driver.h b/drivers/iio/iio_driver.h
+index 9bf2aea..d067c76 100644
+--- a/drivers/iio/iio_driver.h
++++ b/drivers/iio/iio_driver.h
+@@ -38,7 +38,7 @@ typedef struct _iio_driver {
+ //	unsigned int nperiods;
+ 	unsigned int capture_channels;
+ 	unsigned int playback_channels;
+-//
++
+ //	char *indev;
+ //	char *outdev;
+ //	int infd;
+@@ -55,12 +55,22 @@ typedef struct _iio_driver {
+ 
+     jack_nframes_t  sample_rate; ///&lt; The sample rate of the IIO chip.
+     unsigned long   wait_time; ///&lt; The time to wait between calls.
++#ifdef HAVE_CLOCK_GETTIME
++    struct timespec next_wakeup;
++#else
++    jack_time_t     next_time;
++#endif
+ 
+     void *IIO_devices; ///&lt; The IIO C++ class maintaining all devices with a particular chip name.
++    float maxDelayUSecs; ///&lt; The maximum number of micro seconds the buffer can hold
++    void *data; ///&lt; The data read in from the IIO devices is stored here.
+ } iio_driver_t;
+ 
+ /** Function called by jack to init. the IIO driver, possibly passing in variables.
+ */
+ jack_driver_t *driver_initialize (jack_client_t *client, const JSList * params);
++jack_driver_desc_t *driver_get_descriptor();
++void driver_finish (jack_driver_t *driver);
++extern const char driver_client_name[];
+ #endif
+ 
+diff --git a/tools b/tools
+index 8461ac0..ff8fdb5 160000
+--- a/tools
++++ b/tools
+@@ -1 +1 @@
+-Subproject commit 8461ac0d4da80037f855956d39527d2976ed363c
++Subproject commit ff8fdb5af5f2761443498caa338700e64b4e781b
+-- 
+1.8.3.2
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1392326354.13744_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1392326368.13775_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1392326362.13769_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1392326362.13769_0.ltw:2,a&nbsp;&lt;1392326321-3699-3-git-send-email-flatmax at flatmax dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

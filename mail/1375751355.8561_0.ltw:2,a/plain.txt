@@ -1,0 +1,64 @@
+Date:        Tue, 06 Aug 2013 03:09:06 +0200
+From:        Pawel  <[hidden] at wp dot pl>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+
+Subject:     Re: [Jack-Devel] Jack2 - small fix for JackSession
+
+Great - so seems that you can simplify Jack1 code ;-)
+
+.. but meantime , Jack1 is not problem, it properly handle case when path doesn't contain trailing slash, while Jack2 does not.
+
+Check this example with Jack2:
+
+CASE 1
+$ mkdir /tmp/dupa; jack_session_notify save /tmp/dupa; ls -ltr /tmp/dupa
+mkdir: cannot create directory ?/tmp/dupa?: File exists
+export SESSION_DIR="/tmp/dupaD2/"
+fsthost32 -u 16 -s "${SESSION_DIR}state.fps" &
+sleep 10
+total 0
+
+CASE 2
+
+$ mkdir /tmp/dupa; jack_session_notify save /tmp/dupa/; ls -ltr /tmp/dupa
+mkdir: cannot create directory ?/tmp/dupa?: File exists
+export SESSION_DIR="/tmp/dupa/D2/"
+fsthost32 -u 16 -s "${SESSION_DIR}state.fps" &
+sleep 10
+total 0
+drwxrwxr-x 2 xj xj 60 sie  6 03:08 D2
+
+See what I mean ?
+
+P.
+
+
+Dnia Wtorek, 6 Sierpnia 2013 02:59 Paul Davis <[hidden]> napisa³(a)
+> on POSIX systems, the use of a double // in a path is supposed to be equivalent to a single slash. recursively, of course.
+> 
+> On Mon, Aug 5, 2013 at 8:57 PM, Pawel <[hidden]> wrote:
+> > Hi,
+> >  
+> >  There is a small problem with Jack2 JackSession support - it assume that jack_session_notify provide path to session dir with trailing slash. OTOH code for Jack1:
+> >  
+> >   if (req->x.session.path[strlen(req->x.session.path)-1] == '/') {
+> >      snprintf (event.x.name, sizeof (event.x.name), "%s%s/", req->x.session.path, client->control->name );
+> >  } else {
+> >      snprintf (event.x.name, sizeof (event.x.name), "%s/%s/", req->x.session.path, client->control->name );
+> >  }
+> >  
+> >  I attached small fix for jack2 , please apply. Hope this time my patch will not come to /dev/null ;-)
+> >  
+> >  Best Regards
+> >  Pawel / Xj
+> >  
+> > 
+> >  Jack-Devel mailing list
+> >  [hidden]
+> >  http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> 
+
+1375751355.8561_0.ltw:2,a <52004cb29f0a40.01997608 at wp dot pl>
+________________________________________________________________________________
+

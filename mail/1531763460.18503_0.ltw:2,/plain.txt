@@ -1,0 +1,65 @@
+Date:        Mon, 16 Jul 2018 19:49:16 +0200
+From:        Thomas Brand  <[hidden] at trellis dot ch>
+To:          [hidden] at jrigg dot co dot uk
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: [hidden] at jrigg dot co dot uk Re: [Jack-Devel] How to profile jack cpu load? (1531681919.22524_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] How to profile jack cpu load?
+
+On Sun, July 15, 2018 20:13, [hidden] wrote:
+> On Sat, Jul 14, 2018 at 12:52:49PM -0400, Tim wrote:
+>
+>>
+>>
+>> On 07/14/2018 04:15 AM, John Rigg wrote:
+>>
+>>> On Sat, Jul 14, 2018 at 12:41:28AM -0700, oleg68 wrote:
+>>>
+>>>> You are right. The problem was the conflict with the old jack
+>>>> libraries
+>>>>
+>>>> But .waf install with ldconfig did not help.
+>>>>
+>>>
+>>> You need to tell "./waf configure" to install jack over
+>>> the existing jack package files. On Debian systems I use --prefix=/usr
+>>> --libdir=/usr/lib/x86_64-linux-gnu
+>>>
+>>
+>> I would not recommended that. Always a bad idea.
+>> It will interfere with packaging.
+>>
+>
+> I disagree that it's a bad idea. The whole point is that
+> other packages that depend on the distro's jack packages still think those
+> are installed. The only thing to watch for is if you update the distro
+> jack packages it will overwrite the compiled version, so you'll have to
+> re-install that.
+>
+> I've been using this method for many years without problems.
+>
+>
+
+I've been using that method as well, it works pretty good. Overwriting the
+distro package's files also circumvents a lot of package dependency
+issues. You could have jack installed from source and the repo jack
+package will most likely be pulled in sooner or later as a dependency by
+another package anyways.
+
+In a perfect world, there should be no reason that a preferred parallel
+installation in /usr/local would not work *for every client* that does not
+dlopen from a fixed location or otherwise tamper with the linker
+($LD_LIBRARY_PATH etc). It has the advantage of not caring to re-install
+the compiled version after updates. Using 'ldd' on binaries to check which
+libraries are going to be used is an easy way to predict what will happen.
+
+In any case, checking which libraries are effectively somewhere on the
+system is always good advice. 'sudo updatedb && locate libjack' followed
+by selective removes and re-installs.
+
+Greetings
+Thomas
+
+1531763460.18503_0.ltw:2, <bf41dd114941d65585e9054d54189b36.squirrel at ips73 dot ips dot ch>
+________________________________________________________________________________
+

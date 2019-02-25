@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] jack_client_open creates zombie on client</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] jack_client_open creates zombie on client</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1393343727.17122_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1393426279.22361_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1393412763.32724_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 26 Feb 2014 12:05:52 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Uli Franke </span> &lt;[hidden] at weiss dot ch&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Cc</td><td>Rolf Anderegg &lt;[hidden] at weiss dot ch&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1393426279.22361_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack_client_open creates zombie on client </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1394819100.6448_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack_client_open creates zombie on client </a></td></tr>
+</table>
+<pre>
+A general hello
+
+We launch jack from a client thread by making use of the autostart
+feature within jack_client_open on GNU/linux. Each time the server is
+autostarted a zombie is generated on the client process.
+
+We observed this with 1.9.8 and 1.9.9. using
+
+Autostart method                         :  classic
+
+Since we have to restart the server each time we switch the sample rate
+we will run out of pids on the long run.
+
+I scanned the sources and saw that the classic double forking does not
+wait on the pid of the first child. This is a common forking lapse.
+
+It seems that this bug is present in both versions (jack1 and jack2).
+The patch below can be applied to 1.9.9 but it should be trivial to
+inject the necessary changes into the more recent versions. This way you
+can massage the code the way you like it. You could even examine the
+return status of the first child ;)
+
+Regards
+Uli
+
+____
+[1] jack_autostart_fork_zombie_bug_fix.patch
+
+diff --git
+a/basestation/firmware/tools/jackd/posix/JackPosixServerLaunch.cpp
+b/basestation/firmware/tools/jackd/posix/JackPosixServerLaunch.cpp
+index 9818f71..1874fa0 100644
+--- a/basestation/firmware/tools/jackd/posix/JackPosixServerLaunch.cpp
++++ b/basestation/firmware/tools/jackd/posix/JackPosixServerLaunch.cpp
+@@ -159,8 +159,14 @@ static void start_server_classic_aux(const char*
+server_name)
+     fprintf(stderr, "exec of JACK server (command = \"%s\") failed:
+%s\n", command, strerror(errno));
+ }
+
++#include &lt;sys/wait.h&gt;
++
++
+ static int start_server_classic(const char* server_name)
+ {
++    int status;
++    pid_t first_child_pid;
++
+     /* The double fork() forces the server to become a child of
+      * init, which will always clean up zombie process state on
+      * termination. This even works in cases where the server
+@@ -170,7 +176,8 @@ static int start_server_classic(const char* server_name)
+      * virtual memory tricks, the overhead of the second fork() is
+      * probably relatively small.
+      */
+-    switch (fork()) {
++    first_child_pid = fork();
++    switch (first_child_pid) {
+         case 0:                                        /* child process */
+             switch (fork()) {
+                 case 0:                        /* grandchild process */
+@@ -185,6 +192,8 @@ static int start_server_classic(const char* server_name)
+             return 1;          /* failed to start server */
+     }
+
++    waitpid(first_child_pid, &amp;status, 0);
++
+     /* only the original parent process goes here */
+     return 0;                  /* (probably) successful */
+ }
+
+
+-- 
+ Uli Franke -- R&amp;D Engineer Dude
+ WEISS ENGINEERING LTD.
+ Professional Digital and Analog Audio Products
+ Florastrasse 42, 8610 Uster Switzerland
+ phone: +41 44 940 20 06, fax: +41 44 940 22 14
+ email: [hidden] web: http://www.weiss.ch
+
+ "To define recursion we first have to define recursion."
+ "What you boot is what you get."
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1393343727.17122_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1393426279.22361_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1393412763.32724_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1393412763.32724_0.ltw:2,a&nbsp;&lt;530DCA90.8010300 at weiss dot ch&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

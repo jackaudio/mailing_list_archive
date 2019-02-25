@@ -1,0 +1,75 @@
+Date:        Sun, 08 Jan 2012 01:01:06 +0100
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] ladish + jack autoconnect (1325969028.22135_0.ltw:2,a)
+Follow-Up:   Tim E. Real Re: [Jack-Devel] ladish + jack autoconnect (1325985995.2896_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] ladish + jack autoconnect (1326023976.18991_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] ladish + jack autoconnect
+
+On 01/07/2012 09:43 PM, Fons Adriaensen wrote:
+
+Hi!
+
+>> Stephane, Fons et al may provide some [constructive] criticism once the
+>> detailed proposal is out.
+>
+> Constructive or not, this is what I think about the proposal.
+>
+> I'm _not at all_ in favour of adding functionality to Jack
+> that only serves to resolve problems created by application
+> authors who either by ignorance or by design do things they
+> shouldn't do, such as autoconnecting without providing an
+> option to configure or disable it.
+>
+> Doing this only encourages the creation or continued acceptance
+> of apps that don't behave as required. The correct course of
+> action is to discourage the same, and force app authors to
+> either do their homework or face being excluded.
+
+While I think you clearly have a point here, the discussion reminds me
+about the glibc memcpy() bug on newer Intel processors: copying
+backward turned out to be faster on some architectures, and for the
+sake of efficiency, glibc changed from copying forward to copying
+backward on these machines.
+
+Though memcpy's manpage is absolutely clear that source and target
+memory areas must not overlap, some application developers did not worry
+about it. Overlap was no problem as long as memcpy() was traversing from
+low to high addresses. Once changed, many applications broke, including
+flash.
+
+There was a big discussion and blaming of application developers, Adobe
+in particular, that memmove() should have been used as mentioned all
+over the place.
+
+Linus' position was rather clear: the user doesn't care who broke it,
+the user demands a working system. As simple as that, end of the story.
+
+
+It's exactly what we're facing here. We could probably continue to argue
+purity vs. pragmatism for weeks.
+
+How about the following: let's do both - work around the bug to please
+the user *AND* blame the application developers.
+
+For this to work, I suggest to emit a (rude) warning every time an
+application tries to self-connect (its output ports) if jackd is running
+in one of the "compatibility modes" (a.k.a. ladish mode).
+
+Something like:
+
+    "Application foo attempted to self-connect its ports. See
+     http://some.url.org/faq/... why this is bad and update your
+     application to a fixed version."
+
+If there are really many broken applications out there, users would
+hopefully bug the upstream authors until they either do something about
+it or prove Nedko wrong. ;)
+
+
+Just my €0.02
+
+1325980880.27984_0.ltw:2,a <4F08DCC2.2080202 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

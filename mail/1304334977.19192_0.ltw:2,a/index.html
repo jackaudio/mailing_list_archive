@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] more ringbuffer challenges</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] more ringbuffer challenges</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1304333248.17102_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1304335047.19259_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1304334977.19192_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 02 May 2011 07:16:00 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Timothy Godfrey &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Timothy Godfrey
+<a href='../1304315076.29639_0.ltw:2,a/index.html'>[Jack-Devel] more ringbuffer challenges </a></td></tr>
+</table>
+<pre>
+On Mon, May 2, 2011 at 1:44 AM, Timothy Godfrey
+&lt;[hidden]&gt; wrote:
+
+&gt; A bit of background is probably in order to describe my problem. I am
+&gt; working on transmitting audio streams reliably and with minimum
+&gt; latency over a wireless network. I have heard of and read a bit about
+&gt; netjack1 and netjack2 (and I have used them a little bit). I haven't
+&gt; investigated thoroughly the possibility of modifying them or
+&gt; contributing to them so that they work well over wireless networks. So
+&gt; this is my signal flow from one end to another;
+
+not sure why you would not investigate them for this purpose, but ok .....
+
+
+&gt; for (int i = 0; i &lt; 2; i++) {
+&gt; &#xA0; &#xA0; &#xA0; &#xA0;input[i] = (jack_default_audio_sample_t*)jack_port_get_buffer(input_port[i],
+&gt; nframes);
+&gt; &#xA0; &#xA0; &#xA0; &#xA0;jack_ringbuffer_write(rb[i], (char*)input[i], nframes * BPS);
+&gt; }
+
+if jack_ringbuffer_write_space() is less than nframes*BPS you've just
+screwed up your audio stream by throwing away some data. this means
+that if your reader thread ever falls behind the writer (the process
+thread in this case), you will lose sync with the stream.
+
+i made the mistake recently in a side project of forgetting to check
+the status of two ringbuffers that i was copying between and ended up
+totally screwing up the stream. you cannot assume that the ringbuffer
+has space to read or write, and you must have some kind of plan in the
+event that it does not.
+
+in addition, for reasons that i believe i've gone over before but will
+be happy to do so again, the amount of space you can write into a
+jack_ringbuffer_t is always 1 byte less than the size of the buffer.
+thus if you call jack_ringbuffer_write() indiscriminately to simply
+fill up however much space is there, its not too hard to end up
+writing only part of a sample and not all of it.
+
+you need to make sure that you always use the modulus of the available
+space with sizeof(jack_default_audio_sample_t), which in some cases
+will lead you to *not* write as much data as you would otherwise (e.g.
+write_space == 19 will result in you writing just 4 samples, with 3
+bytes left unwritten. if you had passed in 5 samples and just called
+jack_ringbuffer_write(), you would have written 35 bytes and left the
+last byte of the last sample unwritten (and if the code looks like the
+code above, you would not have checked for this error.)).
+
+&gt; As an aside, would this situation be helped by creating a
+&gt; parameterized ringbuffer, something like
+&gt; jack_ringbuffer_t&lt;jack_default_audio_sample_t&gt;?
+
+ardour's own ringbuffers use this, but that is because (as peter
+noted) JACK is a C API, not a C++ API.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1304333248.17102_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1304335047.19259_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1304334977.19192_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1304334977.19192_0.ltw:2,a&nbsp;&lt;BANLkTin2DcaCECSd81Nz3aAEddFivTZNmA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

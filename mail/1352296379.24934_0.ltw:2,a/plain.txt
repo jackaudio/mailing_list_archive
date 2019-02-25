@@ -1,0 +1,82 @@
+Date:        Wed, 07 Nov 2012 15:49:36 +0200
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Thomas DEBESSE <[hidden] at rcf dot fr>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Thomas DEBESSE [Jack-Devel] How to run multiple jackdbus (1352162255.6293_0.ltw:2,a)
+Follow-Up:   Athanasios Silis Re: [Jack-Devel] How to run multiple jackdbus (1352428893.29285_0.ltw:2,a)
+Follow-Up:   Thomas DEBESSE Re: [Jack-Devel] How to run multiple jackdbus (1353081638.26420_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] How to run multiple jackdbus
+
+Thomas DEBESSE <[hidden]> writes:
+
+> I'm trying to run multiple jackdbus…
+
+You are entering terra incognita... :)
+
+> I'm writing an app and I want to use jackd with another server name
+> than "default" to let the user to have is own jackd!
+> The idea is to launch a jackd and do some connections between elements
+> without polluting the user's jackd nor his patchbay, and perhaps
+> provide a virtual interface between the two jackd.
+>
+> I can rename jackd easily with cli jackd and jackdbus, I know how to
+> run multiple legacy jackd, but I don't know how to run multiple
+> jackdbus.
+> I'm writing an app and I like how it's cool to configure and manage
+> jackd using jack dbus interfaces, but if I start and configure jackd
+> using dbus and renaming it to "other" (instead of "default"), I'm not
+> running another dbus, I'm renaming the default jackd ! This is not I
+> want. If the user try to run jackdbus, he will use my jackd!
+>
+> Any Idea ?
+
+The current jackdbus D-Bus presentation was designed for single server
+scenario. For multiserver scenario, the plan was to have one D-Bus
+object per server controller and eventually an object+interface for
+managing these objects (add new server, remove it, rename it). How
+people are actually using multiserver scenario was never clear to
+me. Multiple cards? Multiple users? Testing setups?
+
+There are several problematic areas:
+ * one jackdbus instance per session bus
+ * per-user jack server settings that are autosaved
+ * session vs user
+
+"session vs user" is actually issue at dbus level. AFAIK it is not yet
+solved. I clearly see different use of per-user bus daemon and
+per-session bus daemon. Right now they are merged. If you treat it as
+session bus, you want to access it from different sessions. If you treat
+it as user bus then you may want multiple services per user (multiple
+cards, test setups).
+
+"per-user jack server settings that are autosaved" is issue only if you
+want to use multiple jack server intances per user. It is clear that each
+server must have its own settings persisted in ~/.config/jack/. It is
+not clear whether all jack servers must run within same jackdbus process,
+or there must be one jackdbus process per server, or something in
+between.
+
+"one jackdbus instance per session bus" is problem only if you treat
+session bus as user bus. It should be possible to run multiple session
+bus daemons for same user with each jackdbus daemon attaching to
+different dbus session bus. I can imagine only one functionality that
+could cause problem - the X11 server storage for session bus address. If
+it indeed is a problem, I think you can build dbus without this
+functionality (but your "desktop/login" setup could break, depends on
+how it is made).
+
+A related issue is that server name in jackdbus engine settings is
+useless and some users get into trap to set it. In context of
+multiserver setups, the server name is actually key/id for settings of
+that server. In context of single user setups, the server name only
+causes confusion. So this engine setting should be removed from the
+D-Bus presentation of the engine settings and maybe even from the
+control API.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1352296379.24934_0.ltw:2,a <87sj8led5b.fsf at arnaudov dot name>
+________________________________________________________________________________
+

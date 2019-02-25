@@ -1,0 +1,62 @@
+Date:        Mon, 14 Feb 2011 14:55:12 +0100
+From:        torbenh  <[hidden] at gmx dot de>
+To:          "[hidden] at lists dot jackaudio dot org List" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1297675896.16293_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1297692909.19596_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client
+
+On Mon, Feb 14, 2011 at 10:31:14AM +0100, Stéphane Letz wrote:
+> 
+> Le 11 févr. 2011 à 17:34, Stéphane Letz a écrit :
+> 
+> > 
+> > Le 11 févr. 2011 à 17:19, Valerio Pilo a écrit :
+> > 
+> >> In data venerdì 11 febbraio 2011 17:07:18, hai scritto:
+> >>>> I just tried Jack 0.118 on the ARM box - it works without a problem, using this cmdline:
+> >>>>> jackd -v -r -t 2000 -d alsa -d chrouter -D -r 44100 -S -p 2048 -n 4
+> >>> 
+> >>> Any log of jack1 when application is killed ?
+> >> 
+> >> You can find it attached.
+> > 
+> > OK. It seem that JACK1 ALSA backend does not trigger the same error (JACK2 ALSA backend was printing "ALSA: could not complete playback"), but there is no similar error message in JACK1 log.
+> > 
+> > So... back to square one. Either :
+> > 
+> > - there is a real issue in this ALSA backend on ARM
+> > 
+> > - or we consider again this "ALSA: could not complete playback" ALSA backend error as a "recoverable" one at JackAudioDriver level, and we revert part of  r 4079  commit, so that the ALSA Xrun cause a "skipped" cycle, but the server continue to run.
+> > 
+> > What do other jack hackers think?
+> > 
+> > Stéphane 
+> > 
+> 
+> Since I cannot reproduce the original issue here on my Linux machine, I cannot go much further. To summarize:
+> 
+> - when JACK2 in synchronous mode, the server does : blocking ALSA read (actually, wait + read), graph activation, wait for graph to complete, write ALSA. 
+> 
+> - when a client is killed, it may fail to correctly complete a cycle, before the server detect the client has been removed, and cleanup the graph.  The server has a timeout to decide when the graph has really failed before trying to write back in ALSA. Since the server is late, ALSA backend issue a  "ALSA: could not complete playback" error in alsa_driver_write. This is considered as a "non recoverable error" and the backend wrapping thread is just stopped.
+> 
+> - how does JACK1 behave is a similar situation? I guess there is a "graph late" problem also? Is there a timeout to decide when the graph has really failed? why is the "ALSA: could not complete playback" error not triggered in this precise case?
+
+jack1 will be late too.
+but jack1 does not try to write to the driver when the graph is late.
+the next alsa wait will detect the xrun and recover.
+so the next cycle, things should be fine again.
+
+
+> 
+> Thanks.
+> 
+> Stéphane 
+> 
+
+-- 
+torben Hohn
+
+1297691732.17940_0.ltw:2,a <20110214135512.GB3055 at siel dot b>
+________________________________________________________________________________
+

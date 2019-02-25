@@ -1,0 +1,65 @@
+Date:        Fri, 01 Apr 2011 19:37:07 -0400
+From:        Tim E. Real  <[hidden] at rogers dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Devin Anderson Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages (1301686758.14180_0.ltw:2,a)
+Follow-Up:   Devin Anderson Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages (1301703149.29989_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages
+
+On April 1, 2011 03:38:58 pm Devin Anderson wrote:
+> On Fri, Apr 1, 2011 at 12:32 PM, Pedro Alves <[hidden]> wrote:
+> > On Friday 01 April 2011 20:04:02, Devin Anderson wrote:
+> >> No.  The 'jack_midi_blobstream_t' type would allow file-like
+> >> operations on blobs.
+> >>
+> >> I don't envision blobs growing dynamically.  A client knows the size
+> >> of sysex messages it's going to send, and should be able to deal with
+> >> received sysex messages in another thread if memory allocation is
+> >> necessary.
+> >>
+> >> The only exception would be MIDI drivers, which have no idea about the
+> >> size of sysex messages they might receive.  In this case, I think
+> >> command-line arguments should be used to specify the number of blobs
+> >> and the size of the blobs that a MIDI driver should create before
+> >> starting.
+> >
+> > Okay.
+> >
+> > And, I understand that a blob always must hold a whole complete sysex?
+> > Or can we split a sysex over several blobs if we wanted (with a flag
+> > in jack_midi_blobstream_t indicating there's more to come, or "this
+> > blob is the next chunk of a previous incomplete sysex").
+>
+> I think continuing to guarantee one complete MIDI event per
+> 'jack_midi_event_t' object is the best way to go.  
+This means the event is not delivered to us until it is completely
+ received, possibly after several process cycles, right?
+
+I know that the ALSA API breaks long received sysex into chunks and 
+ delivers them.
+And I get an size error if sending one long sysex with ALSA, I need to
+ change our code to chunk them.
+IIRC my (older) music keyboard sends chunked sysex.
+
+Thanks.
+Tim.
+
+> It's a disadvantage
+> for MIDI drivers, but it's simpler for most other clients.
+>
+> > Alternatively, given you have a stream API, drivers could still
+> > preallocate a pool of N blob chunks of M size each (roughly, your "number
+> > of blobs and the size of the blobs"), and those blob-chunks could be
+> > moved out of the pool and linked-listed per sysex/blob, and released into
+> > the
+> > driver's blob-chunk pool again as readers move past the blob-chunk,
+> > all hidden from the clients.  If clients aren't fast enough advancing
+> > their read streams, so that the driver ends up with no blob chunks left,
+> > clients would get their read streams closed, and their next read would
+> > fail.
+>
+> This sounds too complex, both in implementation and for clients.
+
+1301701945.28867_0.ltw:2,a <201104011937.07164.termtech at rogers dot com>
+________________________________________________________________________________
+

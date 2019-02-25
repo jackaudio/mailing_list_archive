@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Jack2 waf build error</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Jack2 waf build error</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1363344483.15497_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1363389755.26739_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1363382743.15907_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 16 Mar 2013 01:25:25 +0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Alexey Chernov </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Rigg
+<a href='../1363389755.26739_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack2 waf build error </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1363830017.6503_0.ltw:2,/index.html'>Re: [Jack-Devel] Jack2 waf build error </a></td></tr>
+</table>
+<pre>
+Hello,
+I decided to update my Jack2 version and faced a strange error when building 
+version 1.9.9.5 (also there with latest git master):
+
+./waf build
+Waf: Entering directory `/usr/src/packages/jack/jack2/build'
+make[1]: Entering directory `/usr/src/packages/jack/jack2/build'
+Traceback (most recent call last):
+  File 
+"/usr/src/packages/jack/jack2/.waf-1.6.11-30618c54883417962c38f5d395f83584/waflib/Scripting.py", 
+line 97, in waf_entry_point
+    run_commands()
+  File 
+"/usr/src/packages/jack/jack2/.waf-1.6.11-30618c54883417962c38f5d395f83584/waflib/Scripting.py", 
+line 151, in run_commands
+    run_command(cmd_name)
+  File 
+"/usr/src/packages/jack/jack2/.waf-1.6.11-30618c54883417962c38f5d395f83584/waflib/Scripting.py", 
+line 143, in run_command
+    ctx.execute()
+  File 
+"/usr/src/packages/jack/jack2/.waf-1.6.11-30618c54883417962c38f5d395f83584/waflib/Scripting.py", 
+line 345, in execute
+    return execute_method(self)
+  File 
+"/usr/src/packages/jack/jack2/.waf-1.6.11-30618c54883417962c38f5d395f83584/waflib/Build.py", 
+line 98, in execute
+    self.execute_build()
+  File 
+"/usr/src/packages/jack/jack2/.waf-1.6.11-30618c54883417962c38f5d395f83584/waflib/Build.py", 
+line 101, in execute_build
+    self.recurse([self.run_dir])
+  File 
+"/usr/src/packages/jack/jack2/.waf-1.6.11-30618c54883417962c38f5d395f83584/waflib/Context.py", 
+line 128, in recurse
+    user_function(self)
+  File "/usr/src/packages/jack/jack2/wscript", line 337, in build
+    bld.add_subdirs('common')
+  File 
+"/usr/src/packages/jack/jack2/.waf-1.6.11-30618c54883417962c38f5d395f83584/waflib/Context.py", 
+line 128, in recurse
+    user_function(self)
+  File "/usr/src/packages/jack/jack2/common/wscript", line 277, in build
+    create_jack_process_obj(bld, 'netmanager', 'JackNetManager.cpp', 
+serverlib)
+  File "/usr/src/packages/jack/jack2/common/wscript", line 27, in 
+create_jack_process_obj
+    process.includes = ['.'] + env_includes + ['jack', '..']
+UnboundLocalError: local variable 'env_includes' referenced before assignment
+
+Here's my configure command and its output:
+./waf configure --prefix=/usr --firewire --alsa --debug
+Setting top to                           : /usr/src/packages/jack/jack2 
+Setting out to                           : /usr/src/packages/jack/jack2/build 
+Checking for 'g++' (c++ compiler)        : /usr/bin/g++ 
+Checking for 'gcc' (c compiler)          : /usr/bin/gcc 
+Checking for header samplerate.h         : yes 
+Checking for header samplerate.h         : yes 
+Checking for header sndfile.h            : yes 
+Checking for program pkg-config          : /usr/bin/pkg-config 
+Checking for 'celt' &gt;= 0.5.0             : yes 
+Checking for library readline            : yes 
+Checking for 'celt' &gt;= 0.11.0            : yes 
+Checking for 'opus' &gt;= 0.9.0             : not found 
+
+==================                      
+JACK 1.9.10 svn revision will checked and eventually updated during build
+Build with a maximum of 64 JACK clients
+Build with a maximum of 768 ports per application
+Install prefix                           :  /usr 
+Library directory                        :  /usr/lib 
+Drivers directory                        :  /usr/lib/jack 
+Build debuggable binaries                :  yes 
+C compiler flags                         :  ['-O3', '-march=core2', '-mssse3', 
+'-Wall', '-g'] 
+C++ compiler flags                       :  ['-O3', '-march=core2', '-mssse3', 
+'-Wall', '-g'] 
+Linker flags                             :  ['-g'] 
+Build doxygen documentation              :  no 
+Build Opus netjack2                      :  no 
+Build with engine profiling              :  no 
+Build with 32/64 bits mixed mode         :  no 
+Build standard JACK (jackd)              :  yes 
+Build D-Bus JACK (jackdbus)              :  no 
+Autostart method                         :  classic
+
+Python version is 2.7.2. Could you please help me with the issue?
+
+Thanks in advance.
+
+Best regards,
+Alexey Chernov
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1363344483.15497_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1363389755.26739_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1363382743.15907_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1363382743.15907_0.ltw:2,a&nbsp;&lt;1765727.JKareO3hG4 at aclex&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

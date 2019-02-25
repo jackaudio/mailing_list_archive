@@ -1,0 +1,71 @@
+Date:        Sat, 08 Dec 2012 15:48:35 -0800
+From:        Devin Anderson  <[hidden] at gmail dot com>
+To:          [hidden] at chriscaudle dot org
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Chris Caudle Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355002033.6594_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] ALSA PCM multi plugin and xruns
+
+Hi Chris,
+
+On Sat, Dec 8, 2012 at 1:26 PM, Chris Caudle <[hidden]> wrote:
+> On Sat, December 8, 2012 5:57 am, Devin Anderson wrote:
+>> This leads me to believe that the poll descriptors
+>> indicate that there is data available on the master device,
+>> but there isn't any data available on one of the other slave devices.
+>
+> I don't remember hearing other people talk about this interface before.
+>
+> Does the 3G version still use an Envy24 chip?
+
+IDK.  `envy24control` says, "No ICE1712 cards found", but I'm not sure
+if that sufficiently answers your question.
+
+> Are you absolutely sure that the synchronization is set up correctly so
+> that the cards are sharing word clock?
+
+I *believe* I've set up word clock sync correctly using `echomixer`,
+though I don't know how to verify that word clock is *actually*
+working.  I assume that word clock is working because everything runs
+smoothly most of the time - that is, I think, until I do something
+that causes an initial xrun, like loading a song in Renoise, or
+starting an application that uses JACK.  Not all *real* xruns cause
+the spew of xruns, but there's some set of circumstances where it
+happens.  I'm going to try to figure out exactly what that set of
+circumstances is.
+
+I just tried replacing the cable with a cable that I verified is
+working with a cable tester, and I'm able to duplicate the problem.
+
+> What you described sounds like
+> what might happen if the clock sync starts slipping between two cards and
+> they are not filling their buffers at a locked rate any more.
+
+If that happened, I would assume that the cards would each output the
+same amount of frames at different times (please correct me if I'm
+wrong).  I can't yet verify that this is or isn't happening.
+
+I'm confused by why there are 32 frames available for reading *until*
+256 more frames are made available by the card.
+
+This thread seems relevant to the situation:
+
+    http://linux-audio.4202.n7.nabble.com/ALSA-multi-plugin-and-JACK-xrun-callbacks-td74462.html
+
+I'm open to ideas on how to proceed.  For now, I'm going to add some
+error messages to the multi plugin in ALSA, and see if I can figure
+out what's going on.
+
+Thanks,
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+psinsights - http://psinsights.googlecode.com/
+synthclone - http://synthclone.googlecode.com/
+
+1355010522.12496_0.ltw:2, <CAG7zqToqqMpzaMTf2cCtkn87JKcxROKhRh6kx8YikHY6UNtUGw at mail dot gmail dot com>
+________________________________________________________________________________
+

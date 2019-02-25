@@ -1,0 +1,145 @@
+Date:        Thu, 17 Dec 2009 12:40:04 +0100
+From:        Olivier Guilyardi  <[hidden] at samalyse dot com>
+To:          Tim Blechmann <[hidden] at klingt dot org>
+Cc:          [hidden] at lists dot linuxaudio dot org
+In-Reply-To: Tim Blechmann Re: [LAD] Atomic Operations (1260986281.19697_0.ltw:2,a)
+Follow-Up:   Olivier Guilyardi Re: [LAD] Atomic Operations (1261050592.30756_0.ltw:2,a)
+
+Subject:     Re: [LAD] Atomic Operations
+
+On 12/16/2009 06:57 PM, Tim Blechmann wrote:
+
+>> The point is, I wrote ringbuffer stress tests, and someone reported on this list
+>> that they succeeded on a weakly-ordered (PowerPC SMP) system, even without
+>> memory barriers. Anyway...
+> 
+> unfortunately stress tests won't necessarily show the race condition
+
+My tests helped to find and fix a race bug in jack ringbuffer. I guess this
+should have worked for memory barriers too. Unless they need to run for a
+century before an error occur.. ;)
+
+>>>> See the "ring buffer memory barriers" discussion on jack-devel back in
+>>>> October of last year for more information; in particular, this article
+>>>> by Paul E. McKenney is very helpful:
+>>>>
+>>>> http://www.linuxjournal.com/article/8211
+>>> memory-barriers.txt of the linux kernel documentation is interesting as
+>>> well ...
+>> The portaudio ringbuffer is also a good source of inspiration I think:
+>> http://portaudio.com/trac/browser/portaudio/trunk/src/common/pa_ringbuffer.c
+>>
+>> In short, they use memory barriers at only three places, especially:
+>>
+>> - "to ensure that previous writes are seen before we update the write index"
+>> - "to ensure that previous writes are always seen before updating the (read) index."
+> 
+> the kfifo doesn't look too different, either ...
+
+Okay, I got a patch for Jack1's ringbuffer, it's not finished, but it's a
+beginning. I think it misses some "read" memory barriers, as described in
+kernel's memory-barriers.txt (in SMP BARRIER PAIRING) : "A write barrier should
+always be paired with a data dependency barrier or read barrier[...]".
+
+It's attached. What do you think?
+
+--
+  Olivier
+Index: libjack/ringbuffer.c
+===================================================================
+--- libjack/ringbuffer.c	(revision 3862)
++++ libjack/ringbuffer.c	(working copy)
+@@ -29,6 +29,15 @@
+ #endif /* USE_MLOCK */
+ #include <jack/ringbuffer.h>
+ 
++#if defined(__APPLE__)
++#include <libkern/OSAtomic.h>
++#define MEMORY_BARRIER() OSMemoryBarrier()
++#elif (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)
++#define MEMORY_BARRIER() __sync_synchronize()
++#else
++#warning SMP Danger: memory barriers are not supported on this system
++#endif
++
+ /* Create a new ringbuffer to hold at least `sz' bytes of data. The
+    actual buffer size is rounded up to the next power of two.  */
+ 
+@@ -146,6 +155,7 @@
+ 	size_t cnt2;
+ 	size_t to_read;
+ 	size_t n1, n2;
++	size_t new_ptr;
+ 
+ 	if ((free_cnt = jack_ringbuffer_read_space (rb)) == 0) {
+ 		return 0;
+@@ -164,13 +174,17 @@
+ 	}
+ 
+ 	memcpy (dest, &(rb->buf[rb->read_ptr]), n1);
+-	rb->read_ptr = (rb->read_ptr + n1) & rb->size_mask;
++	new_ptr = (rb->read_ptr + n1) & rb->size_mask;
+ 
+ 	if (n2) {
+ 		memcpy (dest + n1, &(rb->buf[rb->read_ptr]), n2);
+-		rb->read_ptr = (rb->read_ptr + n2) & rb->size_mask;
++		new_ptr = (rb->read_ptr + n2) & rb->size_mask;
+ 	}
+ 
++	/* Ensure that the read pointer gets updated after copying the data */
++	MEMORY_BARRIER();
++	rb->read_ptr = new_ptr;
++
+ 	return to_read;
+ }
+ 
+@@ -226,6 +240,7 @@
+ 	size_t cnt2;
+ 	size_t to_write;
+ 	size_t n1, n2;
++	size_t new_ptr;
+ 
+ 	if ((free_cnt = jack_ringbuffer_write_space (rb)) == 0) {
+ 		return 0;
+@@ -244,13 +259,17 @@
+ 	}
+ 
+ 	memcpy (&(rb->buf[rb->write_ptr]), src, n1);
+-	rb->write_ptr = (rb->write_ptr + n1) & rb->size_mask;
++	new_ptr = (rb->write_ptr + n1) & rb->size_mask;
+ 
+ 	if (n2) {
+ 		memcpy (&(rb->buf[rb->write_ptr]), src + n1, n2);
+-		rb->write_ptr = (rb->write_ptr + n2) & rb->size_mask;
++		new_ptr = (rb->write_ptr + n2) & rb->size_mask;
+ 	}
+ 
++	/* Ensure that the write pointer gets updated after copying the data */
++	MEMORY_BARRIER();
++	rb->write_ptr = new_ptr;
++
+ 	return to_write;
+ }
+ 
+@@ -260,6 +279,8 @@
+ jack_ringbuffer_read_advance (jack_ringbuffer_t * rb, size_t cnt)
+ {
+ 	size_t tmp = (rb->read_ptr + cnt) & rb->size_mask;
++	/* Ensure that the read pointer gets updated after external data change */
++	MEMORY_BARRIER();
+ 	rb->read_ptr = tmp;
+ }
+ 
+@@ -269,6 +290,8 @@
+ jack_ringbuffer_write_advance (jack_ringbuffer_t * rb, size_t cnt)
+ {
+ 	size_t tmp = (rb->write_ptr + cnt) & rb->size_mask;
++	/* Ensure that the write pointer gets updated after external data change */
++	MEMORY_BARRIER();
+ 	rb->write_ptr = tmp;
+ }
+ 
+
+1261050039.29634_0.ltw:2,a <4B2A1894.2020909 at samalyse dot com>
+________________________________________________________________________________
+

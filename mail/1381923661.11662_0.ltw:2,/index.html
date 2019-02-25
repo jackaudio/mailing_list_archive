@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] major change in jack1 MIDI handling</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] major change in jack1 MIDI handling</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1381917537.27443_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1381923766.11710_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1381923661.11662_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 16 Oct 2013 13:40:49 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Devin Anderson &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Devin Anderson
+<a href='../1381911964.17373_0.ltw:2,/index.html'>Re: [Jack-Devel] major change in jack1 MIDI handling </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1382122658.11263_0.ltw:2,/index.html'>Re: [Jack-Devel] major change in jack1 MIDI handling </a></td></tr>
+</table>
+<pre>
+&gt; 
+&gt; A few years ago, I would have had more to say (and did, at times,
+&gt; IIRC).  I'm not as familiar with the JACK 2 codebase as I used to be.
+&gt; 
+&gt; And you're right - it's not fair for me to express my dislike of the
+&gt; JACK 2 architecture, design, etc. and not give some specifics.
+&gt; 
+&gt; One problem I remember trying to wrap my head around was the Open
+&gt; functions in the JACK 2 driver system.  Let's take a brief look at
+&gt; those now.
+&gt; 
+&gt; 1.) The JackDriverInterface class has three pure virtual Open()
+&gt; functions.  IIRC, there isn't one driver I've seen that implements all
+&gt; three of these functions.  That's confusing.
+&gt; 
+OK, I've just remove one of the Open method that was not really necessary (pushed on GIT)
+
+
+&gt; 2.) Then there's the JackDriver class that extends the
+&gt; JackDriverInterface class.  The class is meant to be a base class, but
+&gt; it implements all three of the virtual functions.  These
+&gt; implementations are meant to be called by subclasses that override the
+&gt; JackDriver virtual functions, which is an ugly anti-pattern.
+
+Well the point is to have JackDriver implement *common* cases, and sub-classes possibly re-implement the Open methods, calling the *generic* case and then adding their specific stuff. 
+
+
+&gt;  If
+&gt; JackDriver's Open functions are called without the overriding wrapper
+&gt; function, then hilarity may ensue when the underlying JackDriver part
+&gt; of the class thinks the driver has been successfully opened.
+
+Yes right, this is a pattern I had already seen elsewhere, what would you suggest as a better model?
+
+&gt; 
+&gt; 3.) There's also JackThreadDriver, which also extends the
+&gt; JackDriverInterface class (not JackDriver!).
+
+Yes the JackThreadDriver class is meant as a decorator kind of pattern, so implementing the "interface", so JackDriverInterface class
+
+&gt;  It also provides
+&gt; implementations for the three Open functions, one of which just fails
+&gt; by returning -1.
+
+Removed.
+
+
+&gt;  If the JackThreadDriver class doesn't need some of
+&gt; the API from the JackDriverInterface class, then either
+&gt; JackDriverInterface should be changed, or JackThreadDriver shouldn't
+&gt; extend JackDriverInterface.
+
+The decorator pattern redirects call on the decorated object, and possibly implement specific stuff in some method.
+&gt; 
+&gt; 4.) Speaking of returning -1 for non-realtime errors, I'm of the
+&gt; opinion that throwing exceptions is a fantastic way to handle errors.
+&gt; It's okay to write data to stderr and to indicate that some sort of
+&gt; error happened, but it's even better to throw an exception containing
+&gt; a reason for the error occurring so that it can be handled at an
+&gt; appropriate place for handling errors.  Also, not checking return
+&gt; values for error codes again and again is a good thing.  Note that
+&gt; JACK 1 also has this problem; however, given that it's written in C,
+&gt; I'm a little more forgiving.
+
+What would you suggest as a was to better use exceptions in the backend class hierarchy?
+&gt; 
+&gt; 5.) I said before that there isn't one driver I've seen that
+&gt; implements all three of the Open() functions.  Looking through the
+&gt; Linux-specific drivers, I see that JACKAlsaDriver and
+&gt; JackALSARawMidiDriver (I wrote that one) implement only one Open()
+&gt; function each.  Here's a bit of a curve ball - JackFreebobDriver and
+&gt; JackFFADODriver each define an Open function with a completely
+&gt; different signature!  So, why does JackDriverInterface have a public
+&gt; definition for Open() functions that may never be used, and aren't
+&gt; meant to be used at all at times?
+
+The Open(&#x85;.) is supposed to be used by subclasses to do the *generic* Open. Some subclasses (JACKAlsaDrivee, JackFFADODriver, JackFreebobDriver) have chosen a different prototype for their specific version, but sill use the generic Open one. I don't se that as a real problem
+
+&gt; 
+&gt; So, there's an example.  It's likely too little, too late, but
+&gt; hopefully you can generalize some of what I'm talking about to the
+&gt; rest of the code, because the problems above can be found in more
+&gt; places than just the Open() functions of Jack drivers.
+&gt; 
+&gt; Thanks,
+&gt; 
+&gt; -- 
+
+St&#xE9;phane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1381917537.27443_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1381923766.11710_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1381923661.11662_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1381923661.11662_0.ltw:2,&nbsp;&lt;5CF771B3-9AC1-45AB-993A-6E0C1E0E28F2 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

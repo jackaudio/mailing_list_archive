@@ -1,0 +1,52 @@
+Date:        Fri, 10 Jun 2016 10:39:15 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          "[hidden] at saepia dot net" <[hidden] at saepia dot net>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: [hidden] at saepia dot net Re: [Jack-Devel] shm registry full errors (1465566399.20492_0.ltw:2,a)
+Follow-Up:   Marcin Lewandowski Re: [Jack-Devel] shm registry full errors (1465571599.27444_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] shm registry full errors
+
+client limits: i will leave the developer(s) of jack2 to comment on the
+specifics. jack2 hard-codes more values than jack1.
+
+the shared memory registry: you can't make its configuration a run-time
+thing, because you'd have to ensure that the library and the server are
+both given the same value.
+
+MAX_SHM_ID is an operating system constant.
+
+you are hitting the limit almost certainly because you are running far more
+clients than JACK was designed to support.
+
+every client with a process callback implies at least 1 extra context
+switch during the process cycle. this does not and cannot scale with
+contemporary operating systems and processors. context switches are cheap
+but not free. doing hundreds of them per process cycle steals significant
+amounts of time from what is available for actual signal processing.
+
+On Fri, Jun 10, 2016 at 9:46 AM, [hidden] <[hidden]>
+wrote:
+
+> Well I understand but what I observe is that JACK has unpredictable amount
+> of total clients which is an issue, regardless if it's closer to 10 than
+> 1000.
+>
+> I have found out at least 3 conditions that affect this:
+>
+> - compilation flags, which by the way may cause jack to segfault if they
+> are set too high
+>
+> - parameter to jackd
+>
+> - MAX_SHM_ID
+>
+> I suggest integrating this into one runtime command line parameter.
+>
+> M.
+>
+>
+
+1465569564.25510_0.ltw:2, <CAFa_cKner0mAWqWXcXmDvwyzW9YPWp=VT11htbxHAhkUKzm90Q at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,84 @@
+Date:        Mon, 22 Aug 2011 00:45:07 +0200
+From:        [hidden] at xs4all dot nl <[hidden] at xs4all dot nl
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] VideoJACK (1313934690.30620_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] VideoJACK (1313968435.27796_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] VideoJACK
+
+On Sun, August 21, 2011 15:51, Paul Davis wrote:
+> On Sun, Aug 21, 2011 at 9:48 AM, Harry van Haaren <[hidden]>
+> wrote:
+>> Hey All,
+>>
+>> I wasn't aware that patches existed to route video around JACK...
+>> although
+>> the idea has been on list a couple of times before IIRC.
+>> I'm aware the patches are pretty outdated at this stage, but if work was
+>> to
+>> be done in this area would mainline JACK versions be open
+>> to taking it into upstream?
+>
+> this has been asked before, yes. the core developers of JACK (that
+> includes me) were not happy with the specific way that the guys who
+> did videojack went about it. we think that the general idea of video
+> for jack is excellent. but the implementation would need to change in
+> fairly fundamental ways for it be merged into any mainline version of
+> JACK. i don't currently recall what the fundamental problems where.
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+
+Hi Harry,
+I can probably answer this best, since I created the original (unofficial)
+patch. There was a lot of discussion on this some time ago on this list,
+and the conclusion was that only one major change would be needed to make
+it compatible with jack. The change was to add a function
+jack_set_video_process_callback(), which for now would simply be a wrapper
+around jack_set_process_callback(). Then at some time in the future this
+function could be reimplemented as as a new function which would use a
+second clock within jack for the video timing.
+
+However there were some other minor changes needed - in particular there
+would need to be a new option to set the video clock rate (the patch just
+uses -r to set the overall rate).
+
+At the time of this discussion I was very busy with other work, and it was
+about the time jack 1 was moving to (or being replaced by) jack 2, so I
+did not have the opportunity to make the recommended change.
+
+Anyway, the status is that the videojack patch works great for streaming
+video, but it is based on what is now a very old version of jack. Another
+drawback with the current patch is that you can only use the server for
+either video or audio (due to the incompatible framerates).
+
+What would be needed to make it current is for somebody to update the
+patch to the most recent verion of jack 2, add an option to set the video
+framerate, and create the jack_set_video_process_callback() as a wrapper
+aroun jack_set_process_callback(). Then I believe the patch could be
+worked into the main trunk of jack.
+
+
+Anyway, if you want to try out the patch by all means go ahead. It does
+work, but there are a couple of drawbacks as noted. I created sample in
+and out clients for my project, LiVES, which you can see here:
+
+http://lives.svn.sourceforge.net/viewvc/lives/trunk/lives-plugins/weed-plugins/gdk/vjack_rcv.c
+(most of the code in here is to do with resizing the image, but look at
+server_process and the init function)
+
+
+http://lives.svn.sourceforge.net/viewvc/lives/trunk/lives-plugins/plugins/playback/video/vjack_output.c
+
+
+Feel free to contact me on or off list if you need more info.
+
+
+Regards,
+Salsaman.
+
+1313966733.24512_0.ltw:2,a <7f9af2490051decba15d8cbc5297ddcf.squirrel at webmail dot xs4all dot nl>
+________________________________________________________________________________
+

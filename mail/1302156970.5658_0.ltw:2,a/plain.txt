@@ -1,0 +1,51 @@
+Date:        Wed, 06 Apr 2011 23:15:56 -0700
+From:        Devin Anderson  <[hidden] at charityfinders dot com>
+To:          Clemens Ladisch <[hidden] at ladisch dot de>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Clemens Ladisch Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2 (1302155818.3215_0.ltw:2,a)
+Follow-Up:   Clemens Ladisch Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2 (1302172431.11521_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2
+
+On Wed, Apr 6, 2011 at 10:57 PM, Clemens Ladisch <[hidden]> wrote:
+> Devin Anderson wrote:
+>> When I first did research for writing this driver, I was looking
+>> through the ALSA kernel code, and noticed that the default behavior
+>> for the 'drain' method (when a driver doesn't set its own rawmidi
+>> 'drain' method) is to sleep for 50 milliseconds, and then return,
+>> regardless of whether blocking I/O is used or not.  So, one of the
+>> things I did with the 'alsarawmidi' driver is to call:
+>>
+>>     snd_rawmidi_params_set_avail_min(rawmidi, params, 1);
+>
+> This already is the default value.
+
+Okay.
+
+>> ... to make the driver wake up when any bytes are written to a port,
+>> and to avoid calling `snd_rawmidi_drain` completely.
+>
+> The avail_min parameter controls only wakeups of the application.
+
+I made a bad assumption.  In my defense, the ALSA API documentation is
+a bit lacking in details. :)
+
+> The drain method is used only with output devices to wait for all data
+> in ALSA's buffer to be written to the device.  The only situation where
+> you would want to call it is when closing the device, where ALSA already
+> calls it automatically.
+
+Right.  The JACK ALSA raw driver calls 'snd_rawmidi_drain' after each
+successful call to 'snd_rawmidi_write'.  Since one thread is handling
+output to all ports, couldn't that cause some ports to be neglected?
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+
+1302156970.5658_0.ltw:2,a <BANLkTim-wb=8Vyq=noDP3R6GOzMkFDGj+Q at mail dot gmail dot com>
+________________________________________________________________________________
+

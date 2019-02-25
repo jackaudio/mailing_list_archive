@@ -1,0 +1,59 @@
+Date:        Fri, 13 May 2011 10:17:27 -0700
+From:        Devin Anderson  <[hidden] at charityfinders dot com>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] JACK thread priorities on different OSes (1305234660.18427_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK thread priorities on different OSes
+
+On Thu, May 12, 2011 at 2:10 PM, Stéphane Letz <[hidden]> wrote:
+
+>>> Any GUI thread, disk access, main thread... Think about any standard
+>>> audio application (Reason, Live....) that the user start using JackRouter
+>>> ASIO/JACK bridge. If this process get REALTIME_PRIORITY_CLASS,
+>>> then it will certainly cause problem for any other running application.
+>>
+>> Oh!  I see where there's a miscommunication.
+>>
+>> I'm not saying that JACK 2 should set the process priority of client
+>> processes; I'm saying that JACK 2 should allow its *own* process
+>> priority to be set via a command line argument.
+>
+> OK this could make more sense, and would help for the audio/MIDI
+> threads.
+>
+> But then I guess all other threads of JACK server (like the server/client
+> communication one) should be lowered, possibly to
+> THREAD_PRIORITY_IDLE ( which is finally still 16, that is again... over
+> THREAD_PRIORITY_TIME_CRITICAL thread of any other process...)
+> Hum... (1)
+
+How much processing does the server do?  How much would it get in the
+way of other JACK clients?  Maybe this question is dependent on a
+person's particular usage of JACK, such that REALTIME_PRIORITY_CLASS
+might work for some people and not for others.
+
+> Then the Audio RT thread of clients should be handled in another
+> process class,... hum (2)
+
+Maybe.  Other client processes can potentially gain higher process
+priorities too.  JACK 2 can't really control what happens in this
+case, which makes it more important for the process priority of JACK 2
+to be configurable.
+
+> and we also have the issue that internal JACK clients running in the
+> server process would be "boosted" so possibly behave differently
+> than other out of process JACK clients Hum (3)...
+
+How might they behave differently?
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+
+1305307076.24783_0.ltw:2,a <BANLkTiktrNy9LE1vj1ku3H+MBxpuAXfu6Q at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack 1.9.8 + many many connections = problems?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack 1.9.8 + many many connections = problems?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325556897.9808_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325583004.32062_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325577733.26392_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 03 Jan 2012 09:02:22 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fernando Lopez-Lezcano &lt;[hidden] at ccrma dot Stanford dot EDU&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fernando Lopez-Lezcano
+<a href='../1325628430.17392_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack 1.9.8 + many many connections = problems? </a></td></tr>
+</table>
+<pre>
+&gt; 
+&gt; On 01/02/2012 01:19 PM, St&#xE9;phane Letz wrote:
+&gt;&gt; 
+&gt;&gt; Le 2 janv. 2012 &#xE0; 20:41, Fernando Lopez-Lezcano a &#xE9;crit :
+&gt;&gt; 
+&gt;&gt;&gt; On 12/31/2011 12:16 PM, St&#xE9;phane Letz wrote:
+&gt;&gt;&gt;&gt; If  JackAlsaDriver::WriteOutputAux (in JackAlsaDriver.cpp file) works correctly, then you'll have to trace what happens in "JackGraphManager::GetBuffer(jack_port_id_t port_index, jack_nframes_t buffer_size)" (line 168 in JackGraphManager.cpp), possibly checking what code path is used : // This happens when a port has just been unregistered and is still used by the RT code OR // No connections : return a zero-filled buffer, OR // One connection OR // Multiple connections : mix all buffers
+&gt;&gt;&gt; 
+&gt;&gt;&gt; First test results (of many to come)
+&gt;&gt;&gt; 
+&gt;&gt;&gt; I added code to record changes in "len"  inside JackGraphManager::GetBuffer and print them as errors so I can see them in the log.
+&gt;&gt;&gt; 
+&gt;&gt;&gt; Regretfully I don't see any strange behavior when ports go into "silent mode". The number of connections reflects what it should be, and it never goes to zero after the initial connection process finishes.
+&gt;&gt; 
+&gt;&gt; 
+&gt;&gt; Then in JackAlsaDriver::WriteOutputAux you should check that the buffer coming from Jack core
+&gt;&gt; 
+&gt;&gt; (jack_default_audio_sample_t* monbuf = (jack_default_audio_sample_t*)fGraphManager-&gt;GetBuffer(fMonitorPortList[chn], orig_nframes); )
+&gt;&gt; 
+&gt;&gt; actually contains something.... and if yes, then you'll have to trace what happens with this buffer in the ALSA backend itself...
+&gt;&gt; 
+&gt;&gt; St&#xE9;phane
+
+Le 2 janv. 2012 &#xE0; 23:48, Fernando Lopez-Lezcano a &#xE9;crit :
+
+&gt; Found it!
+&gt; And of course it was not jack's fault...
+&gt; 
+&gt; I started factoring the connections out in the code (major code changes) to try to isolate the problem. I found that it was not being caused by the connections at all. Most probably the clues I got were wrong, maybe due to wrong ordering of the output due to buffering being different in all programs used. I finally traced the problem to a few un-initialized variables in a supercollider ugen (LR4 high pass and low pass filters used in the speaker crossover). Those were the cause of the big noises in the output stream. I still can't think how this could result in an audio port that stops working! Must be something inside alsa itself? Still puzzling. Still a lot more testing to do but it looks fine for now...
+&gt; 
+&gt; Many many thanks for your patience and all the debugging hints!
+&gt; 
+&gt; As I feared I was doing something wrong...
+&gt; -- Fernando
+&gt; 
+
+So happy to know this is not JACK fault....
+
+St&#xE9;phane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325556897.9808_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325583004.32062_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325577733.26392_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1325577733.26392_0.ltw:2,a&nbsp;&lt;EE518170-58A3-4120-BFB4-5CF4C2FCFA94 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

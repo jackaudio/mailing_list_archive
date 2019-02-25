@@ -1,0 +1,74 @@
+Date:        Sun, 17 May 2009 13:11:23 +0200
+From:        Fons Adriaensen  <[hidden] at kokkinizita dot net>
+To:          MarcO'Chapeau <[hidden] at marcochapeau dot org>
+Cc:          Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>, JACK Developers <[hidden] at jackaudio dot org>
+In-Reply-To: MarcO'Chapeau Re: [LAD] [Jack-Devel] more jack/qjackctl madness (1242555657.18382_0.ltw:2,a)
+Follow-Up:   MarcO'Chapeau Re: [LAD] [Jack-Devel] more jack/qjackctl madness (1242560654.23262_0.ltw:2,a)
+Follow-Up:   Fernando Lopez-Lezcano Re: [LAD] [Jack-Devel] more jack/qjackctl madness (1243223710.5866_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] more jack/qjackctl madness
+
+On Sun, May 17, 2009 at 12:20:34PM +0200, MarcO'Chapeau wrote:
+
+> - dbus is not the default compile time config option. Your distro should
+> probably disable it (until it's stable and shiny)
+
+On this I agree.
+
+> - When dbus is active, it is indeed not backwards compatible with the
+> legacy autostart feature... I agree it might need fixing
+
+Very very nice. Good luck with it.
+
+> - The behavior you describe with ports is indeed a bug and needs fixing
+
+Seems to be qjackctl-0.3.4. Until this is fixed it is completely
+useless for me.
+ 
+> And for the record, "fixing a mess" doesn't always need to be "deleting all
+> the features that might create it".
+
+Depends on what these features are supposed to add.
+
+The only argument pro using dbus I'v heard so far
+is that it permits run-time discovery of new backends,
+internal clients and their parameters.
+
+If it were true, it's a very weak argument. We
+do have new backends every day do we ? The last
+one added I know of was more than two years ago.
+
+But it is bogus. The dbus server uses the existing 
+control interface and it can't provide any info
+that can't be obtained there directly and with
+much less hassle.
+
+To get backend parameters, you can also just dlopen
+the backend.so and read them directly - there's a
+function for this, used by jackd for its help, and
+also by the control interface.
+Given the name of the backend it takes 10 lines
+of code to do this, which is 3 orders of magnitude
+less than all the dbus stuff required at both ends.
+
+Dbus assumes there is a local login, without that
+there is no session bus, and things don't work.
+Most of my audio machines are headless, there is
+no local login, but I still expect things to work,
+and that, IMHO, is not unreasonable.
+
+If it doesn't add any functionality that can be
+provided in simpler ways, and if it doesn't work
+in some perfectly legal use cases, there is no
+reason for having it. 
+
+Ciao,
+
+-- 
+FA
+
+Io lo dico sempre: l'Italia è troppo stretta e lunga.
+
+1242559233.22384_0.ltw:2,a <20090517111123.GC2959 at zita2 dot kokkinizita dot net>
+________________________________________________________________________________
+

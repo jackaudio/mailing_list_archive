@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] alsa_* device or resource is busy</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] alsa_* device or resource is busy</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1429269418.21466_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1429272084.25797_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1429270739.23586_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 17 Apr 2015 13:38:36 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Adrian Knoth </span> &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Athanasios Silis &lt;[hidden] at gmail dot com&gt;, Developers JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Athanasios Silis
+<a href='../1429269418.21466_0.ltw:2,/index.html'>[Jack-Devel] alsa_* device or resource is busy </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Athanasios Silis
+<a href='../1429273422.28292_0.ltw:2,/index.html'>Re: [Jack-Devel] alsa_* device or resource is busy </a></td></tr>
+</table>
+<pre>
+On 04/17/15 13:16, Athanasios Silis wrote:
+
+&gt; hi all, continuing from a previous email where I try to start up
+&gt; several audio applications from a custom init script , which is run
+&gt; from rc.local,
+
+I originally wanted to point out that the use of rc.local for this stuff
+is discouraged, but you've just discovered this yourself now.
+
+You should really consider your approach and come up with something
+else.
+
+&gt; what could be conflicting here?
+
+Everything. Your login manager is probably using the card.
+
+The whole concept of integrating desktop distros with rc.local for audio
+is not going to fly, because the distros set device permissions based on
+the logged in user.
+
+There might also be a system-wide pulseaudio daemon running, probably as
+root. You might get away with pasuspender -- alsa_out, but I wouldn't be
+surprised if not, unless you wrap your su call in pasuspender.
+
+Also note that you shouldn't be using alsa_in/out at all, use zita-a2j
+and zita-j2a or use jackd-0.124.x where you can simply specify
+additional cards:
+
+    $ jackd -A Intel -d alsa -d hw:DSP24,0
+
+I don't know what you're trying to achieve, but I see mostly two
+options:
+
+   (a) if you don't need a desktop, don't use one.
+   (b) if you do need a desktop, use their autostart features
+
+For (b): You can have auto-login for a certain user. You can have
+autostart for this user. Just run your script from the usual XDG
+directories (or however your distro implements autostart).
+
+Also consider switching to KXstudio - a lot of work went into it to make
+things work. An integration effort other distros never bothered to do.
+
+
+Cheers
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1429269418.21466_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1429272084.25797_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1429270739.23586_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1429270739.23586_0.ltw:2,&nbsp;&lt;5530F0BC.2040701 at drcomp dot erfurt dot thur dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

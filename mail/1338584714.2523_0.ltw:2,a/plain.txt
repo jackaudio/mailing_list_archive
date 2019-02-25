@@ -1,0 +1,45 @@
+Date:        Sat, 02 Jun 2012 00:04:52 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Nedko Arnaudov Re: [Jack-Devel] [LAU] jack2 turned verbose (1338560578.7500_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] [LAU] jack2 turned verbose (1338585389.3213_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] [LAU] jack2 turned verbose (1338586425.4283_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [LAU] jack2 turned verbose
+
+Nedko Arnaudov <[hidden]> writes:
+
+> David Adler <[hidden]> writes:
+>
+>> On Fri, Jun 1, 2012 at 2:52 PM, Robin Gareus wrote:
+>>>
+>>> It might have to do with Arch's compiler[-flags] and how jack2 uses
+>>> unions .. or scoping: JackGlobals vs Engine-Parameters.. although I
+>>> don't have an explanation.. all seems good.
+>>
+>> Compiler flags (for 32bit) are, (from unaltered /etc/makepkg.conf):
+>> CXXFLAGS="-march=i686 -mtune=generic -O2 -pipe -fstack-protector
+>> --param=ssp-buffer-size=4 -D_FORTIFY_SOURCE=2"
+>
+> Don't use -O2 nor -O1, use -O0
+>
+> I'm aware of at least one *compiler* bug that causes jackdbus to
+> misbehave. Yes, i analyzed the generated assembly. Affected are both
+> i32 and amd64 targets. Atm the only reports are from Arch users. The bad
+> machine code is created for th control api implementation, in parts that
+> use unions (jack parameter values).
+
+The jackdbus assert caused by the gcc bug looks like this:
+
+arguments to dbus_message_iter_append_basic() were incorrect, assertion "*bool_p == 0 || *bool_p == 1" failed in file dbus-message.c
+
+The default value of "verbose" is set to 10, the default value of
+"realtime-priority". libdbus has checks for boolean values that gets
+triggered because 10 is neither true (1) not false (0).
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1338584714.2523_0.ltw:2,a <874nqukakr.fsf at arnaudov dot name>
+________________________________________________________________________________
+

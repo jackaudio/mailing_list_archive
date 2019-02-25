@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack dsp load calculation</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack dsp load calculation</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1451122710.11331_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1451130215.18422_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1451125775.14242_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 26 Dec 2015 11:29:26 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Hanspeter Portner </span> &lt;[hidden] at airpost dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>John Emmas
+<a href='../1451122710.11331_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack dsp load calculation </a></td></tr>
+</table>
+<pre>
+On 26.12.2015 10:38, John Emmas wrote:
+&gt; Something occurred to me while tucking into my breakfast this morning...
+&gt; 
+&gt; On 23/12/2015 15:35, Robin Gareus wrote:
+&gt;&gt; Short spikes, which are in most cases the cause for xruns, are simply
+&gt;&gt; ignored in the calculation: For them to show up [...] the spike must
+&gt;&gt; be in the last 32 jack-cycles. [...] Most control applications only
+&gt;&gt; update the value every second or so.
+&gt;&gt;
+&gt; 
+&gt; Of course!  If users are hearing xruns without them showing up in the
+&gt; DSP figure, this must be where the problem lies.  And it won't get
+&gt; solved by changing the calculation algorithm.  Removing the averaging
+&gt; would simply introduce a new set of problems without addressing the
+&gt; underlying issue (i.e. that the client is updating too infrequently).
+&gt; 
+&gt; I wondered if Jack might have any other means of notifying a client when
+&gt; an xrun occurs?  (i.e. apart from returning a load count of 100)?  Let's
+&gt; say that clients (Ardour/Mixbus or whatever) could get notified about
+&gt; xruns using a callback function.  There'd then be a simple solution. 
+&gt; Instead of just querying the DSP reading once every second, clients
+&gt; could use a strategy like this (which would still work - even if only
+&gt; used once every second):-
+&gt; 
+&gt;       if ( the_client-&gt;got_notified_about_an_xrun() ) {
+&gt;             //  We know that an xrun occurred since we last checked
+&gt;             //  the CPU load - so do something to accommodate that.
+&gt; 
+&gt;             //  and then reset the notification flag
+&gt;             reset_the_xrun_notification_flag ();
+&gt;       } else {
+&gt;             //  No xrun was encountered - so we can update normally...
+&gt;             update_cpu_load ();
+&gt;       }
+&gt; 
+&gt; Is there anything like that already available.?
+
+Sure, that's what 'jack_set_xrun_callback' [1] is for.
+
+[1]
+http://jackaudio.org/api/group__ClientCallbacks.html#ga08196c75f06d9e68f9a3570dfcb1e323
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1451122710.11331_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1451130215.18422_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1451125775.14242_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1451125775.14242_0.ltw:2,a&nbsp;&lt;567E6C06.1020001 at airpost dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

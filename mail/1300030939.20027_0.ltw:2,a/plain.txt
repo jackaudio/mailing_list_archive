@@ -1,0 +1,43 @@
+Date:        Sun, 13 Mar 2011 17:41:54 +0200
+From:        Sampo Savolainen  <[hidden] at iki dot fi>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Sampo Savolainen [Jack-Devel] Stack preallocation issues (1300031601.21329_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] Stack preallocation issues (1300048052.23000_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Stack preallocation issues
+
+Hi,
+
+I ran into issues with Foo YC20 and the latest and greatest release of JACK
+1. The organ synth dies immediately when running it with JACK 0.120.1 in
+realtime (I tested both dummy and alsa drivers). It worked fine with
+previous releases, so I dug into SVN history and found the critical change
+in JACK to be commit r3996. The commit moved the stack touching code from
+libjack/client.c to libjack/thread.c. Stack touching means that each JACK
+thread reads & writes to nearly all stack memory. This forces the operating
+system to map the stack memory and thus the application can use the memory
+without page faults. This code has been used regardless of whether the
+thread is realtime or not.
+
+In r3996, not only was the code moved, but it was also uncommented. I do not
+know why the code was not active before this release. The current
+implementation touches 50000 bytes of memory (of 524288 bytes set as the
+thread stack size), but leaves all of that memory allocated!
+
+The DSP in Foo YC20 is Faust, which uses a lot of stack variables. The
+remaining 24k memory just isn't enough and it dies due to a page fault /
+running out of stack.
+
+I've attached a proposed patch. Note that my tests showed that it was not
+enough to have the buf variable go out of scope. The stack allocation had to
+be put in a separate function for gcc (4.4.3) to release it before
+continuing to the actual code the thread is supposed to run.
+
+
+ Sampo
+* Attachment: '1300030939.20027_0.ltw:2,a/files/jack-stack-touch.patch'
+content-type: text/x-patch
+
+1300030939.20027_0.ltw:2,a <AANLkTi=hsw_giHV1P_uR0xyz41W5CZJP1cOyzZSQEhbA at mail dot gmail dot com>
+________________________________________________________________________________
+

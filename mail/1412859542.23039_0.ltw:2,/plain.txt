@@ -1,0 +1,79 @@
+Date:        Thu, 09 Oct 2014 08:57:06 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] port disconnection callbacks (JackPortConnectCallback) (1412858298.21941_0.ltw:2,)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] port disconnection callbacks (JackPortConnectCallback) (1412860164.23647_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] port disconnection callbacks (JackPortConnectCallback)
+
+On Thu, Oct 9, 2014 at 8:32 AM, Stéphane Letz <[hidden]> wrote:
+
+>
+> Le 9 oct. 2014 à 13:49, Paul Davis <[hidden]> a écrit :
+>
+> >
+> >
+> > On Thu, Oct 9, 2014 at 2:55 AM, Matt Flax <[hidden]> wrote:
+> >
+> >
+> > I understand what you are saying - the grey zone !
+> > Something is disconnecting the ports. How would any object which is
+> monitoring ports, such as qjackctl or JackPortMonitor know that the
+> connection status has changed ?
+> > Is there an alternative way to get notifications when  ports are
+> disconnected ?
+> >
+> > they don't use a process callback.
+> >
+> > stephane, this behaviour seems clearly wrong to me. given that a client
+> without a process callback can receive the connect/disconnect callbacks, it
+> doesn't seem right that a client which has just returned non-zero from its
+> process callback would simply stop receiving them. does that seem right to
+> you?
+>
+> No, I'm not saying that… just saying the client is "deactivated"...
+>
+> >
+> > i thought jack2 delivered all non-process callbacks in a separate thread?
+> >
+> Yep…
+>
+> So maybe we should go back to the initial question; what is the client
+> supposed to do when the process callback does not return 0?
+>
+
+it is equivalent to having no process callback registered. the
+documentation in the header is slightly ambgious because it describes the
+behaviour of the callback rather than the registration:
+
+/**
+ * Tell the Jack server to call @a process_callback whenever there is
+ * work be done, passing @a arg as the second argument.
+ *
+ * The code in the supplied function must be suitable for real-time
+ * execution. That means that it cannot call functions that might
+ * block for a long time. This includes all I/O functions (disk, TTY,
+network),
+ * malloc, free, printf, pthread_mutex_lock, sleep, wait, poll, select,
+pthread_join,
+ * pthread_cond_wait, etc, etc.
+ *
+ * @return 0 on success, otherwise a non-zero error code, causing JACK
+ * to remove that client from the process() graph.
+ */
+int jack_set_process_callback (jack_client_t *client,
+                   JackProcessCallback process_callback,
+                   void *arg) JACK_OPTIONAL_WEAK_EXPORT;
+
+so a client that has never called jack_set_process_callback() and a client
+that did but has returned non-zero from the process callback are
+semantically equivalent.
+
+
+>
+> Stéphane
+
+1412859542.23039_0.ltw:2, <CAFa_cKng1kiWD_eGsQtrHRJvgCHrSf8hnw1H2S2XVaYdmQu+Rg at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,82 @@
+Date:        Fri, 29 Aug 2014 01:10:28 +1000
+From:        Patrick Shirkey  <[hidden] at boosthardware dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] softmode for dummy driver (1409237745.19329_0.ltw:2,)
+Follow-Up:   Joakim Hernberg Re: [Jack-Devel] softmode for dummy driver (1409278221.10964_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] softmode for dummy driver
+
+On Fri, August 29, 2014 12:55 am, Paul Davis wrote:
+> On Thu, Aug 28, 2014 at 10:43 AM, Patrick Shirkey <
+> [hidden]> wrote:
+>
+>>
+>> On Fri, August 29, 2014 12:35 am, Paul Davis wrote:
+>> > On Thu, Aug 28, 2014 at 9:52 AM, Patrick Shirkey
+>> > <[hidden]
+>> >> wrote:
+>> >
+>> >> Hi,
+>> >>
+>> >> On the version of jack1 that I am running jackd 0.124.1 it seems that
+>> >> the
+>> >> alsa dummy driver does not support softmode. Am I missing something
+>> or
+>> >> if
+>> >> not is there a specific reason it is not already available other than
+>> no
+>> >> one has bothered to implement it?
+>> >>
+>> >
+>> > my understanding of softmode is that it is a property of the server
+>> not
+>> > the
+>> > backend. but perhaps you mean something else?
+>> >
+>>
+>> I meant to say the dummy driver not the alsa dummy driver. In case it is
+>> of interest I am trying to track down the cause of the following error
+>> so
+>> I thought softmode might be useful in this case.
+>>
+>
+> ah, *that* softmode.
+>
+> the answer is that softmode relates to xrun handling, and the dummy driver
+> nevers gets xruns.
+>
+> xruns are not the same as conditions where a client takes too long,
+> measured by some metric, which is what is happening in your case.
+> obviously, clients taking too long can *lead* to xruns, but softmode in
+> the
+> ALSA driver just affects how it responds to reports of xruns from ALSA
+> itself. since the dummy backend has no such concept ... no softmode.
+>
+
+Thanks for that explanation.
+
+The app I am using loads a midi file and triggers the timeout error while
+loading the file or just after starting playback (upto 200ms). However the
+issue is happening randomly. Sometimes the same file loads and plays just
+fine and sometimes the app triggers the error.
+
+As the dummy driver is not affected by xruns is there an easy/obvious way
+to identify the actual cause of the delay that is triggering the subgraph
+timeout error?
+
+I have tried extending the periods upto -p 4096 but that is not helping.
+With varying period rates I I can run the app for a few hours and other
+times it triggers the timeout error after a few minutes.
+
+Could it be related to the other apps in the processing graph or is it
+most likely an internal issue to the application that is causing the
+error.
+
+
+--
+Patrick Shirkey
+Boost Hardware Ltd
+
+1409238637.21079_0.ltw:2, <61845.86.107.254.57.1409238628.squirrel at boosthardware dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack1 version jack2 public headers comparison</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack1 version jack2 public headers comparison</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1330441030.3140_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1330538411.28905_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1330538373.28854_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 29 Feb 2012 10:57:12 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> [hidden] at linutronix dot de </span> &lt;[hidden] at linutronix dot de </td></tr>
+<tr><td class='col1'>To</td><td>Devin Anderson &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Devin Anderson
+<a href='../1330365640.5613_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack1 version jack2 public headers comparison </a></td></tr>
+</table>
+<pre>
+On Mon, Feb 27, 2012 at 10:00:22AM -0800, Devin Anderson wrote:
+&gt; On Mon, Feb 27, 2012 at 1:16 AM,  &lt;[hidden]&gt; wrote:
+&gt; &gt; On Sat, Feb 25, 2012 at 02:29:34PM -0800, Devin Anderson wrote:
+&gt; &gt;&gt; On Fri, Feb 24, 2012 at 9:44 AM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+&gt; &gt;&gt;
+&gt; &gt;&gt; &gt; Le 24 f&#xE9;vr. 2012 &#xE0; 17:41, Paul Davis a &#xE9;crit :
+&gt; &gt;&gt; &gt;
+&gt; &gt;&gt; &gt;&gt;&gt; Reworked :
+&gt; &gt;&gt; &gt;&gt;&gt; ==========
+&gt; &gt;&gt; &gt;&gt;&gt;
+&gt; &gt;&gt; &gt;&gt;&gt; jackctl_server_start/jackctl_server_close reworked in a
+&gt; &gt;&gt; &gt;&gt;&gt; jackctl_server_open/jackctl_server_start/jackctl_server_stop/jackctl_server_close
+&gt; &gt;&gt; &gt;&gt;
+&gt; &gt;&gt; &gt;&gt; seems reasonable, though what's the justification?
+&gt; &gt;&gt; &gt;
+&gt; &gt;&gt; &gt;
+&gt; &gt;&gt; &gt; (Not completely sure anymore), but I think it was related to
+&gt; &gt;&gt; &gt; slave backend management when Devin Anderson did the MIDI
+&gt; &gt;&gt; &gt; backend rewrite in JACK2. This open/start/stop/close scheme
+&gt; &gt;&gt; &gt; was a better way to separated the steps.
+&gt; &gt;&gt;
+&gt; &gt;&gt; See the last four comments on this ticket:
+&gt; &gt;&gt;
+&gt; &gt;&gt; &#xA0; &#xA0; http://trac.jackaudio.org/ticket/219
+&gt; &gt;
+&gt; &gt; i fail to understand, why this justifies this splitup.
+&gt; &gt; it seems that, in order to add slave drivers, the server needs to be
+&gt; &gt; opened ?
+&gt; 
+&gt; IIRC, 'jackctl_server_open' instantiates the master audio driver.
+&gt; Calls to 'jackctl_server_add_slave' instantiate slave drivers, each of
+&gt; which is added to the master driver.
+
+i dont see why slave drivers must be children of the master driver. 
+but this is an implementation detail anyways. 
+
+jack1 slave drivers are just a list of slaver drivers in the engine.
+
+
+&gt; 
+&gt; &gt; and because the implementation is lacking support for adding slaves
+&gt; &gt; while the server is running, you need to add them in between.
+&gt; &gt;
+&gt; &gt; the implementation in jack1 is equally bad. we even lack the controlapi
+&gt; &gt; bits. however... i dont see why we cant just save a proper list of slave
+&gt; &gt; drivers in the jackctl_server_t which are then instantiated during
+&gt; &gt; server start.
+&gt; 
+&gt; AFAIK, there isn't really a reason, save that some of the internal
+&gt; structures would have to be changed in JACK 2.
+
+implementation detail. i dont think it justifies an API change.
+
+&gt; 
+&gt; However, that doesn't mean your idea is necessarily better.  There
+&gt; would still need to be functionality to add and remove the master
+&gt; driver.  You could make the case that the calls could be renamed to
+&gt; 'jackctl_server_add_master' and 'jackctl_server_remove_master'.  Since
+&gt; the server requires a master driver to run, I think that the
+&gt; 'jackctl_server_open' and 'jackctl_server_close' names are just fine.
+
+we already have a call that changes the master driver.
+
+/**
+ * Call this function to switch master driver.
+ *
+ * @param server server object handle
+ * @param driver driver to switch to
+ *
+ * @return success status: true - success, false - fail
+ */
+bool
+jackctl_server_switch_master(jackctl_server_t * server,
+                            jackctl_driver_t * driver);
+
+
+i think i begin to understand, what happened here:
+
+- jack2 requires an instantiated master driver to be able to add slave
+  drivers.
+
+- its not possible to change slave drivers, while the engine is up and
+  running.
+
+The splitup of the control api seems to be a bandaid, which papers over
+these problems with the implementation. 
+
+IFF these 2 Problems would be fixed in the implementation (which is
+really not so hard) would you still need this splitup ?
+
+
+
+-- 
+Mit freundlichen Gr&#xFC;&#xDF;en
+Torben Hohn
+
+Linutronix GmbH
+
+Standort: Bremen
+
+Phone: +49 421 166 73 41 ; Fax.: +49 7556 919 886
+mailto: [hidden]
+Firmensitz / Registered Office: D-88690 Uhldingen, Auf dem Berg 3
+Registergericht / Local District Court: Freiburg i. Br., HRB Nr. / Trade
+register no.: 700 806;
+
+Gesch&#xE4;ftsf&#xFC;hrer / Managing Directors: Heinz Egger, Thomas Gleixner
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1330441030.3140_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1330538411.28905_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1330538373.28854_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1330538373.28854_0.ltw:2,a&nbsp;&lt;20120229095711.GJ18457 at lxhb dot hb dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,58 @@
+Date:        Sat, 08 Jul 2017 21:04:03 +0300
+From:        alex  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+
+Subject:     Re: [Jack-Devel] Jack won't start on boot
+
+On 07/08/2017 08:59 PM, Ralf Mardorf wrote:
+> On Sat, 8 Jul 2017 20:56:02 +0300, alex wrote:
+>> On 07/08/2017 08:54 PM, Ralf Mardorf wrote:
+>>> On Sat, 8 Jul 2017 20:37:51 +0300, alex wrote:
+>>>> On 07/08/2017 08:30 PM, Joakim Hernberg wrote:
+>>>>> Maybe you need a sleep to make sure that jack is really running
+>>>>> before you start pd?
+>>>> But the script runs fine when launched manually. It's just that jack
+>>>> won't run on boot.
+>>> If you start jackd at boot, you start it for the very first time. If
+>>> you start jackd after that from command line, it's already in the
+>>> cache and might launch faster. I don't think it's the culprit, but it
+>>> explains that running software for the first time does take longer,
+>>> than starting it for the second time.
+>> So do you recommend to add a delay after launching jack and before
+>> launching pd?
+> It doesn't harm.
+>
+> But instead of continuing guessing, it's much more important to
+> redirect jackd's stdout und stderr to a log file, as explained by
+> precious replies.
+Well, I just tried to redirect jack's stdout and stderr as you suggested 
+to /tmp/jackd.log, but it doesn't happen. I created the following script 
+called 'launch_jack.sh':
+date >>/tmp/jackd.log; killall -9 jackd; sleep 5; jackd -dalsa -dhw:1 
+-i2 -o4 -p512 -r48000 >>/tmp/jackd.log 2>&1 &
+
+And then changed the rc.local to call this script, but there's no 
+jackd.log file. Again, if I run the script manually from the terminal, 
+the file is created and the following is being written in it:
+sáb ene  1 11:35:26 ACDT 2000
+jackdmp 1.9.10
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2013 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in realtime mode with priority 10
+audio_reservation_init
+Acquire audio card Audio1
+creating alsa driver ... hw:1|hw:1|512|2|48000|2|4|nomon|swmeter|-|32bit
+configuring for 48000Hz, period = 512 frames (10.7 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: 32bit integer little-endian
+ALSA: use 2 periods for capture
+ALSA: final selected sample format for playback: 32bit integer little-endian
+ALSA: use 2 periods for playback
+
+But only when started manually..
+
+1499537059.5332_0.ltw:2,a <8d73e8e0-ddc2-2c88-232c-c6f269b9fd39 at gmail dot com>
+________________________________________________________________________________
+

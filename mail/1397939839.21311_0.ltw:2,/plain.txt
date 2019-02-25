@@ -1,0 +1,67 @@
+Date:        Sat, 19 Apr 2014 22:37:08 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          [hidden] at marzen dot de
+Cc:          [hidden] at jackaudio dot org
+In-Reply-To: Holger Marzen [Jack-Devel] Effects of increasing "-p, --period" (1397938802.20585_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Effects of increasing "-p, --period"
+
+On 04/19/2014 10:19 PM, Holger Marzen wrote:
+> Hi all,
+> 
+> I have a Qtractor project with many tracks and many instances of CPU
+> hogs like Klangfalter (convolver reverb) and CALF compressor.
+> To decrease realtime load and avoid xruns I had to increase the period
+> size to 512.
+> 
+> I know that this will increase end-to-end latency, but that would'n be a
+> problem in my case. What I don't have understood yet: does this
+> intruduce some more latency to
+> - plugins (LV2, LADSPA) running inside a DAW like Ardour, Qtractor or
+>   Rosegarden?
+> - jack clients like plugin hosts or other sound processing stuff?
+> 
+> The man page says "Specify the number of frames between JACK process()
+> calls." So if plugins and jack clients only get their data as complete
+> chunks after a process() call they would suffer as well from an
+> increased latency.
+
+Hi Holger,
+
+in short: no. there is no additional latency. but, yes plugins process
+the audio in larger chunks.
+
+
+That assumption is wrong. jack clients are called *in* (or during) the
+process call.
+
+-=-=-
+0) read N samples from the soundcard
+
+1) call all jack-clients (incl plugins) to process N samples
+
+2a) write the processed N sample to the soundcard's output
+2b) read next N samples from the soundcard's input (same as step 0)
+
+3) goto (1)
+-=-=-
+
+
+(0) never really happens but is added here to illustrate the process.
+jackd just starts with an empty buffer.
+
+(1) can include pipeline. e.g.
+  "in -> client A -> client B -> client C -> out"
+they are all processed in the same cycle.
+
+
+in reality 2a/2b is a bit more complex. If you're interested, search the
+list archive for jack2 sync/async mode, read the documentation for the
+-n parameter, and feel free to ask here.
+
+Cheers!
+robin
+
+1397939839.21311_0.ltw:2, <5352DE74.2030201 at gareus dot org>
+________________________________________________________________________________
+

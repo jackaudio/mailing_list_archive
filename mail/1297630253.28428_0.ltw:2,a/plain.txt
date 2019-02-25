@@ -1,0 +1,67 @@
+Date:        Sun, 13 Feb 2011 21:50:20 +0100
+From:        torbenh  <[hidden] at gmx dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] jack_bufsize callbacks during jack_activate (1297629611.26955_0.ltw:2,a)
+Follow-Up:   Arnold Krille Re: [Jack-Devel] jack_bufsize callbacks during jack_activate (1297631473.31052_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack_bufsize callbacks during jack_activate
+
+On Sun, Feb 13, 2011 at 09:39:55PM +0100, Stéphane Letz wrote:
+> 
+> Le 13 févr. 2011 à 19:37, torbenh a écrit :
+> 
+> > 
+> > hi...
+> > 
+> > in order to avoid the race conditions with a buffersize change between
+> > jack_client_open() and jack_activate() we are sending out a bufsize
+> > callback during jack_activate()
+> > 
+> > i think its the right move. but there is no way to detect, whether the
+> > implementation in use is doing this.
+> > 
+> > i also delayed the attachment of the buffer segment until
+> > jack_activate(). the result is undefined behaviour when calling
+> > jack_port_get_buffer() on an inactive client.
+> 
+> But why a client would call jack_port_get_buffer outside of the process callback? that is not called when the client is not activated?
+
+ardour3 seems to be doing it during a reconnect to jack, to determine
+the size of jack_midi_port buffers.
+we dont seem to have a function which allows to do this without
+jack_port_get_buffer()
+
+we should have one probably.
+along with this we might change the name of the bufsize callback, to
+allow applications to detect the new semantics.
+
+the current bufsize callback is focussed on audio.
+but we have 2 different buffersizes which might change.
+
+so maybe we should change the signature of the bufsize callback, and
+add a new function:
+jack_nframes_t jack_port_type_get_bufsize( const char *port_type ) ???
+^^ that should probably be size_t or somthing.
+
+
+> 
+> > 
+> > i am now seeing a few problems popping up. so it might make sense to
+> > revert these changes.
+> > anybody got an opinion on it ?
+> > 
+> 
+> Which problems?
+
+bugs in ardour3, for example.
+maybe more clients have problems with this new behaviour.
+
+> 
+> Stéphane 
+
+-- 
+torben Hohn
+
+1297630253.28428_0.ltw:2,a <20110213205020.GE16542 at siel dot b>
+________________________________________________________________________________
+

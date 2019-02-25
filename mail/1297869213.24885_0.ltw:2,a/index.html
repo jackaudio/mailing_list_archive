@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] buffer size callback, revisit</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] buffer size callback, revisit</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297866925.19668_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297869703.26027_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297869213.24885_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 16 Feb 2011 16:12:55 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Arne Jacobs </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>torbenh
+<a href='../1297857408.2483_0.ltw:2,a/index.html'>Re: [Jack-Devel] buffer size callback, revisit </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1297869716.26054_0.ltw:2,a/index.html'>Re: [Jack-Devel] buffer size callback, revisit </a></td></tr>
+</table>
+<pre>
+On a sidenote:
+
+The JACK API documentation states for the buffer size callback, that it
+is called in a "separate non RT thread", i.e., not in the process
+thread. Which sounds to me that the process callback and the buffer size
+callback can run in parallel.
+
+Is this really the case? It means you'd have to allocate new buffers and
+then somehow send those to the process thread in a lock-free way...?
+What if the process callback has already been called with the new buffer
+size, while the other thread is still reallocating the buffers?
+
+I'm asking because the wrapper lib I'm working on is one of the cases
+where I really need to know the buffer size...
+
+Cheers,
+
+Arne
+
+On 16.02.2011 12:56, torbenh wrote:
+&gt; On Tue, Feb 15, 2011 at 12:12:45PM -0600, Jack O'Quin wrote:
+&gt;&gt; On Tue, Feb 15, 2011 at 11:49 AM, torbenh &lt;[hidden]&gt; wrote:
+&gt;&gt;&gt; On Tue, Feb 15, 2011 at 11:36:07AM -0600, Jack O'Quin wrote:
+&gt;&gt;&gt;&gt; On Tue, Feb 15, 2011 at 11:21 AM, Paul Davis &lt;[hidden]&gt; wrote:
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt; this is true EVEN IF the client registered a buffer size callback. why
+&gt;&gt;&gt;&gt;&gt; so? despite the suggestion in the API docs for the buffer size
+&gt;&gt;&gt;&gt;&gt; callback, existing implementations do NOT guarantee to call the
+&gt;&gt;&gt;&gt;&gt; client's buffer size callback from within jack_activate(). this means
+&gt;&gt;&gt;&gt;&gt; that there is no reliable way for a client to know the port buffer
+&gt;&gt;&gt;&gt;&gt; size before its first process callback. the buffer size callback will
+&gt;&gt;&gt;&gt;&gt; notify it of later changes to the size, but not the initial size when
+&gt;&gt;&gt;&gt;&gt; it gets its first process() call.
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; Perhaps a stupid question: why not ensure the buffer size callback
+&gt;&gt;&gt;&gt; *is* invoked before the first process callback?
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; Is that because it cannot be called in the realtime thread?
+&gt;&gt;&gt;
+&gt;&gt;&gt; how would you detect that its invoked ?
+&gt;&gt;
+&gt;&gt; How would the callback know it's been called? I don't understand.
+&gt;&gt;
+&gt;&gt;&gt; jack-svn is invoking bufsize callback during jack_activate()
+&gt;&gt;&gt; there is no way, to be sure this happens.
+&gt;&gt;
+&gt;&gt; That is the point I'm missing. Why not?
+&gt; 
+&gt; because you dont know, which version your binary is linked to ?
+&gt; with the new semantics, you just do all your buffer allocations in the
+&gt; bufsize callback.
+&gt; 
+&gt; no need to preallocate buffers.
+&gt; 
+&gt; ------------------------------------------
+&gt; 
+&gt; float *buffer = NULL;
+&gt; jack_client_t *client;
+&gt; 
+&gt; void bufsize_cb( void * arg )
+&gt; {
+&gt;   buffer = realloc (buffer, jack_port_type_get_bufsize( client, JACK_DEFAULT_AUDIO_TYPE ));
+&gt; }
+&gt; 
+&gt; void old_bufsize_cb( jack_nframes_t nframes, void * arg )
+&gt; {
+&gt;   buffer = realloc (buffer, nframes * sizeof(float) );
+&gt; }
+&gt; 
+&gt; int main()
+&gt; {
+&gt;   client = jack_client_open( "bla", ... );
+&gt; 
+&gt;   if (jack_set_bufsize_changed_cb) {
+&gt;      jack_set_bufsize_changed_cb( client, bufsize_cb, NULL);
+&gt;   } else {
+&gt;      // with the old semantics, we need:
+&gt;      buffer = malloc (jack_get_bufsize() * sizeof(float) );
+&gt;      // if we omit this, buffer will not be allocated, and process_cb would
+&gt;      // crash on using it.
+&gt;      jack_set_bufsize_callback (client, old_bufsize);
+&gt;   }
+&gt; 
+&gt;   jack_set_process_cb();
+&gt; 
+&gt; 
+&gt;   jack_activate();
+&gt; 
+&gt;   sleep(-1);
+&gt; }
+&gt; 
+&gt; ------------------------------------------------
+&gt;&gt;
+&gt;&gt;&gt; so currently, one needs to allocate everything. then the bufsize cb will
+&gt;&gt;&gt; come, and results in reallocations. the old signature of the bufsize cb
+&gt;&gt;&gt; also does not allow determining the size of the midi port buffers.
+&gt;&gt;
+&gt;&gt; I realize that it was overlooked when MIDI was added. I'm just trying
+&gt;&gt; to understand why it's broken for audio buffers.
+&gt; 
+&gt; we are approaching API 1.0 ... this api should be as clean as possible.
+&gt; allocating mem only to reallocate it a few moments afterwards does not
+&gt; seem clean to me.
+&gt; 
+&gt; the problem is that the only valid point to use jack_get_bufsize() is
+&gt; inside a bufsize callback. all other points pose a race condition.
+&gt; 
+&gt; declaring new semantics for jack_get_bufsize() seems wrong.
+&gt; they will go unnoticed for a very long time.
+&gt; if we deprecate jack_get_bufsize() and introduce a new function,
+&gt; programmers are more likely to look at the docs for the new function,
+&gt; and do the bufsize dance ;)
+&gt; 
+&gt; 
+&gt;&gt;
+&gt;&gt;&gt; the new functionname allows us do detect whether it will be called via
+&gt;&gt;&gt; weak linking. we are basically solving 2 problems at once.
+&gt;&gt;&gt;
+&gt;&gt;&gt; does it make sense to you now ?
+&gt;&gt;
+&gt;&gt; Not quite. But, thanks for trying to explain it.
+&gt;&gt;
+&gt;&gt; Regards,
+&gt;&gt; -- 
+&gt;&gt;  joq
+&gt;&gt; 
+&gt;&gt; Jack-Devel mailing list
+&gt;&gt; [hidden]
+&gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt; 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297866925.19668_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297869703.26027_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297869213.24885_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1297869213.24885_0.ltw:2,a&nbsp;&lt;4D5BE977.3060402 at gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

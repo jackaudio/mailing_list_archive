@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Some observations re Jack and systemd</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Some observations re Jack and systemd</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1545336456.29728_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1545426553.10488_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1545423871.8348_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 21 Dec 2018 21:24:01 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> J&#xF6;rn Nettingsmeier </span> &lt;[hidden] at stackingdwarves dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Chris Caudle
+<a href='../1545426553.10488_0.ltw:2,/index.html'>Re: [Jack-Devel] Some observations re Jack and systemd </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Rigg
+<a href='../1545472540.16658_0.ltw:2,/index.html'>Re: [Jack-Devel] Some observations re Jack and systemd </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Christian Affolter
+<a href='../1545479685.22446_0.ltw:2,/index.html'>Re: [Jack-Devel] Some observations re Jack and systemd </a></td></tr>
+</table>
+<pre>
+Hi everyone,
+
+
+after scratching my head for a long time to make systemd behave when 
+running jack as a service, I thought I'd share my findings:
+
+Example service file:
+
+[Unit]
+Description=JACK Audio Connection Kit
+After=sound.target
+After=ntp.service
+After=time-sync.target
+Before=jackd.target
+Requires=jackd.target
+
+[Service]
+EnvironmentFile=-/your/config/file/containing/JACKD_OPTIONS
+LimitRTPRIO=85
+LimitMEMLOCK=700000000
+User=nettings
+Environment="DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket"
+ExecStartPre=/bin/sleep 10
+ExecStart=/usr/bin/jackd $JACKD_OPTIONS
+RestartSec=5
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+
+
+So it's easy to start a service as a user, but that user's environment 
+is not automatically pulled in. That means even though user nettings 
+does have the necessary permissions in /etc/security/limits.conf, you 
+still need to spell them out for systemd.
+
+Another thing to note is that at least on current raspbian, the 
+time-sync.target is broken. Its promise is to only be triggered after 
+ntp has worked its magic and the system time is monotonous. However, 
+I've seen time jumps which combined with cheap USB hardware or the 
+builtin Raspi sound will hang jack. Hence the ugly sleep.
+
+Final goodness: systemd might try to clean up after you. So when you 
+have a jackd service started in your name, all is well, until you have 
+logged in somehow and then closed the last shell, at which point the 
+janitor from hell will happily clear /dev/shm and with it all your jack 
+semaphores, leading to instant dumpster fire and silence.
+
+This magic can be avoided by setting
+RemoveIPC=no
+in /etc/systemd/logind.conf
+
+After clearing these hurdles, I've been quite happy with how systemd 
+handles jack clients.  The usecase here is a number of clients running 
+in an embedded appliance, and systemd takes care of restoring them when 
+I cause them to crash, which is good. Not that they crash, but it's good 
+to have defense in depth.
+Figuring out how to order services is hard because you cannot assume a 
+service is really ready when systemd has fired it off. So I've used a 
+ExecStartPre script that blocks until a downstream jack port has 
+appeared in those cases where I want to start clients in a particular 
+order (matters most for the one job that needs to connect all the ports, 
+so I let it wait on a test port for each client it needs to connect).
+
+Old-time SysV user here, and granted, systemd has given me many a WTF 
+moment, but it does its job. Unfortunately, it does too many other jobs 
+as well, but hey...
+
+
+-- 
+J&#xF6;rn Nettingsmeier
+Tuinbouwstraat 180, 1097 ZB Amsterdam, Nederland
+Tel. +49 177 7937487
+
+Meister f&#xFC;r Veranstaltungstechnik (B&#xFC;hne/Studio), Tonmeister VDT
+http://stackingdwarves.net
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1545336456.29728_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1545426553.10488_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1545423871.8348_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1545423871.8348_0.ltw:2,&nbsp;&lt;8e2e3dcd-1f3d-5dfc-6349-093c0bc01207 at stackingdwarves dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

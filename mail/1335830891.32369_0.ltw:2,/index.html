@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] incompatible version of ffado error message</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] incompatible version of ffado error message</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1335820643.17468_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1335831506.865_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1335830891.32369_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 01 May 2012 09:38:01 +0930 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jonathan Woithe </span> &lt;[hidden] at just42 dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Adrian Knoth &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org, [hidden] at just42 dot net, [hidden] at iinet dot net dot au </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Adrian Knoth
+<a href='../1335792961.7785_0.ltw:2,Sa/index.html'>Re: [Jack-Devel] incompatible version of ffado error message </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Allan Klinbail
+<a href='../1335911921.5512_0.ltw:2,a/index.html'>Re: [Jack-Devel] incompatible version of ffado error message </a></td></tr>
+</table>
+<pre>
+On Mon, Apr 30, 2012 at 03:35:54PM +0200, Adrian Knoth wrote:
+&gt; On Mon, Apr 30, 2012 at 11:26:32PM +1000, Allan Klinbail wrote:
+&gt; &gt; I've been using jack with ffado as the driver for a few years now.
+&gt; &gt; Today, after upgrading ffado to the latest svn , (then tested working).
+&gt; &gt; I then upgraded to the latest jack svn version. Following this I started
+&gt; &gt; receiving the following incompatible error message. 
+&gt; 
+&gt; You were doing it in the wrong order.
+&gt; 
+&gt; FFADO detects the jackd version at compile time. If it's a new jackd
+&gt; version supporting the new API, it switches to the new API.
+
+Similarly, if there is no jackd installed at compile time ffado assumes that
+the jackd which will ultimately be available will support the new API.
+
+So in Allan's case, he compiled a new FFADO against an old jack, which
+resulted in a FFADO which uses the old API.  The old jack was happy with
+this and everything worked.
+
+&gt; You've just told FFADO to adjust itself to an old jackd version.
+&gt; Simply compile FFADO again.
+
+Yep, that should work.
+
+However, from a development point of view I'm a little surprised that the
+latest jackd didn't simply accept FFADO as it was.  The relevant line in
+current jack1 is drivers/firewire/ffado_driver.c, line 786 and following.
+
+  if(ffado_get_api_version() &lt; FIREWIRE_REQUIRED_FFADO_API_VERSION) {
+    printError("Incompatible libffado version! ...
+  }
+
+The same conditional is used in jack2, so the following analysis applies
+equally to that.
+
+In Allen's case, ffado_get_api_version() would return 8 (the old version).
+FIREWIRE_REQUIRED_FFADO_API_VERSION is defined as 8, so this conditional
+*should* have failed and the "Incompatible libffado version" message should
+never have been displayed.
+
+Oh hang on: Allan, you said "the latest jack svn version".  Did you
+literally use jack's subversion repository?  That is no longer carrying the
+latest jackd source as far as I know: if you want the latest jackd you need
+to get it using git.  This is described at
+
+  http://jackaudio.org/download
+
+Look for the "JACK Source Code Repository" section about half-way down.
+
+I don't know the state of jack's ffado driver in the old svn repository, but
+the use of the older jack code (which could be in an unstable intermediate
+state with respect to ffado driver updates) may explain the symptoms
+described.
+
+Regards
+  jonathan
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1335820643.17468_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1335831506.865_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1335830891.32369_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1335830891.32369_0.ltw:2,&nbsp;&lt;20120501000801.GA20808 at marvin dot atrad dot com dot au&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

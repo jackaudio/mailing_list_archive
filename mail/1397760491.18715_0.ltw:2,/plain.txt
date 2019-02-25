@@ -1,0 +1,53 @@
+Date:        Thu, 17 Apr 2014 19:47:57 +0100
+From:        Carl Hetherington  <[hidden] at carlh dot net>
+To:          [hidden] at jackaudio dot org
+Follow-Up:   Paul Davis Re: [Jack-Devel] popen/fclose patch to fix failure on OSX 10.9 (1397762289.22193_0.ltw:2,)
+
+Subject:     [Jack-Devel] popen/fclose patch to fix failure on OSX 10.9
+
+Hi all,
+
+I've found the following patch to JACK1 v 0.124 appears to be
+necessary to make JACK work correctly on OS X 10.9.
+Without it, the second call to popen in a session fails.  The man
+page says that pclose() is the right thing, anyway (not
+fclose()).
+
+Best regards
+Carl
+
+
+
+--- libjack/client.c.orig	2014-04-16 19:54:39.000000000 +0100
++++ libjack/client.c	2014-04-16 19:54:48.000000000 +0100
+@@ -168,7 +168,7 @@
+  	}
+
+  	if (fgets (buf, sizeof (buf), in) == NULL) {
+-		fclose (in);
++		pclose (in);
+  		free (pathcopy);
+  		return -1;
+  	}
+@@ -177,7 +177,7 @@
+
+  	if (buf[len-1] != '\n') {
+  		/* didn't get a whole line */
+-		fclose (in);
++		pclose (in);
+  		free (pathcopy);
+  		return -1;
+  	}
+@@ -190,7 +190,7 @@
+  	memcpy (jack_tmpdir, buf, len-1);
+  	jack_tmpdir[len-1] = '\0';
+
+-	fclose (in);
++	pclose (in);
+  	free (pathcopy);
+
+  	return 0;
+
+1397760491.18715_0.ltw:2, <alpine.DEB.2.02.1404171944470.6169 at localhost>
+________________________________________________________________________________
+

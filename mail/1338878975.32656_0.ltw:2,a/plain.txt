@@ -1,0 +1,72 @@
+Date:        Tue, 05 Jun 2012 09:49:16 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Brendan Jones <[hidden] at gmail dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Brendan Jones Re: [Jack-Devel] [LAU] jack2 turned verbose (1338869538.18103_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [LAU] jack2 turned verbose
+
+Brendan Jones <[hidden]> writes:
+
+> On 06/05/2012 05:30 AM, Nedko Arnaudov wrote:
+>> Brendan Jones<[hidden]>  writes:
+>>
+>>>> http://lists.linuxaudio.org/listinfo/linux-audio-user
+>>>
+>>> I've had a closer look at this and this patch seems to be working for
+>>> me (their's no equivalent bool in jack_driver_param_value_t)
+>>>
+>>> diff -Nurp '-x*~' jack-1.9.8.orig/common/JackControlAPI.cpp
+>>> jack-1.9.8/common/JackControlAPI.cpp
+>>> --- jack-1.9.8.orig/common/JackControlAPI.cpp	2011-12-19
+>>> 12:54:02.000000000 +0100
+>>> +++ jack-1.9.8/common/JackControlAPI.cpp	2012-06-04 21:57:59.264581780 +0200
+>>> @@ -246,7 +246,7 @@ jackctl_add_driver_parameters(
+>>>               break;
+>>>           case JackDriverParamBool:
+>>>               jackctl_type = JackParamBool;
+>>> -            jackctl_value.b = descriptor_ptr->value.i;
+>>> +            jackctl_value.b = (descriptor_ptr->value.i>  0);
+>>>               break;
+>>>           default:
+>>>               jack_error("unknown driver parameter type %i",
+>>> (int)descriptor_ptr->type);
+>>
+>> Does "working for me" mean that verbose is not enabled by default anymore?
+>
+> That's correct. A cast to bool (which is more appropriate) also seems
+> to work. It also corrects the jackdbus SIGSEGV you listed earlier.
+>
+>>
+>> The verbose parameter is not driver parameter, so it should not
+>> be affected by this code at all.
+>
+> It seems that it is (adding at line 228: printf("Driver parameter:
+> %s\n",descriptor_ptr->name) );
+>
+> .
+> Driver parameter: output-latency
+> Driver parameter: inchannels
+> Driver parameter: outchannels
+> Driver parameter: verbose
+> Driver parameter: snoop
+
+This is the FFADO driver. Do you see verbose FFADO messages or verbose
+JACK core messages? That verbose option is not a bool but unsigned int
+and defaults to 3:
+
+value.ui = 3;
+jack_driver_descriptor_add_parameter(desc, &filler, "verbose", 'v', JackDriverParamUInt, &value, NULL, "libffado verbose level", NULL);
+
+Thus, your patch should not affect the ffado verbose parameter because
+changed is the JackDriverParamBool case, not the JackDriverParamUInt
+case.
+
+Also, do you see the temporary server behaviour?
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1338878975.32656_0.ltw:2,a <871uluxngz.fsf at arnaudov dot name>
+________________________________________________________________________________
+

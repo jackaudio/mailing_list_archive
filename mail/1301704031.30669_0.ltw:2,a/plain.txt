@@ -1,0 +1,79 @@
+Date:        Sat, 02 Apr 2011 11:26:46 +1100
+From:        Geoff Beasley  <[hidden] at laughingboyrecords dot com>
+To:          St√©phane Letz <[hidden] at grame dot fr>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: St√©phane Letz [Jack-Devel] NetOne driver in JACK2 (1301659924.17949_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] NetOne driver in JACK2
+
+FYI boyz, just built jackmp from svn and I get no errors. will test more 
+today, but netone works perfectly fine here in jack2.
+
+will report any other issues if i find them ;)
+
+
+g.
+On 04/01/2011 11:11 PM, StÈphane Letz wrote:
+> Hi Torben and jack-dev community.
+>
+> I received some bugs report (crash in server with "jackd -d netone"), like:
+>
+> 	ï NetOne driver started
+> 	ï AutoConfig Override !!!
+> 	ï MTU is set to 1400 bytes
+> 	ï Cannot read socket fd = 10 err = Interrupted system call
+> 	ï [Thread 0xb0862b70 (LWP 6381) exited]
+> 	ï NotifyClient fails name = exaile.py event = 18 val1 = 1 val2 = 0
+> 	ï netxruns... duration: 11ms
+> 	ï jackd: ../common/JackEngine.cpp:932: int Jack::JackEngine::PortConnect(int, jack_port_id_t, jack_port_id_t): Assertion `ref>= 0' failed.
+>
+>
+> 	ï jof@studio:~$ jack_netsource -c 120 -n 3 -H 192.168.1.13
+> 	ï notification: uint decode error
+> 	ï Connected :-)
+> 	ï netjack: at frame 000085 ->  total netxruns 1  (1%) queue time= 23221
+> 	ï notification: uint decode error
+> 	ï notification: uint decode error
+> 	ï notification: uint decode error
+> 	ï notification: uint decode error
+> 	ï notification: uint decode error
+> 	ï notification: uint decode error
+> 	ï notification: uint decode error
+> 	ï notification: uint decode error
+> 	ï notification: uint decode error
+> 	ï notification: uint decode error
+> 	ï notification: uint decode error
+> 	ï notification: uint decode error
+> 	ï ^C*** glibc detected *** jack_netsource: double free or corruption (!prev): 0x09bd4830 ***
+> 	ï ======= Backtrace: =========
+> 	ï
+>
+> The last thing I did (before jack 1.9.7 release) was to synchronize NetJack1 code from JACK1 to JACK2, hoping I did that correctly (basically updating netjack.h,c  and netjack_packet,h,c)
+>
+> Reviewing the code I see:
+>
+>   - using  exit(1); in netjack.c instead of properly returning a proper error.
+>
+> - CELT : celt_mode_create should be matched with celt_mode_destroy. My feeling is that this is not done everywhere it should (especially in JackNetOneDriver.cpp)
+>
+> This is certainly not the cause of the bugs, but I think this should be fixed (along the "jack_netsource: double free or corruption")n before going anywhere else.
+>
+> Could you please have a look?
+>
+> or if not Torben someone else?
+>
+> Thanks.
+>
+> StÈphane
+>
+>
+>
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1301704031.30669_0.ltw:2,a <4D966D46.6030505 at laughingboyrecords dot com>
+________________________________________________________________________________
+

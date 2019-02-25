@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Multiprocessing Program with JACK Server and two Clients - Clients fail with Driver not running</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Multiprocessing Program with JACK Server and two Clients - Clients fail with Driver not running</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1519908902.20817_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1520146872.29927_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1520008766.10080_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 02 Mar 2018 17:38:51 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Christoph Kuhr </span> &lt;[hidden] at web dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+</table>
+<pre>
+HI *,
+
+
+I have a multiprocessing program that shall host a JACK server and two 
+JACK clients.
+The server is named "AVB_Processing", the clients are name "AVB_Talker" 
+and "AVB_Listener".
+The JACK server is created and started before forking the other 
+processes and looks fine:
+
+    JACK server starting in realtime mode with priority 8
+    self-connect-mode is "Don't restrict self connect requests"
+    Jack: JackPosixThread::StartImp : create non RT thread
+    Jack: JackPosixThread::ThreadHandler : start
+    Jack: playback device hw:1,0
+    Jack: capture device hw:1,0
+    Jack: capture device hw:1,0
+    Jack: playback device hw:1,0
+    Jack: apparent rate = 48000
+    Jack: frames per period = 128
+    Jack: JackDriver::Open capture_driver_name = hw:1,0
+    Jack: JackDriver::Open playback_driver_name = hw:1,0
+    Jack: Check protocol client = 8 server = 8
+    Jack: JackEngine::ClientInternalOpen: name = system
+    Jack: JackEngine::AllocateRefNum ref = 0
+    Jack: JackLinuxFutex::Allocate name =
+    jack_sem.0_AVB_Processing_system val = 0
+    Jack: JackEngine::NotifyAddClient: name = system
+    Jack: JackGraphManager::SetBufferSize size = 128
+    Jack: JackConnectionManager::DirectConnect first: ref1 = 0 ref2 = 0
+    Jack: JackGraphManager::ConnectRefNum cur_index = 0 ref1 = 0 ref2 = 0
+    Jack: JackDriver::SetupDriverSync driver sem in flush mode
+    creating alsa driver ...
+    hw:1,0|hw:1,0|128|2|48000|2|2|nomon|swmeter|-|32bit
+    configuring for 48000Hz, period = 128 frames (2.7 ms), buffer = 2
+    periods
+    ALSA: final selected sample format for capture: 32bit integer
+    little-endian
+    ALSA: use 2 periods for capture
+    ALSA: final selected sample format for playback: 32bit integer
+    little-endian
+    ALSA: use 2 periods for playback
+    Jack: JackSocketServerChannel::Open
+    Jack: JackServerSocket::Bind : addr.sun_path
+    /dev/shm/jack_AVB_Processing_0_0
+    Jack: JackSocketServerChannel::BuildPoolTable size = 1
+    Jack: JackEngine::Open
+    Jack: JackClientSocket::Connect : addr.sun_path
+    /dev/shm/jack_AVB_Processing_0_0
+    Jack: JackEngine::ClientInternalOpen: name = freewheel
+    Jack: JackEngine::AllocateRefNum ref = 1
+    Jack: JackLinuxFutex::Allocate name =
+    jack_sem.0_AVB_Processing_freewheel val = 0
+    Jack: JackEngine::NotifyAddClient: name = freewheel
+    Jack: JackDriver::ClientNotify ref = 1 driver = system name =
+    freewheel notify = 0
+    Jack: JackDriver::ClientNotify ref = 0 driver = freewheel name =
+    system notify = 0
+    Jack: JackConnectionManager::DirectConnect first: ref1 = 1 ref2 = 1
+    Jack: JackGraphManager::ConnectRefNum cur_index = 0 ref1 = 1 ref2 = 1
+    Jack: JackDriver::SetupDriverSync driver sem in flush mode
+    Jack: JackGraphManager::SetBufferSize size = 128
+    Jack: JackAlsaDriver::Attach fBufferSize 128 fSampleRate 48000
+    Jack: JackEngine::PortRegister ref = 0 name = system:capture_1 type
+    = 32 bit float mono audio flags = 22 buffer_size = 128
+    Jack: JackGraphManager::AllocatePortAux port_index = 1 name =
+    system:capture_1 type = 32 bit float mono audio
+    Jack: JackConnectionManager::AddOutputPort ref = 0 port = 1
+    Jack: JackEngine::ClientNotify: no callback for notification = 9
+    Jack: JackEngine::ClientNotify: no callback for notification = 9
+    Jack: JackAlsaDriver::Attach fCapturePortList[i] 1
+    Jack: JackEngine::PortRegister ref = 0 name = system:capture_2 type
+    = 32 bit float mono audio flags = 22 buffer_size = 128
+    Jack: JackGraphManager::AllocatePortAux port_index = 2 name =
+    system:capture_2 type = 32 bit float mono audio
+    Jack: JackConnectionManager::AddOutputPort ref = 0 port = 2
+    Jack: JackEngine::ClientNotify: no callback for notification = 9
+    Jack: JackEngine::ClientNotify: no callback for notification = 9
+    Jack: JackAlsaDriver::Attach fCapturePortList[i] 2
+    Jack: JackEngine::PortRegister ref = 0 name = system:playback_1 type
+    = 32 bit float mono audio flags = 21 buffer_size = 128
+    Jack: JackGraphManager::AllocatePortAux port_index = 3 name =
+    system:playback_1 type = 32 bit float mono audio
+    Jack: JackConnectionManager::AddInputPort ref = 0 port = 3
+    Jack: JackEngine::ClientNotify: no callback for notification = 9
+    Jack: JackEngine::ClientNotify: no callback for notification = 9
+    Jack: JackAlsaDriver::Attach fPlaybackPortList[i] 3
+    Jack: JackEngine::PortRegister ref = 0 name = system:playback_2 type
+    = 32 bit float mono audio flags = 21 buffer_size = 128
+    Jack: JackGraphManager::AllocatePortAux port_index = 4 name =
+    system:playback_2 type = 32 bit float mono audio
+    Jack: JackConnectionManager::AddInputPort ref = 0 port = 4
+    Jack: JackEngine::ClientNotify: no callback for notification = 9
+    Jack: JackEngine::ClientNotify: no callback for notification = 9
+    Jack: JackAlsaDriver::Attach fPlaybackPortList[i] 4
+    Jack: Clock source : hpet
+    Jack: JackServer::Start
+    Jack: JackThreadedDriver::Start
+    Jack: JackPosixThread::StartImp : create non RT thread
+    Jack: JackPosixThread::ThreadHandler : start
+    Jack: JackThreadedDriver::Init real-time
+    Jack: JackPosixThread::AcquireRealTimeImp priority = 8
+    Jack: JackPosixThread::StartImp : create non RT thread
+    Jack: JackPosixThread::ThreadHandler : start
+    Jack: JackSocketServerChannel::ClientCreate socket
+    Jack: JackSocketServerChannel::BuildPoolTable size = 2
+    Jack: JackSocketServerChannel::BuildPoolTable fSocketTable i = 1 fd = 56
+    Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 56
+    Jack: JackRequest::Notification
+    Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name =
+    freewheel notify = 18
+    Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name =
+    freewheel notify = 18
+    Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name =
+    freewheel notify = 18
+    Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name =
+    freewheel notify = 18
+    Jack: JackEngine::ClientNotify: no callback for notification = 4
+    Jack: JackEngine::ClientNotify: no callback for notification = 4
+    Jack: **** alsa_pcm: xrun of at least -5118090.752 msecs
+    Jack: ALSA XRun wait_status = 0
+    Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 56
+    Jack: JackRequest::Notification
+    Jack: JackEngine::ClientNotify: no callback for notification = 3
+    Jack: JackEngine::ClientNotify: no callback for notification = 3
+    Jack: **** alsa_pcm: xrun of at least -5118163.456 msecs
+    Jack: ALSA XRun wait_status = 0
+    Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 56
+    Jack: JackRequest::Notification
+    Jack: JackEngine::ClientNotify: no callback for notification = 3
+    Jack: JackEngine::ClientNotify: no callback for notification = 3
+
+
+
+
+
+After the JACK server is running, I fork four processes. Two of which 
+try to open a JACK client without success:
+
+
+    Jack: jack_client_open AVB_Talker
+    Jack: JackInternalClient::Open name = AVB_Talker
+    Jack: Check protocol client = 8 server = 8
+    Jack: JackEngine::ClientInternalOpen: name = AVB_Talker
+    Jack: JackEngine::AllocateRefNum ref = 2
+    Jack: JackLinuxFutex::Allocate name =
+    jack_sem.0_AVB_Processing_AVB_Talker val = 0
+    Jack: JackPosixProcessSync::TimedWait time out = 5000000
+    Jack: jack_client_open AVB_Listener
+    Jack: JackInternalClient::Open name = AVB_Listener
+    Jack: Check protocol client = 8 server = 8
+    Jack: JackEngine::ClientInternalOpen: name = AVB_Listener
+    Jack: JackEngine::AllocateRefNum ref = 2
+    Jack: JackLinuxFutex::Allocate name =
+    jack_sem.0_AVB_Processing_AVB_Listener val = 0
+    Jack: JackPosixProcessSync::TimedWait time out = 5000000
+    JackPosixProcessSync::LockedTimedWait error usec = 5000000 err =
+    Connection timed out
+    Jack: JackPosixProcessSync::TimedWait finished delta = 5000078.0
+    Driver is not running
+    Cannot open client name = AVB_Talker
+    JackPosixProcessSync::LockedTimedWait error usec = 5000000 err =
+    Connection timed out
+    Jack: JackPosixProcessSync::TimedWait finished delta = 5000069.0
+    Driver is not running
+    Cannot open client name = AVB_Listener
+    Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 56
+
+
+
+
+
+The client probably fails with "Driver is not running" due to the ALSA 
+xruns of the server:
+
+    Jack: **** alsa_pcm: xrun of at least -5118090.752 msecs
+    Jack: ALSA XRun wait_status = 0
+    Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 56
+    Jack: JackRequest::Notification
+    Jack: JackEngine::ClientNotify: no callback for notification = 3
+    Jack: JackEngine::ClientNotify: no callback for notification = 3
+    Jack: **** alsa_pcm: xrun of at least -5118163.456 msecs
+    Jack: ALSA XRun wait_status = 0
+
+
+
+Here is the server code:
+
+    static void set_jack_server_parameters( FILE* filepointer, const
+    JSList * node_ptr)
+    {
+     &#xA0;&#xA0;&#xA0; while (node_ptr != NULL) {
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; jackctl_parameter_t * parameter = (jackctl_parameter_t
+    *)node_ptr-&gt;data;
+
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; if( ( strcmp( jackctl_parameter_get_name(parameter), "rate"
+    ) == 0 ) ||
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; ( strcmp( jackctl_parameter_get_name(parameter),
+    "period" ) == 0 ) ||
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; ( strcmp( jackctl_parameter_get_name(parameter),
+    "nperiods" ) == 0 ) ||
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; ( strcmp( jackctl_parameter_get_name(parameter),
+    "device" ) == 0 ) ||
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; ( strcmp( jackctl_parameter_get_name(parameter),
+    "realtime-priority" ) == 0 ) ||
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; ( strcmp( jackctl_parameter_get_name(parameter),
+    "realtime" ) == 0 ) ||
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; ( strcmp( jackctl_parameter_get_name(parameter),
+    "inchannels" ) == 0 ) ||
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; ( strcmp( jackctl_parameter_get_name(parameter),
+    "outchannels" ) == 0 ) ||
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; ( strcmp( jackctl_parameter_get_name(parameter),
+    "playback" ) == 0 ) ||
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; ( strcmp( jackctl_parameter_get_name(parameter),
+    "capture" ) == 0 ) ||
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; ( strcmp( jackctl_parameter_get_name(parameter),
+    "verbose" ) == 0 ) ||
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; ( strcmp( jackctl_parameter_get_name(parameter),
+    "clock-source" ) == 0 ) ||
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; ( strcmp( jackctl_parameter_get_name(parameter),
+    "name" ) == 0 ) ){
+
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; union jackctl_parameter_value value;
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; if( ( strcmp( jackctl_parameter_get_name(parameter),
+    "name" ) == 0 ) ){
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; sprintf( value.str, "AVB_Processing");
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; } else if( ( strcmp(
+    jackctl_parameter_get_name(parameter), "verbose" ) == 0 ) ){
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; value.b = true;
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; } else if( ( strcmp(
+    jackctl_parameter_get_name(parameter), "clock-source" ) == 0 ) ){
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; value.ui = 1;
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; } else if( ( strcmp(
+    jackctl_parameter_get_name(parameter), "rate" ) == 0 ) ){
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; value.ui = 48000;
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; } else if( ( strcmp(
+    jackctl_parameter_get_name(parameter), "period" ) == 0 ) ){
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; value.ui = 128;
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; } else if( ( strcmp(
+    jackctl_parameter_get_name(parameter), "nperiods" ) == 0 ) ){
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; value.ui = 2;
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; } else if( ( strcmp(
+    jackctl_parameter_get_name(parameter), "device" ) == 0 ) ){
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; sprintf( value.str, "hw:1,0");
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; } else if( ( strcmp(
+    jackctl_parameter_get_name(parameter), "realtime-priority" ) == 0 ) ){
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; value.i = 8;
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; } else if( ( strcmp(
+    jackctl_parameter_get_name(parameter), "realtime" ) == 0 ) ){
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; value.b = true;
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; } else if( ( strcmp(
+    jackctl_parameter_get_name(parameter), "inchannels" ) == 0 ) ){
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; value.ui = 2;
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; } else if( ( strcmp(
+    jackctl_parameter_get_name(parameter), "outchannels" ) == 0 ) ){
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; value.ui = 2;
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; }
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; jackctl_parameter_set_value( parameter, &amp;value );
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; }
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; node_ptr = jack_slist_next(node_ptr);
+     &#xA0;&#xA0;&#xA0; }
+    }
+
+    if( (server = jackctl_server_create(NULL, NULL) ));
+    parameters = jackctl_server_get_parameters(server);
+    set_jack_server_parameters(filepointer, parameters);
+
+    drivers = jackctl_server_get_drivers_list(server);
+    node_ptr = drivers;
+    while (node_ptr != NULL) {
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; if( ( strcmp( jackctl_driver_get_name((jackctl_driver_t
+    *)node_ptr-&gt;data), "alsa" ) == 0 ) ){
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; set_jack_server_parameters( filepointer,
+    jackctl_driver_get_parameters( ( jackctl_driver_t *) node_ptr-&gt;data) );
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; }
+     &#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; node_ptr = jack_slist_next(node_ptr);
+    }
+
+    if( (jackctl_server_open(server, jackctl_server_get_driver(server,
+    "alsa")) ));
+    if( (jackctl_server_start(server) ));
+
+
+Jack is working fine outside my program.
+I cloned the git repo of jack2 today ( jackdmp 1.9.12 ).
+
+What might be going wrong here?
+
+
+Thanks,
+Ck
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1519908902.20817_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1520146872.29927_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1520008766.10080_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1520008766.10080_0.ltw:2,&nbsp;&lt;530b3601-a386-b597-df06-a4a653bb6d12 at web dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,57 @@
+Date:        Sun, 17 Jul 2011 17:25:02 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Robin Gareus <[hidden] at gareus dot org>
+Cc:          JACK Mailing List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Robin Gareus Re: [Jack-Devel] jackd-logging -- was jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT" (1310828604.4406_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jackd-logging -- was jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT"
+
+Robin Gareus <[hidden]> writes:
+
+>>>> This is in jackdbus right?
+>>> 
+>>> indeed.
+>>> 
+>>>> How the info/log/error message are handled can be configurated
+>>>> with the jack_set_error_function/jack_set_info_function from
+>>>> jack.h API. You should look in how jackdbus configure them.
+>>>> And/or ask Nedko...
+>>> 
+>>> dbus/jackdbus.c does not expose them, but hardcodes internal
+>>> handlers that simply append the messages to the log-file.
+>>> 
+>>> Oh well,
+>>> robin
+>> 
+>> Ask Nedko !!
+>
+> Hey Nedko (CCed), could you please shed some light on jackdbus logging.
+> Is there some [planned] functionality for specifying the log level (e.g.
+> a quiet mode). Jack offers 3 levels: _error, _info, _log; "verbose mode"
+> only allows to switch on/off the latter.
+>
+> Furthermore, changing the verbose mode with jack_control requires
+> re-starting the client(s) (or backend) in order for the change to take
+> effect.
+
+ATM jackdbus has same control over what is logged as jackd. I'd be happy
+if jackdbus is able to configure what is logged on-the-fly (without
+restarting the server).
+
+> Is it planned to dup messages? If a client sets a callback - i.e.
+> jack_set_error_function() -  messages do no longer end up in jackd's
+> log, but are only sent only to that client.
+
+AFAIK messages that are logged in server don't end up in client log
+callbacks. jackdbus sets log callabacks so the messages that originate
+in server go to the jackdbus log file. messages that originate in client
+(libjack) are still logged at client side, either through default
+callback that prints to stdout/stderr or through a custom callback that
+makes them appear in a GUI window for example (ardour).
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1310901937.4169_0.ltw:2,a <87bowtq91d.fsf at arnaudov dot name>
+________________________________________________________________________________
+

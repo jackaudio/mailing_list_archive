@@ -1,0 +1,51 @@
+Date:        Thu, 16 May 2013 15:02:34 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Pawel <[hidden] at wp dot pl>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+
+Subject:     Re: [Jack-Devel] JackTransport vs VST ppqPos
+
+On 05/16/2013 06:39 AM, Pawel wrote:
+> Is there any good reason to not sync BBT with frames ?
+
+Yes. Tempo maps.
+
+> I made patch for jack_transport example client (actually it remove some unnecessary code ;-)
+> 
+> ... but I just realized that there is always one way for compute BBT 
+
+That is only true if you have a single tempo and meter for the whole
+timeline.
+
+The tempo can change in the middle of the song (accelerando,
+decellerando). The meter can change as well. You can also have multiple
+songs (or movements of the same song) on the same timeline with BBT offsets.
+
+- so Jack should do this by self, and master client should change these
+values:
+>                 pos->beats_per_bar = time_beats_per_bar;
+>                 pos->beat_type = time_beat_type;
+>                 pos->ticks_per_beat = time_ticks_per_beat;
+>                 pos->beats_per_minute = time_beats_per_minute;
+> 
+> 
+> What do you think ?
+
+You'll need a tempo map.
+N entries like above that can be positioned at arbitrary points on the
+timeline. Furthermore, BPM can be hard or gradual.
+
+It's not a trivial task for jackd to take care of. It is also against
+design: jackd only passes information between jack-clients. The daemon
+does nothing on its own (with few exceptions).
+
+Now, if you like a challenge: tempo-ramps, flexible BBT offsets and
+arbitrary tempo/meter changes mid song is a major item on the Ardour3
+ToDo list :)
+
+best,
+robin
+
+1368709457.32654_0.ltw:2,a <5194D8EA.10703 at gareus dot org>
+________________________________________________________________________________
+

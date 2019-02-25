@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] jack_lsp show sessions uuids</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] jack_lsp show sessions uuids</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1352374881.6712_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1352411321.29515_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1352410312.27964_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 08 Nov 2012 22:31:43 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> rev8 </span> &lt;[hidden] at wp dot pl&gt; </td></tr>
+<tr><td class='col1'>To</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1352463219.16853_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack_lsp show sessions uuids </a></td></tr>
+</table>
+<pre>
+Hi,
+
+You can find below patch for jack_lsp to show session uuids (when available) in place of client name. I'll probably use this to wait for port while restoring session vi my simple-script-based session manager, but I think it can be also useful for debug sessions.
+
+I also thinking about add "-w TIMEOUT" to jack_connect. Then it can wait until ports appear. What do you think about such idea ?
+
+Best Regards
+Pawel
+
+--- lsp.c	2012-11-08 21:43:11.500435421 +0100
++++ lsp.c.org	2012-11-08 21:41:39.307978264 +0100
+@@ -33,7 +33,6 @@
+ 	fprintf (stderr, "        -p, --properties      Display port properties. Output may include:\n"
+ 			 "                              input|output, can-monitor, physical, terminal\n\n");
+ 	fprintf (stderr, "        -t, --type            Display port type\n");
+-	fprintf (stderr, "        -u, --uuid            Display uuid instead of client name (if available)\n");
+ 	fprintf (stderr, "        -h, --help            Display this help message\n");
+ 	fprintf (stderr, "        --version             Output version information and exit\n\n");
+ 	fprintf (stderr, "For more information see http://jackaudio.org/\n");
+@@ -54,7 +53,6 @@
+ 	int show_total_latency = 0;
+ 	int show_properties = 0;
+ 	int show_type = 0;
+-	int show_uuid = 0;
+ 	int c;
+ 	int option_index;
+ 	char* aliases[2];
+@@ -69,7 +67,6 @@
+ 		{ "total-latency", 0, 0, 'L' },
+ 		{ "properties", 0, 0, 'p' },
+ 		{ "type", 0, 0, 't' },
+-		{ "uuid", 0, 0, 'u' },
+ 		{ "help", 0, 0, 'h' },
+ 		{ "version", 0, 0, 'v' },
+ 		{ 0, 0, 0, 0 }
+@@ -82,7 +79,7 @@
+ 		my_name ++;
+ 	}
+ 
+-	while ((c = getopt_long (argc, argv, "s:AclLphvtu", long_options, &amp;option_index)) &gt;= 0) {
++	while ((c = getopt_long (argc, argv, "s:AclLphvt", long_options, &amp;option_index)) &gt;= 0) {
+ 		switch (c) {
+ 		case 's':
+             server_name = (char *) malloc (sizeof (char) * strlen(optarg));
+@@ -109,9 +106,6 @@
+ 		case 't':
+ 			show_type = 1;
+ 			break;
+-		case 'u':
+-			show_uuid = 1;
+-			break;
+ 		case 'h':
+ 			show_usage ();
+ 			return 1;
+@@ -153,22 +147,7 @@
+ 		}
+ 		if(skip_port) continue;
+ 
+-		if (show_uuid) {
+-			char *cname = strdup( ports[i] );
+-			char *pname = strchr(cname,':') + 1;
+-			strchr(cname,':')[0] = '\0';
+-			char *uuid = jack_get_uuid_for_client_name(client, cname);
+-
+-			if (uuid != NULL &amp;&amp; strcmp(uuid, "-1")) {
+-				printf ("%s:%s\n", uuid, pname);
+-			} else {
+-				printf ("%s\n", ports[i]);
+-			}
+-			if(uuid != NULL) jack_free(uuid);
+-			free(cname);
+-		} else {
+-			printf ("%s\n", ports[i]);
+-		}
++		printf ("%s\n", ports[i]);
+ 
+ 		jack_port_t *port = jack_port_by_name (client, ports[i]);
+ 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1352374881.6712_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1352411321.29515_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1352410312.27964_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1352410312.27964_0.ltw:2,a&nbsp;&lt;509c24bf4baef4.57481535 at wp dot pl&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

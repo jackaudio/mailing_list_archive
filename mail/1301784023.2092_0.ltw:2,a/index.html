@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1301752346.26385_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1301819485.24480_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1301784023.2092_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 02 Apr 2011 15:40:08 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at charityfinders dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1301686674.14107_0.ltw:2,a/index.html'>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1301819485.24480_0.ltw:2,a/index.html'>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages </a></td></tr>
+</table>
+<pre>
+On Fri, Apr 1, 2011 at 12:37 PM, Paul Davis &lt;[hidden]&gt; wrote:
+
+&gt; the question is whether the
+&gt; complexity of your proposal (i'm not actually scoring it, just noting
+&gt; that its more complex than doing nothing :) is balanced by the
+&gt; real-world instances of this sort of case.
+
+I'd like to make a second proposal that incorporates some parts of the
+first proposal, but isn't as complex (I hope).
+
+This proposal assumes that the jack_midi_event_t struct would not need
+to be modified in order for the 'buffer' member to reference shared
+memory.  My reading on shared memory indicates that this is okay, but
+I can't be totally sure because I don't have a thorough understanding
+of the internals of JACK.
+
+The advantage of this proposal is that JACK clients wouldn't need to
+change what they're doing right now.  MIDI events can continue to be
+processed in the same manner they're processed now.  The 'size' member
+of 'jack_midi_event_t' objects would contain the size, regardless of
+whether the 'buffer' member holds a blob or not.
+
+The disadvantage is that clients would have access to shared memory
+segments associated with MIDI buffers created by other clients.
+Perhaps changing the jack_midi_event_t buffer member to be of type
+'const jack_midi_data_t *' would be helpful, but that will break some
+clients.
+
+To start, we'd keep functionality for creating and destroying MIDI
+blobs, only a MIDI blob is now a 'jack_midi_data_t *' that points to a
+segment of shared memory:
+
+   jack_midi_data_t *
+   jack_midi_blob_create(jack_client_t *client, size_t size);
+
+   void
+   jack_midi_blob_free(jack_midi_data_t *blob);
+
+MIDI buffers need to be taught how to enqueue blobs.  The 'size'
+argument specifies the amount of the blob that contains an actual
+message:
+
+   int
+   jack_midi_event_write_blob(void *port_buffer, jack_nframes_t time,
+                              const jack_midi_data_t *blob, size_t size);
+
+Dealing with references to blobs is a little different than the first
+proposal.  The JACK server would need a way to map shared
+'jack_midi_data_t *' objects to reference counts.
+
+We need to know if a particular 'jack_midi_data_t *' is a blob:
+
+    int
+    jack_midi_is_blob(const jack_midi_data_t *data);
+
+(Perhaps this should take a 'port_buffer' argument too.  Not sure.)
+
+A client can acquire and release references to blobs if the client
+needs to access the blob for more than one cycle, or in a separate
+thread:
+
+    int
+    jack_midi_blob_acquire(jack_client_t *client, const jack_midi_data_t *data);
+
+    int
+    jack_midi_blob_release(jack_client_t *client, const jack_midi_data_t *data);
+
+(Maybe the client arguments aren't necessary.)
+
+Finally, we have callbacks to let clients know when a blob has no more
+clients using the blob:
+
+   typedef void (*JackMIDIBlobCallback)(jack_midi_data_t *blob, void *arg);
+
+   int
+   jack_set_midi_blob_callback(jack_client_t *client,
+                               JackMIDIBlobCallback midi_blob_callback,
+                               void *arg);
+
+I think this is a lot simpler for clients.  I'm interested in knowing
+what sort of challenges this presents for JACK 1 and JACK 2.
+
+Thanks,
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1301752346.26385_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1301819485.24480_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1301784023.2092_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1301784023.2092_0.ltw:2,a&nbsp;&lt;AANLkTim41Ad+7giW=dwHTH4sToGM_PKm6MmUmRM3K+dO at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

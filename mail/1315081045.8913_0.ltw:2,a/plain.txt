@@ -1,0 +1,45 @@
+Date:        Sat, 03 Sep 2011 15:16:59 -0500
+From:        Gabriel Beddingfield  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Devin Anderson [Jack-Devel] Client deactivation behavior (1314510019.27959_0.ltw:2,a)
+Follow-Up:   Devin Anderson Re: [Jack-Devel] Client deactivation behavior (1315112622.9396_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Client deactivation behavior
+
+On 08/28/2011 12:39 AM, Devin Anderson wrote:
+> Hello,
+>
+> I'm in the middle of testing a new version of `synthclone`, and I'm
+> noticing what I believe is incorrect behavior in JACK 1 (0.120.2 on
+> AVLinux).
+>
+> Intermittently, I notice that the process callback will still be
+> executing after jack_deactivate() returns, and `synthclone` will
+> segfault in the process callback in a call to jack_port_get_buffer().
+> I don't know if the process callback is called before the call to
+> jack_deactivate() and jack_deactivate() isn't waiting for it to
+> finish, or if the process callback is being called after
+> jack_deactivate() returns.
+>
+> Before filing a bug, I want to make sure this is not expected behavior
+> and that this isn't fixed in newer versions of JACK.  I'll try a newer
+> version tomorrow if this isn't cleared up by then.
+
+This is not expected behavior.  jack_deactivate() should be 
+synchronous... that is, it should not return until the process() cycle 
+is complete.
+
+FWIW, if JACK 0.120.2 actually exhibits this bug... all hell would be 
+breaking loose with every JACK app... not just yours.
+
+I suggest updating the the latest JACK.  If the bug persists, create a 
+test case that demonstrates the bug and post it to this list.
+
+There is a bug tracking system on jackaudio.org -- but none of the Jack 
+1 devs use it.  So this ML is the way to file any bugs.
+
+-gabriel
+
+1315081045.8913_0.ltw:2,a <4E628B3B.80009 at gmail dot com>
+________________________________________________________________________________
+

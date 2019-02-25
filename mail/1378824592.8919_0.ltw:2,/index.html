@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] FAIR</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] FAIR</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1378823732.7519_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1378824903.9537_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1378824592.8919_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 10 Sep 2013 16:49:24 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Wolfgang Lorenz &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Wolfgang Lorenz
+<a href='../1378823732.7519_0.ltw:2,/index.html'>[Jack-Devel] Using the callback free API with self-created RT-threads </a></td></tr>
+</table>
+<pre>
+AFAIR the jack_cycle_wait function is supposed to fail (and so properly quit the thread) if the server is shutdown. On which OS are you testing?
+
+Can you send me tour jack_cycle_wait/jack_cycle_signal based code?
+
+Thanks.
+
+St&#xE9;phane
+
+
+Le 10 sept. 2013 &#xE0; 16:35, Wolfgang Lorenz &lt;[hidden]&gt; a &#xE9;crit :
+
+&gt; Hello,
+&gt; 
+&gt; I'm currently trying to create a JACK-based backend for an already
+&gt; existing audio processing software. The software creates multiple
+&gt; RT-threads and at the end of each cycle hands the control to the audio
+&gt; driver, which does the communication to whatever interface is chosen.
+&gt; So far, nothing new... Using the callback free API, the communication
+&gt; to the jack server went well, until the point where I shut down the
+&gt; jack server and the jack client blocked unrecoverably in the
+&gt; jack_cycle_wait() call.
+&gt; 
+&gt; Some studies of the jack2-sources showed, that jack_cycle_wait() is
+&gt; waiting 0x7FFFFFFF microseconds (about 2147.4836 seconds) for the
+&gt; signal to wake up, and afterwards kills the thread, if the signal
+&gt; didn't arrive. I guess that it is expected, that jack_cycle_wait() is
+&gt; solely called from the callback function provided by
+&gt; jack_set_process_thread(). I'm guilty, because this is, what I am not
+&gt; doing. Since I am already operating in a RT thread, I just call
+&gt; jack_client_wait() from the thread my method is called on. Using the
+&gt; JACK-provided thread would only mean to introduce yet another
+&gt; synchronization point -- which by the way would be the same as in the
+&gt; callback API.
+&gt; 
+&gt; Thinking about it, I don't really understand why the thread has to be
+&gt; killed, after the time out. Even if jack_cycle_wait() was called from
+&gt; the callback function, a return value of 0 should suffice to signal the
+&gt; jack client, to please return from the function -- the thread would
+&gt; close down automatically afterwards.
+&gt; 
+&gt; Also, the maximum time out duration is somewhat impractical, especially
+&gt; in audio processing terms, as it leaves the system hanging with no
+&gt; possibility to correctly handling any anomalies. I think the best way
+&gt; here would be to leave it to the user, what time is adequate.
+&gt; 
+&gt; As a conclusion, I can't use this API, though it looked very promising,
+&gt; and I will have to implement the callback way with some means of
+&gt; synchronization. (Even if this was "fixed" in any way now, I need to
+&gt; stay compatible with some older versions.)
+&gt; 
+&gt; But what I wanted to know is: Is this really the way the callback-free
+&gt; API is supposed to work? Does anybody else see this as a problem or bug
+&gt; that should be fixed?
+&gt; 
+&gt; 
+&gt; Sincerely,
+&gt;  Wolfgang Lorenz
+&gt; 
+&gt; 
+&gt; PS: Is this the same as http://trac.jackaudio.org/ticket/27 ?
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1378823732.7519_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1378824903.9537_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1378824592.8919_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1378824592.8919_0.ltw:2,&nbsp;&lt;B65C1707-5699-4ACF-ABC5-F706F52A373D at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

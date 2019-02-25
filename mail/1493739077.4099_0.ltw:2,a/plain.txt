@@ -1,0 +1,126 @@
+Date:        Tue, 02 May 2017 10:28:36 -0500
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          Frodo Jedi <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Frodo Jedi Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2 (1493730703.23332_0.ltw:2,a)
+Follow-Up:   Frodo Jedi Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2 (1493739700.4970_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2
+
+On Tue, May 2, 2017 8:11 am, Frodo Jedi wrote:
+> Regarding your questions, I have never truncated the commands outputs.
+
+OK, maybe the coreaudio backend just doesn't dump out as much information
+as the ALSA backend.  Just looks odd because on an ALSA machine you
+usually get confirmation of what format and sample rate was set (sometimes
+the hardware does not support what you requested, and the ALSA backend
+will adjust to find the closest setting allowed by the hardware).
+
+> I did various trials, I report the outputs below.
+
+I see some variations in output even when it looks like the jackd
+parameters are the same.  I don't quite understand why that might happen.
+
+Trial 1 and 2 show this:
+
+> TRIAL 1 ----------------------------------------------------
+> On the master (Mac computer)
+> sh-3.2# jackd -P 70 -p96 -t 2000 -dcoreaudio  -s -r48000 -p128 -n2 -Cno
+> -Pyes
+...
+> CoreAudio driver is running...
+> Starting Jack NetManager
+...
+> Floating point exception: 8
+
+So after netmanager is loaded jackd dies with an exception.  Searching
+google references to that exception number indicates that it can be
+triggered by divide by 0 errors for integer or floating point, it is not
+exclusively a floating point error.
+
+Trial 2 looks like the same startup parameters were used for jackd, but no
+exception that time, but the netmanager crashes with bad socket
+parameters:
+
+> TRIAL 2 ----------------------------------------------------
+> On the master (Mac computer)
+> sh-3.2# jackd -P 70 -p96 -t 2000 -dcoreaudio  -s -r48000 -p128 -n2 -Cno
+> -Pyes
+...
+> CoreAudio driver is running...
+> Starting Jack NetManager
+> Listening on '225.3.19.154:19000'
+> Sending parameters to ...
+> Can't set net buffer sizes : Invalid argument
+> SetParams error...
+
+I don't see anything on the jackd command line to explain why they failed
+in two different ways.
+I think someone with more experience with jackd on Mac will need to chime in.
+
+I don't think you need to spend any time even starting jack on the odroid
+yet.
+
+> TRIAL 1 ----------------------------------------------------
+> On the master (Mac computer)
+...
+> Floating point exception: 8
+
+> TRIAL 2 ----------------------------------------------------
+> On the master (Mac computer)
+...
+> SetParams error...
+> Can't init new NetMaster...
+
+> TRIAL 3----------------------------------------------------
+> On the master (Mac computer)
+...
+> Sending parameters to ...
+> Can't set net buffer sizes : Invalid argument
+> SetParams error...
+> Can't init new NetMaster...
+
+> TRIAL 4 ----------------------------------------------------
+> The result are the same of before.,...
+
+> TRIAL 5 ----------------------------------------------------
+> On the master (Mac computer)
+> Floating point exception: 8
+
+> TRIAL 6 ----------------------------------------------------
+> Can't set net buffer sizes : Invalid argument
+> SetParams error...
+> Can't init new NetMaster...
+
+You obviously are not going to be able to get the odroid to connect to the
+Mac until jackd can start the netmanager without crashing on the mac.
+
+Nothing obvious stands out as a cause, what is needed is more verbose
+output from jackd to help determine the underlying cause of the crash in
+netmanager.
+
+I don't know how directly comparable the messages from a linux computer
+are to a mac build, but I had some trouble getting multicast packets
+passed between machines, you may see if omping is available for MacOS, it
+will verify that multicast traffic is enabled between the two devices.  I
+had to build it for my ARM device running debian, it was available from
+the Fedora repositories for my workstation.  Building from source was
+simple on my ARM device, I just copied the source over and ran make, no
+configuration necessary.
+
+This article indicates that multicast is not enabled by default on MacOS:
+http://blogs.agilefaqs.com/2009/11/08/enabling-multicast-on-your-macos-unix/
+
+That article is several years old, it may not be accurate for current
+versions of MacOS, but definitely something to check.   On my linux
+machines I got output messages to the effect that there seemed to be a
+network problem, which is the point I went off and found omping and
+figured out my firewall problems.  The messages on MacOS don't seem nearly
+as helpful.
+
+-- 
+Chris Caudle
+
+1493739077.4099_0.ltw:2,a <d317859607702fb8a28d70ea5e99255e.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,70 @@
+Date:        Sat, 06 Jul 2013 18:23:20 +0930
+From:        Ron  <[hidden] at debian dot org>
+To:          Robin Gareus <[hidden] at gareus dot org>
+Cc:          [hidden] at bugs dot debian dot org, Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>, [hidden] at jackaudio dot org, Debian Multimedia Maintainers <[hidden] at lists dot alioth dot debian dot org>
+In-Reply-To: Robin Gareus Re: Bug#686777: netjack2 + opus custom modes + debian (1372815076.12808_0.ltw:2,)
+
+Subject:     Bug#686777: netjack2 + opus custom modes + debian
+
+On Wed, Jul 03, 2013 at 03:30:51AM +0200, Robin Gareus wrote:
+> On 07/01/2013 05:59 PM, Ron wrote:
+> [..]
+> > So I'm still not really sure what
+> > showstopper complexity you are worried about there.
+> 
+> Sample accurate alignment of buffered netjack streams with the rest of
+> jack. updating port-latencies,.. Sounds easy, but it's not.
+
+You do know that you've _already_ got to deal with this if you care about
+it when using Opus right?  The first few samples out of the decoder aren't
+the first few samples that you put into the encoder, whatever mode you use.
+
+And yeah, I'm not saying it's a one-liner, but it's not squaring the circle
+either, it is a fairly normal part of anything dealing with windowed codecs.
+
+> The realshowstopper there is lack of manpower.
+> No one volunteered to implement it.
+
+Ok, that's fine.  There are no answers here that don't involve work that
+still needs to be done, which hasn't been done yet and that someone will
+need to do if they want this to happen.
+
+There's still no answer to a sensible way to distribute -custom builds
+in a shared environment yet either.  Upstream is very much focussed on
+just the standardised modes, and custom is still a hack, that people
+with total control over a closed system can use if they really need it,
+and if they are prepared to deal with taking full responsibility for
+anything that may get broken with it (or be completely untested) over
+subsequent releases.  That's not really a state of affairs that we want
+if we're going to expose it in general purpose distro libraries (either
+from the libopus package or embedded in other public libs).  Sooner or
+later some change will bite people badly.  So this needs to be resolved
+if there ever is anything that's to go in the distro that uses them.
+But while there isn't, it can also wait until more urgent things are
+completed too, and everything just settles down a bit in general and
+stops changing as rapidly as it currently is.
+
+What I'm concerned about here is that we figure out what the _best_
+answer is, so that when someone does have time to do it, they don't
+waste it chasing up the wrong tree.
+
+Right now, it really is sounding like the best answer for what we have
+at present is for someone to look at the jack code and do the work that
+is needed there, to account for the initial padding and window latency.
+If that's the real showstopper, that's what people should focus on
+fixing first.
+
+I'm still open to suggestions for good ways to manage the how we might
+enable custom problem, but that seems orthogonal to also fixing jack
+in the way that will work with best results there, and less pressing
+until there is a definite need for it.
+
+  Cheers,
+  Ron
+
+-- 
+To unsubscribe, send mail to [hidden].
+
+1373101398.14961_0.ltw:2, <20130706085320.GF14785 at audi dot shelbyville dot oz>
+________________________________________________________________________________
+

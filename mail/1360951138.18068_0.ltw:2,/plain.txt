@@ -1,0 +1,36 @@
+Date:        Fri, 15 Feb 2013 18:59:25 +0100
+From:        aCOSwt  <[hidden] at orange dot fr>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] Trying to understand jackd's threads (1360936642.984_0.ltw:2,)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Trying to understand jackd's threads (1360957213.21746_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Trying to understand jackd's threads
+
+On Friday 15 February 2013 14:57:06 Paul Davis wrote:
+
+> the watchdog and message queue threads are higher priority than the
+> "process" thread which actually does the core work (wait for backend, run
+> process cycle, repeat).
+
+Fair enough and thank you for answering.
+
+Now, speaking of the "process" thread, I make no doubt that the SCHED_FIFO 
+policy was not chosen at random but I was wondering if they are known major 
+inconveniences to reschedule it SCHED_RR.
+
+If I may quote... Paul Davis (2001 - Linux-Audio-Dev) :
+<< SCHED_RR is designed for situations where there are several 
+ "real time" kernel threads and you wish to ensure that they all get 
+ time on the processor, regardless of their own intentions. the RR 
+ stands for "round robin". SCHED_FIFO is different in that once a 
+ thread is running, it will run forever, or until it yields, blocks or 
+ a higher priority SCHED_FIFO thread is runnable. its designed for 
+ situations where there is either only 1 "real time" kernel thread, or 
+ a set that are intended to do cooperative multitasking. >>
+
+Now that the irqs are threaded SCHED_FIFO, aren't we in the situation where 
+SCHED_RR would sound more appropriate ?
+
+1360951138.18068_0.ltw:2, <201302151859.25203.acoswt at orange dot fr>
+________________________________________________________________________________
+

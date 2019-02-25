@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How do I replicate the -P parameter when using dbus</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How do I replicate the -P parameter when using dbus</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1322056313.27180_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1322332586.3534_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1322137262.4788_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 24 Nov 2011 12:19:30 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Roger James </span> &lt;[hidden] at beardandsandals dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Roger James
+<a href='../1322052625.22113_0.ltw:2,a/index.html'>Re: [Jack-Devel] How do I replicate the -P parameter when using dbus </a></td></tr>
+</table>
+<pre>
+On 23/11/11 12:48, Roger James wrote:
+&gt; On 22/11/11 20:36, Paul Davis wrote:
+&gt;&gt; On Tue, Nov 22, 2011 at 3:30 PM, Roger James
+&gt;&gt; &lt;[hidden]&gt;  wrote:
+&gt;&gt;
+&gt;&gt;&gt; I guess if I want to use qjackctl I will have to go back to figuring 
+&gt;&gt;&gt; why the
+&gt;&gt;&gt; server hangs when capture ports are specified on my system that has a
+&gt;&gt;&gt; standard onboard nVidia HDA chipset. But that is for another day.
+&gt;&gt; this is a common problem. it typically (not always) means that have
+&gt;&gt; not set the capture source (in the h/w mixer) correctly. the device
+&gt;&gt; refuses to start in duplex mode when this is the case. ALSA drivers
+&gt;&gt; get this wrong, probably through lack of information but it could also
+&gt;&gt; be a straight bug. use alsamixer or something equivalent to select a
+&gt;&gt; valid capture source.
+&gt; Some final words on replicating the -P behaviour. The absolute minimum 
+&gt; config that I could get to work was as follows:
+&gt;
+&gt; &lt;driver name="alsa"&gt;
+&gt; &lt;option name="capture"&gt;0&lt;/option&gt;
+&gt; &lt;option name="duplex"&gt;false&lt;/option&gt;
+&gt; &lt;/driver&gt;
+&gt;
+&gt; All the other driver parameters can be left to default their "unset" 
+&gt; values. Note that setting the capture parameter to its unset default 
+&gt; value of "none" (i.e. str:set:none:none) does not work, it must show 
+&gt; in dp as str:set:none:0.
+&gt;
+&gt; Paul, I suspected that the capture source settings must be the problem 
+&gt; and I played with alsamixer to try to fix it. I could not find a 
+&gt; combination of settings that fixed it.
+&gt;
+&gt; The card is an nVidia onboard HDA chipset
+&gt;
+&gt; 00:07.0 Audio device: nVidia Corporation MCP72XE/MCP72P/MCP78U/MCP78S 
+&gt; High Definition Audio (rev a1)
+&gt;
+&gt; I have tried front and rear mic capture sources and the switches on 
+&gt; the two capture volume controls off and on. No joy.
+&gt;
+&gt;
+PROBLEM SOLVED.
+
+Final final words I hope.
+
+Please ignore what I said before about setting capture to zero. That was 
+working because zero is an invalid alsa name which is ignored by the 
+real alsa driver, and because the driver IGNORES the value of the duplex 
+parameter and always sets its internal capture and playback parameters 
+to TRUE if the parameter is present (set).
+
+So here is the full story of the jack alsa drivers handling of the 
+capture (-C), playback (-P), device(-d), and duplex (-D) parameters.
+
+The following internal values are used to initialise the real alsa 
+interface. Before the parameters are read they are initialised as follows.
+
+capture FALSE
+capture_pcm_name "hw:0"
+playback FALSE
+playback_pcm_name "hw:0"
+
+The parameters are processed in the order they are encountered as follows.
+, de
+capture(-C) - set capture TRUE and if the value associated with the 
+parameter is not "none" set capture_pcm_name to that value.
+
+playback(-P) - set playback TRUE and if the value associated with the 
+parameter is not "none" set playback_pcm_name to that value.
+
+device(-d) - set capture_pcm_name and playback_pcm_name to the value 
+associated with the parameter.
+
+duplex(-D) - set capture TRUE and playback TRUE. Any value associated 
+with the parameter is ignored.
+
+Once all parameter processing has finished if both capture and playback 
+are FALSE then set them both to TRUE.
+
+The dbus version of jack enforces the parameter order capture, playback, 
+device, duplex. I am not sure what the command line jackd does.In any 
+case it is important to ensure that configuration does not specify a 
+duplex parameter if you want only capture ports or only playback ports. 
+So my new minimal playback only config for dbus is
+
+&lt;driver name="alsa"&gt;
+&lt;option name="playback"&gt;hw:0&lt;/option&gt;
+&lt;/driver&gt;
+
+A thing that caught me out once or twice in these tests is that 
+jack_control cannot remove parameters so if you end up with  duplex 
+parameter "set" then it will stay that way until the jackdbus process is 
+stopped and.config/jack/conf.xml is removed. Setting the duplex 
+parameter value to FALSE has no affect as the driver only checks if the 
+parameter is set and ignores its value.
+
+Going back to to my original reason for starting this thread it appears 
+that qjackctl is somewhat broken in this respect.
+
+My apologies if this duplicates information that is readily available 
+elsewhere, I could not find any!
+
+Roger
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1322056313.27180_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1322332586.3534_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1322137262.4788_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1322137262.4788_0.ltw:2,a&nbsp;&lt;4ECE3652.1050901 at beardandsandals dot co dot uk&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

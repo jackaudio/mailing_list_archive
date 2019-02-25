@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Windows compilation - me too</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Windows compilation - me too</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1376373469.10158_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1376503900.32204_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1376444839.7342_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 13 Aug 2013 18:47:05 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Sam Hanes </span> &lt;[hidden] at maltera dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Amir Eldor
+<a href='../1376373127.9711_0.ltw:2,a/index.html'>[Jack-Devel] Windows compilation - me too </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Tim Mayberry
+<a href='../1376616513.429_0.ltw:2,a/index.html'>Re: [Jack-Devel] Windows compilation - me too </a></td></tr>
+</table>
+<pre>
+On 2013-08-12 22:51, Amir Eldor wrote:
+&gt; As far as I can see, Windows development of Jack isn't particularly
+&gt; interesting to most devs here, and I would like to attempt to change it.
+
+Hear, hear!
+
+&gt; I am trying to compile Jack but in vain. I currently own a Windows 7
+&gt; machine and would like to develop a cross platform application using
+&gt; Jack. I understood that modern MSVC++ is not supported, so we'll put
+&gt; that aside. I tried CB (Code::Blocks), but am facing some problems.
+
+I got the Code::Blocks build working for me a while ago; I'll try to 
+remember how I did it. I had to make a few changes to the projects to 
+fix compilation errors; I've attached a patch. Also, the projects expect 
+a CB compiler configuration called 'mingw_64', which I found I had to 
+create under Settings-&gt;Compiler.
+
+&gt; On CB, a required 'config.h' is missing, As I understand it, the
+&gt; /config.h.in &lt;http://config.h.in&gt; was not populated when opening a cbp
+&gt; file from within the '/windows/' folder.  How is this done?
+
+I don't remember how I got past that, sorry. I don't have a `config.h` 
+in the same directory as `config.h.in`. The only one I have is 
+`build/config.h`, which I think was created when I (unsuccessfully) 
+tried to run waf under Cygwin.
+
+&gt; But let's put that aside as well. What is your opinion on trying to move
+&gt; the windows build process to 'waf' as well? And in the process of doing
+&gt; this transition, I will also document all the necessary compilation
+&gt; steps (which is currently lacking) /or the sake of future generations.
+
+I'm very much in favor of getting the waf build working, either under 
+MinGW+MSYS or Cygwin with the MinGW cross toolchain. If waf supports 
+building under Windows natively with MSVC++ that would be fine too. Any 
+of those three will give us a nice, repeatable build environment.
+
+It would also be enormously helpful if whoever builds the official 
+Windows installers could explain their environment and process.
+
+--
+Sam Hanes
+[hidden]
+From 1f530885b4f52d283e18d30c75aeaf51dcb97650 Mon Sep 17 00:00:00 2001
+From: Sam Hanes &lt;[hidden]&gt;
+Date: Fri, 26 Jul 2013 11:59:43 -0700
+Subject: [PATCH] Fix Code::Blocks compiler config.
+
+---
+ windows/jack_netadapter.cbp   |    2 +-
+ windows/jack_netdriver.cbp    |    2 +-
+ windows/jack_netmanager.cbp   |    2 +-
+ windows/jack_netonedriver.cbp |    2 +-
+ windows/libjacknet.cbp        |  111 +++++++++++++++++++++--------------------
+ 5 files changed, 60 insertions(+), 59 deletions(-)
+
+diff --git a/windows/jack_netadapter.cbp b/windows/jack_netadapter.cbp
+index b41b31e..dbe01e6 100644
+--- a/windows/jack_netadapter.cbp
++++ b/windows/jack_netadapter.cbp
+@@ -151,7 +151,7 @@
+ 			&lt;Add directory="..\common" /&gt;
+ 		&lt;/Compiler&gt;
+ 		&lt;Linker&gt;
+-			&lt;Add option="-enable-auto-import" /&gt;
++			&lt;Add option="--enable-auto-import" /&gt;
+ 			&lt;Add library="kernel32" /&gt;
+ 			&lt;Add library="user32" /&gt;
+ 			&lt;Add library="gdi32" /&gt;
+diff --git a/windows/jack_netdriver.cbp b/windows/jack_netdriver.cbp
+index b3d0c0b..320351a 100644
+--- a/windows/jack_netdriver.cbp
++++ b/windows/jack_netdriver.cbp
+@@ -142,7 +142,7 @@
+ 			&lt;Add option="-Wall" /&gt;
+ 		&lt;/Compiler&gt;
+ 		&lt;Linker&gt;
+-			&lt;Add option="-enable-auto-import" /&gt;
++			&lt;Add option="--enable-auto-import" /&gt;
+ 			&lt;Add library="kernel32" /&gt;
+ 			&lt;Add library="user32" /&gt;
+ 			&lt;Add library="gdi32" /&gt;
+diff --git a/windows/jack_netmanager.cbp b/windows/jack_netmanager.cbp
+index 4be11f2..0356481 100644
+--- a/windows/jack_netmanager.cbp
++++ b/windows/jack_netmanager.cbp
+@@ -136,7 +136,7 @@
+ 			&lt;Add option="-Wall" /&gt;
+ 		&lt;/Compiler&gt;
+ 		&lt;Linker&gt;
+-			&lt;Add option="-enable-auto-import" /&gt;
++			&lt;Add option="--enable-auto-import" /&gt;
+ 			&lt;Add library="kernel32" /&gt;
+ 			&lt;Add library="user32" /&gt;
+ 			&lt;Add library="gdi32" /&gt;
+diff --git a/windows/jack_netonedriver.cbp b/windows/jack_netonedriver.cbp
+index 0a4e718..066d928 100644
+--- a/windows/jack_netonedriver.cbp
++++ b/windows/jack_netonedriver.cbp
+@@ -142,7 +142,7 @@
+ 			&lt;Add option="-Wall" /&gt;
+ 		&lt;/Compiler&gt;
+ 		&lt;Linker&gt;
+-			&lt;Add option="-enable-auto-import" /&gt;
++			&lt;Add option="--enable-auto-import" /&gt;
+ 			&lt;Add library="kernel32" /&gt;
+ 			&lt;Add library="user32" /&gt;
+ 			&lt;Add library="gdi32" /&gt;
+diff --git a/windows/libjacknet.cbp b/windows/libjacknet.cbp
+index f77a3b4..63de4b9 100644
+--- a/windows/libjacknet.cbp
++++ b/windows/libjacknet.cbp
+@@ -4,13 +4,13 @@
+ 	&lt;Project&gt;
+ 		&lt;Option title="libjacknet" /&gt;
+ 		&lt;Option pch_mode="2" /&gt;
+-		&lt;Option compiler="gcc" /&gt;
++		&lt;Option compiler="mingw_64" /&gt;
+ 		&lt;Build&gt;
+ 			&lt;Target title="Win32 Release 64bits"&gt;
+-				&lt;Option output="Release64\bin\libjacknet" prefix_auto="1" extension_auto="1" /&gt;
+-				&lt;Option object_output="Release64\libjacknet" /&gt;
++				&lt;Option output="Release64/bin/libjacknet" prefix_auto="1" extension_auto="1" /&gt;
++				&lt;Option object_output="Release64/libjacknet" /&gt;
+ 				&lt;Option type="3" /&gt;
+-				&lt;Option compiler="gcc" /&gt;
++				&lt;Option compiler="mingw_64" /&gt;
+ 				&lt;Option createDefFile="1" /&gt;
+ 				&lt;Option createStaticLib="1" /&gt;
+ 				&lt;Compiler&gt;
+@@ -26,20 +26,20 @@
+ 					&lt;Add option="-DSTDC_HEADERS" /&gt;
+ 					&lt;Add option="-D__SMP__" /&gt;
+ 					&lt;Add directory="." /&gt;
+-					&lt;Add directory="..\windows" /&gt;
+-					&lt;Add directory="..\common\jack" /&gt;
+-					&lt;Add directory="..\common" /&gt;
++					&lt;Add directory="../windows" /&gt;
++					&lt;Add directory="../common/jack" /&gt;
++					&lt;Add directory="../common" /&gt;
+ 				&lt;/Compiler&gt;
+ 				&lt;Linker&gt;
+ 					&lt;Add library="libsamplerate_x86_64.a" /&gt;
+-					&lt;Add directory="Release64\bin" /&gt;
++					&lt;Add directory="Release64/bin" /&gt;
+ 				&lt;/Linker&gt;
+ 			&lt;/Target&gt;
+ 			&lt;Target title="Win32 Debug 64bits"&gt;
+-				&lt;Option output="Debug64\bin\libjacknet" prefix_auto="1" extension_auto="1" /&gt;
+-				&lt;Option object_output="Debug64\libjacknet" /&gt;
++				&lt;Option output="Debug64/bin/libjacknet" prefix_auto="1" extension_auto="1" /&gt;
++				&lt;Option object_output="Debug64/libjacknet" /&gt;
+ 				&lt;Option type="3" /&gt;
+-				&lt;Option compiler="gcc" /&gt;
++				&lt;Option compiler="mingw_64" /&gt;
+ 				&lt;Option createDefFile="1" /&gt;
+ 				&lt;Option createStaticLib="1" /&gt;
+ 				&lt;Compiler&gt;
+@@ -55,20 +55,20 @@
+ 					&lt;Add option="-DSTDC_HEADERS" /&gt;
+ 					&lt;Add option="-D__SMP__" /&gt;
+ 					&lt;Add directory="." /&gt;
+-					&lt;Add directory="..\windows" /&gt;
+-					&lt;Add directory="..\common\jack" /&gt;
+-					&lt;Add directory="..\common" /&gt;
++					&lt;Add directory="../windows" /&gt;
++					&lt;Add directory="../common/jack" /&gt;
++					&lt;Add directory="../common" /&gt;
+ 				&lt;/Compiler&gt;
+ 				&lt;Linker&gt;
+ 					&lt;Add library="libsamplerate_x86_64.a" /&gt;
+-					&lt;Add directory="Debug64\bin" /&gt;
++					&lt;Add directory="Debug64/bin" /&gt;
+ 				&lt;/Linker&gt;
+ 			&lt;/Target&gt;
+ 			&lt;Target title="Win32 Profiling 64bits"&gt;
+-				&lt;Option output="Release64\bin\libjacknet" prefix_auto="1" extension_auto="1" /&gt;
+-				&lt;Option object_output="Release64\libjacknet" /&gt;
++				&lt;Option output="Release64/bin/libjacknet" prefix_auto="1" extension_auto="1" /&gt;
++				&lt;Option object_output="Release64/libjacknet" /&gt;
+ 				&lt;Option type="3" /&gt;
+-				&lt;Option compiler="gcc" /&gt;
++				&lt;Option compiler="mingw_64" /&gt;
+ 				&lt;Option createDefFile="1" /&gt;
+ 				&lt;Option createStaticLib="1" /&gt;
+ 				&lt;Compiler&gt;
+@@ -85,20 +85,20 @@
+ 					&lt;Add option="-D__SMP__" /&gt;
+ 					&lt;Add option="-DJACK_MONITOR" /&gt;
+ 					&lt;Add directory="." /&gt;
+-					&lt;Add directory="..\windows" /&gt;
+-					&lt;Add directory="..\common\jack" /&gt;
+-					&lt;Add directory="..\common" /&gt;
++					&lt;Add directory="../windows" /&gt;
++					&lt;Add directory="../common/jack" /&gt;
++					&lt;Add directory="../common" /&gt;
+ 				&lt;/Compiler&gt;
+ 				&lt;Linker&gt;
+ 					&lt;Add library="libsamplerate_x86_64.a" /&gt;
+-					&lt;Add directory="Release64\bin" /&gt;
++					&lt;Add directory="Release64/bin" /&gt;
+ 				&lt;/Linker&gt;
+ 			&lt;/Target&gt;
+ 			&lt;Target title="Win32 Release 32bits"&gt;
+-				&lt;Option output="Release\bin\libjacknet" prefix_auto="1" extension_auto="1" /&gt;
+-				&lt;Option object_output="Release\libjacknet" /&gt;
++				&lt;Option output="Release/bin/libjacknet" prefix_auto="1" extension_auto="1" /&gt;
++				&lt;Option object_output="Release/libjacknet" /&gt;
+ 				&lt;Option type="3" /&gt;
+-				&lt;Option compiler="gcc" /&gt;
++				&lt;Option compiler="mingw_64" /&gt;
+ 				&lt;Option createDefFile="1" /&gt;
+ 				&lt;Option createStaticLib="1" /&gt;
+ 				&lt;Compiler&gt;
+@@ -115,24 +115,24 @@
+ 					&lt;Add option="-DSTDC_HEADERS" /&gt;
+ 					&lt;Add option="-D__SMP__" /&gt;
+ 					&lt;Add directory="." /&gt;
+-					&lt;Add directory="..\windows" /&gt;
+-					&lt;Add directory="..\common\jack" /&gt;
+-					&lt;Add directory="..\common" /&gt;
++					&lt;Add directory="../windows" /&gt;
++					&lt;Add directory="../common/jack" /&gt;
++					&lt;Add directory="../common" /&gt;
+ 				&lt;/Compiler&gt;
+ 				&lt;Linker&gt;
+ 					&lt;Add option="-m32" /&gt;
+ 					&lt;Add library="libsamplerate_x86.a" /&gt;
+-					&lt;Add directory="Release\bin" /&gt;
++					&lt;Add directory="Release/bin" /&gt;
+ 				&lt;/Linker&gt;
+ 				&lt;ExtraCommands&gt;
+ 					&lt;Add before="windres -F pe-i386 -O coff -o Release/libjacknet/libjacknet.res libjacknet.rc" /&gt;
+ 				&lt;/ExtraCommands&gt;
+ 			&lt;/Target&gt;
+ 			&lt;Target title="Win32 Debug 32bits"&gt;
+-				&lt;Option output="Debug\bin\libjacknet" prefix_auto="1" extension_auto="1" /&gt;
+-				&lt;Option object_output="Debug\libjacknet" /&gt;
++				&lt;Option output="Debug/bin/libjacknet" prefix_auto="1" extension_auto="1" /&gt;
++				&lt;Option object_output="Debug/libjacknet" /&gt;
+ 				&lt;Option type="3" /&gt;
+-				&lt;Option compiler="gcc" /&gt;
++				&lt;Option compiler="mingw_64" /&gt;
+ 				&lt;Option createDefFile="1" /&gt;
+ 				&lt;Option createStaticLib="1" /&gt;
+ 				&lt;Compiler&gt;
+@@ -149,24 +149,24 @@
+ 					&lt;Add option="-DSTDC_HEADERS" /&gt;
+ 					&lt;Add option="-D__SMP__" /&gt;
+ 					&lt;Add directory="." /&gt;
+-					&lt;Add directory="..\windows" /&gt;
+-					&lt;Add directory="..\common\jack" /&gt;
+-					&lt;Add directory="..\common" /&gt;
++					&lt;Add directory="../windows" /&gt;
++					&lt;Add directory="../common/jack" /&gt;
++					&lt;Add directory="../common" /&gt;
+ 				&lt;/Compiler&gt;
+ 				&lt;Linker&gt;
+ 					&lt;Add option="-m32" /&gt;
+ 					&lt;Add library="libsamplerate_x86.a" /&gt;
+-					&lt;Add directory="Debug\bin" /&gt;
++					&lt;Add directory="Debug/bin" /&gt;
+ 				&lt;/Linker&gt;
+ 				&lt;ExtraCommands&gt;
+ 					&lt;Add before="windres -F pe-i386 -O coff -o Debug/libjacknet/libjacknet.res libjacknet.rc" /&gt;
+ 				&lt;/ExtraCommands&gt;
+ 			&lt;/Target&gt;
+ 			&lt;Target title="Win32 Profiling 32bits"&gt;
+-				&lt;Option output="Release\bin\libjacknet" prefix_auto="1" extension_auto="1" /&gt;
+-				&lt;Option object_output="Release\libjacknet" /&gt;
++				&lt;Option output="Release/bin/libjacknet" prefix_auto="1" extension_auto="1" /&gt;
++				&lt;Option object_output="Release/libjacknet" /&gt;
+ 				&lt;Option type="3" /&gt;
+-				&lt;Option compiler="gcc" /&gt;
++				&lt;Option compiler="mingw_64" /&gt;
+ 				&lt;Option createDefFile="1" /&gt;
+ 				&lt;Option createStaticLib="1" /&gt;
+ 				&lt;Compiler&gt;
+@@ -184,14 +184,14 @@
+ 					&lt;Add option="-D__SMP__" /&gt;
+ 					&lt;Add option="-DJACK_MONITOR" /&gt;
+ 					&lt;Add directory="." /&gt;
+-					&lt;Add directory="..\windows" /&gt;
+-					&lt;Add directory="..\common\jack" /&gt;
+-					&lt;Add directory="..\common" /&gt;
++					&lt;Add directory="../windows" /&gt;
++					&lt;Add directory="../common/jack" /&gt;
++					&lt;Add directory="../common" /&gt;
+ 				&lt;/Compiler&gt;
+ 				&lt;Linker&gt;
+ 					&lt;Add option="-m32" /&gt;
+ 					&lt;Add library="libsamplerate_x86.a" /&gt;
+-					&lt;Add directory="Release\bin" /&gt;
++					&lt;Add directory="Release/bin" /&gt;
+ 				&lt;/Linker&gt;
+ 				&lt;ExtraCommands&gt;
+ 					&lt;Add before="windres -F pe-i386 -O coff -o Release/libjacknet/libjacknet.res libjacknet.rc" /&gt;
+@@ -201,8 +201,8 @@
+ 		&lt;Compiler&gt;
+ 			&lt;Add option="-Wall" /&gt;
+ 			&lt;Add directory="." /&gt;
+-			&lt;Add directory="..\common" /&gt;
+-			&lt;Add directory="..\common\jack" /&gt;
++			&lt;Add directory="../common" /&gt;
++			&lt;Add directory="../common/jack" /&gt;
+ 		&lt;/Compiler&gt;
+ 		&lt;Linker&gt;
+ 			&lt;Add library="kernel32" /&gt;
+@@ -220,15 +220,15 @@
+ 			&lt;Add library="ws2_32" /&gt;
+ 			&lt;Add library="winmm" /&gt;
+ 		&lt;/Linker&gt;
+-		&lt;Unit filename="..\common\JackAudioAdapterInterface.cpp" /&gt;
+-		&lt;Unit filename="..\common\JackException.cpp" /&gt;
+-		&lt;Unit filename="..\common\JackGlobals.cpp" /&gt;
+-		&lt;Unit filename="..\common\JackLibSampleRateResampler.cpp" /&gt;
+-		&lt;Unit filename="..\common\JackNetAPI.cpp" /&gt;
+-		&lt;Unit filename="..\common\JackNetInterface.cpp" /&gt;
+-		&lt;Unit filename="..\common\JackNetTool.cpp" /&gt;
+-		&lt;Unit filename="..\common\JackResampler.cpp" /&gt;
+-		&lt;Unit filename="..\common\ringbuffer.c"&gt;
++		&lt;Unit filename="../common/JackAudioAdapterInterface.cpp" /&gt;
++		&lt;Unit filename="../common/JackException.cpp" /&gt;
++		&lt;Unit filename="../common/JackGlobals.cpp" /&gt;
++		&lt;Unit filename="../common/JackLibSampleRateResampler.cpp" /&gt;
++		&lt;Unit filename="../common/JackNetAPI.cpp" /&gt;
++		&lt;Unit filename="../common/JackNetInterface.cpp" /&gt;
++		&lt;Unit filename="../common/JackNetTool.cpp" /&gt;
++		&lt;Unit filename="../common/JackResampler.cpp" /&gt;
++		&lt;Unit filename="../common/ringbuffer.c"&gt;
+ 			&lt;Option compilerVar="CC" /&gt;
+ 		&lt;/Unit&gt;
+ 		&lt;Unit filename="JackMMCSS.cpp" /&gt;
+@@ -246,8 +246,9 @@
+ 			&lt;debugger /&gt;
+ 			&lt;AutoVersioning&gt;
+ 				&lt;Scheme minor_max="10" build_max="0" rev_max="0" rev_rand_max="10" build_times_to_increment_minor="100" /&gt;
+-				&lt;Settings autoincrement="0" date_declarations="0" do_auto_increment="0" ask_to_increment="0" language="C++" svn="0" svn_directory="" header_path="version.h" /&gt;
++				&lt;Settings autoincrement="0" date_declarations="0" update_manifest="97" do_auto_increment="0" ask_to_increment="0" language="C++" svn="0" svn_directory="" header_path="version.h" /&gt;
+ 				&lt;Changes_Log show_changes_editor="0" app_title="released version %M.%m.%b of %p" changeslog_path="ChangesLog.txt" /&gt;
++				&lt;Code header_guard="VERSION_H" namespace="AutoVersion" prefix="" /&gt;
+ 			&lt;/AutoVersioning&gt;
+ 		&lt;/Extensions&gt;
+ 	&lt;/Project&gt;
+-- 
+1.7.9
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1376373469.10158_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1376503900.32204_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1376444839.7342_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1376444839.7342_0.ltw:2,a&nbsp;&lt;520AE199.5040509 at maltera dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

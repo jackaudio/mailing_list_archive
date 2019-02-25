@@ -1,0 +1,190 @@
+Date:        Fri, 24 Feb 2012 11:41:33 -0500
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   [hidden] at linutronix dot de Re: [Jack-Devel] jack1 version jack2 public headers comparison (1330105025.2827_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] jack1 version jack2 public headers comparison (1330105507.3609_0.ltw:2,a)
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] jack1 version jack2 public headers comparison (1330439329.32034_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack1 version jack2 public headers comparison
+
+We're starting the merge of the header files used by all
+implementations of JACK, following setting up several git repositories
+that make this possible.
+
+This is a review of the differences between the header files, initally
+done by Stephane, with new comments by me ...
+
+
+> control.h  :
+>
+> New :
+> =====
+>
+> /** Driver types */
+> typedef enum
+> {
+>    JackMaster = 1,     /**< @brief master driver */
+>    JackSlave               /**< @brief slave driver */
+> } jackctl_driver_type_t;
+>
+> jackctl_driver_type_t
+> jackctl_driver_get_type(
+>        jackctl_driver_t * driver);
+
+Seems like a reasonable addition, especially since its specifically
+only for the control API.
+
+> Reworked :
+> ==========
+>
+> /jackctl_sigmask_t *
+> jackctl_setup_signals(
+>    unsigned int flags);
+>
+> void
+> jackctl_wait_signals(
+>    jackctl_sigmask_t * signals);
+
+can you or nedko explain the need for this change? again, since its
+for the control API the issue is not that significant but i recall
+that this part of the API attracted some significant criticism from
+torben.
+
+>
+> Reworked :
+> ==========
+>
+> jackctl_server_start/jackctl_server_close reworked in a jackctl_server_open/jackctl_server_start/jackctl_server_stop/jackctl_server_close
+
+seems reasonable, though what's the justification?
+
+> New :
+> =====
+>
+> int
+> jackctl_driver_params_parse(
+>    jackctl_driver_t * driver,
+>    int argc,
+>    char* argv[]);
+
+seems reasonable and sensible.
+
+> =========================================================================================
+>
+> jack.h :
+>
+> New :
+> =====
+>
+> void
+> jack_get_version(
+>    int *major_ptr,
+>    int *minor_ptr,
+>    int *micro_ptr,
+>    int *proto_ptr) JACK_OPTIONAL_WEAK_EXPORT;
+>
+>
+> const char *
+> jack_get_version_string() JACK_OPTIONAL_WEAK_EXPORT;
+>
+> ==> not really used? Should they be removed?
+
+i am opposed to any such API in JACK. providing version information
+like this encourages bad/stupid/unnecessary behaviour by developers.
+as the docs for automake describe, if you're interested in whether or
+not a particular feature exists in something you want to use, test for
+the *feature* not some arbitrary version number.
+
+> int jack_get_client_pid (const char *name) JACK_OPTIONAL_WEAK_EXPORT;
+
+needed for?
+
+> jack_port_type_id_t jack_port_type_id (const jack_port_t *port) JACK_OPTIONAL_WEAK_EXPORT;
+
+needed for?
+
+> =========================================================================================
+>
+> jslist.h: same API, code reworked a bit to be compilable without too much warning in  a C++ context.
+
+ok, we should merge the jack2 version.
+
+> =========================================================================================
+>
+> ringbuffer.h
+>
+> New :
+> =====
+>
+> void jack_ringbuffer_reset_size (jack_ringbuffer_t * rb, size_t sz);
+
+what's the need or use case for this? when can the ringbuffer be reset safely?
+
+> =========================================================================================
+>
+> in thread.h
+>
+>
+> New :
+> =====
+>
+> int jack_client_stop_thread(jack_client_t* client, jack_native_thread_t thread) JACK_OPTIONAL_WEAK_EXPORT;
+>
+> int jack_client_kill_thread(jack_client_t* client, jack_native_thread_t thread) JACK_OPTIONAL_WEAK_EXPORT;
+
+what's the use case for these? AFAIK, its not possible to do what the
+first one suggests in the general case (it requires that the thread
+hits a cancellation point). similar objections for the second one,
+though i think that maybe that works more reliably.
+
+> =========================================================================================
+>
+> transport.h and types.h
+>
+> ==> jack2 version moved some type definition from transport.h to types.h (don't remember the reason.... maybe not a good idea..)
+
+so this won't matter, probably.
+
+> New :
+> =====
+>
+> typedef uint32_t jack_port_type_id_t;
+
+use?
+
+> typedef pthread_t            jack_native_thread_t;  ==> moved in  systemdeps.h file
+
+agreed.
+
+> POST_PACKED_STRUCTURE is uses in jack1 transport, and missing in jack2 version.
+>
+> This POST_PACKED_STRUCTURE should probably go in systemdeps.h
+
+agreed.
+
+> =========================================================================================
+>
+> New systemdeps.h that abstract systems dependencies
+
+agreed.
+
+> =========================================================================================
+>
+> weakmacro.h ==> some WIN32 specific
+
+agreed,  i think.
+
+> When files are the same, jack2 version something have some more documentation. It should be better to take them.
+
+seems OK except that i think i've done updates and improvements to
+jack.h in the last several months that should not get lost.
+
+> 2) How to we proceed now?
+
+another round of email, then i'll start merging it all into the
+"headers" repo. once that's done someone can try a build of jack2
+against the new headers.
+
+1330101711.29556_0.ltw:2,a <CAFa_cK=KKijKd_cgYaL9um63HY26AH4CYVbRDpEWNtFjGV8kwA at mail dot gmail dot com>
+________________________________________________________________________________
+

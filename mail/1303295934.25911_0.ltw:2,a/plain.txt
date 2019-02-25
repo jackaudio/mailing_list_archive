@@ -1,0 +1,54 @@
+Date:        Wed, 20 Apr 2011 10:38:40 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>, Stéphane Letz <[hidden] at grame dot fr>, Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: torbenh Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3 (1303244946.18626_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3 (1303296572.27196_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3 (1303304501.10932_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3
+
+On Tue, Apr 19, 2011 at 10:28:39PM +0200, torbenh wrote:
+> On Tue, Apr 19, 2011 at 07:52:03AM -0400, Paul Davis wrote:
+> > On Tue, Apr 19, 2011 at 6:57 AM, Stéphane Letz <[hidden]> wrote:
+> > 
+> > > So is this fix considered "official" ?  (before I report it again on jack2)
+> > 
+> > from chatting with torben yesterday, i think we're not quite done yet.
+> 
+> well... we probably need to write zeros instead of empty buffers.
+> but if Stéphane has that code already, it should be fine.
+> 
+> i am wondering what you mean by official ?
+> the old behaviour was clearly wrong. it was just that nobody really
+> cared before. (i have still no real explanation of why things worked,
+> but i know that i fixed a bug in the null cycle, and that bug might have
+> been "fixing" the offsets, during the client kick.
+> 
+> or we had real xruns all the time anyways.
+
+It's the sort of thing that can easily go undetected. The server still
+works after it skipped a write(), and the only results would be a glitch
+in the output (which is expected anyway when starting and stopping new
+clients, at least with Jack1), and a change of the latency.
+
+A driver->write_zeros() would be useful anyway. When I started looking
+into this problem I wrongly assumed that the problem was something with
+the start() function. There is a long standing warning there "Actually
+this is cheating etc." about zeroing the entire playback buffer within
+a single mmap_begin(), mmap_commit() pair. So changing that was the
+first thing I tried. You could use the write_zeros() there as well, and
+as part of the idle cycle code.
+
+I can't help but feel that the whole ALSA backend is overly complicated.
+For example I still have no idea what the 'extra_fd' stuff in wait() is
+about :-) The wait() code in libclalsadrv (which is very similar to the
+backend) doesn't have it and works OK. Same about the 'linux poll bug'.
+
+Ciao,
+
+-- 
+FA
+
+1303295934.25911_0.ltw:2,a <20110420103840.GA12625 at linuxaudio dot org>
+________________________________________________________________________________
+

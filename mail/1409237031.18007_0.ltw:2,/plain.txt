@@ -1,0 +1,97 @@
+Date:        Fri, 29 Aug 2014 00:43:44 +1000
+From:        Patrick Shirkey  <[hidden] at boosthardware dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] softmode for dummy driver (1409236553.17091_0.ltw:2,)
+Follow-Up:   Paul Davis Re: [Jack-Devel] softmode for dummy driver (1409237745.19329_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] softmode for dummy driver
+
+On Fri, August 29, 2014 12:35 am, Paul Davis wrote:
+> On Thu, Aug 28, 2014 at 9:52 AM, Patrick Shirkey
+> <[hidden]
+>> wrote:
+>
+>> Hi,
+>>
+>> On the version of jack1 that I am running jackd 0.124.1 it seems that
+>> the
+>> alsa dummy driver does not support softmode. Am I missing something or
+>> if
+>> not is there a specific reason it is not already available other than no
+>> one has bothered to implement it?
+>>
+>
+> my understanding of softmode is that it is a property of the server not
+> the
+> backend. but perhaps you mean something else?
+>
+
+I meant to say the dummy driver not the alsa dummy driver. In case it is
+of interest I am trying to track down the cause of the following error so
+I thought softmode might be useful in this case.
+
+subgraph starting at jack-smf-player timed out (subgraph_wait_fd=16,
+status = 0, state = Triggered, pollret = 0 revents = 0x0)
+
+
+- I don't see it in the server flags or the dummy driver flags but I do
+see it in the alsa driver flags.
+
+jackd -d alsa -v
+jackd 0.124.1
+Copyright 2001-2009 Paul Davis, Stephane Letz, Jack O'Quinn, Torben Hohn
+and others.
+jackd comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+
+Unknownage with option 'v'
+Options for driver 'alsa':
+	-C, --capture 	Provide capture ports.  Optionally set device (default: none)
+	-P, --playback 	Provide playback ports.  Optionally set device (default:
+none)
+	-d, --device 	ALSA device name (default: hw:0)
+	-r, --rate 	Sample rate (default: 48000)
+	-p, --period 	Frames per period (default: 1024)
+	-n, --nperiods 	Number of periods of playback latency (default: 2)
+	-H, --hwmon 	Hardware monitoring, if available (default: false)
+	-M, --hwmeter 	Hardware metering, if available (default: false)
+	-D, --duplex 	Provide both capture and playback ports (default: true)
+	-s, --softmode 	Soft-mode, no xrun handling (default: false)
+	-m, --monitor 	Provide monitor ports for the output (default: false)
+	-z, --dither 	Dithering mode (default: n)
+	-i, --inchannels 	Number of capture channels (defaults to hardware max)
+(default: 0)
+	-o, --outchannels 	Number of playback channels (defaults to hardware max)
+(default: 0)
+	-S, --shorts 	Try 16-bit samples before 32-bit (default: false)
+	-I, --input-latency 	Extra input latency (frames) (default: 0)
+	-O, --output-latency 	Extra output latency (frames) (default: 0)
+	-X, --midi 	legacy (default: none)
+
+
+ jackd -d dummy -v
+jackd 0.124.1
+Copyright 2001-2009 Paul Davis, Stephane Letz, Jack O'Quinn, Torben Hohn
+and others.
+jackd comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+
+Unknownage with option 'v'
+Options for driver 'dummy':
+	-C, --capture 	Number of capture ports (default: 2)
+	-P, --playback 	Number of playback ports (default: 2)
+	-r, --rate 	Sample rate (default: 48000)
+	-p, --period 	Frames per period (default: 1024)
+	-w, --wait 	Number of usecs to wait between engine processes (default:
+21333)
+
+
+--
+Patrick Shirkey
+Boost Hardware Ltd
+
+1409237031.18007_0.ltw:2, <61775.86.107.254.57.1409237024.squirrel at boosthardware dot com>
+________________________________________________________________________________
+

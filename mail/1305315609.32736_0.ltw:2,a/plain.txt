@@ -1,0 +1,77 @@
+Date:        Fri, 13 May 2011 21:39:34 +0200
+From:        StÃ©phane Letz  <[hidden] at grame dot fr>
+To:          Tommaso Cucinotta <[hidden] at sssup dot it>
+Cc:          [hidden] at lists dot jackaudio dot org
+
+Subject:     Re: [Jack-Devel] JACK thread priorities on different OSes (Was: Installers for Jack 1.9.8...)
+
+Le 13 mai 2011 à 20:07, Tommaso Cucinotta a écrit :
+
+> Il 13/05/2011 18:40, Stéphane Letz ha scritto:
+>> Le 13 mai 2011 à 18:08, Tommaso Cucinotta a écrit :
+>> 
+>> 
+>>> For what it matters, this kind of model is the same that we need to exploit the deadline-based scheduler we're experimenting on Linux (presented during the last LAC): we identified the resource requirements of jackd and all of the involved client threads, in terms of how much computation-time is needed every period, and we've set-up parameters into the scheduler accordingly.
+>>> AFAICS, currently this fComputation value is set-up statically to a random value ("500*1000"), or sometimes computed in a way I hope somebody can explain:
+>>> 
+>>>  driver->fEngineControl->fComputation = driver->fEngineControl->fPeriod * driver->fComputationGrain;
+>>> 
+>> Well you are actually looking at JackCoreAudioDriver and this specific line is completely "experimental" and to say the truth, not used at all.
+>> 
+>> Here is the situation :
+>> 
+>> -  all periodic OSX RT threads are supposed to have a "period" and a "constraint" (which is actually the same value than "period" in all examples I've seen...), The "computation" value describe an "uninterruptible time slice" the RT thread will be allowed to use. (this is somewhat different from what you may find in Apple documentation, but is the result of discussion with Apple CoreAudio guys I had in past years)
+>> 
+> 
+> you know, relying on the documentation:
+> 
+> "A nonzero period value specifies the nominal periodicity in the computation—that is, the time between two consecutive processing arrivals. The computation value specifies the nominal time needed during a processing span. The constraint value specifies the maximum amount of real time that may elapse from the start of a processing span to the end of the computation."
+> 
+> would map in a straightforward way to the periodic task model: for every period P, we have to make some computations for a time C within a relative deadline D possibly shorter than P, i.e.:
+> -) os-x period == task period (P);
+> -) os-x computation == task WCET (C);
+> -) os-x constraint == task relative deadline (D), normally equal to the period except for particular situations (i.e., task involved in a larger pipeline with periodicity P)
+
+But my understanding (again after discussion with Jeff Moore of CoreAudio list) is that this documentation is actually wrong...
+
+> 
+> But what the actual implementation does should be analyzed looking at the XNU sources.
+>> Then this "uninterruptible time slice" is used to control correct thread interleaving, but in a quite ad-hoc manner at least for CoreAudio RT threads. Basically in CoreAudio they use a different "computation " value for the different buffer sizes with the following mapping:
+>> 
+>> 64 frames ==> 500 usec
+>> 128 frames ==> 300 usec
+>> 256 frames up to 4096 ==> 100 usec
+>> 
+>> So the point is : a thread with a larger buffer size can afford to be interrupted often by another RT thread, (so lower computation value) but a thread with lover buffer size can't or lest often (so higher computation value)
+>> 
+> 
+> I see, that's completely heuristic and doesn't really take into account what's the computing need (workload) of the audio applications. Perhaps the CoreAudio component in Mac has a quite stable and deterministic workload,
+> but a Jack pipeline would be far from such a condition: all depends on how many clients you connect, and what they're actually doing. So, this way you never know whether you'll get the right computing power on-time.
+
+But the situation is similar with *regular* CoreAudio applications: and it is even possibly more complicated for the scheduler. CoreAudio applications can use different buffer size, so basically RT thread interleaving becomes more an issue.
+
+With JACK all applications use the same buffer size, so the same set of "period", "computation" "constraint".
+
+
+>>> Perhaps there's a chance to reuse a part of this deadline-based work on Linux also for setting up some more meaningful values on OS-X. However, that needs to be crossed with info about what the kernel actually does with those parameters. With Linux, that was easy: the whole set of threads were getting (at least) that required computation-time every period.
+>>> 
+>> I don't see how the  period,  computation,  constraint , parameters can be used in a similar manner. There is not real notion of "reserved time slice" so to say.
+>> 
+> 
+> See above.
+> 
+> Also, I'm curious about the comparison between exploiting priorities on Mac vs the TIME_CONSTRAINT policy.
+> 
+> Thx,
+> 
+>     T.
+
+But the thing is that OSX does a kind of mixture of POSIX approach (basically for non RT threads) and the special TIME_CONSTRAINT policy for RT.
+
+Said in another way, OSX kernel comes from Mach, and my guess is that the POSIX threads implementation came later on, on a existing scheduler model.
+
+Stéphane 
+
+1305315609.32736_0.ltw:2,a <96F68EF9-7F6A-4E3B-8DE8-9306156D9D73 at grame dot fr>
+________________________________________________________________________________
+

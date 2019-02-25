@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [LAD] [ANN] guitarix-0.04.4-1 release</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [LAD] [ANN] guitarix-0.04.4-1 release</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1243080308.9407_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1243223710.5866_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1243105466.20665_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 23 May 2009 21:13:18 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> hermann meyer </span> &lt;[hidden] at web dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at yahoo dot com </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org, [hidden] at lists dot linuxaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>[hidden] at yahoo dot com
+<a href='../1243080308.9407_0.ltw:2,a/index.html'>Re: [LAD] [ANN] guitarix-0.04.4-1 release </a></td></tr>
+</table>
+<pre>
+Am Samstag, den 23.05.2009, 05:04 -0700 schrieb [hidden]:
+&gt; discussion started at LAD about changing the jack server latency from the app called guitarix (like ardour does from its menu JACK -&gt; Latency). Proposed guitarix patch (by me) works nice against jack2 but not against jack1. See below.
+&gt; 
+&gt; Hermann,
+&gt; 
+&gt; I quickly ran guitarix in debug mode through gdb. You get a crash at dsp_audio.cpp, line 469. Looks like memory at output[2] and output[3] cannot be accessed. I tried to understand what you attempt to do but this function (mydsp::compute) is way to much for me to understand. It looks like some sort of auto-code ...
+&gt; 
+&gt; Anyway, output[2] and output[3] are passed in from process() (process callback function). I believe these arrays should correspond to buffers that you receive from jack audio ports 2 and 3. However, at the time we try to change the latency, they are already unregistered because of DSP.setNumOutputs().
+&gt; 
+&gt; So it looks to me that resetting the jack buffer size on the fly from guitarix badly interacts with how jack1 handled your port deregistration requests. I don't know why it works with jack2. Running guitarix through gdb against jack2, I could see that output[2] and output[3] were still valid memory locations after changing the jack buffer size on the fly. 
+
+This port register/unregister behaviour from jackd/jackd2 brings me a
+lot of headage, but on the other hand it's clear that they interact in
+different way's, it seems to be a question of time. Can't exactly say
+that, but it look to me that jackd2 is a lot faster in handling such a
+request.
+The port's 2 and 3 used by guitarix for pass the output over a wet/dry
+slider to jconv. This way you can mix the output from jconv and guitarix
+(to your soundcart or what ever) to your need's.
+They are unused when jconv dont run, that meen unregister and fill'd
+with sero's.
+
+&gt;   
+&gt; This is a bit unfortunate that we get different behaviors when using jack1 or jack2. I hope you'll sort it out, I don't have more time to spend on it. 
+&gt; 
+&gt; J.
+I have run this prob first time when I switch to jackdmp, so I know now
+how to handle this. I have a idea and will try it tomorow, let you know
+the result. Good point to the ports 2 and 3.
+I have the same output from gdb, but line 469 point to outputport_0 so I
+dont think on ports 2 and 3.
+
+
+&gt; PS: by the way, be careful with hardcoded values. On one hand you have gNumOutChans (= 4), on the other you have arrays declared with [4].
+That are different variables you talk about, 
+float* 	gOutChannel[4]; --&gt; pointers to the jack_port_buffers
+int	gNumOutChans;  --&gt; counter for the used output ports
+
+regards 
+         hermann
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1243080308.9407_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1243223710.5866_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1243105466.20665_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1243105466.20665_0.ltw:2,a&nbsp;&lt;1243105998.3228.22.camel at box&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

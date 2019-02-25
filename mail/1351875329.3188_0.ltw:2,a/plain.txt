@@ -1,0 +1,44 @@
+Date:        Fri, 02 Nov 2012 10:55:20 -0600
+From:        Jason Martyn  <[hidden] at gmail dot com>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] Introducing delay into simple_client.c (1351859088.7774_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Introducing delay into simple_client.c (1351875895.4121_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Introducing delay into simple_client.c
+
+Well the compiler sure doesn't complain, but I imagine it's unwise to
+declare it in a function that is called repeatedly :). I recall reading
+this. I won't be able to touch the code till tonight, I imagine it won't be
+a problem to declare this in main before the process hook?
+
+Jason
+On Nov 2, 2012 6:24 AM, "Paul Davis" <[hidden]> wrote:
+
+>
+>
+> On Fri, Nov 2, 2012 at 4:55 AM, Jason Martyn <[hidden]> wrote:
+>
+>> Hello all,
+>>
+>> Thanks again for the help.  I've managed to put together an initial
+>> solution, though this doesn't utilize ringbuffers yet. It is as follows:
+>>    //Initialize audio buffer array
+>>     if( prev == NULL ){
+>>         prev = malloc(sizeof(jack_default_audio_sample_t *)*n);
+>>
+>>         for(i = 0; i < n; i++){
+>>             prev[i] = malloc(nframes*sizeof(jack_default_audio_sample_t));
+>>         }
+>>
+>>         i = 0;
+>>     }
+>>
+>
+> you are not allowed to allocate memory inside the process() callback. this
+> must happen before you activate the client.
+>
+
+1351875329.3188_0.ltw:2,a <CAMMKq3RHmkoSxq-JA4+fPecywJMA-ERUcEPp5yH3_R=z3orJVg at mail dot gmail dot com>
+________________________________________________________________________________
+

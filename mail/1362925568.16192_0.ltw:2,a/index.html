@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Fwd: Re: Bug</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Fwd: Re: Bug</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1362924185.14023_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1362932668.26600_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1362925568.16192_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 10 Mar 2013 15:26:02 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Kaj Ailomaa </span> &lt;[hidden] at mousike dot me&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+------- Forwarded message -------
+From: "Morizot Hugo" &lt;[hidden]&gt;
+To: "Kaj Ailomaa" &lt;[hidden]&gt;
+Cc:
+Subject: Re: [Jack-Devel] Bug
+Date: Sun, 10 Mar 2013 15:08:28 +0100
+
+// I don't have a "audio.conf" in security folder - i have created one,  
+but it did not help ...
+
+When installing jackd, you are given the option to use realtime or not. If  
+answering no, you'd have a file called  
+"/etc/security/limits.d/audio.conf.disabled". Rename it to audio.conf.  
+Then reboot.
+If you really don't have any files in the folder /etc/security/limits.d/,  
+then create the audio.conf and add these two lines to it:
+
+@audio - rtprio 95
+@audio - memlock unlimited
+
+Then reboot.
+
+
+// I created the user :
+// maitre@Serviteur:~$ groups
+// maitre adm cdrom sudo audio dip plugdev lpadmin sambashare
+
+
+//maitre@Serviteur:~$
+
+//I have tried already to install PA jack package but it did not help ...  
+Just tried again it did nothing ...
+
+To make things easy, once you have everything in place, reboot. Then,  
+don't do anything else but start jack.
+
+First, make sure you are trying to start jack with the right device. Check  
+what devices you have with:
+
+$ cat /proc/asound/cards
+0 [M66 ]: ICE1712 - M Audio Delta 66
+    M Audio Delta 66 at 0xd040, irq 21
+1 [SB ]: HDA-Intel - HDA ATI SB
+    HDA ATI SB at 0xfe300000 irq 16
+2 [NVidia ]: HDA-Intel - HDA NVidia
+    HDA NVidia at 0xfe080000 irq 24
+
+As you see, I have three devices. The order of the devices may change at  
+each boot. First, let's make sure jack start, no matter what PA is doing:
+
+$ pasuspender -- jackd -d alsa -d hw:0
+
+Then, try without suspending PA.
+
+$ jackd -d alsa -d hw:0
+
+If that failed, it was probably due to PA using the same device, and not  
+letting go, in which case, you'll probably always want to suspend PA when  
+you use jack (unless you have multiple audio devices, in which case PA can  
+happily use one, while jack uses another).
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1362924185.14023_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1362932668.26600_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1362925568.16192_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1362925568.16192_0.ltw:2,a&nbsp;&lt;op.wtqidopl2rg3it at melete dot mousike&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

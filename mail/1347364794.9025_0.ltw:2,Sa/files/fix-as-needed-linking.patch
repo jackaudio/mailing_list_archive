@@ -1,0 +1,60 @@
+Description: Mangle wscript to make the build work with --as-needed
+Author: Adam Conrad <adconrad@ubuntu.com>
+Forwarded: no
+Last-Update: 2012-07-22
+
+Index: jackd2-1.9.8~dfsg.4+20120529git007cdc37/wscript
+===================================================================
+--- jackd2-1.9.8~dfsg.4+20120529git007cdc37.orig/wscript	2012-07-22 07:21:48.822535235 -0600
++++ jackd2-1.9.8~dfsg.4+20120529git007cdc37/wscript	2012-07-22 07:24:12.694530145 -0600
+@@ -176,6 +176,8 @@
+     conf.env['LIB_PTHREAD'] = ['pthread']
+     conf.env['LIB_DL'] = ['dl']
+     conf.env['LIB_RT'] = ['rt']
++    conf.env['LIB_M'] = ['m']
++    conf.env['LIB_STDC++'] = ['stdc++']
+     conf.env['JACK_API_VERSION'] = JACK_API_VERSION
+     conf.env['JACK_VERSION'] = VERSION
+ 
+@@ -228,8 +230,6 @@
+         if m != None:
+             svnrev = m.group(1)
+ 
+-    conf.env.append_unique('LINKFLAGS', ['-lm', '-lstdc++'])
+-
+     if Options.options.mixed == True:
+         env_variant2 = conf.env.copy()
+         conf.set_env_name('lib32', env_variant2)
+Index: jackd2-1.9.8~dfsg.4+20120529git007cdc37/linux/wscript
+===================================================================
+--- jackd2-1.9.8~dfsg.4+20120529git007cdc37.orig/linux/wscript	2012-07-22 07:26:54.000000000 -0600
++++ jackd2-1.9.8~dfsg.4+20120529git007cdc37/linux/wscript	2012-07-22 07:26:54.000000000 -0600
+@@ -38,9 +38,9 @@
+         jackd.use = ['serverlib']
+         if bld.env['IS_LINUX'] and bld.env['BUILD_JACKDBUS']: 
+             jackd.source += ['../dbus/reserve.c', '../dbus/audio_reserve.c'] 
+-            jackd.use += ['PTHREAD', 'DL', 'RT', 'DBUS-1']
++            jackd.use += ['PTHREAD', 'DL', 'RT', 'M', 'STDC++', 'DBUS-1']
+         else:
+-            jackd.use += ['PTHREAD', 'DL', 'RT']
++            jackd.use += ['PTHREAD', 'DL', 'RT', 'M', 'STDC++']
+         jackd.target = 'jackd'
+   	
+     create_jack_driver_obj(bld, 'dummy', '../common/JackDummyDriver.cpp')
+Index: jackd2-1.9.8~dfsg.4+20120529git007cdc37/example-clients/wscript
+===================================================================
+--- jackd2-1.9.8~dfsg.4+20120529git007cdc37.orig/example-clients/wscript	2012-07-22 07:40:21.000000000 -0600
++++ jackd2-1.9.8~dfsg.4+20120529git007cdc37/example-clients/wscript	2012-07-22 07:40:21.000000000 -0600
+@@ -86,10 +86,9 @@
+             #prog.env.append_value("LINKFLAGS", "-arch i386 -arch ppc -arch x86_64")
+             prog.env.append_value("LINKFLAGS", "")
+         if bld.env['IS_LINUX']:
+-            prog.use += ['RT']
+-            prog.env.append_value("LINKFLAGS", "-lm")
++            prog.use += ['RT', 'M']
+         if bld.env['IS_SUN']:
+-            prog.env.append_value("LINKFLAGS", "-lm")
++            prog.use += ['M']
+ 
+         prog.target = example_program
+    

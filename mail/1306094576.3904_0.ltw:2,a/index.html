@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] [PATCH 1/3] [core] add basic support for slave drivers to engine</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] [PATCH 1/3] [core] add basic support for slave drivers to engine</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305985814.1383_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1306094580.3925_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1306094576.3904_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 22 May 2011 22:02:22 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Torben Hohn </span> &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Torben Hohn
+<a href='../1306094580.3925_0.ltw:2,a/index.html'>[Jack-Devel] [PATCH 3/3] [alsa-midi] add basic alsa-seq midi slave driver </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Torben Hohn
+<a href='../1306094586.3933_0.ltw:2,a/index.html'>[Jack-Devel] [PATCH 2/3] [jackd] add support for slave drivers into jackd executable </a></td></tr>
+</table>
+<pre>
+---
+ jack/engine.h  |    9 ++++
+ jackd/engine.c |  132 ++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 137 insertions(+), 4 deletions(-)
+
+diff --git a/jack/engine.h b/jack/engine.h
+index 1884690..6bac8cf 100644
+--- a/jack/engine.h
++++ b/jack/engine.h
+@@ -68,6 +68,8 @@ struct _jack_engine {
+     jack_driver_desc_t    *driver_desc;
+     JSList                *driver_params;
+ 
++    JSList                *slave_drivers;
++
+     /* these are "callbacks" made by the driver backend */
+     int  (*set_buffer_size) (struct _jack_engine *, jack_nframes_t frames);
+     int  (*set_sample_rate) (struct _jack_engine *, jack_nframes_t frames);
+@@ -188,6 +190,9 @@ int		jack_wait (jack_engine_t *engine);
+ int		jack_engine_load_driver (jack_engine_t *engine,
+ 					 jack_driver_desc_t * driver_desc,
+ 					 JSList * driver_params);
++int		jack_engine_load_slave_driver (jack_engine_t *engine,
++					       jack_driver_desc_t * driver_desc,
++					       JSList * driver_params);
+ void		jack_dump_configuration(jack_engine_t *engine, int take_lock);
+ 
+ /* private engine functions */
+@@ -252,4 +257,8 @@ jack_client_by_name (jack_engine_t *engine, const char *name);
+ int  jack_deliver_event (jack_engine_t *, jack_client_internal_t *, jack_event_t *);
+ void
+ jack_engine_signal_problems (jack_engine_t* engine);
++
++int
++jack_drivers_start (jack_engine_t *engine);
++
+ #endif /* __jack_engine_h__ */
+diff --git a/jackd/engine.c b/jackd/engine.c
+index b8d3824..8ea3107 100644
+--- a/jackd/engine.c
++++ b/jackd/engine.c
+@@ -1118,6 +1118,46 @@ jack_engine_load_driver (jack_engine_t *engine,
+ 	return 0;
+ }
+ 
++int
++jack_engine_load_slave_driver (jack_engine_t *engine,
++			       jack_driver_desc_t * driver_desc,
++			       JSList * driver_params)
++{
++	jack_client_internal_t *client;
++	jack_driver_t *driver;
++	jack_driver_info_t *info;
++
++	if ((info = jack_load_driver (engine, driver_desc)) == NULL) {
++		return -1;
++	}
++
++	if ((client = jack_create_driver_client (engine, info-&gt;client_name)
++		    ) == NULL) {
++		return -1;
++	}
++
++	if ((driver = info-&gt;initialize (client-&gt;private_client,
++					driver_params)) == NULL) {
++		free (info);
++		return -1;
++	}
++
++	driver-&gt;handle = info-&gt;handle;
++	driver-&gt;finish = info-&gt;finish;
++	driver-&gt;internal_client = client;
++	free (info);
++
++	if (jack_add_slave_driver (engine, driver) &lt; 0) {
++		jack_client_delete (engine, client);
++		return -1;
++	}
++
++	//engine-&gt;driver_desc   = driver_desc;
++	//engine-&gt;driver_params = driver_params;
++
++	return 0;
++}
++
+ #ifdef USE_CAPABILITIES
+ 
+ static int check_capabilities (jack_engine_t *engine)
+@@ -1766,6 +1806,8 @@ jack_engine_new (int realtime, int rtpriority, int do_mlock, int do_unlock,
+ 	engine-&gt;driver_desc = NULL;
+ 	engine-&gt;driver_params = NULL;
+ 
++	engine-&gt;slave_drivers = NULL;
++
+ 	engine-&gt;set_sample_rate = jack_set_sample_rate;
+ 	engine-&gt;set_buffer_size = jack_driver_buffer_size;
+ 	engine-&gt;run_cycle = jack_run_cycle;
+@@ -2078,6 +2120,75 @@ jack_engine_freewheel (void *arg)
+ 	return 0;
+ }
+ 
++int
++jack_drivers_start (jack_engine_t *engine)
++{
++	JSList *node;
++	/* first start the slave drivers */
++	for (node=engine-&gt;slave_drivers; node; node=jack_slist_next(node))
++	{
++		jack_driver_t *sdriver = node-&gt;data;
++		sdriver-&gt;start( sdriver );
++
++		//XXX: need to remove driver which fail to start
++	}
++
++	/* now the master driver is started */
++	return engine-&gt;driver-&gt;start(engine-&gt;driver);
++}
++
++static int
++jack_drivers_stop (jack_engine_t *engine)
++{
++	JSList *node;
++	/* first stop the master driver */
++	int retval = engine-&gt;driver-&gt;stop(engine-&gt;driver);
++
++	/* now the slave drivers are stopped */
++	for (node=engine-&gt;slave_drivers; node; node=jack_slist_next(node))
++	{
++		jack_driver_t *sdriver = node-&gt;data;
++		sdriver-&gt;stop( sdriver );
++
++		//XXX: need to remove driver which fail to start
++	}
++
++	return retval;
++}
++
++static int
++jack_drivers_read (jack_engine_t *engine, jack_nframes_t nframes)
++{
++	JSList *node;
++	/* first start the slave drivers */
++	for (node=engine-&gt;slave_drivers; node; node=jack_slist_next(node))
++	{
++		jack_driver_t *sdriver = node-&gt;data;
++		sdriver-&gt;read (sdriver, nframes);
++
++		//XXX: need to remove driver which fail to start
++	}
++
++	/* now the master driver is started */
++	return engine-&gt;driver-&gt;read(engine-&gt;driver, nframes);
++}
++
++static int
++jack_drivers_write (jack_engine_t *engine, jack_nframes_t nframes)
++{
++	JSList *node;
++	/* first start the slave drivers */
++	for (node=engine-&gt;slave_drivers; node; node=jack_slist_next(node))
++	{
++		jack_driver_t *sdriver = node-&gt;data;
++		sdriver-&gt;write (sdriver, nframes);
++
++		//XXX: need to remove driver which fail to start
++	}
++
++	/* now the master driver is started */
++	return engine-&gt;driver-&gt;write(engine-&gt;driver, nframes);
++}
+ static int
+ jack_start_freewheeling (jack_engine_t* engine, jack_client_id_t client_id)
+ {
+@@ -2097,7 +2208,7 @@ jack_start_freewheeling (jack_engine_t* engine, jack_client_id_t client_id)
+ 	   there are no more process() calls being handled.
+ 	*/
+ 
+-	if (engine-&gt;driver-&gt;stop (engine-&gt;driver)) {
++	if (jack_drivers_stop (engine)) {
+ 		jack_error ("could not stop driver for freewheeling");
+ 		return -1;
+ 	}
+@@ -2164,7 +2275,7 @@ jack_stop_freewheeling (jack_engine_t* engine, int engine_exiting)
+ 		
+ 		/* restart the driver */
+ 		
+-		if (engine-&gt;driver-&gt;start (engine-&gt;driver)) {
++		if (jack_drivers_start (engine)) {
+ 			jack_error ("could not restart driver after freewheeling");
+ 			return -1;
+ 		}
+@@ -2287,7 +2398,7 @@ jack_run_one_cycle (jack_engine_t *engine, jack_nframes_t nframes,
+ 		
+ 	if (!engine-&gt;freewheeling) {
+ 		DEBUG("waiting for driver read\n");
+-		if (driver-&gt;read (driver, nframes)) {
++		if (jack_drivers_read (engine, nframes)) {
+ 			goto unlock;
+ 		}
+ 	}
+@@ -2300,7 +2411,7 @@ jack_run_one_cycle (jack_engine_t *engine, jack_nframes_t nframes,
+ 	}
+ 		
+ 	if (!engine-&gt;freewheeling) {
+-		if (driver-&gt;write (driver, nframes)) {
++		if (jack_drivers_write (engine, nframes)) {
+ 			goto unlock;
+ 		}
+ 	}
+@@ -4051,6 +4162,19 @@ jack_use_driver (jack_engine_t *engine, jack_driver_t *driver)
+ 	return 0;
+ }
+ 
++int
++jack_add_slave_driver (jack_engine_t *engine, jack_driver_t *driver)
++{
++	if (driver) {
++		if (driver-&gt;attach (driver, engine)) {
++			return -1;
++		}
++
++		engine-&gt;slave_drivers = jack_slist_append (engine-&gt;slave_drivers, driver);
++	}
++
++	return 0;
++}
+ 
+ /* PORT RELATED FUNCTIONS */
+ 
+-- 
+1.7.2.5
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305985814.1383_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1306094580.3925_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1306094576.3904_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1306094576.3904_0.ltw:2,a&nbsp;&lt;1306094544-12075-1-git-send-email-torbenh at gmx dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

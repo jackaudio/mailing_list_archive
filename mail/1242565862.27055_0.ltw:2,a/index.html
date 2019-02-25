@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [LAD] [Jack-Devel] more jack/qjackctl madness</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [LAD] [Jack-Devel] more jack/qjackctl madness</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1242564505.26136_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1242566557.27664_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1242565862.27055_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 17 May 2009 14:07:55 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Rui Nuno Capela </span> &lt;[hidden] at rncbc dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at kokkinizita dot net&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Linux Audio Developers &lt;[hidden] at lists dot linuxaudio dot org&gt;, JACK Developers &lt;[hidden] at jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1242560416.23177_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] more jack/qjackctl madness </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Gabriel M. Beddingfield
+<a href='../1242566557.27664_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] more jack/qjackctl madness </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1242569195.29516_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] more jack/qjackctl madness </a></td></tr>
+</table>
+<pre>
+Fons Adriaensen wrote:
+&gt; On Sun, May 17, 2009 at 11:48:57AM +0100, Rui Nuno Capela wrote:
+&gt; 
+&gt;&gt; qjackctl only writes to ~/.jackdrc *iif* you opt to (see Setup/Misc/Save
+&gt;&gt; JACK audio server configuration). otherwise it *never* makes use of that
+&gt;&gt; file ie. it never auto-starts jackd implicitly; it only does start jackd
+&gt;&gt; explicitly if none is found running atm.
+&gt; 
+&gt; If the file is ignored by jackd, and by qjackctl, why
+&gt; does qjackctl write it at all ?
+&gt;  
+&gt;&gt; if you really want several jackd server running simultaneously
+&gt; 
+&gt; I don't want that. I want to get rid of one that was 
+&gt; started automatically, terminated, but restarted by
+&gt; dbus (why on earth ?) when I run qjackctl. The net
+&gt; result is that running qjackctl starts a server with
+&gt; parameters that have no relation at all to its setup
+&gt; (making it appear as if qjackctl has gone nuts), and
+&gt; starting the one corresponding to qjackctl's setup
+&gt; becomes impossible. It's very probably not qjackctl's
+&gt; fault.
+&gt; 
+&gt; Two other things _are_:
+&gt; 
+&gt; 1. I definitely want to be able to terminate qjackctl
+&gt; without stopping jackd, even if that jackd was started
+&gt; by qjackctl. This used to be possible.
+&gt; 
+
+unfortunately, Qt4's class which is being used for wrapping the jackd
+process (QProcess) does kill it on its destructor. afaict, this behavior
+wasn't present in Qt3 and that's why there's no option to keep jackd
+running upon quitting qjackctl anymore.
+
+&gt; 2. Qjackctl-0.3.4 seems to have a bug handling the port
+&gt; creation and destruction callbacks, it continues to show
+&gt; ports that have been deleted and does not show some new
+&gt; ones. This happens when the delete/create calls are close
+&gt; together. Jack_evmon shows the right events in the right
+&gt; order, so it must be qjackctl getting it wrong.
+&gt; 
+
+this might just be a side-effect of the jack_port_t* reuse issue that i
+think has been discussed recently.
+
+qjackctl does not handle port (un)registration callbacks but does its
+book-keeping with this jack_port_t * handle as a unique key identifier.
+
+if, for instance, one client unregisters one given port and registers
+another in a quick sequence, it might just happen that the new port has
+the very same jack_port_t* address value which got just reclaimed and
+reused. alas, qjackctl assumes it's the very same port object as it
+keeps jack_port_t*s as its unique port identifiers, so nothing changes.
+
+i suppose i'll have to fix this soon. by properly handling port
+unregistration callbacks, which will be a novelty after 5+ years of
+doing just fine without on jack1 at least ;)
+
+cheers
+-- 
+rncbc aka Rui Nuno Capela
+[hidden]
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1242564505.26136_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1242566557.27664_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1242565862.27055_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1242565862.27055_0.ltw:2,a&nbsp;&lt;4A100C2B.6040901 at rncbc dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

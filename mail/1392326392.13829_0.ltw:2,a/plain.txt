@@ -1,0 +1,153 @@
+Date:        Fri, 14 Feb 2014 08:18:37 +1100
+From:        Matt Flax  <[hidden] at flatmax dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Matt Flax [Jack-Devel] [PATCH 00/16] IIO driver for jack1 (1392326340.13728_0.ltw:2,Sa)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] [PATCH 12/16] now compiling the iio_driver_dummy.C using G++ and a high sample rate. The clients now report large xruns, whilst the server doesn't. (1392372667.23478_0.ltw:2,a)
+
+Subject:     [Jack-Devel] [PATCH 12/16] now compiling the iio_driver_dummy.C using G++ and a high sample rate. The clients now report large xruns, whilst the server doesn't.
+
+---
+ drivers/iio/iio_driver.C       | 18 +++++++++---------
+ drivers/iio/iio_driver_dummy.C | 21 +++++++++++++--------
+ 2 files changed, 22 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/iio/iio_driver.C b/drivers/iio/iio_driver.C
+index 3d0fbb8..4441609 100644
+--- a/drivers/iio/iio_driver.C
++++ b/drivers/iio/iio_driver.C
+@@ -50,7 +50,7 @@ extern "C" {
+ 
+ static int iio_driver_attach (iio_driver_t *driver, jack_engine_t *engine) {
+     //DebuggerLocal<<"iio_driver_attach\n";
+-    ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
++    //ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
+ 
+     // open the IIO subsystem
+     IIOMMap *iio = static_cast<IIOMMap *>(driver->IIO_devices);
+@@ -125,7 +125,7 @@ static int iio_driver_attach (iio_driver_t *driver, jack_engine_t *engine) {
+ 
+ static int iio_driver_detach (iio_driver_t *driver, jack_engine_t *engine) {
+     DebuggerLocal<<"iio_driver_detach\n";
+-    ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
++    //ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
+ 
+     IIOMMap *iio = static_cast<IIOMMap *>(driver->IIO_devices);
+     iio->enable(false); // stop the DMA
+@@ -155,7 +155,7 @@ static int iio_driver_detach (iio_driver_t *driver, jack_engine_t *engine) {
+ 
+ static int iio_driver_start (iio_driver_t *driver) {
+     DebuggerLocal<<"iio_driver_start::   enabling IIO : enable(true)\n";
+-    ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
++    //ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
+ 
+     IIOMMap *iio = static_cast<IIOMMap *>(driver->IIO_devices);
+     int ret;
+@@ -170,7 +170,7 @@ static int iio_driver_start (iio_driver_t *driver) {
+ 
+ static int iio_driver_stop (iio_driver_t *driver) {
+     DebuggerLocal<<"iio_driver_start:: disabling IIO : enable(false)"<<endl;
+-    ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
++    //ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
+ 
+     IIOMMap *iio = static_cast<IIOMMap *>(driver->IIO_devices);
+     iio->enable(false); // stop the DMA
+@@ -179,7 +179,7 @@ static int iio_driver_stop (iio_driver_t *driver) {
+ 
+ static int iio_driver_read(iio_driver_t *driver, jack_nframes_t nframes) {
+     Debugger<<"iio_driver_read\n";
+-    ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
++    //ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
+ 
+     if (nframes > 0) {
+         ////Debugger<<"iio_driver_read nframes = "<<nframes<<"\n";
+@@ -227,7 +227,7 @@ static int iio_driver_write (iio_driver_t *driver, jack_nframes_t nframes) {
+ 
+ static int iio_driver_null_cycle (iio_driver_t *driver, jack_nframes_t nframes) {
+     //Debugger<<"iio_driver_null_cycle\n";
+-    ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
++    //ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
+ 
+     if (nframes>0) {
+         IIOMMap *iio = static_cast<IIOMMap *>(driver->IIO_devices);
+@@ -298,7 +298,7 @@ static jack_nframes_t iio_driver_wait(iio_driver_t *driver, int extra_fd, int *s
+ 
+ static int iio_driver_run_cycle (iio_driver_t *driver) {
+     //Debugger<<"iio_driver_run_cycle\n";
+-    ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
++    //ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
+ 
+     int wait_status;
+     float delayed_usecs;
+@@ -336,7 +336,7 @@ jack_time_t getUSecs(jack_nframes_t nframes, jack_nframes_t fs) {
+ */
+ static int iio_driver_bufsize(iio_driver_t *driver, jack_nframes_t nframes) {
+     //DebuggerLocal<<"iio_driver_bufsize"<<endl;
+-    ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
++    //ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
+ 
+     IIOMMap *iio = static_cast<IIOMMap *>(driver->IIO_devices);
+ //    int newDMABufSize=iio->setChannelBufferCnt(nframes*2); // ensure we have a periods head room
+@@ -447,7 +447,7 @@ static int iio_driver_bufsize(iio_driver_t *driver, jack_nframes_t nframes) {
+ */
+ static void iio_driver_delete(iio_driver_t * driver) {
+     DebuggerLocal<<"iio_driver_delete"<<endl;
+-    ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
++    //ELAPSED_TIME(&(driver->debug_last_time), driver->engine->get_microseconds())
+ 
+     IIOMMap *iio = static_cast<IIOMMap *>(driver->IIO_devices);
+     if (iio)
+diff --git a/drivers/iio/iio_driver_dummy.C b/drivers/iio/iio_driver_dummy.C
+index 320a57c..aa81c82 100644
+--- a/drivers/iio/iio_driver_dummy.C
++++ b/drivers/iio/iio_driver_dummy.C
+@@ -28,23 +28,27 @@ Date: 2014.01.13
+ #define DEBUG_LOCAL_OUTPUT
+ //#define DEBUG_OUTPUT
+ 
++#include <IIO/IIOMMap.H>
++
++#define __STDC_FORMAT_MACROS
+ #include <values.h>
+ 
+-#include <stdbool.h>
+-#include <string.h>
+-#include <errno.h>
+-#include <math.h>
+-#include <stdio.h>
++//#include <stdbool.h>
++//#include <string.h>
++//#include <errno.h>
++//#include <math.h>
++//#include <stdio.h>
+ 
+ extern "C" {
+ #include "iio_driver.h"
+ #include "engine.h"
+ }
+ 
++#define ELAPSED_TIME(last_time, this_time) {Debugger<<"time since last time = "<<(uintmax_t)(this_time-*last_time)<<'\n'; *last_time = this_time;}
+ 
+ #define IIO_DEFAULT_CHIP "AD7476A" ///< The default IIO recording chip to look for.
+-//#define IIO_DEFAULT_READ_FS 1.e6 ///< The default IIO sample rate for the default chip.
+-#define IIO_DEFAULT_READ_FS 48.e3 ///< The default IIO sample rate for the default chip.
++#define IIO_DEFAULT_READ_FS 1.e6 ///< The default IIO sample rate for the default chip.
++//#define IIO_DEFAULT_READ_FS 48.e3 ///< The default IIO sample rate for the default chip.
+ #define IIO_DEFAULT_PERIOD_SIZE 2048 ///< The default period size is in the ms range
+ #define IIO_DEFAULT_PERIOD_COUNT 2 ///< The default number of periods
+ #define IIO_DEFAULT_CAPUTURE_PORT_COUNT MAXINT ///< The default number of capture ports is exceedingly big, trimmed down to a realistic size in driver_initialize
+@@ -372,7 +376,8 @@ jack_driver_t *driver_initialize (jack_client_t *client, const JSList * params)
+         }
+ 
+         driver->period_usecs = driver->wait_time = getUSecs(driver->period_size, driver->sample_rate);
+-        driver->maxDelayUSecs=4000; // the mmap max delay is currently unknown
++        driver->maxDelayUSecs=driver->period_usecs*driver->nperiods; // the mmap max delay is currently unknown
++        cout<<"max delay = "<<driver->maxDelayUSecs<<" us"<<endl;
+         driver->capture_channels=4;
+         jack_info("created DUMMY iio driver ... dummy_iio|%" PRIu32 "|%" PRIu32 "|%lu|%u|%u", driver->sample_rate, driver->period_size, driver->wait_time, driver->capture_channels, driver->playback_channels);
+         return (jack_driver_t *) driver;
+-- 
+1.8.3.2
+
+1392326392.13829_0.ltw:2,a <1392326321-3699-13-git-send-email-flatmax at flatmax dot org>
+________________________________________________________________________________
+

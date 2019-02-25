@@ -1,0 +1,127 @@
+Date:        Sun, 25 Dec 2011 09:29:55 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Nedko Arnaudov <[hidden] at arnaudov dot name>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Nedko Arnaudov Re: [Jack-Devel] ladish + jack autoconnect (1324773286.16602_0.ltw:2,a)
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] ladish + jack autoconnect (1324847989.29166_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] ladish + jack autoconnect
+
+On 12/25/2011 01:34 AM, Nedko Arnaudov wrote:
+> Robin Gareus <[hidden]> writes:
+>> On 12/25/2011 12:22 AM, Nedko Arnaudov wrote:
+> 
+>>> I'd like to implement new jack1 server option (exposed in jackd too) with
+>>> value that defaults to current behaviour. The option (kind of enum) has
+>>> four other possible values. In total:
+>>>
+>>>  * dont restrict self connect attempts (default)
+>>>  * ignore (dont fail, nop) all self-connect requests
+>>>  * fail all self-connect requests
+>>>  * ignore self connect requests to other clients only
+>>>  * fail self connect requests to other clients only
+>>>
+>>> If something in my proposal is not clear, please let me know. I'll try
+>>> to clarify it.
+>>
+>> That clarified a lot regarding the state of ladi. Thanks!
+>>
+>> As for adding this option to vanilla JACK. I'm rather skeptical. I think
+>> this rather works around client-bugs or problems that should be fixed in
+>> the respective clients.
+>>
+>> Too many options make trouble-shooting issue with JACK a pain.
+> 
+> IMO few(?) other options we already have are much rarely used and
+> less useful.
+
+probably true; but IMHO this is not an argument. (If at all: it's a
+counter-argument: the situation is already dire, so why not make it worse..)
+
+>> My first reaction is that this proposal does not add anything to jack
+>> and thus is not relevant in the core. But I did not give it too much
+>> thought. Is there a good use-case - except for working around b0rked apps?
+> 
+>> OTOH I did not investigate how many jack-clients would be affected and
+>> how much it'd improve usability in the real-world with potentially lots
+>> of messy clients.
+> 
+> Its for b0rked apps.
+
+Then maybe this port-override could not be global, but per app instead:
+Every time a client creates a new port it is checked against a
+jack-connect-blacklist.conf that defines the behavior for those ports..
+
+> Some major ones like ardour2 do it. Essentially
+> all-in-one apps tend to implement session manager functionality. And
+> this creates interoperatability problem. We don't have unified way to
+> tell apps to not self-connect. But we can give the power to the user to
+> cut them at the hub - the jack server.
+> 
+> Telling the user that app X must be fixed to add option for disabling
+> self-connect is almost always not acceptable. Because the user has no
+> direct and easy control over app X development and deployment of app X
+> in distro Y.
+
+indeed.
+Actually I start to see some merits of your proposal:
+One could safely use any app in a specialized environment (where f.i.
+playback_1,2 is not the default speakers) without having to worry about
+ruining the hardware connected to those ports (Fons will probably like
+that).
+
+> In my, yours and maybe of others opinion fixing clients is the right
+> thing to do. But the app author may disagree. Or distro packagers may
+> disagree. This is social problem or rather a virtue. 
+yes!
+
+>The opposite is stalinism.
+Well, surly that's exaggerated.
+
+> People have right to disagree.
+> User must be in control of his system. Trying to implement totalitarian
+> society by penalizing users is bad idea.
+
+Certainly. Yet, we're not building a society but a real-time low-latency
+audio system.
+
+I lean towards the Unix attitude: Make a tool that does one thing and
+does it right. Don't try for world-domination or to outsmart the user.
+[Try to] educate users (here: software developers and packagers) why
+certain things are wrong in JACK-context:
+
+Auto-connecting in pulse-audio or ALSA land is a feature.
+Auto-connecting in JACK's realm is wrong(*).
+Take your pick; and also feel free to move around. No visa required :)
+
+(*) optional auto-[re]-connect is a feature, too.
+Yet it's potentially a gray area when it comes to default behavior of
+the JACK auto-connect option.
+
+
+Once you'll add connection-override to the jack-server's features and
+people get used to it, it'll be hard to remove it again I can and
+already imagine end-user complaints ("Help my app does no longer
+connect.."). I'm torn.
+
+
+> This does not mean that systems with predefined, fixed and specialized
+> workflows should not be developed.
+> 
+[..]
+>> It may well be that distributors allow users to install multiple
+>> jack-session handlers/managers along with one of the (3,4? [2])
+>> available implementations or configurations of jackd. The user can
+>> choose at run-time which of the session managers to start/use and
+>> potentially start/stop more than one.
+> 
+> I think this matches the reality.
+> 
+
+Do you [for]see any problems with that?
+
+robin
+
+1324801828.25833_0.ltw:2,a <4EF6DF03.3040908 at gareus dot org>
+________________________________________________________________________________
+

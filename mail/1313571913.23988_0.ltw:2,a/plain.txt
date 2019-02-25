@@ -1,0 +1,41 @@
+Date:        Wed, 17 Aug 2011 10:08:15 +0100
+From:        John Rigg  <[hidden] at jrigg dot co dot uk>
+To:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1313519247.3714_0.ltw:2,a)
+Follow-Up:   John Rigg Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1313583193.23182_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea
+
+On Tue, Aug 16, 2011 at 06:27:03PM +0000, Fons Adriaensen wrote:
+> I seriously doubt if you can get a sampling clock with the required
+> low jitter using the FPGA's digital PLLs. The next thing to look at
+> would be an external VCXO module to generate the master clock, with
+> the loop closed by digital filtering in the FPGA followed by an
+> analog lowpass driving the VCXO. Lock range for VCXOs is small but
+> it should be enough to cover typical sound card frequency
+
+This is a very important point. Quality of the clock signal at
+the ADC and DAC clock pins is more critical than elsewhere in the
+system by several orders of magnitude. For high audio quality every
+device with converters in needs a good local clock recovery circuit
+to remove jitter from the distributed system clock. 
+
+Ideally a two stage PLL would be used, with a VCXO typically used
+for the second stage. Good VCXOs aren't cheap, and it's not unusual
+to use two to cover the common sample rates (one for 44.1kHz and
+multiples, and another for 48kHz and multiples).
+
+There are lower cost IC solutions available like the TC DICE chip,
+which has a very effective low jitter PLL. It's one of the cheapest
+ways I've seen to get clock recovery good enough for high end
+professional audio, even if you don't use its other features like
+ADAT in/out.
+
+There's a good paper on PLL and clock basics here:
+http://www.grimmaudio.com/whitepapers
+
+John
+
+1313571913.23988_0.ltw:2,a <20110817090815.GA2554 at localhost0 dot localdomain>
+________________________________________________________________________________
+

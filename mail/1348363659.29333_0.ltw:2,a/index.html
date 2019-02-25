@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] a few tests on the netjack2 v1.9.8 connecting audio routes</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] a few tests on the netjack2 v1.9.8 connecting audio routes</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1348361628.13193_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1348479085.22275_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1348363659.29333_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 23 Sep 2012 04:27:26 +0300 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Athanasios Silis </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt;, Developers JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+so hello again,
+so more news on transporting sound back and forth between linux and windows
+
+i did install jack2 - 1.9.9.4 on both ends (32bits on both ends)
+
+things work smoothly.
+i carry 8C + 8P channels back and forth without any problem.
+
+i do get some clicks and stuff when i see these messages in the server:
+
+Connection is not synched, skip cycle...
+Connection is not synched, skip cycle...
+Connection is not synched, skip cycle...
+
+and in client: (i get these both with and w/o "-dnet -l10"  - thats for
+latency and i tried it as Staphane requested)
+
+ActivePortsFromNetwork: incorrect port = 1302707770
+Packet(s) missing from... -1 1
+NetSlave : overloaded, skipping receive
+ActivePortsFromNetwork: incorrect port = 149686076
+ActivePortsFromNetwork: incorrect port = 1308103740
+ActivePortsFromNetwork: incorrect port = 1758646842
+Packet(s) missing from... -1 1
+NetSlave : overloaded, skipping receive
+ActivePortsFromNetwork: incorrect port = 1603161786
+
+i also get a few XRUNS on the jack server (in linux) but these vanish if i
+switch from -p128 to -p256.
+
+i also tried -S option for Sync in : client only, both client and server.
+
+hydrogen takes too long to start playing (it stops immidiately though).
+once hydrogen is rolling, jack server also says rolling - there is no way
+to start the jack server rolling from qjackctl play button.
+on the jack client side, i can roll freely from qjackctl, but it does not
+start/stop anything in either the client side (i have FL studio running),
+nor on the server side.
+
+that's pretty much my findings. For audio processing this is great (16
+channels of audio is rather massive for home DAW)
+
+On a side note:
+im also trying to get sound from amSynth and try to control it through midi
+virtual keyboard. bammer.
+i compiled and installed 2 virtual keyboards. jack - keyboard and vkeybd.
+the former shows up in midi connections tab, and i can connect it to
+amSynth. But i can hear no sound - it is as if  the signals never reach am
+synth.
+The latter, i can't even see it in midi connections pane...
+
+I'm sure i've seen screenshots in the internet of vkeybd showing up in
+jack..
+anything i am missing about how to start (perhpas) keybd in order for it to
+show up?
+other soft synths that you suggest i try (so as to verify virtual midi
+connectivity can produce sound).
+
+Last but not least.
+I would like to run more than one qjackctl (and jackd) on the jack master
+pc (linux). it seems impossible unless i open separate terminals and export
+the variable $JACK_DEFAULT_SERVER as a difference value in each.
+
+Then i can start a different qjackctl from each terminal. but i will not
+get any ports (apart from system) showing up. basically, i'd expect the
+windows jack client to show up in at least one of them (they both run
+"jack_load netmanager" as a post jackd startup command).
+
+Also i have set virtual alsa devices  (cloop and ploop - through an init
+script called loop2jack, see here
+http://alsa.opensrc.org/Jack_and_Loopback_device_as_Alsa-to-Jack_bridge) so
+as to route all sound from my desktop appz through one of the these running
+jack instances on my linux jack master.
+
+if i'm running a single qjackctl all the above will show up nicely, but not
+if i run 2 sessions. is it possible to have clients show up in either of
+the sessions? if it possible to  share audio, between different instances?
+
+The reason i ask is because i have 2 audio cards on my DAW. one is prof
+audio card and the other, the onboard soundcard. I would still like to add
+some effect in the onboard soundcard, which i'll use to pass desktop sound
+through.
+
+I can not use the pro audio card for jackified desktop appz sound, because
+ XRUNS are generated if i use the ploop and cloop alsa devices with low
+jack server frame settings (-p128 and -p256). so redirecting the desktop
+sound to another soundcard (through another jack) would be awesome. is it
+possible?
+
+Thank you for your help!
+Nass
+
+
+On Fri, Sep 7, 2012 at 10:32 AM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+
+&gt;
+&gt; Le 7 sept. 2012 &#xE0; 02:30, Athanasios Silis a &#xE9;crit :
+&gt;
+&gt; &gt; ok so some quite first findings,
+&gt; &gt; disclaimer: this is the very first time i'm attempting this so most
+&gt; probably i need to tweak numbers and stuff to make it sing.
+&gt; &gt;
+&gt; &gt; ok first the versions and such:
+&gt; &gt;
+&gt; &gt; -my home network is based on a cheap gigabit switch. there is not too
+&gt; much traffic. I have server running linux, that hosts several services on
+&gt; the intranet and also is the internet gateway. internallly from the
+&gt; gateway/file server there is the gigabit switch and a small 100Mbit wifi
+&gt; access point. there exist 2 more pcs and a laptop. at the time of running.
+&gt; The server and the 2 pcs were on.
+&gt; &gt; Also, the services run internally, include, dhcp , dns, ntpd... i hope
+&gt; this is not a hell of traffic.
+&gt; &gt;
+&gt; &gt; -jack server: v1.9.8 (sorry no time to install 1.9.9.4 - i'll do that
+&gt; when i get back in 10 days), on a linux 32bit
+&gt; &gt; -jack client: v1.9.8 - 32bit executable , win7 -64bit,
+&gt; &gt;
+&gt; &gt; -connected using netjack2, as described in the wiki for netjack2
+&gt; &gt;
+&gt; &gt; -I did only audio testing, no midi (sorry - no kb pressent - i could use
+&gt; a virtual kb if someone could give me a how to in order to understand midi
+&gt; in linux -raw/seq )
+&gt; &gt;
+&gt; &gt; -the master starts with this params:
+&gt; &gt;
+&gt; &gt; creating alsa driver ...
+&gt; hw:2,0|hw:2,0|128|2|48000|0|0|hwmon|hwmeter|-|32bit
+&gt; &gt; control device hw:2
+&gt; &gt; configuring for 48000Hz, period = 128 frames (2.7 ms), buffer = 2 periods
+&gt; &gt;
+&gt; &gt; -the slave is identified automatically on the master
+&gt; &gt;
+&gt; &gt; New NetMaster started
+&gt; &gt; **************** Network parameters ****************
+&gt; &gt; Name : stardom
+&gt; &gt; Protocol revision : 5
+&gt; &gt; MTU : 1500
+&gt; &gt; Master name : starbase
+&gt; &gt; Slave name : stardom
+&gt; &gt; ID : 1
+&gt; &gt; Transport Sync : no
+&gt; &gt; Send channels (audio - midi) : 12 - 0
+&gt; &gt; Return channels (audio - midi) : 10 - 0
+&gt; &gt; Sample rate : 48000 frames per second
+&gt; &gt; Period size : 128 frames per period
+&gt; &gt; Network latency : 5 cycles
+&gt; &gt; SampleEncoder : Float
+&gt; &gt; Slave mode : sync
+&gt; &gt; ****************************************************
+&gt; &gt;
+&gt; &gt; -ok a possible bug i think i identified:
+&gt; &gt;
+&gt; &gt; -I can not start the slave jack (in windows) from qjackctl. the slave
+&gt; qjackctl tries to start jack with the following line:
+&gt; &gt;
+&gt; &gt; 02:00:27.098 jackd.exe -S -R -t200 -dnet -r48000 -p1024
+&gt; &gt; 02:00:27.145 JACK was started with PID=47748568.
+&gt; &gt; 02:00:27.285 Could not connect to JACK server as client. - Overall
+&gt; operation failed. - Unable to connect to server. Please check the messages
+&gt; window for more info.
+&gt; &gt;
+&gt; &gt; -this most probably fails because the net backend, does not support the
+&gt; options -r -p, but i have no way of disabling these on the jzck control
+&gt; interface... so one thing to watch out for.
+&gt;
+&gt; -r48000 -p1024 do not make sens in ht net case: those parameters are
+&gt; actually get from the master.
+&gt;
+&gt; This is a bug in Qjackctl
+&gt;
+&gt;
+&gt; &gt;
+&gt; &gt; -so on the slave jack, i started it from the command prompt as
+&gt; &gt;
+&gt; &gt; jackd.exe -S -R -dnet
+&gt; &gt;
+&gt; &gt; -and got the following
+&gt; &gt;
+&gt; &gt; **************** Network parameters ****************
+&gt; &gt; Name : stardom
+&gt; &gt; Protocol revision : 5
+&gt; &gt; MTU : 1500
+&gt; &gt; Master name : starbase
+&gt; &gt; Slave name : stardom
+&gt; &gt; ID : 1
+&gt; &gt; Transport Sync : no
+&gt; &gt; Send channels (audio - midi) : 12 - 0
+&gt; &gt; Return channels (audio - midi) : 10 - 0
+&gt; &gt; Sample rate : 48000 frames per second
+&gt; &gt; Period size : 128 frames per period
+&gt; &gt; Network latency : 5 cycles
+&gt; &gt; SampleEncoder : Float
+&gt; &gt; Slave mode : sync
+&gt; &gt; ****************************************************
+&gt; &gt;
+&gt; &gt; -NICE!
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; OPERATION
+&gt; &gt; ------------------
+&gt; &gt;
+&gt; &gt; with this setup i routed sound from the slave to the master.
+&gt; &gt; indeed i fired up FL studio on windows and used the "jack router"  asio
+&gt; driver.
+&gt; &gt;
+&gt; &gt; nice and easy, the FL showed up as a pair of new ports on the slave
+&gt; jack's connection pane. once i also connected a pair of the inputs into FL
+&gt; studio, a pair of input ports appeared on the slave jack! NICE! :)
+&gt; &gt;
+&gt; &gt; if i start 8 playback and 4 capture channels on the slave jack I
+&gt; generally get very decent sound.
+&gt; &gt;  I do get a few of these though
+&gt; &gt;
+&gt; &gt; Connection is not synched, skip cycle...
+&gt; &gt; Connection is not synched, skip cycle...
+&gt; &gt; Connection is not synched, skip cycle...
+&gt; &gt; Connection is not synched, skip cycle...
+&gt; &gt;
+&gt; &gt; i get these even with just 2 capture and 2 playback ports only. still
+&gt; they are infrequent.
+&gt; &gt;
+&gt; &gt; Coming to think of it, the clicks are probably due to some infrequence
+&gt; xruns on the slave jack (can i do smth about it (i just realised as i
+&gt; happened to hear a click in the sound while seeing the xrun counter being
+&gt; incremented)
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; Anyway, then i enabled all 22 channels on netjack2 i tried to route a
+&gt; simple audio stream from the slave to the master,  one way..
+&gt; &gt; But the sound was far from great. I got alot of xruns and alot of
+&gt; packets where dropped.
+&gt; &gt; The reason is obvious, but it was a nice stress test. here are some
+&gt; findings:
+&gt; &gt;
+&gt; &gt; -slave command prompt says:
+&gt; &gt;
+&gt; &gt; NetSlave : overloaded, skipping receive
+&gt; &gt; .............(alot of these)...................
+&gt; &gt; NetSlave : overloaded, skipping receive
+&gt; &gt; NetSlave : overloaded, skipping receive
+&gt; &gt; NetSlave : overloaded, skipping receive
+&gt; &gt; NetSlave : overloaded, skipping receive
+&gt; &gt; NetSlave : overloaded, skipping receive
+&gt; &gt; NetSlave : overloaded, skipping receive
+&gt; &gt; Cannot read named pipe name = \\.\pipe\server_jack_default_0 err = 109
+&gt; &gt; NetSlave : overloaded, skipping receive
+&gt; &gt; HandleRequest: cannot read header
+&gt; &gt; Unknown source port in attempted (dis)connection src_name [FL:out3]
+&gt; dst_name [sy
+&gt; &gt; stem:playback_1]
+&gt; &gt; Unknown source port in attempted (dis)connection src_name [FL:out4]
+&gt; dst_name [sy
+&gt; &gt; stem:playback_2]
+&gt; &gt; NetSlave : overloaded, skipping receive
+&gt; &gt; NetSlave : overloaded, skipping receive
+&gt; &gt; NetSlave : overloaded, skipping receive
+&gt; &gt; NetSlave : overloaded, skipping receive
+&gt; &gt;
+&gt; &gt; -the Jack control (which i opened afterwards and identified the already
+&gt; runnning connection) showed:
+&gt; &gt;
+&gt; &gt; 02:08:43.374 XRUN callback (76).
+&gt; &gt; 02:08:43.493 JACK connection change.
+&gt; &gt; 02:08:45.306 XRUN callback (37 skipped).
+&gt; &gt; 02:08:47.339 XRUN callback (3 skipped).
+&gt; &gt; 02:09:00.197 XRUN callback (118).
+&gt; &gt; 02:09:01.277 XRUN callback (119).
+&gt; &gt; 02:09:01.533 XRUN callback (1 skipped).
+&gt; &gt; 02:09:03.569 XRUN callback (1 skipped).
+&gt; &gt; 02:10:11.069 JACK connection change.
+&gt; &gt;
+&gt; &gt; -the jack master was alot more talkative:
+&gt; &gt;
+&gt; &gt; Connection is not synched, skip cycle...
+&gt; &gt; Connection is not synched, skip cycle...
+&gt; &gt; Connection is not synched, skip cycle...
+&gt; &gt; 02:32:07.086 XRUN callback (1).
+&gt; &gt; JackEngine::XRun: client = stardom was not run: state = 2
+&gt; &gt; JackAudioDriver::ProcessGraphAsyncMaster: Process error
+&gt; &gt; Connection is not synched, skip cycle...
+&gt; &gt; Connection is not synched, skip cycle...
+&gt; &gt; JackEngine::XRun: client = stardom was not run: state = 1
+&gt; &gt; JackAudioDriver::ProcessGraphAsyncMaster: Process error
+&gt; &gt; JackEngine::XRun: client = stardom was not run: state = 1
+&gt; &gt; JackAudioDriver::ProcessGraphAsyncMaster: Process error
+&gt; &gt; Connection is not synched, skip cycle...
+&gt; &gt; JackEngine::XRun: client = stardom was not run: state = 1
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; TRANSPORT:
+&gt; &gt; --------------------
+&gt; &gt;
+&gt; &gt; i started hydrogen on the jack master and routed the sound to the jack
+&gt; slave and directly back  to the jack master and from the there to the sound
+&gt; card. pressing the play button on hydrogen would not start playing
+&gt; immediately, but only after a few seconds (about 10-15sec). when it finally
+&gt; starts playing,
+&gt; &gt;
+&gt; &gt; If i disconnect the slave jack, the start of playback is immediate. the
+&gt; jack masters transport play button is also pressed and i get the message:
+&gt; &gt;
+&gt; &gt; 02:42:16.937 Transport start.
+&gt; &gt;
+&gt; &gt; shouldn't the jack slave also be started??? or am i wrong to think that?
+&gt;
+&gt; Not implemented for now.
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; Thats all folks for now!
+&gt; &gt;
+&gt; &gt; Nass
+&gt; &gt;
+&gt;
+&gt; - so I understand the result is somewhat mixed. I you can try latest
+&gt; 1.9.9.4 that may helps in parts of the issue (like those "Cannot read named
+&gt; pipe name = \\.\pipe\server_jack_default_0 err = 109" error...)
+&gt;
+&gt; - you can also try to increase the latency parameter on slave side, like:
+&gt;
+&gt; jackd -S -R -d net -l 10
+&gt;
+&gt; - you can also try to put master side in "Synchronous" mode (with the -S)
+&gt;
+&gt; St&#xE9;phane
+&gt;
+&gt;
+&gt;
+&gt;
+&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1348361628.13193_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1348479085.22275_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1348363659.29333_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1348363659.29333_0.ltw:2,a&nbsp;&lt;CADgchnsxczJB-QsadL6WniDgL_ZfOHpiCrbePP4H8mDvEwWTkw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

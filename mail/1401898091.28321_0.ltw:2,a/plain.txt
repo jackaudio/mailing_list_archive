@@ -1,0 +1,78 @@
+Date:        Wed, 04 Jun 2014 20:00:53 +0400
+From:        TimKa  <[hidden] at yandex dot ru>
+To:          Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] Place for bug reporting (1401880557.26644_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Place for bug reporting (1401899597.31107_0.ltw:2,)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] Place for bug reporting (1401900769.916_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Place for bug reporting
+
+Hi Adrian, please see below
+
+04.06.2014 15:15, Adrian Knoth пишет:
+> On Tue, Jun 03, 2014 at 05:28:35PM +0400, TimKa wrote:
+>
+>> jackd_netsource -H <master_IP> I get a lot of "nextrun amount 21ms"
+>> and less 106 or 61ms on master console. Unfortunately I can not find
+>> any information on Web by this issue so trying to find right way by
+>> mail list. //
+> It just means "something is wrong", where "something" could mean
+> anything from system tuning to hardware design (who knows if your SoC
+> has some crappy design that prevents timely memory access for NIC
+> and audio simultaneously?)
+>
+>> I did not get any feedback again, so after these three unsuccessful
+>> steps I decided to write my own network clients, because it's much
+>> more clear to understand and debug. So I wrote very simpe send/recv
+>> client with jitter buffer on receiving side but after some time of
+>> proper working it's became broken and I start got xruns and
+> Clock drift. I assume you used jackd clients on both sides. Since they
+> advance independently, one side will over- or underflow sooner than
+> later.
+>
+> You either need to slave one clock to the sender (this boils down to
+> writing another network backend; you could also stick with netjack) or
+> resample on the receiving side to the local clock (IIRC that's what
+> jacktrip does)
+I do not believe that it's clock drift. I have two master clock sides. I 
+just send UDP buffers to ethernet on sender side. On receiver side I 
+just check availability of data with zero timeout (and read to buffer if 
+present) and copy data to out from jitter buffer, also I check for 
+jitter buffer overflow, so, as I understand, clock drift is not key for 
+my situation. Yes, I currently make sound worse (if my jitter underflow 
+or overflow), but I will fix it for next step using voice detector and 
+expanding jitter-buffer functions.
+>> So right now I do not have working solution based on jackd and
+>> thinking about writing my own alsaclient( with similar functionality.
+> You're discovering the fundamentals of network audio, most prominently
+> clock synchronisation. It really boils down to this.
+For VoiceIP (similar to my demo) there are some strategics to work good 
+enough even with two master clock sides.
+>
+> Doing all this on a limited embedded system doesn't exactly help, that
+> is why you didn't get any feedback: only few have done this before, and
+> those who were successful are most likely selling this stuff by now.
+>
+>
+> Worse, there is no active netjack dev at the moment, so you're literally
+> on your own. There are a couple of patches, but apparently, nobody
+> cares. Feel free to familiarize yourself with the subject and become the
+> netjack dev, maybe together with Leonardo.
+>
+> When I say netjack, I mean both incarnations (netjack1, netjack2).
+>
+>
+> Posting logs of underruns won't get you nowhere, this doesn't even
+> qualify as a bug report. A segfault without a stacktrace neither.
+Could you please make advise what's enough for bug report?
+>
+>
+>
+> Cheers
+>
+Cheers
+
+1401898091.28321_0.ltw:2,a <538F42B5.6030103 at yandex dot ru>
+________________________________________________________________________________
+

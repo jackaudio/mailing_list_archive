@@ -1,0 +1,59 @@
+Date:        Tue, 18 Mar 2014 08:32:39 +0000
+From:        John Emmas  <[hidden] at tiscali dot co dot uk>
+To:          Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] Using Jack (1395128239.24911_0.ltw:2,)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] Using Jack (1395141212.4869_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Using Jack
+
+On 18/03/2014 07:41, Stéphane Letz wrote:
+> Lack of time to test and answer, possible more time in april.
+>
+
+Hi Yves,
+
+Since Stephane is unavailable at present I can give you a very rough 
+idea of how we start Jack from within Mixbus.  However, we don't support 
+midi (within Windows) so it might not be relevant to your situation.  
+Please bear in mind what Stephane said previously... setting your app up 
+as a Jack server is NOT a good idea - because if other apps use Jack 
+(like Mixbus, for example) they would use the version provided by your 
+app.  So, when your app eventually shuts down, anything else that was 
+using Jack would break!  The correct way to use Jack is to launch it as 
+an external server and let Jack decide whether & when to shut itself down.
+
+In Mixbus, we seem to create a file called ".jackdrc" (notice that it 
+begins with a ".", rather than a "j").  Basically, that file contains a 
+list of commands for starting Jack.  Typical file contents might look 
+like this:-
+
+"C:\Program Files\Jack\jackd.exe" -S -p 512 -T -d portaudio -r 48000 -p 
+512 -P  "ASIO::ASIO4ALL v2"  -C  "ASIO::ASIO4ALL v2"
+
+The first parameter is a path to the Jack server.  "-S" means to start 
+Jack in synchronous mode (I believe this is mandatory on Windows).  Not 
+sure what the (two) "-p" parameters are but at least one of them must be 
+the buffer size (512 in this example). "-T" means "temporary" (Jack will 
+shut itself down automatically when it detects that nothing is connected 
+to it any more).  "-d portaudio" is the audio driver (portaudio is 
+almost always the driver for Windows - so you'll need to install that 
+too.  For testing purposes you can use "-d dummy").  "-r 48000" is the 
+audio sample rate.  "-P" then gives us the Playback device and "-C" 
+gives us the Capture device (input device).
+
+If you typed that complete line into a command prompt (assuming you'd 
+already installed ASIO4ALL) Jack would launch and would use it.
+
+Having described all that....  I've no idea what Jack actually does with 
+that .jackdrc file.  Stephane or Paul will undoubtedly know. It looks 
+like the file needs to be in the user's personal folder (e.g. 
+C:\Documents and Settings\<user_name>) but I'm not sure how we tell Jack 
+to look for it there.  Simply starting Jack with no parameters doesn't 
+seem to make it search for .jackdrc - so I'm not sure how that happens.  
+If I manage to get some spare time this week, I'll try to find out.
+
+John
+
+1395131598.28110_0.ltw:2, <532804A7.7020805 at tiscali dot co dot uk>
+________________________________________________________________________________
+

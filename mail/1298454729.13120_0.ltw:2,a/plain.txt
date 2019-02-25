@@ -1,0 +1,64 @@
+Date:        Wed, 23 Feb 2011 10:51:52 +0100
+From:        torbenh  <[hidden] at gmx dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Peter Nelson Re: [Jack-Devel] backend switching - another way (1298413843.10583_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] backend switching - another way
+
+On Tue, Feb 22, 2011 at 10:30:29PM +0000, Peter Nelson wrote:
+> On Mon, 2011-02-21 at 22:44 +0000, Fons Adriaensen wrote:
+> > On Mon, Feb 21, 2011 at 11:33:26PM +0100, Arnold Krille wrote:
+> >  
+> > > You seemed to limit your persistent ports to hardware-ports. I like to remove 
+> > > the distinction between backends and clients and thus between hardware and 
+> > > software ports. And I think that virtual/persitent ports can be benefitial to 
+> > > other apps/use-cases as well as for abstracting the actual hardware/backend.
+> > 
+> > I agree, but as my original post should have made clear, that
+> > is not what I proposed to discuss even if I like the idea.
+> > Abstracting the HW in this way is something that *could* be
+> > done given a bit of courage. Doing this with application ports
+> > as well is much more ambitious, it would have deep consequences
+> > and would leave little of Jack as we know it.
+> >  
+> > Ciao,
+> > 
+> 
+> Couldn't you just create those abstract ports with yet another client?
+> 
+> Perhaps as an internal client (I assume this saves on context
+> switches?), it can contain whatever logic for connecting to the real HW
+> ports as the user desires, or be controlled by a session manager.
+> 
+> This might be a reasonable use of jack_port_tie() perhaps...
+
+if this was using a facility like jack_port_tie() it wouldnt need a
+process_cb, and we would still get zero copy behaviour.
+
+the impact on the code would be quite small.
+(only need to fix jack_port_tie() )
+
+the cons of this approach is that the original h/w ports are still
+visible, and autoconnect clients like mplayer and portaudio would still
+connect to the system ports, and not the new virtual ones.
+
+nedko already has somthing like this in his ladish rooms
+(he is using a separate client, which does memcpy in the process_cb, but
+the principle is pretty similar)
+
+
+
+
+
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+
+-- 
+torben Hohn
+
+1298454729.13120_0.ltw:2,a <20110223095152.GA5404 at siel dot b>
+________________________________________________________________________________
+

@@ -1,0 +1,44 @@
+Date:        Sat, 06 Jun 2015 07:47:58 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Matthias Apitz <[hidden] at unixarea dot de>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Matthias Apitz [Jack-Devel] Fwd: KDE && jackd flag -l (was: kbiff && zombies) (1433579059.6159_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Fwd: KDE && jackd flag -l (was: kbiff && zombies)
+
+On Sat, Jun 6, 2015 at 4:24 AM, Matthias Apitz <[hidden]> wrote:
+
+>
+> Hallo,
+>
+> I'm an active FreeBSD user and I'm trying to nail down a problem of
+> zombies caused by KDE components which make use of
+> jack-audio-connection-kit-0.121.3
+>
+> To get this debugged I have inserted a wrapper script as
+> /usr/local/bin/jackd which does some logging and calls at the end the
+> real jackd as jackd.bin (see below). I've stumbled over something in the
+> source and man page of jackd which I do not understand:
+>
+> The man page explains the flag -l as for changing the LISTEN port, while
+> the implementation in the C-source use the flag -l to just print the
+> actual working directory (/tmp) and do exit(0); see below.
+>
+
+You're confused.
+
+JACK Command line structure:
+
+    jackd [ server options ] -d [ backend name ] [ backend options ]
+
+the same option may appear twice, once as a server option and once as a
+backend option. The semantics of each appearance are totally different.
+
+-l is both a server option (meaning: print out the location of the
+directory where FIFOs exist to communicate with the the server), and an
+option for the net1 backend (meaning: define the listen port for sync
+packets).
+
+1433591285.24791_0.ltw:2, <CAFa_cK=rZmz2+7EDgVw73u4HBgoyH_HYya70PZbMg0Sf8gBxKg at mail dot gmail dot com>
+________________________________________________________________________________
+

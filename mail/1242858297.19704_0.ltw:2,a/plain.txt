@@ -1,0 +1,47 @@
+Date:        Thu, 21 May 2009 00:15:16 +0200
+From:        Fons Adriaensen  <[hidden] at kokkinizita dot net>
+To:          [hidden] at io dot com
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>
+In-Reply-To: Jack O'Quin Re: [LAD] [Jack-Devel] A picture...of the global mess (1242855836.14687_0.ltw:2,a)
+Follow-Up:   Jack O'Quin Re: [LAD] [Jack-Devel] A picture...of the global mess (1242875773.21586_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] A picture...of the global mess
+
+On Wed, May 20, 2009 at 04:43:33PM -0500, Jack O'Quin wrote:
+
+> On Wed, May 20, 2009 at 2:38 PM, Fons Adriaensen <[hidden]> wrote:
+>
+> > You don't need this jackd. If all the IPC is in libjack, an
+> > autostart request can be passed directly to jackcontrol without
+> > creating a transient process.
+> >
+> > 1. Client uses jack_client_open() with autostart.
+> > 2. Libjack doesn't find the server
+> > 3. Libjack sends 'start server' to jackcontrol
+> > 4. jackcontrol starts the server
+> > 5. jackcontrol notifies libjack
+> > 6. The jack_client_open() call proceeds.
+> >
+> > Between 3 and 5 the thread doing the original call
+> > (i.e. the client's thread) just waits within libjack
+> > for the ok/fail message from jackcontrol.
+> 
+> Don't forget a timeout in case the fork/exec fails and there is no message.
+
+The fork/exec is done by jackcontrol, if it fails then
+jackcontrol reports this and the entire jack_client_open()
+is made to fail. A timeout is required to cover the case
+that jackcontrol isn't there (but that can be tested before
+the start server request), or it crashes doing the fork/exec,
+but in the latter case there are bigger problems anyway.
+
+Ciao,
+
+-- 
+FA
+
+Io lo dico sempre: l'Italia è troppo stretta e lunga.
+
+1242858297.19704_0.ltw:2,a <20090520221516.GB3547 at zita2 dot kokkinizita dot net>
+________________________________________________________________________________
+

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1501689380.2930_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1501696197.9162_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1501693255.6533_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 02 Aug 2017 19:00:32 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> David Kastrup </span> &lt;[hidden] at gnu dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>J&#xF6;rg M&#xFC;ller
+<a href='../1501689380.2930_0.ltw:2,a/index.html'>Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels </a></td></tr>
+</table>
+<pre>
+J&#xF6;rg M&#xFC;ller &lt;[hidden]&gt; writes:
+
+&gt; This is months old, but I have news to this topic.
+&gt;
+&gt; The suggested changes work and we have set up 11x16channel audio
+&gt; monitors. That is 176 speakers!
+&gt;
+&gt; However, running Jack is highly unstable, it crashes roughly every two
+&gt; minutes and causes a huge amount of XRuns even at buffer sizes like
+&gt; 16000. CPU is down at 5%, so that is not the issue. Jack runs without a
+&gt; problem when using just one card. However, we need to combine the three
+&gt; MADI-Cards via .asoundrc in order to eventually get to 768 channels.
+&gt;
+&gt; I have the jack logs here: https://pastebin.com/ke25cdXB
+&gt;
+&gt; Do you have any idea what could cause the issue?
+
+768 channels is a whole lot of throughput.  The MADI cards work with
+some bus mastering setup if I remember correctly, so the CPU load should
+be a weak indication of how close you are to choking the system as long
+jack is working efficiently: in that case the CPU load will be choked
+_low_ when things go south.
+
+So this looks like your next go-to area is the hardware.  Interrupt
+priorities (rtirq), PCI burst lengths for the cards involved (make them
+long enough to be efficient and short enough that the CPU can shovel the
+stuff off to disk eventually).
+
+Of course, you also _must_ make sure that the clocks of your converters
+are _all_ hardware-synchronized or Jack has no chance to keep up with
+both the slowest and fastest unit without eventually dropping samples on
+the fast one.
+
+-- 
+David Kastrup
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1501689380.2930_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1501696197.9162_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1501693255.6533_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1501693255.6533_0.ltw:2,a&nbsp;&lt;87efstkiq7.fsf at fencepost dot gnu dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,64 @@
+Date:        Tue, 09 Apr 2013 19:37:08 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Pawel <[hidden] at wp dot pl>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Pawel Re: [Jack-Devel] Graph callback and client state (1365548873.24465_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Graph callback and client state
+
+On Tue, Apr 9, 2013 at 7:07 PM, Pawel <[hidden]> wrote:
+
+>
+> - port is inactive - ?? Client suppose that port exits - and it exists, so
+> it's "broken" ... but because jack server KNOW this before serve it to
+> client  - it should at least try to avoid problems.
+>
+> What I want to say - we can't fix this ultimately - but jack server should
+> at least TRY to protect client from evil
+
+
+you can't protect them from *all* "evil", so the question is : which types
+of "evil" will we attempt to avoid.
+
+
+> - and in this case he definitely can. So , once again - jack_get_ports
+> shouldn't return broken ports if he know they are useless for client.
+>
+
+mostly agreed.
+
+
+>
+> I also can't find a problem in jack_is_port_active. Example:
+> jack_get_ports(....)
+> <--- obviously some time here - and things can change ..
+> jack_port_t* port = jack_get_port_by_name ( ...)
+> <-- still things can change - but if we got port == NULL we fail here and
+> remove port from patchbay graph.
+> jack_port_is_active ( client, port);
+>
+# return 0 on success i.e. port still exists and is active. Otherwise we
+> can return some codes like "1 - not active, 2 - not exists .. etc, but for
+> me (as patch manager maintainer) it's clear that in this short time window
+> port is broken. I just mark it as "unusable" .. and wait for another event.
+>
+
+so for now, you know that the port is active ... so what? you can't do
+anything useful with this information.
+
+every time you use jack_get_ports(), you get, as you noted above, a
+"snapshot" of things. there is no way to prolong the life of the
+information in the snapshot. when you come to use the information, you
+*must* be ready for some or all of it to be invalid or out of date.
+
+i think this is a somewhat separate question to whether or not we should
+return ports that *at the time of jack_get_ports()* are known to be
+inactive. logic and cleanliness would suggest that we should not. however,
+the comparison with other kinds of potential "invalidation" of port
+information says "it doesn't really matter".
+
+--p
+
+1365550636.25428_0.ltw:2,a <CAFa_cKkgPpd7fzZ1pC=Pq8_0NETMy9RaOj4xXu_vMdDeYZoBgQ at mail dot gmail dot com>
+________________________________________________________________________________
+

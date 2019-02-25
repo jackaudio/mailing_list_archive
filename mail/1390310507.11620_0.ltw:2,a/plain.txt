@@ -1,0 +1,61 @@
+Date:        Tue, 21 Jan 2014 14:21:39 +0100
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Matt Flax Re: [Jack-Devel] new IIO driver added to jack - large overruns (1390308547.9077_0.ltw:2,a)
+Follow-Up:   Christian Schoenebeck Re: [Jack-Devel] new IIO driver added to jack - large overruns (1390313790.17487_0.ltw:2,a)
+Follow-Up:   Matt Flax Re: [Jack-Devel] new IIO driver added to jack - large overruns (1390340276.29778_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] new IIO driver added to jack - large overruns
+
+On Tue, Jan 21, 2014 at 11:48:55PM +1100, Matt Flax wrote:
+If so: 
+
+> I have found that jack isn't pulling much cpu time at all when
+> operating the iio driver. Top reports that it chews about 3% of the
+> cpu power. This suggests that a lot of the delay is coming from
+> kernel related servicing of the iio read calls.
+> 
+> The small overruns can probably be removed by reading from the DMA
+> buffer in the background, but I would need to do some form of
+> locking and unlocking ... whether it be polling in user space or
+> some atomic lock system ...
+
+The usual approach is to be woken up from the kernel whenever some parts
+of the buffer (let's say one half for a start) are ready for processing.
+
+This doesn't require locking. Thing is, it's a bit hard to give useful
+hints, since you're developing an entirely new driver, that is, only you
+know the details.
+
+So as a general advice, here's what you can do:
+
+   1.) Have a look at some PCI ALSA drivers and/or read the ALSA driver
+       tutorial. Even if you really don't want to write an ALSA driver,
+       you'll at least understand the basic approach taken in jackd.
+
+
+   2.) If you're dealing with a userspace driver, maybe have a look at
+       FFADO and its jackd integration. Note that the FFADO project has
+       shown that you really want kernel-level streaming, so userspace
+       drivers are generally more headache than necessary.
+
+   3.) Take a shortcut and hire Paul Davis, Clemens Ladisch or Daniel
+       Mack. No idea if any of these guys is available for freelancing
+       at the moment. They know Linux audio inside out and hence know
+       how to do it right.
+
+
+I don't know your hardware at hand, but unless you have very good
+reason, I strongly encourage you to write an ALSA driver. This way, your
+audio device would automatically work with jack1 AND jack2, so no need
+for porting.
+
+
+Just my €0.02
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1390310507.11620_0.ltw:2,a <20140121132139.GK25242 at ltw dot loris dot tv>
+________________________________________________________________________________
+

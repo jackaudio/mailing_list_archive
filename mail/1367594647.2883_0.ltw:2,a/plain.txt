@@ -1,0 +1,54 @@
+Date:        Fri, 03 May 2013 17:23:52 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          "MONTANARO Luciano (MM)" <[hidden] at magnetimarelli dot com>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: MONTANARO Luciano (MM) [Jack-Devel] Jack thread cancellation (1367593890.1594_0.ltw:2,a)
+Follow-Up:   MONTANARO Luciano (MM) [Jack-Devel] R: Jack thread cancellation (1367832671.29903_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack thread cancellation
+
+Le 3 mai 2013 à 17:11, "MONTANARO Luciano (MM)" <[hidden]> a écrit :
+
+> Hi list,
+> 
+> I have an embedded application that makes use of jack (Version 1.9.8).
+> I have started seeing crashes from the clients in the JackError() call.
+> 
+> The stack trace shows that the thread executing (Which is handling the
+> JackSocketChannel::Execute call) receives is being killed
+> (sigcancel_handler is called) and since the thread is in
+> CANCEL_ASYNCHRONOUS mode, it crashes since an unsafe function is
+> called (vnsprintf).
+> 
+> The client I am using is actually unaware of using Jack at all, it is
+> using the alsa jack plugin, and it opens/closes the alsa devices many
+> times during its lifetime.
+> 
+> Now, I have a few doubts:
+> - Why are threads created with cancellation type PTHREAD_CANCEL_ASYNCHRONOUS?
+>  Is this because the realtime threads need this or is there some other reason?
+
+Old written code. AFAIR PTHREAD_CANCEL_DEFERRED was not working so well (or possibly not the same way on test OS like Linux and OSX) so PTHREAD_CANCEL_ASYNCHRONOUS was choses.
+
+> - Would it be possible to mark the threads used by the JackMessageBuffer and
+>  JackSocketClientChannel as PTHREAD_CANCEL_DELAYED instead?
+
+You mean PTHREAD_CANCEL_DEFERRED?  Possibly yes.  Try to test it.
+
+> - Why is fThread.Kill() used in JackSocketClientChannel::Stop instead of fThread.Stop()?
+
+Same answer as before, Stop was not working reliably on all testes OSs, so Kill was used.
+
+
+>  The latter should still work, and allow the Execute() to terminate it communication
+>  with the server.
+> 
+> Thanks in advance,
+> Luciano
+> --
+
+Stéphane
+
+1367594647.2883_0.ltw:2,a <701B0BF3-A199-4235-8F5B-3F72998AE460 at grame dot fr>
+________________________________________________________________________________
+

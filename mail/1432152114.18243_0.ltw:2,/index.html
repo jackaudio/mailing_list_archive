@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Netjack 2: how to improve reliability by allowing greater latency?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Netjack 2: how to improve reliability by allowing greater latency?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1432150136.17215_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1432200764.26656_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1432152114.18243_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 20 May 2015 22:01:46 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Andr&#xE9; Pinto </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>David Nielson &lt;[hidden] at naptastic dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>David Nielson
+<a href='../1432150136.17215_0.ltw:2,/index.html'>Re: [Jack-Devel] Netjack 2: how to improve reliability by allowing greater latency? </a></td></tr>
+</table>
+<pre>
+Hi David,
+
+Thanks for your reply. I think it is understandable that people didn't
+reply to this topic as this is a feature described as not-supported on the
+GitHub wiki page:
+
+"Wireless and Internet use are not supported because they can't be
+qualified as *realtime*. In Netjack, you can set a additional latency which
+allow you to prevent from larger transmission delays, due to the use of
+networks with some kind of *random delivery*, like wireless or Internet
+networks. Netjack2 doesn't include this feature for now. That's why we
+recommend the use of classical wired network."
+
+https://github.com/jackaudio/jackaudio.github.com/wiki/WalkThrough_User_NetJack2#2-requirements
+
+I just went ahead anyway and tried my luck by compiling it with OPUS
+support as I was also interested in learning a little bit more about
+Jack/NetJack.
+
+Nevertheless, if you end up trying it, please share your experience, but I
+guess I will have to go with some other (less interesting) solution with a
+different technology for my home wireless stereo system (probably KORUS
+www.korussound.com that uses the patented SKAA technology and requires
+additional dongles everywhere, which I was trying to avoid).
+
+Thanks!
+
+On Wed, May 20, 2015 at 9:28 PM, David Nielson &lt;[hidden]&gt; wrote:
+
+&gt; I was hoping someone who knows more would chime in. It's been a LONG
+&gt; time since I used Netjack, but I thought there was an option to add
+&gt; extra periods of latency, specifically for what you're requesting? And
+&gt; it was this capability that allowed some people back in the day to do
+&gt; recording sessions internationally?
+&gt;
+&gt; I can't test it right now, but if I get a chance tonight, I will. No
+&gt; promises.
+&gt;
+&gt; David Nielson
+&gt;
+&gt; On 05/20/2015 02:17 PM, Andr&#xE9; Pinto wrote:
+&gt; &gt; Judging by the lack of replies, I guess this is not a use case that the
+&gt; &gt; current netjack implementation supports right?
+&gt; &gt;
+&gt; &gt; I don't know how much work would imply making netjack a viable solution
+&gt; &gt; for WiFi streaming but if it is something relatively easy to do, it
+&gt; &gt; might be interesting to explore that path considering the lack of
+&gt; &gt; alternatives for "low latency" audio streaming, bad bluetooth audio
+&gt; &gt; quality and support, proliferation of devices and omnipresence of WiFi
+&gt; &gt; networks across the globe.
+&gt; &gt;
+&gt; &gt; Thank you all anyway for your work on Jack!
+&gt; &gt; Cheers,
+&gt; &gt; Andr&#xE9;
+&gt; &gt;
+&gt; &gt; On Fri, May 15, 2015 at 7:51 PM, Andr&#xE9; Pinto
+&gt; &gt; &lt;[hidden] &lt;mailto:[hidden]&gt;&gt;
+&gt; wrote:
+&gt; &gt;
+&gt; &gt;     Hello,
+&gt; &gt;
+&gt; &gt;     I've been playing around with Jack/Netjack and the Opus codec in
+&gt; &gt;     order to setup a "low latency" WiFi audio stream at home.
+&gt; &gt;
+&gt; &gt;     After compiling Opus with custom modes and Jack2 with Opus support
+&gt; &gt;     (both from the master branches of the respective repositories), I
+&gt; &gt;     was able to run the Master-Slave setup:
+&gt; &gt;
+&gt; &gt;     Master.
+&gt; &gt;     jackd -R -d alsa -d hw:1 -D=false -r44100 -S -n16
+&gt; &gt;     jack_load netmanager
+&gt; &gt;
+&gt; &gt;     Slave:
+&gt; &gt;     jackd -R -d net -C0 -P2 -o0 -i0 -O320 -M1200 -l5
+&gt; &gt;
+&gt; &gt;     + jack_connect to route the net input on the master to the speakers
+&gt; &gt;
+&gt; &gt;     But as I was getting quite frequent audio deterioration, with the
+&gt; &gt;     master showing messages like these:
+&gt; &gt;
+&gt; &gt;     Packet(s) missing from... -1 1
+&gt; &gt;     Wrong packet type : a
+&gt; &gt;     JackEngine::XRun: client = SLAVE_HOSTNAME was not finished, state =
+&gt; &gt;     Running
+&gt; &gt;     JackEngine::XRun: client netmanager finished after current callback
+&gt; &gt;     JackAudioDriver::ProcessGraphAsyncMaster: Process error
+&gt; &gt;     Wrong packet type : a
+&gt; &gt;     Packet(s) missing from... -1 1
+&gt; &gt;     JackAudioDriver::ProcessGraphAsyncMaster: Process error
+&gt; &gt;     JackEngine::XRun: client = SLAVE_HOSTNAME was not finished, state =
+&gt; &gt;     Triggered
+&gt; &gt;
+&gt; &gt;     I've thought that maybe I should just try increasing the network
+&gt; &gt;     latency argument on the slave, as, for my use case, I'm happy with
+&gt; &gt;     latency &lt; 200 ms.
+&gt; &gt;
+&gt; &gt;     By using something like -l30 (the maximum I'm allowed to set) on the
+&gt; &gt;     slave I was able to greatly diminish the Process errors (I still get
+&gt; &gt;     the same lots of wrong packet type and packet missing messages
+&gt; &gt;     though) but it didn't fix the audio artifacts. Actually sometimes
+&gt; &gt;     this change makes the playback even worse with ms pauses every
+&gt; second.
+&gt; &gt;
+&gt; &gt;     So I would like to know if there is any other way to relax the low
+&gt; &gt;     latency requirement in order to improve playback reliability. Or is
+&gt; &gt;     there some kind of incompatibility in the configuration I'm passing
+&gt; &gt;     to both endpoints that is causing these problems?
+&gt; &gt;
+&gt; &gt;     Thanks!
+&gt; &gt;     Andr&#xE9;.
+&gt; &gt;
+&gt; &gt;
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; 
+&gt; &gt; Jack-Devel mailing list
+&gt; &gt; [hidden]
+&gt; &gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt; &gt;
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1432150136.17215_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1432200764.26656_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1432152114.18243_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1432152114.18243_0.ltw:2,&nbsp;&lt;CAHesbnf95a-RwvANWthNPoSJvFtmce8rj=2PaO+-_LFkMF2TwA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

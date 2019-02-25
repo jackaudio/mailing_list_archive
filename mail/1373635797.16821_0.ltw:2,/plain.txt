@@ -1,0 +1,59 @@
+Date:        Fri, 12 Jul 2013 22:59:10 +0930
+From:        Jonathan Woithe  <[hidden] at just42 dot net>
+To:          Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>
+Cc:          [hidden] at lists dot sourceforge dot net, [hidden] at just42 dot net
+In-Reply-To: Jonathan Woithe Re: Segfault when watchdog object is deleted (was: Re: [FFADO-devel] Segfault on jackd/ffado shutdown?) (1373413843.30084_0.ltw:2,)
+
+Subject:     Re: Segfault when watchdog object is deleted
+
+On Wed, Jul 10, 2013 at 08:57:39AM +0930, Jonathan Woithe wrote:
+> On Tue, Jul 09, 2013 at 03:57:55PM +0200, Adrian Knoth wrote:
+> > On 07/09/2013 03:26 PM, Jonathan Woithe wrote:
+> > I vaguely remember a discussion on jack-devel and Paul saying "You must
+> > never ever rely on pthread cancellation, it's broken." Maybe you're just
+> > seeing this.
+> 
+> Perhaps.  I also recall this discussion, but I don't think the reasons
+> behind the statement were ever described in detail (at least not at that
+> time).  I might search the list jack archives and see what turns up.
+
+A web search was surprisingly thin on results.  The general gist of Paul's
+point (according to the only post I could find quickly) appears to stem from
+the significant restrictions that are placed on the thread functions being
+called.  If those functions are doing purely computational tasks with no
+system calls then you can get away with it.  If system calls are involved
+then all bets are apparently off because the rollback can't be done reliably.
+
+In the present case, the segfault occurs in the _Unwind_Resume() function
+having interrupted SystemTimeSource::SleepUsecRelative().  The latter
+function definitely consists of syscalls, which would make the entire thread
+unsuitable for pthread_cancel().  Add to this that the watchdog threads are
+set with a cancellation type of PTHREAD_CANCEL_ASYNCHRONOUS (which places
+even more restrictions on the thread) and we have a significant issue.  Note
+however that changing this to the more conventional PTHREAD_CANCEL_DEFERRED
+doesn't fix the problem.
+
+Removing the calls to SleepUsecRelative() and replacing them with a crude
+loop delay resolves the segfault for me, which pretty much proves the point.
+This all makes sense except for the fact that a segfault has taken so long
+to appear due to all this - and even not it's only affecting a specific
+distribution.  We must have just been lucky.
+
+I'm working on a patch to fix this.  We can't just Stop() the PosixThreads
+because the sleep time can be quite lengthy.  Libffado would therefore take
+quite a few seconds to clean up typically, which is inconvenient.  I expect
+the solution to involve some combination of Stop() and pthread_signal() (to
+interrupt a system call and hopefully speed up the thread exit) but I'm
+still working through various issues (for example, the global nature of
+signal handlers, even if execution context is by thread).
+
+As far as I can tell, only the watchdog uses pthread_cancel() on its
+threads; all other FFADO threads are stopped using PoxixThread::Stop(). 
+Therefore this problem only affects the watchdog object.
+
+Regards
+  jonathan
+
+1373635797.16821_0.ltw:2, <20130712132910.GA1435 at marvin dot atrad dot com dot au>
+________________________________________________________________________________
+

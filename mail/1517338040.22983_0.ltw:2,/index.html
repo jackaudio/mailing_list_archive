@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1517335112.19316_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1517339652.24861_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1517338040.22983_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 30 Jan 2018 19:46:40 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Christian Affolter </span> &lt;[hidden] at purplehaze dot ch&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Christian Affolter
+<a href='../1517332563.16161_0.ltw:2,/index.html'>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Chris Caudle
+<a href='../1517340940.26643_0.ltw:2,/index.html'>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Thomas Brand
+<a href='../1517342497.29163_0.ltw:2,/index.html'>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device </a></td></tr>
+</table>
+<pre>
+Hi Thomas,
+
+On 30.01.2018 18:15, Christian Affolter wrote:
+&gt; On 30.01.2018 16:23, Christian Affolter wrote:
+&gt;&gt;&gt; the alsa device could be the issue. you could try to start a dummy jack
+&gt;&gt;&gt; and add the alsa device with alsa_in to see if it makes a difference.
+
+This seems to work, the audio gets captured (and can be played)
+correctly. Here is what I did:
+
+# Start jackd with the dummy backend
+jackd -d dummy
+
+# Add the alsa device via alsa_in
+alsa_in -d hw:0 -c 2
+
+
+# Capture via jack_capture
+jack_capture -b 32 -c 2 -d 10 -fn /tmp/test-jack_capture.wav \
+             -p alsa_in:capture_1 -p alsa_in:capture_2
+
+# Capture via jackrec
+jackrec -f /tmp/test-jackrec.wav -d 10 -b 32 alsa_in:capture_1
+alsa_in:capture_2
+
+
+What I also observed is the fact, that capturing 10 seconds
+(jack_capture -d 10 ...) directly from the "-d alsa" jackd takes around
+40 seconds (real 0m40.457s) vs. 10 seconds (as one would expect) with
+the "-d dummy" jackd (real 0m10.339s)
+
+So I guess we're one step closer.
+
+
+Thanks a lot for your help
+Chris
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1517335112.19316_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1517339652.24861_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1517338040.22983_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1517338040.22983_0.ltw:2,&nbsp;&lt;42e1a004-9c68-311e-5053-cdf7e4f45ea9 at purplehaze dot ch&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

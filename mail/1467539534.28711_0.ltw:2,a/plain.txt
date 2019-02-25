@@ -1,0 +1,49 @@
+Date:        Sun, 03 Jul 2016 09:52:00 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Thomas Brand Re: [Jack-Devel] graph simplification using mathematics? (1467515109.4606_0.ltw:2,a)
+Follow-Up:   Thomas Brand Re: [Jack-Devel] graph simplification using mathematics? (1467586798.20463_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] graph simplification using mathematics? (1467620279.15984_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] graph simplification using mathematics?
+
+On Sun, Jul 03, 2016 at 05:04:17AM +0200, Thomas Brand wrote:
+
+> Given that a processing graph doesn't change constantly (except in some
+> special cases), i'd imagine to kind of "freeze" the plugins setup to a
+> single instance to gain more room per cycle. Maybe this is just a pipe
+> dream. Having all involved DSP in a declarative text language instead of
+> BLOBs. Whole DAWs could be built like this. As i said, just a pipe dream
+
+Keep in that in all but the simplest algorithms, audio processing doesn't
+just involve calculations on samples, but also logic, maintaining state,
+and in general things that don't happen at the audio sample rate but have
+their own independent timing which isn't regular and can't be predicted.
+Faust isn't particularly good at any of that.
+
+In theory all of that could be expressed in a 'formula', but the complexity
+of such a formula will explode exponentially unless you express it as a
+chain or graph of separete operations with no or limited interaction. And
+then we are back where we started. 
+
+You may think that running the entire combined algorithm sample per sample,
+avoiding all intermediate buffers, would be more efficient than having 
+separate modules which communicate by passing blocks of samples between
+them. But that is NOT the case. Short loops using a small set of variables
+make much better use of CPU registers and the cache, and will be faster.
+
+In other words, even if it would practically possible to do what you
+suggest, nothing will be gained, on the contrary.
+
+Ciao,
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+
+1467539534.28711_0.ltw:2,a <20160703095200.GA82955 at linuxaudio dot org>
+________________________________________________________________________________
+

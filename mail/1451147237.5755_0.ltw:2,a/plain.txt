@@ -1,0 +1,31 @@
+Date:        Sat, 26 Dec 2015 16:27:08 +0000
+From:        John Emmas  <[hidden] at tiscali dot co dot uk>
+To:          JACK devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Robin Gareus Re: [Jack-Devel] jack dsp load calculation (1451144317.3107_0.ltw:2,a)
+Follow-Up:   Robin Gareus Re: [Jack-Devel] jack dsp load calculation (1451148559.7023_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack dsp load calculation
+
+On 26 Dec 2015, at 15:38, Robin Gareus wrote:
+
+> 
+> My criticism is that jack's currently algorithm does not satisfy the
+> criteria: "an x-run implies 100% reported load".
+> 
+> How can we justify buffer over/under-runs if there is time left to
+> process the buffer?
+> 
+
+Huh?  You've already pointed out that any value higher than 95% gets reported verbatim (i.e. without getting factored into any averaging).  So why will 100% not get reported correctly?
+
+The problem here is that Ardour's DSP printout is NOT intended to highlight xruns (not in any sense).  It's simply a display (in green) which turns to red when the value gets worryingly high.
+
+BUT... it only gets updated once every second.  And since the display isn't (currently) affected in any way by xruns, if an xrun happens to occur in between 2 updates it can go unreported (as far as that DSP reading is concerned).  Removing Jack's averaging won't fix that problem.
+
+HOWEVER... Ardour already has a mechanism for registering xruns.  So if we want xruns to get reflected somehow in that DSP printout, we can already achieve that within Ardour.  It's not necessary to modify Jack.
+
+John
+
+1451147237.5755_0.ltw:2,a <E00351EB-D505-4489-A0C8-E9D0873B4240 at tiscali dot co dot uk>
+________________________________________________________________________________
+

@@ -1,0 +1,34 @@
+Date:        Mon, 20 May 2013 04:38:11 +0100
+From:        Christian Jaeger  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Christian Jaeger [Jack-Devel] JACK_PROMISCUOUS_SERVER not working (1369013238.31694_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK_PROMISCUOUS_SERVER not working
+
+I've fixed it by changing the two GetUID methods to return -1 in case the
+env var is set. There was a reference to JACK_PROMISCUOUS_SERVER in
+common/JackTools.cpp (that wasn't sufficient to get it to work [anymore])
+that I've removed now since it's not necessary anymore with the GetUID
+change:
+
+ https://github.com/pflanze/jack2/compare/master...fix_promiscous
+
+(Merge the fix_promiscous branch from https://github.com/pflanze/jack2.git)
+
+Maybe one of the two GetUID methods could be eliminated? I haven't looked
+whether there is more duplication to eliminate or whether there is a reason
+for it.
+
+Now it works as long as umask is 0 for both the server and the client. I'm
+going to look into changing that.
+
+(BTW I did add some assert statements to check snprintf result values
+https://github.com/pflanze/jack2/compare/fix_promiscous...nonworkingassertbut
+strangely one of the asserts failed when exiting the server normally,
+so I'm leaving it out of my build now.)
+
+Christian.
+
+1369021116.19243_0.ltw:2,a <CAEjYwfU7grv-XNjz_fcvDxydra6Mbep3xxFb-P4z6pt9Tnd4Yg at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,102 @@
+Date:        Sat, 06 Oct 2018 09:57:19 +0200
+From:        Karl Lindén  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Christoph Kuhr Re: [Jack-Devel] Edit WAF Script for Experimental Jack Backend (1538485588.6611_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Edit WAF Script for Experimental Jack Backend
+
+Den 2018-10-02 kl. 15:05, skrev Christoph Kuhr:
+> I added a new driver object to the top level wscript. The configuration
+> and build work fine the includes and my C library are found, but my
+> jack_avb.so is not linked to against my C library.
+> 
+> in def options:
+> 
+> 
+>     avtp = add_auto_option(opt, 'jack1722driver', help='IEEE1722 AVTP
+> Mediaclock AVB Backend')
+> avtp.add_header('/home/christoph/sources/jack1722driver.git/src/Jack1722Driver.h')
+> 
+>     avtp.add_library('jack1722driver')
+> 
+> 
+> and in def build_drivers:
+> 
+>     avb_src = [
+>         'common/Jack1722Driver.cpp'
+>     ]
+>    ---------------------8<----------------------
+>     create_driver_obj(
+>         bld,
+>         target = 'avb',
+>         source = avb_src)
+> 
+> 
+> 
+> What else do I need to add to the script to link against my library?
+> 
+> Thanks in advance,
+> Ck
+> 
+> On 09/28/2018 12:12 PM, Christoph Kuhr wrote:
+>> I forgot to mention that I have no experience with waf so far.
+>>
+>> On 09/28/2018 12:11 PM, Christoph Kuhr wrote:
+>>> Hi *,
+>>>
+>>>
+>>> I am programming on an experimental Jack backend for AVB.
+>>>
+>>> I have a single source/header file but I need to link against a C
+>>> library as well.
+>>> How would I integrate the backend with the waf script?
+>>>
+>>> Thx,
+>>> Ck
+>>> 
+>>> Jack-Devel mailing list
+>>> [hidden]
+>>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>>
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> 
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+Hi,
+
+Linking against the library is only the first problem. You have to build
+the driver conditionally, or otherwise everyone are forced to use the
+driver whenever the code hits master.
+
+To link against your library you can add use='JACK1722DRIVER' to your
+call to create_driver_obj. Just out of curiousity, is your standalone
+library jack-specific (from the name it atleast seems to be)?
+
+Regarding the help-text, please be consistent and follow the form of the
+other options. The help for them is on the form 'Enable ${XYZ} driver'.
+Thus, I would suggest the help for your option to be 'Enable IEEE1722
+AVTP Mediaclock AVB driver'.
+
+To build your driver conditionally you must add the conf_dest key to the
+call to add_auto_option. I would suggest conf_dest='BUILD_DRIVER_1722'
+or something similar that is consistent with the other options. Then in
+the build_drivers function you must make the call to create_driver_obj
+conditional on bld.env['BUILD_DRIVER_1722'] (or whatever conf_dest you
+choose).
+
+Lastly, I would highly recommend using pkg-config for your library, so
+that jack only has to look for the *.pc file instead of searching for
+the header and shared object separately.
+
+Regards,
+Karl
+
+1538812672.30052_0.ltw:2, <d5968a8f-b179-bb4c-b568-73361a0e5fc0 at gmail dot com>
+________________________________________________________________________________
+

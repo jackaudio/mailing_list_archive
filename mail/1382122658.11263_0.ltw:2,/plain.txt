@@ -1,0 +1,82 @@
+Date:        Fri, 18 Oct 2013 11:57:32 -0700
+From:        Devin Anderson  <[hidden] at gmail dot com>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          JACK Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] major change in jack1 MIDI handling (1381923661.11662_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] major change in jack1 MIDI handling
+
+Hi Stéphane,
+
+On Wed, Oct 16, 2013 at 4:40 AM, Stéphane Letz <[hidden]> wrote:
+
+>> 2.) Then there's the JackDriver class that extends the
+>> JackDriverInterface class.  The class is meant to be a base class, but
+>> it implements all three of the virtual functions.  These
+>> implementations are meant to be called by subclasses that override the
+>> JackDriver virtual functions, which is an ugly anti-pattern.
+>
+> Well the point is to have JackDriver implement *common* cases, and
+> sub-classes possibly re-implement the Open methods, calling the
+> *generic* case and then adding their specific stuff.
+
+I'm not sure there's a well-defined generic case here.
+
+>>  If
+>> JackDriver's Open functions are called without the overriding wrapper
+>> function, then hilarity may ensue when the underlying JackDriver part
+>> of the class thinks the driver has been successfully opened.
+>
+> Yes right, this is a pattern I had already seen elsewhere, what would
+> you suggest as a better model?
+
+See my previous message. :)
+
+>> 3.) There's also JackThreadDriver, which also extends the
+>> JackDriverInterface class (not JackDriver!).
+>
+> Yes the JackThreadDriver class is meant as a decorator kind of
+> pattern, so implementing the "interface", so JackDriverInterface
+> class
+
+Yes.  I tend to like the decorator pattern, as long as it's not
+overused.  The confusing part is that JackThreadedDriver appears to be
+a class that Jack uses internally to wrap a driver, and isn't for
+driver development itself.
+
+I suppose this problem goes away if you have a well-defined driver
+development API.
+
+>> 4.) Speaking of returning -1 for non-realtime errors, I'm of the
+>> opinion that throwing exceptions is a fantastic way to handle errors.
+>> It's okay to write data to stderr and to indicate that some sort of
+>> error happened, but it's even better to throw an exception containing
+>> a reason for the error occurring so that it can be handled at an
+>> appropriate place for handling errors.  Also, not checking return
+>> values for error codes again and again is a good thing.  Note that
+>> JACK 1 also has this problem; however, given that it's written in C,
+>> I'm a little more forgiving.
+>
+> What would you suggest as a was to better use exceptions in the
+> backend class hierarchy?
+
+I'd like to see exceptions used to indicate errors instead of return
+codes such that instead of errors being propagated up to where there
+supposed to be handled by checking return codes over and over, an
+exception is thrown and the callers that aren't interested in doing
+any specific error handling can simply make sure they're using RAII in
+case an exception happens, and the exception can be caught at the
+point where error handling should occur.
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+midisnoop - http://midisnoop.googlecode.com/
+psinsights - http://psinsights.googlecode.com/
+synthclone - http://synthclone.googlecode.com/
+
+1382122658.11263_0.ltw:2, <CAG7zqTpnLPhPoXWA7a6cgoRWMy_BM-vXxiO2Ud60evuA6gzjiQ at mail dot gmail dot com>
+________________________________________________________________________________
+

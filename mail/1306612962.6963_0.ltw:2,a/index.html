@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack and signals</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack and signals</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1306543745.11750_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1306619719.13589_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1306612962.6963_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 28 May 2011 22:02:12 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> torbenh </span> &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Nedko Arnaudov &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at jackaudio dot org, Dan Muresan &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Nedko Arnaudov
+<a href='../1306542921.11043_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack and signals </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1306619719.13589_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack and signals </a></td></tr>
+</table>
+<pre>
+On Sat, May 28, 2011 at 03:34:43AM +0300, Nedko Arnaudov wrote:
+&gt; St&#xE9;phane Letz &lt;[hidden]&gt; writes:
+&gt; 
+&gt; &gt;&gt;&gt;  I think we should distinguish several things, in JACK2:
+&gt; &gt;&gt;&gt; 
+&gt; &gt;&gt;&gt; 1) what happens on server side : the code for signal management is
+&gt; &gt;&gt;&gt; located in two functions jackctl_setup_signals and
+&gt; &gt;&gt;&gt; jackctl_wait_signals (part of the so called "control API")
+&gt; &gt;&gt;&gt; 
+&gt; &gt;&gt;&gt; 2) on server side, the desire to precisely control the signal
+&gt; &gt;&gt;&gt; setup, depending of the kind of process that is going to use the
+&gt; &gt;&gt;&gt; "libjackserver" library (up to now: jackd or jackdbus)
+&gt; &gt;&gt;&gt; 
+&gt; &gt;&gt;&gt; 3) what happens on client (libjack) side: right now the SIGPIPE
+&gt; &gt;&gt;&gt; signal is filtered to avoid JACK clients receive a SIGPIPE when
+&gt; &gt;&gt;&gt; trying to access a died server (see JackLibGlobals constructor in
+&gt; &gt;&gt;&gt; JackLibGlobals.h)
+&gt; &gt;&gt;&gt; 
+&gt; &gt;&gt;&gt; 4) an additional somewhat separated issue is the use of non
+&gt; &gt;&gt;&gt; appropriate API (like "sigprocmask" instead of "pthread_sigmask")
+&gt; &gt;&gt;&gt; 
+&gt; &gt;&gt;&gt; We should probably try to refine 1) and 2) to see if
+&gt; &gt;&gt;&gt; jackctl_setup_signals and jackctl_wait_signals have to be
+&gt; &gt;&gt;&gt; redesigned to be more flexible. What are the precise constraints
+&gt; &gt;&gt;&gt; for jackdbus?  Nedko can you refine?
+&gt; &gt;&gt;  jackdbus needs to have a loop. jackd has no loop, it calls
+&gt; &gt;&gt; jackctl_wait_signals(signals). AFAICS jackctl_wait_signals() cannot
+&gt; &gt;&gt; be used for jackdbus because it will block the D-Bus loop.
+&gt; &gt;&gt; 
+&gt; &gt;&gt; Maybe dbus loop can be implemented in a separate thread but I'd like
+&gt; &gt;&gt; to avoid this, if possible.
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; To remember: jackctl_setup_signals/ jackctl_wait_signals was designed
+&gt; &gt; as a "restructuration" of jack1 initial signal code handling: the code
+&gt; &gt; was just separated as 2 functions.
+&gt; 
+&gt; The signal issue is present in jack1dbus as well. Back when I proposed
+&gt; the dbus.patch for jack1 and it got refused, there was absolutely no
+&gt; sense to change the jack1 jackd from sigwait to a real main loop. Even
+&gt; these days some people don't understand why jackdbus needs a main loop
+&gt; and thus is not really compatible with jackd, from the POV of user that
+&gt; tends to look in the process monitor for a process with a name that
+&gt; starts with "jack".
+
+but there seems to be some sense, to fix the control api now, for
+jack-dbus. 
+all that jackd cared about was that the threads it creates ignore all
+signals. jack doesnt need signals. it just used SIGUSR1 to communicate
+that the backend died, and shutdown is indicated.
+
+this whole jackctl_setup_signals/ jackctl_wait_signals is completely
+useless.
+jackctl_server_start() needs to make sure, that the threads it creates
+block all signals.
+"backend died" just needs to be a callback. than any jackctl user can take
+appropriate actions.
+
+just clean up that api. 
+we dont need signals in jack. 
+(maybe we need to make sure that the main thread doesnt get SIGPIPE...
+but its probably safer to just document, that SIGPIPE might be
+generated and any jackctl user needs to either ignore them, or if it
+needs them itself, needs to be prepared for spurious occurances.
+
+
+&gt; 
+&gt; &gt; If this API is not usable in dbus context, then either 1) you just
+&gt; &gt; don't use is at all..
+&gt; 
+&gt; I had impression that this is not really an option because the threads
+&gt; that jack creates will get wrong signal setup.
+
+yes. the stuff that jackctl_setup_signals() does, needs to be done inside 
+jackctl_server_start() before it calls pthread_create() and then undone.
+
+&gt; 
+&gt; &gt; 2) this signal handling API has to be
+&gt; &gt; redesigned to be used in different context.
+&gt; 
+&gt; I never got the information about the reasoning behind design of the
+&gt; signal setup in jack1 (IIRC in jack2 it is almost the same, copied
+&gt; From jack1).
+&gt; 
+&gt; &gt; I still don't have a clear view of what is the correct approach: do
+&gt; &gt; you think 2) will make some sense? if yes, do you have any proposal to
+&gt; &gt; change the API?
+&gt; 
+&gt; I think 2) is better but I dont know how to do it. The bad news here is
+&gt; that I never got motivation to investigate how to fix the issue. Mainly
+&gt; because it is not that important compared to other issues that have to
+&gt; be fixed.
+&gt; 
+&gt; -- 
+&gt; Nedko Arnaudov &lt;GnuPG KeyID: 5D1B58ED&gt;
+
+
+
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+
+-- 
+torben Hohn
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1306543745.11750_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1306619719.13589_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1306612962.6963_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1306612962.6963_0.ltw:2,a&nbsp;&lt;20110528200212.GA8601 at siel dot b&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

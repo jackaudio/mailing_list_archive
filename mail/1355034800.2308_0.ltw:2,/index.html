@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] ALSA PCM multi plugin and xruns</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] ALSA PCM multi plugin and xruns</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1355014309.14390_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1355049350.14178_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1355034800.2308_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 08 Dec 2012 22:33:12 -0800 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Devin Anderson
+<a href='../1355014309.14390_0.ltw:2,/index.html'>Re: [Jack-Devel] ALSA PCM multi plugin and xruns </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1355052429.20274_0.ltw:2,/index.html'>Re: [Jack-Devel] ALSA PCM multi plugin and xruns </a></td></tr>
+</table>
+<pre>
+On Sat, Dec 8, 2012 at 4:51 PM, Devin Anderson
+&lt;[hidden]&gt; wrote:
+
+&gt; I added some errors messages to the multi plugin in alsa-lib, and have
+&gt; found that:
+&gt;
+&gt; 1.) Both of the Layla 3Gs have the same amount of frames available
+&gt; regardless of whether the xrun onslaught is happening.  So, when 32 is
+&gt; reported back as the amount of frames available, both of the devices
+&gt; have 32 frames available, despite the period size being 256.
+
+I was wrong about this too.  It appears that one of two scenarios happens:
+
+1.) The master device has (period_size + 32) frames available, and the
+other has 0 frames available.
+2.) The master device has (period_size + 32) frames available, and the
+other has 32 frames available.
+
+So, it sure *looks* like an xrun, but it's not currently being handled
+in `alsa_driver_wait` the same way that a detected xrun is handled.
+
+I tried adding the following code just before the last return
+statement in `alsa_driver_wait`:
+
+	/* if the number of available frames is less than the expected frame
+	   count, then handle this as a buffer underrun */
+
+	if (avail &lt; driver-&gt;frames_per_cycle) {
+		*status = alsa_driver_xrun_recovery (driver, delayed_usecs);
+		return 0;
+	}
+
+... and the situation improved considerably.  The onslaught of xruns
+is now limited to a few at most.
+
+@Paul, Torben, etc.: I'm not convinced that this is the best or
+correct way to solve the problem, or if this will introduce problems
+in other setups.  I think you'd know better than me.  If this is an
+acceptable fix, I'll submit a patch.  Let me know.
+
+Thanks,
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+psinsights - http://psinsights.googlecode.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1355014309.14390_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1355049350.14178_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1355034800.2308_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1355034800.2308_0.ltw:2,&nbsp;&lt;CAG7zqTrAkz0mG-y46u0iXNGqkpGByvg2DQ2ziQ4Jm=kR5wdVBw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

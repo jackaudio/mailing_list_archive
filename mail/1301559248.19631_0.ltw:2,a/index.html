@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1301499643.24924_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1301568773.31591_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1301559248.19631_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 31 Mar 2011 01:13:44 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at charityfinders dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1301643257.24099_0.ltw:2,a/index.html'>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Pedro Alves
+<a href='../1301683377.11097_0.ltw:2,a/index.html'>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages </a></td></tr>
+</table>
+<pre>
+Back in August, there was a discussion about implementing
+functionality to deal with large system exclusive MIDI message in
+JACK.  At the time, I proposed that the interface for
+'jack_midi_event_t' could be changed like from:
+
+    typedef struct _jack_midi_event {
+        jack_nframes_t time;
+        size_t size;
+        jack_midi_data_t *buffer;
+    } jack_midi_event_t;
+
+... to something like this:
+
+    typedef struct _jack_midi_event {
+        jack_nframes_t time;
+        size_t size;
+        union {
+            jack_midi_data_t *buffer;
+            const jack_midi_stream_t *stream;
+        };
+    } jack_midi_event_t;
+
+... in order to accomodate large system exclusive messages by
+containing such messages in shared memory, with (size == 0) indicating
+that the alternate 'stream' object would contain the message instead
+of the 'buffer' object.
+
+Since I'm taking a bit of time away from work right now, I'd like to
+expand on my idea and make a proposal for an extension to the JACK
+MIDI API.
+
+To start, let's discuss the problem at hand.
+
+JACK MIDI, in its current state, is very good at handling lots of
+small MIDI messages, and sending/delivering them in sync with audio.
+This is absolutely fantastic for the greater majority of JACK clients,
+which don't have to communicate with external hardware, and most
+likely have no need for system exclusive messages.  However, JACK MIDI
+cannot currently handle arbitrarily large system exclusive messages
+for a couple reasons:
+
+1.) Support for system exclusive messages (and MIDI in general, in
+some cases) in drivers that provide an interface to physical MIDI
+ports is poor.  This problem is currently being addressed in JACK 2 (I
+don't know the state of MIDI drivers in JACK 1).
+
+2.) The MIDI buffers that clients/drivers use to send/receive messages
+have a fixed size.  Any messages that can't fit in a MIDI buffer are
+discarded.  This is the problem I'd like to address with this
+proposal.
+
+One way to solve this problem is to create a separate space in shared
+memory for any arbitrarily sized MIDI message.  Basically, a space is
+allocated (hereafter referred to as 'blob') for a MIDI message in
+shared memory, which is then populated by a client, and copied to the
+buffer.  When the MIDI message is copied to the buffer, the *address*
+of the MIDI blob is copied, and not the data itself.  Since the data
+is in shared memory, it can be read by clients that receive the MIDI
+message without making extremely large buffers.
+
+Of course, since there's lots of data to be read, there also needs to
+be a way for the blobs to be read over several cycles, or possibly in
+separate threads.  Since the data is in shared memory, there's also a
+need to make sure that clients that receive messages containing MIDI
+blobs can't easily modify the data in the blob.  As if that weren't
+enough, we also need to make sure that there's a way for the client
+that 'owns' the blob to know when other clients are done accessing the
+blob object.  These problems can be solved by using a 'stream' object
+(hereafter referred to as 'blobstream' object), which is allowed to
+access the blob and maintain the blob's structure.
+
+I'm proposing the JACK MIDI API be extended to support MIDI 'blob'
+objects and 'blobstream' objects.  The functionality I propose here
+would be added to 'jack/midiport.h'.
+
+First, new opaque types would be created for 'blob' and 'blobstream' objects:
+
+    typedef struct _jack_midi_blob jack_midi_blob_t;
+    typedef struct _jack_midi_blobstream jack_midi_blobstream_t;
+
+For reference and understanding, internal definitions of these objects
+might look something like this:
+
+    struct _jack_midi_blob {
+        jack_client_t *client;       /* The client that owns the stream. */
+        jack_midi_data_t *buffer;    /* The actual MIDI data. */
+        size_t buffer_size;          /* The size of the allocated buffer. */
+        size_t actual_size;          /* Actual number of bytes being used. */
+        unsigned short stream_count; /* Count of streams accessing the blob. */
+    };
+
+    struct _jack_midi_blobstream {
+        union {
+            const jack_midi_blob_t *read_blob; /* For read operations. */
+            jack_midi_blob_t *write_blob;      /* For write operations. */
+        };
+        size_t pos;                            /* Location of the stream. */
+        int read_only;                         /* Flag. */
+    };
+
+New functionality for creating, accessing, and destroying blobs would
+be necessary:
+
+    /**
+     * Create a new MIDI blob in shared memory that can accomodate 'size'
+     * bytes.  Returns the blob on success, and NULL on failure.
+     */
+
+    jack_midi_blob_t *
+    jack_midi_blob_create(jack_client_t *client, size_t size);
+
+    /**
+     * Frees the memory associated with the given MIDI blob.
+     */
+
+    void
+    jack_midi_blob_free(jack_midi_blob_t *blob);
+
+    /**
+     * Returns the number of bytes that the MIDI blob can contain.
+     */
+
+    size_t
+    jack_midi_blob_size(const jack_midi_blob_t *blob);
+
+We need to be able to create 'blobstream' objects, which can be used
+to access blob objects using a simple file-like API:
+
+    /**
+     * Opens a blob for reading.  The given stream object is initialized for
+     * reading data from the given blob object.  The return code is 0 on
+     * success, or an appropriate non-zero error code if an error occurs.
+     */
+
+    int
+    jack_midi_blobstream_open_read(jack_midi_blobstream_t *stream,
+                                   const jack_midi_blob_t *blob);
+
+    /**
+     * Opens a blob for writing.  The given stream object is initialized for
+     * writing data to the given blob object.  The return code is 0 on success,
+     * or an appropriate non-zero error code if an error occurs.
+     */
+
+    int
+    jack_midi_blobstream_open_write(jack_midi_blobstream_t *stream,
+                                    jack_midi_blob_t *blob);
+
+    /**
+     * Reads 'count' bytes of data from the given 'stream' to the 'dest'
+     * buffer.  The return code is 0 on success, or an appropriate non-zero
+     * error code if an error occurs.
+     */
+
+    int
+    jack_midi_blobstream_read(jack_midi_blobstream_t *stream,
+                              jack_midi_data_t *dest, size_t count);
+
+    /**
+     * Sets the current 'stream' position to 'pos'.  The return code is 0 on
+     * success, or an appropriate non-zero error code if an error occurs.
+     */
+
+    int
+    jack_midi_blobstream_seek(jack_midi_blobstream_t *stream, size_t pos);
+
+    /**
+     * Populates the 'pos' argument with the current 'stream' position.  The
+     * return code is 0 on success, or an appropriate non-zero error code if an
+     * error occurs.
+     */
+
+    int
+    jack_midi_blobstream_tell(jack_midi_blobstream_t *stream, size_t *pos);
+
+    /**
+     * Writes 'count' bytes of data from the 'src' buffer to the given
+     * 'stream'.  The return code is 0 on success, or an appropriate non-zero
+     * error code if an error occurs.
+     *
+     * Note: This operation isn't valid on streams opened with
+     * 'jack_midi_blobstream_open_read'.
+     */
+
+    int
+    jack_midi_blobstream_write(jack_midi_blobstream_t *stream,
+                               const jack_midi_data_t *src, size_t count);
+
+    /**
+     * Closes the given 'stream'.  The return code is 0 on success, or an
+     * appropriate non-zero error code if an error occurs.
+     */
+
+    int
+    jack_midi_blobstream_close(jack_midi_blobstream_t *stream);
+
+MIDI buffers need to be taught how to enqueue blobs:
+
+    /**
+     * Writes a 'blob' event into the given 'port_buffer' with the given sample
+     * offset.  The return code is 0 on success, or an appropriate non-zero
+     * error code if an error occurs.
+     */
+
+    int
+    jack_midi_event_write_blob(void *port_buffer, jack_nframes_t time,
+                               const jack_midi_blob_t *blob);
+
+Finally, JACK needs a way to communicate to JACK clients that their
+blobs are no longer being accessed by streams.  My current thinking is
+that a callback is the best way to do this:
+
+    typedef void (*JackMIDIBlobCallback)(jack_midi_blob_t *blob, void *arg);
+
+    /**
+     * Registers a function (and argument) to be called when a MIDI blob is no
+     * longer being accessed by client streams.  The return code is 0 on
+     * success, or an appropriate non-zero error code if an error occurs.
+     */
+
+    int
+    jack_set_midi_blob_callback(jack_client_t *client,
+                                JackMIDIBlobCallback midi_blob_callback,
+                                void *arg);
+
+I'm sure I've overlooked many details in this proposal, but I think
+all of this can be ironed out with a bit of communal brainstorming.
+
+Let me (and the rest of jack-devel - please don't reply off-list
+without good reason) know what you think.
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1301499643.24924_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1301568773.31591_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1301559248.19631_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1301559248.19631_0.ltw:2,a&nbsp;&lt;AANLkTinY-ecDQMo8r-9RCqEteW8_jaR_Hw_NUXiLG-EH at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

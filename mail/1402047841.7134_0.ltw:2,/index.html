@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack2 temporary server flag doesn't work properly</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack2 temporary server flag doesn't work properly</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1402023648.12686_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1402059991.31050_0.ltw:2,S/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1402047841.7134_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 06 Jun 2014 11:43:45 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Tim Mayberry &lt;[hidden] at gmail dot com&gt;, JACK Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+Thanks, fixed on git.
+
+St&#xE9;phane
+
+Le 6 juin 2014 &#xE0; 10:09, Tim Mayberry &lt;[hidden]&gt; a &#xE9;crit :
+
+&gt; 
+&gt; Hi St&#xE9;phane,
+&gt; 
+&gt; On Thu, Jun 5, 2014 at 8:45 PM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+&gt; 
+&gt; Le 5 juin 2014 &#xE0; 12:34, Tim Mayberry &lt;[hidden]&gt; a &#xE9;crit :
+&gt; 
+&gt; &gt; Hi St&#xE9;phane,
+&gt; &gt;
+&gt; &gt; Yeah sorry for not getting back to you, I was in the process of testing this with jack1 when I had a problem with my system that meant I had to reinstall my OS, with all the backup/restore nonsense that goes along with it.
+&gt; &gt;
+&gt; &gt; I will try to test this again tonight.
+&gt; &gt;
+&gt; &gt; I couldn't really work out what was supposed to happen when raise(SIGINT) was called in response to the temporary exception being thrown, perhaps you could explain that to me briefly?
+&gt; 
+&gt; The signal is catched and the server is properly closed/cleaned. Here is a trace on OSX in verbose mode  (-v )
+&gt; 
+&gt; 
+&gt; I was going to let you know that I tested jack1 and the temporary flag does indeed work there.
+&gt; 
+&gt; I see that Robin Gareus just sent a one line fix for this issue for jack2 on the jack-devel list and it does seem to work correctly.
+&gt; 
+&gt; Here is the output of jackd with that fix applied:
+&gt; 
+&gt; [timbyr@mojotecra i686]$ jackd -v -T -d dummy
+&gt; jackdmp 1.9.10
+&gt; Copyright 2001-2005 Paul Davis and others.
+&gt; Copyright 2004-2014 Grame.
+&gt; jackdmp comes with ABSOLUTELY NO WARRANTY
+&gt; This is free software, and you are welcome to redistribute it
+&gt; under certain conditions; see the file COPYING for details
+&gt; no message buffer overruns
+&gt; no message buffer overruns
+&gt; no message buffer overruns
+&gt; JACK server starting in realtime mode with priority 20
+&gt; self-connect-mode is "Don't restrict self connect requests"
+&gt; Jack: JackPosixThread::StartImp : create non RT thread
+&gt; Jack: JackPosixThread::ThreadHandler : start
+&gt; Jack: JackDriver::Open capture_driver_name = dummy
+&gt; Jack: JackDriver::Open playback_driver_name = dummy
+&gt; Jack: Check protocol client = 8 server = 8
+&gt; Jack: JackEngine::ClientInternalOpen: name = system
+&gt; Jack: JackEngine::AllocateRefNum ref = 0
+&gt; Jack: JackPosixSemaphore::Allocate name = jack_sem.1000_default_system val = 0
+&gt; Jack: JackEngine::NotifyAddClient: name = system
+&gt; Jack: JackGraphManager::SetBufferSize size = 1024
+&gt; Jack: JackConnectionManager::DirectConnect first: ref1 = 0 ref2 = 0
+&gt; Jack: JackGraphManager::ConnectRefNum cur_index = 0 ref1 = 0 ref2 = 0
+&gt; Jack: JackDriver::SetupDriverSync driver sem in flush mode
+&gt; Jack: JackSocketServerChannel::Open
+&gt; Jack: JackServerSocket::Bind : addr.sun_path /dev/shm/jack_default_1000_0
+&gt; Jack: JackSocketServerChannel::BuildPoolTable size = 1
+&gt; Jack: JackEngine::Open
+&gt; Jack: JackClientSocket::Connect : addr.sun_path /dev/shm/jack_default_1000_0
+&gt; Jack: JackEngine::ClientInternalOpen: name = freewheel
+&gt; Jack: JackEngine::AllocateRefNum ref = 1
+&gt; Jack: JackPosixSemaphore::Allocate name = jack_sem.1000_default_freewheel val = 0
+&gt; Jack: JackEngine::NotifyAddClient: name = freewheel
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = system name = freewheel notify = 0
+&gt; Jack: JackDriver::ClientNotify ref = 0 driver = freewheel name = system notify = 0
+&gt; Jack: JackConnectionManager::DirectConnect first: ref1 = 1 ref2 = 1
+&gt; Jack: JackGraphManager::ConnectRefNum cur_index = 0 ref1 = 1 ref2 = 1
+&gt; Jack: JackDriver::SetupDriverSync driver sem in flush mode
+&gt; Jack: JackAudioDriver::Attach fBufferSize = 1024 fSampleRate = 48000
+&gt; Jack: JackEngine::PortRegister ref = 0 name = system:capture_1 type = 32 bit float mono audio flags = 22 buffer_size = 1024
+&gt; Jack: JackGraphManager::AllocatePortAux port_index = 1 name = system:capture_1 type = 32 bit float mono audio
+&gt; Jack: JackConnectionManager::AddOutputPort ref = 0 port = 1
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; Jack: JackAudioDriver::Attach fCapturePortList[i] port_index = 1
+&gt; Jack: JackEngine::PortRegister ref = 0 name = system:capture_2 type = 32 bit float mono audio flags = 22 buffer_size = 1024
+&gt; Jack: JackGraphManager::AllocatePortAux port_index = 2 name = system:capture_2 type = 32 bit float mono audio
+&gt; Jack: JackConnectionManager::AddOutputPort ref = 0 port = 2
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; Jack: JackAudioDriver::Attach fCapturePortList[i] port_index = 2
+&gt; Jack: JackEngine::PortRegister ref = 0 name = system:playback_1 type = 32 bit float mono audio flags = 21 buffer_size = 1024
+&gt; Jack: JackGraphManager::AllocatePortAux port_index = 3 name = system:playback_1 type = 32 bit float mono audio
+&gt; Jack: JackConnectionManager::AddInputPort ref = 0 port = 3
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; Jack: JackAudioDriver::Attach fPlaybackPortList[i] port_index = 3
+&gt; Jack: JackEngine::PortRegister ref = 0 name = system:playback_2 type = 32 bit float mono audio flags = 21 buffer_size = 1024
+&gt; Jack: JackGraphManager::AllocatePortAux port_index = 4 name = system:playback_2 type = 32 bit float mono audio
+&gt; Jack: JackConnectionManager::AddInputPort ref = 0 port = 4
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; Jack: JackAudioDriver::Attach fPlaybackPortList[i] port_index = 4
+&gt; Jack: Clock source : system clock via clock_gettime
+&gt; Jack: JackServer::Start
+&gt; Jack: JackThreadedDriver::Start
+&gt; Jack: JackPosixThread::StartImp : create non RT thread
+&gt; Jack: JackPosixThread::ThreadHandler : start
+&gt; Jack: JackThreadedDriver::Init real-time
+&gt; Jack: JackPosixThread::AcquireRealTimeImp priority = 20
+&gt; Jack: JackPosixThread::StartImp : create non RT thread
+&gt; Jack: JackPosixThread::ThreadHandler : start
+&gt; Jack: JackSocketServerChannel::ClientCreate socket
+&gt; Jack: JackSocketServerChannel::BuildPoolTable size = 2
+&gt; Jack: JackSocketServerChannel::BuildPoolTable fSocketTable i = 1 fd = 5
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+&gt; Jack: JackRequest::Notification
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+&gt; Jack: JackSocketServerChannel::ClientCreate socket
+&gt; Jack: JackSocketServerChannel::BuildPoolTable size = 3
+&gt; Jack: JackSocketServerChannel::BuildPoolTable fSocketTable i = 1 fd = 5
+&gt; Jack: JackSocketServerChannel::BuildPoolTable fSocketTable i = 2 fd = 6
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 2 fd = 6
+&gt; Jack: JackSocketServerChannel::Execute : poll client error err = Success
+&gt; Jack: JackSocketServerChannel::ClientKill ref = -1 fd = 6
+&gt; Jack: Client was not opened : probably correspond to server_check
+&gt; Jack: JackClientSocket::Close
+&gt; Jack: JackSocketServerChannel::BuildPoolTable size = 2
+&gt; Jack: JackSocketServerChannel::BuildPoolTable fSocketTable i = 1 fd = 5
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+&gt; Jack: JackSocketServerChannel::ClientCreate socket
+&gt; Jack: JackSocketServerChannel::BuildPoolTable size = 3
+&gt; Jack: JackSocketServerChannel::BuildPoolTable fSocketTable i = 1 fd = 5
+&gt; Jack: JackSocketServerChannel::BuildPoolTable fSocketTable i = 2 fd = 6
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 2 fd = 6
+&gt; Jack: JackRequest::ClientCheck
+&gt; Jack: Check protocol client = 8 server = 8
+&gt; Jack: JackRequest::ClientOpen
+&gt; Jack: JackEngine::ClientExternalOpen: uuid = 0, name = jack_simple_client
+&gt; Jack: JackEngine::AllocateRefNum ref = 2
+&gt; Jack: JackPosixSemaphore::Allocate name = jack_sem.1000_default_jack_simple_client val = 0
+&gt; Jack: JackSocketNotifyChannel::Open name = jack_simple_client
+&gt; Jack: JackClientSocket::Connect : addr.sun_path /dev/shm/jack_jack_simple_client_1000_0
+&gt; Jack: JackShmMem::new index = 2 attached = b77bd000 size = 422 
+&gt; Jack: JackExternalClient::Open name = jack_simple_client index = 2 base = b77bd000
+&gt; Jack: JackPosixProcessSync::TimedWait time out = 5000000
+&gt; Jack: JackPosixProcessSync::TimedWait finished delta = 12601.0
+&gt; Jack: JackEngine::NotifyAddClient: name = jack_simple_client
+&gt; Jack: JackDriver::ClientNotify ref = 2 driver = system name = jack_simple_client notify = 0
+&gt; Jack: JackExternalClient::ClientNotify ref = 0 client = jack_simple_client name = system notify = 0
+&gt; Jack: JackDriver::ClientNotify ref = 2 driver = freewheel name = jack_simple_client notify = 0
+&gt; Jack: JackExternalClient::ClientNotify ref = 1 client = jack_simple_client name = freewheel notify = 0
+&gt; Jack: JackSocketServerChannel::ClientAdd ref = 2 fd = 6
+&gt; Jack: JackSocketServerChannel::BuildPoolTable size = 3
+&gt; Jack: JackSocketServerChannel::BuildPoolTable fSocketTable i = 1 fd = 5
+&gt; Jack: JackSocketServerChannel::BuildPoolTable fSocketTable i = 2 fd = 6
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+&gt; Jack: JackRequest::Notification
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 2 fd = 6
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 2 fd = 6
+&gt; Jack: JackRequest::RegisterPort
+&gt; Jack: JackEngine::PortRegister ref = 2 name = jack_simple_client:output1 type = 32 bit float mono audio flags = 2 buffer_size = 0
+&gt; Jack: JackGraphManager::AllocatePortAux port_index = 5 name = jack_simple_client:output1 type = 32 bit float mono audio
+&gt; Jack: JackConnectionManager::AddOutputPort ref = 2 port = 5
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 2 fd = 6
+&gt; Jack: JackRequest::RegisterPort
+&gt; Jack: JackEngine::PortRegister ref = 2 name = jack_simple_client:output2 type = 32 bit float mono audio flags = 2 buffer_size = 0
+&gt; Jack: JackGraphManager::AllocatePortAux port_index = 6 name = jack_simple_client:output2 type = 32 bit float mono audio
+&gt; Jack: JackConnectionManager::AddOutputPort ref = 2 port = 6
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 2 fd = 6
+&gt; Jack: JackRequest::ActivateClient
+&gt; Jack: JackEngine::ClientActivate ref = 2 name = jack_simple_client
+&gt; Jack: JackConnectionManager::DirectConnect first: ref1 = 1 ref2 = 2
+&gt; Jack: JackGraphManager::ConnectRefNum cur_index = 2 ref1 = 1 ref2 = 2
+&gt; Jack: JackConnectionManager::DirectConnect first: ref1 = 2 ref2 = 1
+&gt; Jack: JackGraphManager::ConnectRefNum cur_index = 2 ref1 = 2 ref2 = 1
+&gt; Jack: JackPosixProcessSync::TimedWait time out = 426660
+&gt; Jack: JackPosixProcessSync::TimedWait finished delta = 13679.0
+&gt; Jack: JackExternalClient::ClientNotify ref = 2 client = jack_simple_client name = jack_simple_client notify = 2
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 9
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+&gt; Jack: JackRequest::Notification
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackExternalClient::ClientNotify ref = 2 client = jack_simple_client name = jack_simple_client notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackExternalClient::ClientNotify ref = 2 client = jack_simple_client name = jack_simple_client notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 2 fd = 6
+&gt; Jack: JackRequest::ConnectNamePorts
+&gt; Jack: JackEngine::PortConnect ref = 2 src = jack_simple_client:output1 dst = system:playback_1
+&gt; Jack: JackGraphManager::CheckConnect src_name = jack_simple_client:output1 dst_name = system:playback_1
+&gt; Jack: JackEngine::PortConnect ref = 2 src = 5 dst = 3
+&gt; Jack: JackGraphManager::Connect port_src = 5 port_dst = 3
+&gt; Jack: JackConnectionManager::Connect port_src = 5 port_dst = 3
+&gt; Jack: JackConnectionManager::Connect port_src = 3 port_dst = 5
+&gt; Jack: JackConnectionManager::IsLoopPathAux ref1 = 0 ref2 = 2
+&gt; Jack: JackConnectionManager::DirectConnect first: ref1 = 2 ref2 = 0
+&gt; Jack: JackConnectionManager::IncConnectionRef: ref1 = 2 ref2 = 0
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 11
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 11
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 11
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 2 fd = 6
+&gt; Jack: JackRequest::ConnectNamePorts
+&gt; Jack: JackEngine::PortConnect ref = 2 src = jack_simple_client:output2 dst = system:playback_2
+&gt; Jack: JackGraphManager::CheckConnect src_name = jack_simple_client:output2 dst_name = system:playback_2
+&gt; Jack: JackEngine::PortConnect ref = 2 src = 6 dst = 4
+&gt; Jack: JackGraphManager::Connect port_src = 6 port_dst = 4
+&gt; Jack: JackConnectionManager::Connect port_src = 6 port_dst = 4
+&gt; Jack: JackConnectionManager::Connect port_src = 4 port_dst = 6
+&gt; Jack: JackConnectionManager::IsLoopPathAux ref1 = 0 ref2 = 2
+&gt; Jack: JackConnectionManager::IncConnectionRef: ref1 = 2 ref2 = 0
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 11
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 11
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 11
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+&gt; Jack: JackRequest::Notification
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackExternalClient::ClientNotify ref = 2 client = jack_simple_client name = jack_simple_client notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackExternalClient::ClientNotify ref = 2 client = jack_simple_client name = jack_simple_client notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 2 fd = 6
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 2 fd = 6
+&gt; Jack: JackRequest::DeactivateClient
+&gt; Jack: JackEngine::ClientDeactivate ref = 2 name = jack_simple_client
+&gt; Jack: JackEngine::PortDisconnect ref = -1 src = 5 dst = 65535
+&gt; Jack: JackEngine::PortDisconnect ref = -1 src = 5 dst = 3
+&gt; Jack: JackGraphManager::Disconnect port_src = 5 port_dst = 3
+&gt; Jack: JackConnectionManager::Disconnect port_src = 5 port_dst = 3
+&gt; Jack: JackConnectionManager::Disconnect port_src = 3 port_dst = 5
+&gt; Jack: JackConnectionManager::DecConnectionRef: ref1 = 2 ref2 = 0
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 12
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 12
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 12
+&gt; Jack: JackEngine::PortDisconnect ref = -1 src = 6 dst = 65535
+&gt; Jack: JackEngine::PortDisconnect ref = -1 src = 6 dst = 4
+&gt; Jack: JackGraphManager::Disconnect port_src = 6 port_dst = 4
+&gt; Jack: JackConnectionManager::Disconnect port_src = 6 port_dst = 4
+&gt; Jack: JackConnectionManager::Disconnect port_src = 4 port_dst = 6
+&gt; Jack: JackConnectionManager::DirectDisconnect last: ref1 = 2 ref2 = 0
+&gt; Jack: JackConnectionManager::DecConnectionRef: ref1 = 2 ref2 = 0
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 12
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 12
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 12
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 10
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 10
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 10
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 10
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 10
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 10
+&gt; Jack: JackConnectionManager::DirectDisconnect last: ref1 = 2 ref2 = 1
+&gt; Jack: JackGraphManager::DisconnectRefNum cur_index = 4 ref1 = 2 ref2 = 1
+&gt; Jack: JackConnectionManager::DirectDisconnect last: ref1 = 1 ref2 = 2
+&gt; Jack: JackGraphManager::DisconnectRefNum cur_index = 4 ref1 = 1 ref2 = 2
+&gt; Jack: JackPosixProcessSync::TimedWait time out = 426660
+&gt; Jack: JackPosixProcessSync::TimedWait finished delta = 4963.0
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+&gt; Jack: JackRequest::Notification
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel notify = 18
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 4
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 2 fd = 6
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 2 fd = 6
+&gt; Jack: JackRequest::ClientClose
+&gt; Jack: JackEngine::ClientExternalClose ref = 2
+&gt; Jack: JackEngine::ClientCloseAux ref = 2
+&gt; Jack: JackEngine::PortUnRegister ref = 2 port_index = 5
+&gt; Jack: JackEngine::PortDisconnect ref = -1 src = 5 dst = 65535
+&gt; Jack: JackGraphManager::DisconnectAllOutput port_index = 5 
+&gt; Jack: JackConnectionManager::RemoveOutputPort ref = 2 port_index = 5 
+&gt; Jack: JackEngine::PortUnRegister ref = 2 port_index = 6
+&gt; Jack: JackEngine::PortDisconnect ref = -1 src = 6 dst = 65535
+&gt; Jack: JackGraphManager::DisconnectAllOutput port_index = 6 
+&gt; Jack: JackConnectionManager::RemoveOutputPort ref = 2 port_index = 6 
+&gt; Jack: JackEngine::ReleaseRefnum server quit
+&gt; JackTemporaryException : now quits...
+&gt; Jack main caught signal 2
+&gt; Jack: JackServer::Stop
+&gt; Jack: JackThreadedDriver::Stop
+&gt; Jack: JackPosixThread::Stop
+&gt; Jack: JackSocketServerChannel::ClientRemove ref = 2 fd = 6
+&gt; Jack: JackClientSocket::Close
+&gt; Jack: JackSocketServerChannel::BuildPoolTable size = 2
+&gt; Jack: JackSocketServerChannel::BuildPoolTable fSocketTable i = 1 fd = 5
+&gt; Jack: JackPosixThread::ThreadHandler : exit
+&gt; Jack: JackPosixThread::Stop
+&gt; Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+&gt; Jack: JackRequest::Notification
+&gt; Jack: JackRequest::Notification kQUIT
+&gt; Jack: JackSocketServerChannel::Execute : JackQuitException
+&gt; Jack: JackPosixThread::ThreadHandler : exit
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 15
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 15
+&gt; Jack: JackServer::Close
+&gt; Jack: JackServerSocket::Close /dev/shm/jack_default_1000_0
+&gt; Jack: JackClientSocket::Close
+&gt; Jack: JackAudioDriver::Detach
+&gt; Jack: JackEngine::PortUnRegister ref = 0 port_index = 1
+&gt; Jack: JackEngine::PortDisconnect ref = -1 src = 1 dst = 65535
+&gt; Jack: JackGraphManager::DisconnectAllOutput port_index = 1 
+&gt; Jack: JackConnectionManager::RemoveOutputPort ref = 0 port_index = 1 
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 10
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 10
+&gt; Jack: JackEngine::PortUnRegister ref = 0 port_index = 2
+&gt; Jack: JackEngine::PortDisconnect ref = -1 src = 2 dst = 65535
+&gt; Jack: JackGraphManager::DisconnectAllOutput port_index = 2 
+&gt; Jack: JackConnectionManager::RemoveOutputPort ref = 0 port_index = 2 
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 10
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 10
+&gt; Jack: JackEngine::PortUnRegister ref = 0 port_index = 3
+&gt; Jack: JackEngine::PortDisconnect ref = -1 src = 3 dst = 65535
+&gt; Jack: JackGraphManager::DisconnectAllInput port_index = 3
+&gt; Jack: JackConnectionManager::RemoveInputPort ref = 0 port_index = 3 
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 10
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 10
+&gt; Jack: JackEngine::PortUnRegister ref = 0 port_index = 4
+&gt; Jack: JackEngine::PortDisconnect ref = -1 src = 4 dst = 65535
+&gt; Jack: JackGraphManager::DisconnectAllInput port_index = 4
+&gt; Jack: JackConnectionManager::RemoveInputPort ref = 0 port_index = 4 
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 10
+&gt; Jack: JackEngine::ClientNotify: no callback for notification = 10
+&gt; Jack: JackDriver::Close
+&gt; Jack: JackConnectionManager::DirectDisconnect last: ref1 = 0 ref2 = 0
+&gt; Jack: JackGraphManager::DisconnectRefNum cur_index = 5 ref1 = 0 ref2 = 0
+&gt; Jack: JackEngine::ClientInternalClose ref = 0
+&gt; Jack: JackEngine::ClientCloseAux ref = 0
+&gt; Jack: JackGraphManager::RemoveAllPorts ref = 0
+&gt; Jack: JackDriver::ClientNotify ref = 0 driver = freewheel name = system notify = 1
+&gt; Jack: JackPosixSemaphore::Destroy name = jack_sem.1000_default_system
+&gt; Jack: JackDriver::Close
+&gt; Jack: JackConnectionManager::DirectDisconnect last: ref1 = 1 ref2 = 1
+&gt; Jack: JackGraphManager::DisconnectRefNum cur_index = 5 ref1 = 1 ref2 = 1
+&gt; Jack: JackEngine::ClientInternalClose ref = 1
+&gt; Jack: JackEngine::ClientCloseAux ref = 1
+&gt; Jack: JackGraphManager::RemoveAllPorts ref = 1
+&gt; Jack: JackPosixSemaphore::Destroy name = jack_sem.1000_default_freewheel
+&gt; Jack: JackEngine::Close
+&gt; Jack: JackClientSocket::Close
+&gt; Jack: no message buffer overruns
+&gt; Jack: JackPosixThread::Stop
+&gt; Jack: JackPosixThread::ThreadHandler : exit
+&gt; Jack: Succeeded in unlocking 107335194 byte memory area
+&gt; Jack: JackShmMem::delete size = 0 index = 0
+&gt; Jack: ~JackDriver
+&gt; Jack: ~JackDriver
+&gt; Jack: Succeeded in unlocking 1186 byte memory area
+&gt; Jack: JackShmMem::delete size = 0 index = 1
+&gt; Jack: Cleaning up shared memory
+&gt; Jack: Cleaning up files
+&gt; Jack: Unregistering server `default'
+&gt; 
+&gt; and jack_simple_client
+&gt; 
+&gt; 
+&gt; [timbyr@mojotecra i686]$ jack_simple_client 
+&gt; Jack: JackClient::SetupDriverSync driver sem in flush mode
+&gt; Jack: JackPosixSemaphore::Connect name = jack_sem.1000_default_jack_simple_client
+&gt; Jack: JackPosixSemaphore::Connect sem_getvalue 0
+&gt; Jack: Clock source : system clock via clock_gettime
+&gt; Jack: JackLibClient::Open name = jack_simple_client refnum = 2
+&gt; Jack: JackClient::PortRegister ref = 2 name = jack_simple_client:output1 type = 32 bit float mono audio port_index = 5
+&gt; Jack: JackClient::PortRegister ref = 2 name = jack_simple_client:output2 type = 32 bit float mono audio port_index = 6
+&gt; Jack: JackClient::Activate
+&gt; Jack: JackPosixThread::StartImp : create non RT thread
+&gt; Jack: JackPosixThread::ThreadHandler : start
+&gt; Jack: JackClient::kBufferSizeCallback buffer_size = 1024
+&gt; Jack: JackClient::Init : period = 21333 computation = 100 constraint = 21333
+&gt; Jack: JackPosixThread::AcquireRealTimeImp priority = 15
+&gt; Jack: JackClient::ClientNotify ref = 2 name = jack_simple_client notify = 2
+&gt; Jack: JackClient::kActivateClient name = jack_simple_client ref = 2 
+&gt; Jack: JackClient::Connect src = jack_simple_client:output1 dst = system:playback_1
+&gt; Jack: JackClient::ClientNotify ref = 2 name = jack_simple_client notify = 18
+&gt; Jack: JackClient::ClientNotify ref = 2 name = jack_simple_client notify = 18
+&gt; Jack: JackClient::Connect src = jack_simple_client:output2 dst = system:playback_2
+&gt; Jack: JackClient::ClientNotify ref = 2 name = jack_simple_client notify = 18
+&gt; Jack: JackClient::ClientNotify ref = 2 name = jack_simple_client notify = 18
+&gt; ^CJack: jack_client_close
+&gt; Jack: JackClient::Close ref = 2
+&gt; Jack: JackClient::Deactivate
+&gt; Jack: JackClient::Deactivate res = 0
+&gt; Jack: JackPosixThread::Kill
+&gt; Jack: JackSocketClientChannel::Stop
+&gt; Jack: JackPosixThread::Kill
+&gt; Jack: JackClientSocket::Close
+&gt; Jack: JackClientSocket::Close
+&gt; Jack: JackPosixSemaphore::Disconnect name = jack_sem.1000_default_jack_simple_client
+&gt; Jack: JackLibClient::~JackLibClient
+&gt; Jack: JackShmReadWritePtr1::~JackShmReadWritePtr1 2
+&gt; Jack: Succeeded in unlocking 422 byte memory area
+&gt; Jack: JackLibGlobals Destroy 9180048
+&gt; Jack: ~JackLibGlobals
+&gt; Jack: JackPosixSemaphore::Disconnect name = jack_sem.1000_default_system
+&gt; Jack: JackPosixSemaphore::Disconnect name = jack_sem.1000_default_freewheel
+&gt; Jack: no message buffer overruns
+&gt; Jack: JackPosixThread::ThreadHandler : exit
+&gt; Jack: JackPosixThread::Stop
+&gt; Jack: JackShmReadWritePtr::~JackShmReadWritePtr 1
+&gt; Jack: Succeeded in unlocking 1186 byte memory area
+&gt; Jack: JackShmReadWritePtr::~JackShmReadWritePtr 0
+&gt; Jack: Succeeded in unlocking 107335194 byte memory area
+&gt; Jack: jack_client_close res = 0
+&gt; signal received, exiting ...
+&gt; 
+&gt; 
+&gt; Thanks,
+&gt; 
+&gt; Tim
+&gt;  
+&gt; 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1402023648.12686_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1402059991.31050_0.ltw:2,S/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1402047841.7134_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1402047841.7134_0.ltw:2,&nbsp;&lt;82A42DDA-DE25-491B-847B-14DBBE0FAB27 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

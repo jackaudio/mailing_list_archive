@@ -1,0 +1,47 @@
+Date:        Sat, 05 May 2012 20:04:08 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at jackaudio dot org
+
+Subject:     [Jack-Devel] Split template files
+
+Hi!
+
+I'm by far no C++ expert and only have a rough idea how templates work,
+but to the best of my knowledge, it is not permitted to have a template
+prototype declaration in a header file and the actual implementation in
+a corresponding cpp file without special magic.
+
+It took me a couple of hours to debug
+
+    https://github.com/jackaudio/jack2/issues/4
+
+because I was misled by the idea that the recent change in the build
+system might have caused the problem.
+
+In the end, objdump and strings have confirmed that the code in question
+was never compiled. This is exactly what articles on the web say[0][1].
+
+Of course, there is the export keyword, but iirc, it's deprecated in
+C++11.
+
+So I moved the code back in commit
+
+ 
+<https://github.com/jackaudio/jack2/commit/dfbd8ce733a12d381522b66fe0228d970d32e7c1>,
+
+
+effectively fixing the runtime error.
+
+
+
+Cheers
+
+
+[0] 
+http://www.codeproject.com/Articles/3515/How-To-Organize-Template-Source-Code
+[1] 
+http://stackoverflow.com/questions/115703/storing-c-template-function-definitions-in-a-cpp-file
+
+1336241159.24782_0.ltw:2,a <4FA56B98.1020105 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

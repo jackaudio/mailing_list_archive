@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack_client_close error...</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack_client_close error...</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1309291506.9291_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1309422945.1273_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1309294971.12538_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 28 Jun 2011 14:00:18 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Evan Buswell </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+</table>
+<pre>
+I think this is all happening in JackLockedEngine.h within
+CATCH_EXCEPTION_RETURN; the exception is thrown by
+JackEngine::ReleaseRefnum called by JackEngine::ClientCloseAux.  I
+could be wrong about this.
+
+I'm pretty sure it doesn't have anything to do with the way I'm
+calling jack from my code, as all you need to reproduce it is this:
+
+int main(int argc, char **argv) {
+    jack_client_t *client = jack_client_open("someclient", 0, NULL);
+    int r = jack_client_close(client);
+    if(r != 0) {
+        printf("\nJack_client_close returned nonzero: %d!\n", r);
+    } else {
+        printf("\nEverything OK!\n");
+    }
+    return 0;
+}
+
+Run jack elsewhere, you get "Everything OK!"; let the library start it
+on jack_client_open, you get "Jack_client_close returned nonzero:
+-1!".
+
+Evan
+
+On Tue, Jun 28, 2011 at 1:14 PM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+&gt;
+&gt; Le 28 juin 2011 &#xE0; 22:04, Evan Buswell a &#xE9;crit :
+&gt;
+&gt;&gt; With libjack2, I've noticed that jack_client_close returns nonzero
+&gt;&gt; (error) when running the "temporary" server. &#xA0;As far as I can tell
+&gt;&gt; (which is probably not all that far), this is because the method for
+&gt;&gt; quitting is to throw a JackTemporaryException, which is then caught,
+&gt;&gt; the server is quit, and a nonzero error code is returned.
+&gt;
+&gt; Where is the code?
+&gt;
+&gt;&gt; &#xA0;Is this
+&gt;&gt; expected behavior? &#xA0;When running the temporary server, is there a way
+&gt;&gt; to tell the difference between normal server quit and an actual error
+&gt;&gt; (like a broken socket) on close?
+&gt;&gt;
+&gt;&gt; Cheers,
+&gt;&gt;
+&gt;&gt; Evan
+&gt;
+&gt; Thanks.
+&gt;
+&gt; Stephane
+&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1309291506.9291_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1309422945.1273_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1309294971.12538_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1309294971.12538_0.ltw:2,a&nbsp;&lt;BANLkTinzf32HOYmrhfrRMNKfaxr3KRTYsw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

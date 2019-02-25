@@ -1,0 +1,95 @@
+Date:        Sat, 28 Jul 2018 20:21:59 +0200
+From:        Hanspeter Portner  <[hidden] at open-music-kontrollers dot ch>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Matthias Geier [Jack-Devel] Fwd: Possible error codes for jack_midi_event_get()? (1532789817.21574_0.ltw:2,)
+Follow-Up:   Matthias Geier Re: [Jack-Devel] Fwd: Possible error codes for jack_midi_event_get()? (1532872787.19673_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Fwd: Possible error codes for jack_midi_event_get()?
+
+On 28.07.2018 16:55, Matthias Geier wrote:
+> Dear list.
+> 
+> I'm the author of one of the Python bindings for JACK:
+> https://jackclient-python.readthedocs.io/
+> 
+> I was a bit lazy when implementing a generator function that's
+> supposed to yield all incoming MIDI events one-by-one.
+> 
+> Here's the code if somebody is interested (it's using CFFI and the
+> _lib object is a wrapper for the JACK API):
+> 
+> 
+>     def incoming_midi_events(self):
+>         event = self._event
+>         buf = _lib.jack_port_get_buffer(
+>             self._ptr, self._client.blocksize)
+>         for i in range(_lib.jack_midi_get_event_count(buf)):
+>             err = _lib.jack_midi_event_get(event, buf, i)
+>             # TODO: proper error handling if this ever happens:
+>             assert not err, err
+>             yield event.time, _ffi.buffer(event.buffer, event.size)
+> 
+> 
+> As you can see, I didn't check the return value of
+> jack_midi_event_get(), I just added an "assert" statement hoping that
+> somebody would report it if the call to jack_midi_event_get() would
+> ever fail.
+> 
+> I didn't hear anything for a long time, but recently I got a bug
+> report where the assertion was violated:
+> https://github.com/spatialaudio/jackclient-python/issues/54
+> 
+> This shows that jack_midi_event_get() can raise an error, even if I
+> check with jack_midi_get_event_count() beforehand.
+> 
+> My question is now: how should I react to this error?
+
+For JACK1 error is only returned if midi_event_index >= midi_event_count [1].
+
+For JACK2 the same is true; additionally it can fail if the MIDI port buffer is
+invalid (whatever that means...) [2].
+
+[1] https://github.com/jackaudio/jack1/blob/master/libjack/midiport.c#L96
+[2] https://github.com/jackaudio/jack2/blob/master/common/JackMidiAPI.cpp#L67
+
+> 
+> Shall I ...
+> 
+> * discard the current event and continue reading further events?
+> 
+> * discard the current and all following events in this block?
+> 
+> * raise an error?
+> 
+> * do something else?
+
+Well, there is no valid event, so ignore it ?
+
+> 
+> Can I guarantee that no incoming MIDI events get lost?
+> 
+
+MIDI events can only get lost while multiplexed down from multiple ports into
+one (and the latter can not take them all), iirc.
+
+> Another related question: what error code is supposed to be returned?
+> The documentation
+> (http://www.jackaudio.org/api/group__MIDIAPI.html#ga838c794bd1451bfd47edde1c7cd1ff4f)
+> mentions ENODATA, but according to my bug report, ENOBUFS (-105) was
+> returned.
+> 
+> Is this a bug in JACK or an omission in the documentation?
+
+It is in the documentation, that it can fail [3].
+
+[3] http://jackaudio.org/api/group__MIDIAPI.html#ga838c794bd1451bfd47edde1c7cd1ff4f
+
+> 
+> I don't know which JACK version was used, the OS was Ubuntu 18.04 LTS 64 bits.
+> 
+> cheers,
+> Matthias
+
+1532802150.3977_0.ltw:2, <d77f2499-f98a-fb79-bba2-a54169c0c02e at open-music-kontrollers dot ch>
+________________________________________________________________________________
+

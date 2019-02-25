@@ -1,0 +1,127 @@
+Date:        Tue, 24 Jan 2017 17:59:43 +0100
+From:        Thomas Brand  <[hidden] at trellis dot ch>
+To:          "\"JÃ¶rg MÃ¼ller\"" <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jörg Müller Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels (1485274443.19498_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels
+
+Hi again,
+
+I'd like to throw in a possible alternative for non-resampled audio
+transfer via UDP.
+
+jack_audio_send and jack_audio_receive [1]
+
+These programs have several limitations however for a case with two
+externally synced interfaces both connected to the same host running JACK
+with the same settings it could be worth a try. The number of channels
+that can be transimitted depends on the period size.
+
+For two JACK running at -p64, this *should* work:
+jack_audio_send --in 196 localhost 1234
+jack_audio_receive --out 196 1234
+...
+196 channels are quite heavy and the send/receive aren't possibly robust
+enough so you'd need to see if it works four you or where it breaks.
+
+===
+period size: 64 samples (1.333 ms, 256 bytes)
+channels (capture): 196
+bytes per sample: 4 (32 bit float)
+immediate send, no pause or shutdown: no
+multi-channel period size: 50176 bytes
+message rate: 750.0 messages/s
+message length: 51200 bytes
+transfer length: 52398 bytes (4.2 % overhead)
+/!\ receiver(s) must support message size > 32768
+expected network data rate: 314388.0 kbit/s (39.30 MB/s)
+/!\ high data rate (OK on localhost), use GigE
+===
+-> almost 40 MB/s of data moving on localhost, just in one direction.
+That's a lot for "just" creating a common audio data domain for both devices.
+
+Good Luck
+Thomas
+
+[1] https://github.com/7890/jack_tools/tree/master/audio_rxtx
+
+On Tue, January 24, 2017 17:13, JÃ¶rg MÃ¼ller wrote:
+> Thanks for the information.
+>
+>
+> The two MADI FX cards I'm using can be synced via word clock.
+>
+>
+> However, the information needs to be unaltered, no resampling or any
+> modification is allowed for our processing. What command line settings do
+> I
+> have to use to make sure of that? How can I use the official zita-ajbridge
+>  or is there some documentation about it?
+>
+> 2017-01-24 16:36 GMT+01:00 Thomas Brand <[hidden]>:
+>
+>
+>> On Tue, January 24, 2017 16:27, Thomas Brand wrote:
+>>
+>>> On Tue, January 24, 2017 09:22, Ralf Mardorf wrote:
+>>>
+>>>
+>>>> On Tue, 24 Jan 2017 07:41:50 +0000, [hidden] wrote:
+>>>>
+>>>>
+>>>>
+>>>>> On Mon, Jan 23, 2017 at 05:35:57PM +0000, Fons Adriaensen wrote:
+>>>>>
+>>>>>
+>>>>>
+>>>>>> With the official zita-ajbridge you can disable resampling.
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>
+>>>>> Good to know.
+>>>>>
+>>>>>
+>>>>>
+>>>>
+>>>> Could this be used without word clock, by using a digital interface
+>>>> to sync, e.g. S/PDIF? If so, assuming two identical cards would be
+>>>> used, would sync be hat good, that each combination of IOs, e.g. a
+>>>> channel from one card for the left and of the other card for the
+>>>> right channel of a stereo signal, wouldn't cause phasing issues?
+>>>>
+>>> yes i think that works pretty good (drawing from earlier
+>>> experiments). Using S/PDIF just for sync is a cheap alternative to a
+>>> "real" wordclock.
+>>> One of both interfaces will be slaved to the other and then both
+>>> should run the same cycle at the same time (so theoretically no
+>>> phasing issues). You just have to manage to shove forth and back the
+>>> sample data from/to interface at good enough rate which isn't a
+>>> particular problem on
+>> localhost
+>>> using UDP like zita does. If there is no resampling involved, this
+>>> can work for many many channels without hitting the CPU too much.
+>>>
+>>> Greetings
+>>> Thomas
+>>>
+>>>
+>> Even if the interfaces are synchronized with S/PDIF, there will be some
+>>  cycles (hopefully a static number) needed to shove data forth and
+>> back. This needs to be considered to effectively get synchronous
+>> behaviour for input or output to both interfaces.
+>>
+>>
+>>
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>>
+>>
+>
+
+1485277274.22745_0.ltw:2,a <0c02a1d5d90d90b81053f9c3cfeb4277.squirrel at ips73 dot ips dot ch>
+________________________________________________________________________________
+

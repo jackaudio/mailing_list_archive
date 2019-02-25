@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] routing alsa through jack</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] routing alsa through jack</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1387468889.9092_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1387565850.22698_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1387491441.14261_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 19 Dec 2013 23:36:33 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Dominique Michel </span> &lt;[hidden] at vtxnet dot ch&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Lucio Crusca
+<a href='../1387468889.9092_0.ltw:2,/index.html'>Re: [Jack-Devel] routing alsa through jack </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Lucio Crusca
+<a href='../1387565850.22698_0.ltw:2,/index.html'>Re: [Jack-Devel] routing alsa through jack </a></td></tr>
+</table>
+<pre>
+Le Thu, 19 Dec 2013 17:01:14 +0100,
+Lucio Crusca &lt;[hidden]&gt; a &#xE9;crit :
+
+&gt; In data mercoled&#xEC; 18 dicembre 2013 23:27:21, Dominique Michel ha
+&gt; scritto:
+&gt; &gt; I think no part must be ignored. This article is about routing JACK
+&gt; &gt; and ALSA together.
+&gt; 
+&gt; Ok thanks, I'm now following that guide and I'm getting closer. The
+&gt; problem here is that if I have this in
+&gt; my /etc/modprobe.d/alsabase.conf 
+&gt; 
+&gt; options snd-aloop index=0 pcm_substreams=2
+&gt; 
+&gt; then I get
+&gt; 
+&gt; # modprobe snd-aloop
+&gt; ERROR: could not insert 'snd_aloop': No such device
+&gt; 
+&gt; but it works if I omit the options in /etc/modprobe.d/alsa-base.conf.
+&gt; Please note that I've already tried rebooting several times with and
+&gt; without the options in place, same result.
+
+You must tell the kernel how much sound card do you have:
+
+options snd cards_limit=3
+
+and the index for each sound card:
+
+options snd-aloop index=0
+options snd-hda-intel index=1 model=alc271-dmic
+options snd-hda-intel index=2
+
+If the order is still not correct (you can see it
+with 'cat /proc/asound/cards'), that can append i.e. when a sound card
+is built in a video card, and insist to load at the same time than
+the video card before alsa get loaded, you will have to blacklist this
+sound card in /etc/modprobe.d/blacklist.conf.
+
+Dominique
+
+
+&gt; 
+&gt; Moreover, if I
+&gt; 
+&gt; # alsa force-unload
+&gt; Unloading ALSA sound driver modules: snd-pcm-oss snd-hda-codec-hdmi
+&gt; snd-hda- codec-realtek snd-hda-intel snd-hda-codec snd-hwdep
+&gt; snd-mixer-oss snd-pcm snd- page-alloc snd-timer (failed: modules
+&gt; still loaded: snd-hda-codec-hdmi snd- hda-codec-realtek snd-hda-intel
+&gt; snd-hda-codec snd-hwdep snd-mixer-oss snd-pcm snd-page-alloc
+&gt; snd-timer).
+&gt; 
+&gt; # rmmod snd-pcm-oss snd-hda-codec-hdmi snd-hda-codec-realtek
+&gt; snd-hda-intel snd-hda-codec snd-hwdep snd-mixer-oss snd-pcm
+&gt; snd-page-alloc snd-timer Error: Module snd_pcm_oss is not currently
+&gt; loaded Error: Module snd_hda_codec_hdmi is in use
+&gt; Error: Module snd_hda_codec_realtek is in use
+&gt; Error: Module snd_hda_intel is in use
+&gt; Error: Module snd_hda_codec is in use by: snd_hda_codec_realtek 
+&gt; snd_hda_codec_hdmi snd_hda_intel
+&gt; Error: Module snd_hwdep is in use by: snd_hda_codec
+&gt; Error: Module snd_mixer_oss is in use
+&gt; Error: Module snd_pcm is in use by: snd_hda_codec_hdmi snd_hda_codec 
+&gt; snd_hda_intel
+&gt; Error: Module snd_page_alloc is in use by: snd_pcm snd_hda_intel
+&gt; Error: Module snd_timer is in use by: snd_pcm
+&gt; 
+&gt; In /var/log/dmesg.log I have
+&gt; 
+&gt; [   21.865605] cannot find the slot for index 0 (range 0-1), error:
+&gt; -16 [   21.865851] snd_aloop: probe of snd_aloop.0 failed with error
+&gt; -16 [   21.865893] aloop: No loopback enabled
+&gt; 
+&gt; What am I doing wrong?
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1387468889.9092_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1387565850.22698_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1387491441.14261_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1387491441.14261_0.ltw:2,&nbsp;&lt;20131219233633.756f14f7 at tux dot fritz dot box&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

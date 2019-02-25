@@ -1,0 +1,37 @@
+Date:        Sun, 19 Apr 2015 09:38:38 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Johannes Lorenz <[hidden] at mailueberfall dot de>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Johannes Lorenz Re: [Jack-Devel] JACK 2 is not real time safe on posix? (1429450549.27215_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] JACK 2 is not real time safe on posix?
+
+On Sun, Apr 19, 2015 at 9:35 AM, Johannes Lorenz <
+[hidden]> wrote:
+
+> > It's realtime safe as long as you know that those system calls pass
+> > control to the thread you want them to pass control to and not some
+> > other random thread that has nothing to do with JACK.
+>
+> Ok, but how does JACK keep the OS from executing a completely different
+> process as the next job?
+>
+
+because the relevant threads in the server AND in the clients are all
+scheduled in the SCHED_FIFO class, with (relatively) high priority.
+
+
+>
+> Also, as you say, by using e.g., malloc(), the realtime app indeed passes
+> the control to the kernel thread, which has to do a lot with JACK (it does
+> exactly what the rt app need to get process). So why is calling malloc()
+> not realtime then?
+>
+
+**if** malloc() ends up with a call to the system call brk(), then the
+kernel needs to memory allocation on behalf of the calling process. this is
+not realtime safe.
+
+1429450728.27422_0.ltw:2, <CAFa_cK=P6+K21n7EQh4apB1i4VQ0j0TrMZBejjvB1tuY=N-KQg at mail dot gmail dot com>
+________________________________________________________________________________
+

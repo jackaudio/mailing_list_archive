@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] port disconnection callbacks (JackPortConnectCallback)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] port disconnection callbacks (JackPortConnectCallback)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1412858298.21941_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1412860164.23647_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1412859542.23039_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 09 Oct 2014 08:57:06 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1412858298.21941_0.ltw:2,/index.html'>Re: [Jack-Devel] port disconnection callbacks (JackPortConnectCallback) </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1412860164.23647_0.ltw:2,/index.html'>Re: [Jack-Devel] port disconnection callbacks (JackPortConnectCallback) </a></td></tr>
+</table>
+<pre>
+On Thu, Oct 9, 2014 at 8:32 AM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+
+&gt;
+&gt; Le 9 oct. 2014 &#xE0; 13:49, Paul Davis &lt;[hidden]&gt; a &#xE9;crit :
+&gt;
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; On Thu, Oct 9, 2014 at 2:55 AM, Matt Flax &lt;[hidden]&gt; wrote:
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; I understand what you are saying - the grey zone !
+&gt; &gt; Something is disconnecting the ports. How would any object which is
+&gt; monitoring ports, such as qjackctl or JackPortMonitor know that the
+&gt; connection status has changed ?
+&gt; &gt; Is there an alternative way to get notifications when  ports are
+&gt; disconnected ?
+&gt; &gt;
+&gt; &gt; they don't use a process callback.
+&gt; &gt;
+&gt; &gt; stephane, this behaviour seems clearly wrong to me. given that a client
+&gt; without a process callback can receive the connect/disconnect callbacks, it
+&gt; doesn't seem right that a client which has just returned non-zero from its
+&gt; process callback would simply stop receiving them. does that seem right to
+&gt; you?
+&gt;
+&gt; No, I'm not saying that&#x2026; just saying the client is "deactivated"...
+&gt;
+&gt; &gt;
+&gt; &gt; i thought jack2 delivered all non-process callbacks in a separate thread?
+&gt; &gt;
+&gt; Yep&#x2026;
+&gt;
+&gt; So maybe we should go back to the initial question; what is the client
+&gt; supposed to do when the process callback does not return 0?
+&gt;
+
+it is equivalent to having no process callback registered. the
+documentation in the header is slightly ambgious because it describes the
+behaviour of the callback rather than the registration:
+
+/**
+ * Tell the Jack server to call @a process_callback whenever there is
+ * work be done, passing @a arg as the second argument.
+ *
+ * The code in the supplied function must be suitable for real-time
+ * execution. That means that it cannot call functions that might
+ * block for a long time. This includes all I/O functions (disk, TTY,
+network),
+ * malloc, free, printf, pthread_mutex_lock, sleep, wait, poll, select,
+pthread_join,
+ * pthread_cond_wait, etc, etc.
+ *
+ * @return 0 on success, otherwise a non-zero error code, causing JACK
+ * to remove that client from the process() graph.
+ */
+int jack_set_process_callback (jack_client_t *client,
+                   JackProcessCallback process_callback,
+                   void *arg) JACK_OPTIONAL_WEAK_EXPORT;
+
+so a client that has never called jack_set_process_callback() and a client
+that did but has returned non-zero from the process callback are
+semantically equivalent.
+
+
+&gt;
+&gt; St&#xE9;phane
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1412858298.21941_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1412860164.23647_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1412859542.23039_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1412859542.23039_0.ltw:2,&nbsp;&lt;CAFa_cKng1kiWD_eGsQtrHRJvgCHrSf8hnw1H2S2XVaYdmQu+Rg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357600085.12425_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357603637.17666_0.ltw:2,S/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357602068.15335_0.ltw:2,Sa'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 07 Jan 2013 17:40:41 -0600 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK List &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>John Emmas
+<a href='../1357595948.6019_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Emmas
+<a href='../1357632649.25030_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) </a></td></tr>
+</table>
+<pre>
+On Mon, January 7, 2013 3:58 pm, John Emmas wrote:
+&gt; And after all that manual adjustment, what happens if the same code needs
+&gt; to run on a different CPU with some other native alignment?  Chris, this
+&gt; is just a roundabout way of saying that the ARM compiler doesn't
+&gt; understand packing.
+
+Let me back up a minute and make sure I have not misunderstood something.
+
+I thought the original suggestion was not to use a general pack directive
+to the compiler, but specifically a pack(1) directive.  If I understand
+the syntax correctly (which is not a sure thing) that would say to pack on
+byte boundaries, which implies no padding bytes between structure members.
+
+If I do not have a mistake in my understanding as described above, how is
+that a compiler problem?  The programmer has instructed the compiler to
+pack elements with no padding bytes, which would work if all the data
+elements in the structure occupy 4 bytes, but which results in a load
+exception if any of the data elements are smaller than 4 bytes.
+
+That to me says the programmer should not use pack(1) unless the
+programmer understands the implications.
+
+The documentation for the Microsoft compiler points out that if you pack
+your data structures, you may need to use the _unaligned attribute when
+accessing the struct to let the compiler know that extra code needs to be
+generated to handle the unaligned data.  The _unaligned directive does
+nothing on some platforms, but adds the additional code on platforms where
+it is needed.
+http://msdn.microsoft.com/en-us/library/ms253935%28v=vs.80%29.aspx
+http://msdn.microsoft.com/en-us/library/ms253978%28v=vs.80%29.aspx
+
+GCC does not seem to have the equivalent of the _unaligned directive, so
+on platforms which can not handle unaligned access, either the programmer
+must add the additional required code by hand, or avoid packing structures
+in ways which cause unaligned access.
+
+&gt; accommodate that.  Nowadays (far from gaining performance benefits)
+&gt; there's almost always a performance penalty in changing a compiler's
+&gt; default packing alignment.
+
+Yes, but isn't that what you had first proposed?  The default packing
+alignment is not going to be on byte boundaries on any platform which can
+run jackd.  Did I misread an earlier message?  I thought you had suggested
+pack(1).
+
+&gt; This is because when data is taken from RAM
+&gt; and presented to the CPU, the compiler must adjust the
+&gt; alignment as needed and do the reverse again on the way back to RAM.
+
+
+That is what the compiler does by default. When you use the pack directive
+you are in essence telling the compiler that you know something that the
+compiler does not have access to, so trust the program input, override the
+default behavior.  The default behavior on ARM would likely be something
+equivalent to pack(4).  Using a pack(1) directive causes the default
+behavior to stop.  I don't think it is a valid complaint against the
+compiler when something breaks after instructing the compiler to stop 
+using the correct default behavior and start using a different behavior.
+
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357600085.12425_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357603637.17666_0.ltw:2,S/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357602068.15335_0.ltw:2,Sa'>Index</a></td></tr>
+</table>
+<p><small>1357602068.15335_0.ltw:2,Sa&nbsp;&lt;ffb822b9dbca9bfa764dd5aa04d62434.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

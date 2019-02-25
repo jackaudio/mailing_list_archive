@@ -1,0 +1,56 @@
+Date:        Sat, 02 Jul 2016 17:58:00 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] Compiling jack2 in mixed mode (1467467161.7077_0.ltw:2,)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Compiling jack2 in mixed mode (1467482657.23000_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Compiling jack2 in mixed mode
+
+On Sat, Jul 02, 2016 at 09:45:48AM -0400, Paul Davis wrote:
+ 
+> context switches are not free. their cost varies depending on the size of
+> the working set of the process (the amount of memory touched by the
+> process, notably during the JACK process() callback).
+> 
+> they might vary from <10 usecs to as much as 500usecs (the lowest possible
+> number is dependent on your CPU; the upper bound depends on the clients)
+> 
+> 100 * 100 usecs = 10msecs
+> 
+> so, you've just used 10msecs of the time available for the process
+> callback. That's enormous (quite possibly larger than the actual time
+> available).
+
+True, assuming you have single linear chain of 100 clients, and
+each step involves a context switch.
+
+In practice there are two factors that mitigate this problem:
+
+1. Parts of the graph may run in parallel. And SMP systems
+   are more or less standard today.
+
+2. Linear chains could be in the same process. In that case,
+   depending on implementation, you don't even need a thread
+   switch.
+
+Exploiting both conditions at the same time requires some
+intricate logic, but it's certainly possible. I have a
+'proof of concept' actually running. The big remaining
+question that needs to be resolved before this gets turned
+into something real is if I want to support existing Jack
+clients (via a replacement libjack on top of the new API).
+Doing that complicates things quite a bit, but I haven't
+abandoned the idea.
+
+Ciao,
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+
+1467482292.22498_0.ltw:2,a <20160702175800.GA113313 at linuxaudio dot org>
+________________________________________________________________________________
+

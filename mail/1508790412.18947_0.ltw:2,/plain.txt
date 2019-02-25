@@ -1,0 +1,81 @@
+Date:        Mon, 23 Oct 2017 15:26:33 -0500
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          Philippe Bekaert <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+
+Subject:     Re: [Jack-Devel] AES67 / SMPTE ST 2110-30
+
+On Mon, October 23, 2017 11:53 am, Philippe Bekaert wrote:
+> wireshark reveals that dante is using ptp v1 - it's not that
+> non-standard.
+
+Correct, I have not looked up the Audinate patent(s) yet, I do not know
+what was unique enough to award a patent.  In any case ALC Networx did not
+seem to think that the Ravenna approach of using PTPv2 (IEEE 1588-2008)
+for synchronization and RTP/RTCP (IEEE 1733-2011 and IETF RFC3550 and
+RFC3650) for media streams would be covered by any patents.
+
+> Especially rtp is not difficult : it's just one packet format, and we
+> need none of the special features, essentially just the time stamp
+> in the header and the audio data.
+
+Yes, time stamp calculations and latency adjustments seemed like the only
+part that would possibly be a little tricky. The rest seems like just
+manipulating sample values to get into the correct order in the packet. 
+Jack uses floating point for sample format and RTP uses integers, so the
+usual conversion between integer and floating point that you would do for
+sending samples to a hardware sound card applies.
+
+> I'm sticking with linux in the first place, but using platform
+> independent tools whereever available.
+> Hence also my consideration of the asio C++11 library for networking
+> support.
+
+OK, the first time I misread that as an ASIO library, i.e. the Steinberg
+designed Windows specific multi-channel audio specification, not asio C++
+library for asynchronous I/O.
+I checked my fedora installation and that is easily available as the
+asio-devel package.  I think libasio-dev is the equivalent in debian. 
+Seems that should not be a problem for any recent distribution.
+Actually, now that I look at the details that seems to be just headers,
+I'm not sure where the actual libraries are implemented.  Something to
+investigate later.
+
+> I'm considering to have a user set up system time synchronisation
+> with the audio network clock master and use system time as
+> reference indeed, as you also proposed.
+
+One thing I do not know is what the clock will be set to using one of the
+standalone audio devices as the PTP master. I'm not sure if those devices
+have a battery backed clock, so potentially if you set your system clock
+to the PTP clock in a network which only contains a Ravenna device for
+example, your system clock could jump to some unexpected value,
+potentially far in the past.  Just something to consider for documentation
+purposes for the moment, hopefully I will find a way to get access to some
+hardware for testing.
+
+> It won't work if you have different audio devices synchronised with
+> different master clocks
+
+That is always the case, whether using network audio, USB, or AES/EBU or
+S/PDIF connections, so again I think just a note for the documentation. 
+Typically any devices which are on the same network segment or VLAN will
+end up using the same master clock because of the PTP best master clock
+algorithm so in practical installations should not be a problem. I think
+you would have to specifically change the default clock domain from clock
+0 to some other value to have that problem.
+
+A second level of consideration is  that two devices which are using the
+same master clock could still be configured to use different sample rates,
+so those two devices could still not be used together as a single
+aggregate audio device.  That could be manually checked at the beginning,
+but eventually should be part of whatever configuration method exists,
+compatibility of stream parameters should be verified before those streams
+are allowed to be configured together as part of the aggregate device.
+
+-- 
+Chris Caudle
+
+1508790412.18947_0.ltw:2, <5ebffabc8e00aa9f28e3cf751bdaa182.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

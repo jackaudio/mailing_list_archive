@@ -1,0 +1,57 @@
+Date:        Fri, 15 Apr 2011 14:56:27 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          [hidden] at feline-soul dot com
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Bearcat M. Sandor Re: [Jack-Devel] Real Time extensions for JACK (1302893359.25048_0.ltw:2,a)
+Follow-Up:   Bearcat M.\ Şandor Re: [Jack-Devel] Real Time extensions for JACK (1302980606.25884_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Real Time extensions for JACK
+
+On Fri, Apr 15, 2011 at 2:49 PM, Bearcat M. Sandor
+<[hidden]> wrote:
+> On 4/14/2011 7:55 AM, John Rigg wrote:
+>>
+>> JACK requires realtime scheduling privileges, which the standard Linux
+>> kernel has been able to provide for a long time now.
+>>
+>> The -rt patch for the kernel provides realtime preemption, which is
+>> not required by JACK.
+>>
+>> John
+>
+> Can someone explain what the difference between realtime scheduling and
+> realtime preempting is?  I know what the words mean, but what  does a system
+> do differently in each case?
+
+simple, short answer limited to SCHED_FIFO realtime scheduling:
+
+   * a thread that is set to run with SCHED_FIFO will run forever, or
+until it blocks
+        (e.g. it goes to sleep or does file i/o). it will also be
+temporarily interrupted
+        by an interrupt handler, for as long as the handler runs.
+
+this is totally unlike normal scheduling, where threads will be
+stopped so that something else can run for a while.
+
+that's realtime scheduling, and access to it is "controlled" on linux
+(not on OS X)
+
+realtime preemption is a bad name, but what is generally being
+referred to is how interrupts are handled. in a regular kernel, when a
+device
+interrupts the CPU, the handler will run right away and will continue
+to run until its finished. in kernels with threaded interrupt handlers
+(the most important part of "realtime preemption"), only a tiny part
+of the handler will run, and the rest of it takes place in a thread
+whose priority can be controlled. this means that bulk of the work
+done by an interrupt handler for, say, a video device or a keyboard or
+network interface can be explicitly prioritized to be "less important"
+than a SCHED_FIFO thread, meaning that even interrupts from these
+devices will have very little impact on the execution of the
+SCHED_FIFO thread's code. there are other aspects to "realtime
+preemption", but its not really worth getting into them here.
+
+1302893811.25967_0.ltw:2,a <BANLkTi=dUpFM_E1NfsQjz0Ud3jNWK25_dw at mail dot gmail dot com>
+________________________________________________________________________________
+

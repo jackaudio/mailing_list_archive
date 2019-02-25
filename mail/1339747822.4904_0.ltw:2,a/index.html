@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] ALSA merged audio device:</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] ALSA merged audio device:</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1339697880.31696_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1339784442.27048_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1339747822.4904_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 15 Jun 2012 08:02:17 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> James Harkins </span> &lt;[hidden] at dewdrop-world dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at jackaudio dot org </td></tr>
+</table>
+<pre>
+This is my first post to this list -- thanks in advance for advice.
+
+I'm trying to configure Jack 1.9.6 on Ubuntu 10.04 (with real-time kernel) to
+use all four channels of an M-Audio fast track pro. The class-compliant USB
+audio driver reads a pair of stereo devices:
+
+card 1: Pro [FastTrack Pro], device 0: USB Audio [USB Audio]
+  Subdevices: 0/1
+  Subdevice #0: subdevice #0
+card 1: Pro [FastTrack Pro], device 1: USB Audio [USB Audio #1]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+
+I've set up a merged device in .asoundrc and tested directly against alsa, no
+problem:
+
+1. Play a stereo, 44.1 kHz, 16 bit file to hw:1,0.
+2. Play the same file to hw:1,1.
+3. Use SuperCollider to make a four channel version of the same file, and play
+this to the merged device.
+
+All of these tests are successful -- so I think the .asoundrc configuration is
+correct.
+
+Jack can use either of the stereo devices -- hw:1,0 or hw:1,1 -- for playback
+with no problem. I've been using that successfully for almost two years now.
+
+But... (-Chw:1,1 is for the FTPro's stereo input)
+
+/usr/bin/jackd -S -P60 -dalsa -r44100 -p1024 -n2 -D -Chw:1,1 -Pft4 -s
+
+... gives me:
+
+~~~
+JACK server starting in realtime mode with priority 60
+audio_reservation_init
+Acquire audio card Audio1
+creating alsa driver ...
+   ft4|hw:1,1|1024|2|44100|0|0|nomon|swmeter|soft-mode|32bit
+Using ALSA driver USB-Audio running on card 1 - M-Audio FastTrack Pro at
+usb-0000:00:1d.0-1.5, full speed
+configuring for 44100Hz, period = 1024 frames (23.2 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: 16bit little-endian
+ALSA: use 2 periods for capture
+ALSA: final selected sample format for playback: 16bit little-endian
+ALSA: use 2 periods for playback
+ALSA: could not start playback (Broken pipe)
+Cannot start driver
+JackServer::Start() failed with -1
+Released audio card Audio1
+audio_reservation_finish
+Failed to start server
+~~~
+
+Any ideas what I'm missing?
+
+Thanks,
+hjh
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1339697880.31696_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1339784442.27048_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1339747822.4904_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1339747822.4904_0.ltw:2,a&nbsp;&lt;loom.20120615T093843-195 at post dot gmane dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

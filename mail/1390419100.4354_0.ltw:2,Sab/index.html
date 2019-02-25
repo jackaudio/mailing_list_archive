@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] JACK 0.124.0 released</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] JACK 0.124.0 released</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1390414547.28721_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1390422448.9918_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1390419100.4354_0.ltw:2,Sab'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 22 Jan 2014 14:31:29 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Florian Paul Schmidt
+<a href='../1390425049.14558_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK 0.124.0 released </a></td></tr>
+</table>
+<pre>
+The small but intrepid group of JACK 1 developers announce the release
+today of JACK 0.124.0, the latest version of JACK 1. This release features
+3 major new features that are designed to make JACK easier to use and
+better in several ways, along with a large set of minor bug fixes and
+improvements. You can fetch the tarball release
+here&lt;http://jackaudio.org/downloads/jack-audio-connection-kit-0.124.0.tar.gz&gt;.
+It has been tagged in the JACK 1 git repository as "0.124.0".
+
+ One of the "minor" bug fixes will make a huge difference for some users:
+if a particular JACK client crashes *only* the misbehaving client will be
+"zombified" - other clients will continue functioning normally (after a
+short delay). If you are developing JACK applications, this can make a huge
+difference to your day-to-day experience of JACK 1. The Metadata API
+
+It is now possible to define arbitrary metadata to be associated with any
+JACK port or JACK client. This API lays the groundwork for more useful
+naming of ports and clients (particularly those associated with hardware),
+as well as many other features that developers have talked about in a JACK
+context for several years. The full docs on the API can be found
+here&lt;http://jackaudio.org/files/docs/html/group__Metadata.html&gt;and
+there is also a man page for
+jack_property, which is the primary command line tool for setting, removing
+and changing metadata. A short tutorial &lt;http://jackaudio.org/metadata&gt; on
+using the Metadata API is available.
+Builtin MIDI hardware I/O (on Linux)
+
+For years, we have known that the performance of the -X seq and -X raw
+options to the ALSA backend have left much to be desired. For that reason,
+most users have been instructed to use a2jmidid (typically with the -e flag
+to tell it use external (hardware) MIDI devices). Although
+a2jmididprovided good MIDI I/O, it has two problems:
+
+   1. Requires starting an addition program in order to get MIDI I/O via
+   hardware working
+   2. Adds latency to the MIDI I/O "through" or "monitor" signal pathway
+
+ This release of JACK 1 sees the transformation of a2jmidid into a "slave"
+driver that can be started as a part of JACK, much like the old -X seq and
+-X raw options. This not only removes the need to start a separate program,
+but also reduces the "through" or "monitoring" latency of MIDI I/O by 1
+JACK period.
+
+The canonical way to invoke this new internal MIDI driver is with -X
+alsa_midi, which will create JACK ports for all MIDI devices (and other
+MIDI applications) known to ALSA at the time that JACK starts up. Note that
+the new internal driver does not currently notice the arrival or departure
+of MIDI hardware or applications, but future improvements will correct
+this.
+
+In addition, the old -X seq and -X raw implementations have been removed.
+However, using -X seq will be interpreted as a request to use the new
+internal MIDI driver, and so is formally equivalent to using -X alsa_midi.
+Note that -X seq is an argument to the ALSA backend, and so comes
+*after*the backend specification; by contrast, -X
+alsa_midi is a server argument, and must come before the backend
+specification.
+
+It is worth noting that the server argument -X alsa_midi can be used with
+any Linux-based backend (ALSA, OSS, Dummy, Netjack) to get the ALSA MIDI
+bridge functional.
+Builtin Internal Client for using additional ALSA devices
+
+Older versions of JACK have come with the tools alsa_in and alsa_out which
+can be used to add additional ALSA supported audio devices to a running
+JACK setup. These tools work quite well, but:
+
+   1. Fons Adriennsen developed significantly better versions known as
+   zita-a2j and zita-j2a that use his own resampler.
+   2. these tools are (like the rest of the JACK tools) separate programs
+   that the user must start up after the server is running
+
+ To address these two points, the zita-a2j/zita-j2a code has been merged
+into the tools part of JACK as a pair of *internal* clients ("zalsa_in" and
+"zalsa_out") that can be specified on the command line. So for example,
+this JACK command line:
+
+	jackd ... -I "USB Mic:zalsa_in/-dhw:USB,-r44100,-n2,-p512" ...
+
+will create an internal client called "USB Mic" that represents the ALSA
+device "hw:USB" using the ZITA alsa/jack bridge code, running at 44100kHz,
+with 2 periods of size 512. If you do not specify the period size or sample
+rate, then the values in use by the backend will be adopted. Audio being
+captured or played back via devices added to JACK in this way will be
+resampled with substantial accuracy and quality.
+
+Note that the -I argument has been present in JACK 2 for sometime, but the
+new JACK1 implementation extends the semantics of its argument by allowing
+the user to specify a client name as well as arguments for the internal
+client code.
+
+Both internal clients (zalsa_in and zalsa_out) will accept the -h argument
+to show their possible arguments: jackd -I zalsa_in/-h -d alsa (the final -d
+alsa is required by JACK but not used in this case). The arguments will
+match those of the standalone zita-a2j and zita-j2a (external) clients.
+
+Since this new "multiple device" capability is implemented using JACK
+internal clients, you can remove a given device by just unloading the
+client using the long-existing but rarely used jack_unload command.
+Similarly, if you wanted to add a device to a running server after it has
+started, jack_load can be used for that.
+
+It is worth noting that these internal clients can be used with any
+Linux-based backend (ALSA, FFADO, OSS, Dummy, Netjack) to add additional
+ALSA-support devices to an instance of JACK.
+Syntactic Sugar Version
+
+To make the addition of extra audio devices to an instance of JACK even
+easier, JACK 1 also features the new -A option which takes almost nothing
+more than an ALSA card name (e.g. "SB", "DSP", "Codec", "HDMI" and many
+others) and makes the device available for playback or capture or both.
+Adding %p or %c to the card name limits the direction of audio flow.
+
+This option does nothing more than translate its argument into an
+equivalent use of -I, so for example:
+
+	-A SB
+
+is equivalent to using *both* of these arguments:
+
+	-I SB/zalsa_in/-dhw:SB
+	-I SB/zalsa_out/-dhw:SB
+
+As with -I, the -A argument may be used multiple times to add as many
+devices as you want. -A is simple but not very powerful - if you need to
+provide more options (e.g. to adjust I/O latency values), then you must use
+the -I argument instead.
+
+Finally, note that these internal clients are theoretically compatible with
+JACK 2, and should work with that implementation of JACK once JACK 2 has a
+working internal client loading mechanism restored.
+Complete Change List for 0.124.0 Major New Features
+
+   - add the new metadata API, allowing arbitrary metadata to be associated
+   with JACK ports and clients
+   - merge a2jmidid code into JACK as (slave) driver.
+   - add zita-a2j as internal clients
+
+Notable Source Code Rearrangements
+
+   - Use separated JACK public headers and tools repositories, in an
+   attempt to share these with JACK 2
+   - JACK 1 now requires the Berkeley DB library to build (this is used
+   inside the metadata API implementation)
+   - The new ZITA-based internal clients are optional - to build them you
+   will need Fons Adriennsen's ALSA PCMI and ZITA resampler libraries
+   available.
+
+Bug Fixes, Updates and Other Enhancements
+
+   - Install jslist.h with JACK headers since it is used by control.h
+   - clarify use of alsa_in/alsa_out's -q parameter
+   - check for engine-&gt;driver before delivery latency events to its
+   internal client
+   - the default error callback no longer calls DEBUG, which breaks if
+   _jack_get_microseconds has not been set
+   - remove all references to MMX/MME (which was never used within JACK)
+   - remove --enable-ensure-mlock configure option
+   - deprecate jack_thread_wait() as done in JACK2
+   - clean up client code to fix inconsistent handling of the return value
+   from the process callback
+   - improve configure.ac for use on OS X
+   - redesign thread calls to make them work correctly on OS X
+   - remove port.g from documentation since it is not a public header
+   - remove timestamps code, since it was no longer used or useful.
+   - fix detection of libsamplerate
+   - support setbufsize now available in firewire driver
+   - improved jack_get_cycle_times() and improved DLL implementation
+   (particularly after freewheeling)
+   - compile with FFADO versions &lt; 9 once more
+   - update FFADO latencies after setbufsize
+   - use max (JACK_CLIENT_EVENT_TIMEOUT,command-line-client-timeout) for
+   poll on event handling when in non-RT mode
+   - tidy up error messages when something goes wrong with client event
+   handling
+   - add a latency callback to the ALSA backend, and ensure that the
+   backend's latency callback, if it exists, is called after a buffer size
+   change
+   - provide FFADO/firewire backend with its own latency callback
+   - adjust driver/backend port latencies for both playback and capture
+   ports in both directions
+   - handle latency callbacks before graph reorder callbacks, as per a
+   recent (correct) change in JACK 2
+   - handled failed malloc caused limits.conf being changed while jackd is
+   running
+   - Correctly recognize ALSA subdevices when symbolic names like hw:Live
+   are used.
+   - If an attempt to reconfigure the ALSA backend fails, it will fall back
+   to its previous successful configuration.
+   - remove watchdog thread from engine/jackd, since Linux no longer allows
+   SCHED_{FIFO,RR} tasks to take over the cpu unless the user misconfigures a
+   very obscure part of their system configuration
+   - fix delivery of buffer size changes to internal clients
+   - fix incorrect memset() of an event in latency handling
+   - fix arguably incorrect marking of client with errors after process
+   cycle fails to return to server
+   - use a default size of 2048 byte for MIDI port buffers, like JACK 2, to
+   avoid problems with MIDI delivery under fairly common circumstances
+   - add -I option to command line to allow loading internal clients
+   (consistent with JACK 2), though with more complex argument style to -I to
+   permit client names and arguments
+
+Authors
+
+Jonathan Woithe, Adrian Knoth, Fons Adriennsen, Nedko Arnaudov, Torben
+Hohn, Paul Davis.
+
+Thanks to David Robillard, Jonathan Liles and Filipe Coehlo for their
+participation in the design of the metadata API.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1390414547.28721_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1390422448.9918_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1390419100.4354_0.ltw:2,Sab'>Index</a></td></tr>
+</table>
+<p><small>1390419100.4354_0.ltw:2,Sab&nbsp;&lt;CAFa_cKkomW2PqJqgB+0BEaKygZ4Ye_x9Yn0MptNgn_=1ovrYng at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

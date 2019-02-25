@@ -1,0 +1,138 @@
+Date:        Mon, 14 Mar 2011 18:11:34 +0100
+From:        Felix Pfeifer  <[hidden] at googlemail dot com>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] what could cause: "impossible sample width (1) discovered!" (1300125921.22817_0.ltw:2,a)
+Follow-Up:   Clemens Ladisch Re: [Jack-Devel] what could cause: "impossible sample width (1) discovered!" (1300129415.2798_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] what could cause: "impossible sample width (1) discovered!"
+
+>> "16bits or 24bits" indeed.  I don't know where Jack's one byte
+>> comes from, but you might want to correct this.
+>
+> JACK's ALSA backend does this:
+>
+>        driver->playback_sample_bytes =
+>                snd_pcm_format_physical_width (driver->playback_sample_format)
+>                / 8;
+>
+> and then later checks that value to determine how it is going to
+> convert samples into 32 bit floating point.
+>
+> it is certainly true that it does not handle 8 bit values, and the
+> error message could be friendlier. but the value is being reported by
+> ALSA.
+
+Hi again,
+
+i did some testing with arecord but i do
+not fully understand the outputs. As i
+understand it, my hardware is able to
+send 16bit. Maybe i do have to make some
+alsa configurations?
+here is what i did:
+
+$ arecord -vv testrec.wav
+Recording WAVE 'testrec.wav' : Unsigned 8 bit, Rate 8000 Hz, Mono
+Plug PCM: Rate conversion PCM (48000, sformat=U8)
+Converter: linear-interpolation
+Protocol version: 10002
+Its setup is:
+  stream       : CAPTURE
+  access       : RW_INTERLEAVED
+  format       : U8
+  subformat    : STD
+  channels     : 1
+  rate         : 8000
+  exact rate   : 8000 (8000/1)
+  msbits       : 8
+...
+Slave: Route conversion PCM (sformat=S16_LE)
+  Transformation table:
+    0 <- 0*0.5 + 1*0.5
+Its setup is:
+  stream       : CAPTURE
+  access       : MMAP_INTERLEAVED
+  format       : U8
+  subformat    : STD
+  channels     : 1
+  rate         : 48000
+  exact rate   : 48000 (48000/1)
+  msbits       : 8
+...
+Slave: Direct Snoop PCM
+Its setup is:
+  stream       : CAPTURE
+  access       : MMAP_INTERLEAVED
+  format       : S16_LE
+  subformat    : STD
+  channels     : 2
+  rate         : 48000
+  exact rate   : 48000 (48000/1)
+  msbits       : 16
+  buffer_size  : 16384
+...
+Hardware PCM card 0 'LUFA Audio In Demo' device 0 subdevice 0
+Its setup is:
+  stream       : CAPTURE
+  access       : MMAP_INTERLEAVED
+  format       : S16_LE
+  subformat    : STD
+  channels     : 2
+  rate         : 48000
+  exact rate   : 48000 (48000/1)
+  msbits       : 16
+...
+overrun!!! (at least 1276313785.524 ms long)
+Status:
+  state       : XRUN
+  trigger_time: 1300121528.603269000
+  tstamp      : 1300121528.608661000
+  delay       : 2560
+  avail       : 170
+  avail_max   : 117
+#+                                                 | 00%^C
+Aborted by signal Interrupt...
+
+and later i did:
+
+$ arecord -vv -fdat testrec.wav
+Recording WAVE 'testrec.wav' : Signed 16 bit Little Endian, Rate 48000
+Hz, Stereo
+Plug PCM: Direct Snoop PCM
+Its setup is:
+  stream       : CAPTURE
+  access       : RW_INTERLEAVED
+  format       : S16_LE
+  subformat    : STD
+  channels     : 2
+  rate         : 48000
+  exact rate   : 48000 (48000/1)
+  msbits       : 16
+  buffer_size  : 16384
+  period_size  : 1024
+  period_time  : 21333
+  tstamp_mode  : NONE
+  period_step  : 1
+...
+Hardware PCM card 0 'LUFA Audio In Demo' device 0 subdevice 0
+Its setup is:
+  stream       : CAPTURE
+  access       : MMAP_INTERLEAVED
+  format       : S16_LE
+  subformat    : STD
+  channels     : 2
+  rate         : 48000
+  exact rate   : 48000 (48000/1)
+  msbits       : 16
+...
+#+                                                 | 00%^C
+Aborted by signal Interrupt...
+
+
+Does this help to identify where the missing
+bits get lost?
+
+1300123368.17839_0.ltw:2,a <AANLkTi=1yA_NY4Vv8m5YSQgWraAye2rq55poPYxg9YHe at mail dot gmail dot com>
+________________________________________________________________________________
+

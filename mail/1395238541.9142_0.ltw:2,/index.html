@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Using Jack</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Using Jack</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1395223903.10722_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1395239516.10595_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1395238541.9142_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 19 Mar 2014 10:15:31 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Yves Perron </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>'St&#xE9;phane Letz' &lt;[hidden] at grame dot fr&gt;, 'John Emmas' &lt;[hidden] at tiscali dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>'JACK' &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1395141212.4869_0.ltw:2,/index.html'>Re: [Jack-Devel] Using Jack </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1395239516.10595_0.ltw:2,/index.html'>Re: [Jack-Devel] Using Jack </a></td></tr>
+</table>
+<pre>
+Greetings Jack masters, think you for your inputs.
+
+[quote] setting your app up as a Jack server is NOT a good idea - because if
+other apps use Jack (like Mixbus, for example) they would use the version
+provided by your app.  So, when your app eventually shuts down, anything
+else that was using Jack would break!  The correct way to use Jack is to
+launch it as an external server and let Jack decide whether &amp; when to shut
+itself down. [/quote]
+
+I am not worry about this. The whole point is precisely not to install jack
+at all but to embed Jack's client/server libraries into our API. That said,
+I'm trying to start a Jack server programmatically but little info is
+available on this and I do understand why now.
+
+Before going any further. Regardless of if it is a good practice or not. Is
+running a Jack server via our API even possible without the need for the end
+user to installing Jack in the first place?
+
+If yes, I'm guessing that the next question is for St&#xE9;phane. What I did is
+this, I installed Jack for Windows x64, copied the include and the libraries
+files to my VS project and uninstalled jack completely. Finally, I linked
+Jack's libraries to my VS project.
+
+I'm also guessing that the only way to pass parameters to a new Jack server
+is with jackctl_server_create, right? To compile our project with
+jackctl_server_create, some includes are missing like JackConstants.h and
+getopt.h. To solve the compilation errors, I copied the missing .h files
+from jack2-master source files and add them to my project's include folder.
+With those files, it compiles fine but the problem is that
+jackctl_server_create always returns NULL.
+
+What am I missing? I understand it's a little out of scope of the intended
+Jack mechanism but I'm hoping it could be feasible without to much trouble. 
+
+-----Original Message-----
+From: St&#xE9;phane Letz [mailto:[hidden]] 
+Sent: Tuesday, March 18, 2014 7:18 AM
+To: John Emmas; Yves Perron
+Cc: JACK
+Subject: Re: [Jack-Devel] Using Jack
+
+
+
+
+
+Le 18 mars 2014 &#xE0; 09:32, John Emmas &lt;[hidden]&gt; a &#xE9;crit :
+
+&gt; On 18/03/2014 07:41, St&#xE9;phane Letz wrote:
+&gt;&gt; Lack of time to test and answer, possible more time in april.
+&gt;&gt; 
+&gt; 
+&gt; Hi Yves,
+&gt; 
+&gt; Since Stephane is unavailable at present I can give you a very rough idea
+of how we start Jack from within Mixbus.  However, we don't support midi
+(within Windows) so it might not be relevant to your situation.  Please bear
+in mind what Stephane said previously... setting your app up as a Jack
+server is NOT a good idea - because if other apps use Jack (like Mixbus, for
+example) they would use the version provided by your app.  So, when your app
+eventually shuts down, anything else that was using Jack would break!  The
+correct way to use Jack is to launch it as an external server and let Jack
+decide whether &amp; when to shut itself down.
+&gt; 
+&gt; In Mixbus, we seem to create a file called ".jackdrc" (notice that it
+begins with a ".", rather than a "j").  Basically, that file contains a list
+of commands for starting Jack.  Typical file contents might look like this:-
+&gt; 
+&gt; "C:\Program Files\Jack\jackd.exe" -S -p 512 -T -d portaudio -r 48000 -p
+512 -P  "ASIO::ASIO4ALL v2"  -C  "ASIO::ASIO4ALL v2"
+&gt; 
+&gt; The first parameter is a path to the Jack server.  "-S" means to start
+Jack in synchronous mode (I believe this is mandatory on Windows).  Not sure
+what the (two) "-p" parameters are but at least one of them must be the
+buffer size (512 in this example). "-T" means "temporary" (Jack will shut
+itself down automatically when it detects that nothing is connected to it
+any more).  "-d portaudio" is the audio driver (portaudio is almost always
+the driver for Windows - so you'll need to install that too.  For testing
+purposes you can use "-d dummy").  "-r 48000" is the audio sample rate.
+"-P" then gives us the Playback device and "-C" gives us the Capture device
+(input device).
+&gt; 
+&gt; If you typed that complete line into a command prompt (assuming you'd
+already installed ASIO4ALL) Jack would launch and would use it.
+&gt; 
+&gt; Having described all that....  I've no idea what Jack actually does with
+that .jackdrc file.  Stephane or Paul will undoubtedly know. It looks like
+the file needs to be in the user's personal folder (e.g. C:\Documents and
+Settings\&lt;user_name&gt;) but I'm not sure how we tell Jack to look for it
+there.  Simply starting Jack with no parameters doesn't seem to make it
+search for .jackdrc - so I'm not sure how that happens.  If I manage to get
+some spare time this week, I'll try to find out.
+&gt; 
+&gt; John
+&gt; ______________________________________________
+
+OK I forgot this .jackdrc file mechanism was also working on Windows &#x85;.
+
+So Yves probably using this system and adding the -X winmme should work, so
+something like:
+
+"C:\Program Files\Jack\jackd.exe" -S  -X winmme -p 512 -T -d portaudio -r
+48000 -p 512 -P  "ASIO::ASIO4ALL v2"  -C  "ASIO::ASIO4ALL v2"
+
+(note that the first -p 512 is for the wanted number of port in JACK)
+
+St&#xE9;phane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1395223903.10722_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1395239516.10595_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1395238541.9142_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1395238541.9142_0.ltw:2,&nbsp;&lt;002301cf437d$b088c4c0$119a4e40$ at gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

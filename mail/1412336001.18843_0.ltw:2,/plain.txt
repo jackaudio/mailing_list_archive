@@ -1,0 +1,50 @@
+Date:        Thu, 02 Oct 2014 12:27:28 -0700
+From:        Devin Anderson  <[hidden] at gmail dot com>
+To:          "Tim E. Real" <[hidden] at rogers dot com>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Tim E. Real [Jack-Devel] Jack2 alsarawmidi slave: Pluggable device registration problem? (1411861644.6704_0.ltw:2,)
+Follow-Up:   Tim E. Real Re: [Jack-Devel] Jack2 alsarawmidi slave: Pluggable device registration problem? (1412324723.29308_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Jack2 alsarawmidi slave: Pluggable device registration problem?
+
+Hi Tim,
+
+On Sat, Sep 27, 2014 at 4:47 PM, Tim E. Real <[hidden]> wrote:
+
+> When I plug in my USB midi device after starting Jack2 with alsarawmidi,
+>  it does not register at all, as jack_lsp shows.
+
+That's because the driver doesn't detect new devices.  It looks at the
+devices that are connected when you start JACK, and assumes that those
+are the devices that will be used.  I took this approach when I wrote
+the driver because, at the time (it may still be this way), there
+wasn't an elegant way to detect new devices using ALSA's rawmidi
+interface.  I believe the ALSA sequencer interface has an event
+mechanism for new devices; the rawmidi interface, in contrast, has no
+such mechanism.
+
+> But then if I unplug the device, strangely the ports do not unregister and
+> I can even make connections to them in qjctl.
+
+I'm not surprised that the ports don't disappear, but I am surprised
+that there isn't a bunch of (poll-related) error messages that flood
+your JACK console.
+
+I'm happy to help brainstorm on ideas about how to best solve the
+problem.  I can't guarantee that I'll find time to actually fix the
+problem if and when a reasonable solution pops up.
+
+Thanks,
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+midisnoop - http://midisnoop.googlecode.com/
+psinsights - http://psinsights.googlecode.com/
+synthclone - http://synthclone.googlecode.com/
+
+1412336001.18843_0.ltw:2, <CAG7zqTp26TL7B2-yXE7W-g7yUtuOBU=YohRF-S-fKb3e5NSy4Q at mail dot gmail dot com>
+________________________________________________________________________________
+

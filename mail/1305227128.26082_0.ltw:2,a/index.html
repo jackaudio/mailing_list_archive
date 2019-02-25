@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK thread priorities on different OSes</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK thread priorities on different OSes</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305225262.20078_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1305227415.27166_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1305227128.26082_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 12 May 2011 12:05:07 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at charityfinders dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1305188573.17421_0.ltw:2,a/index.html'>[Jack-Devel] JACK thread priorities on different OSes </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1305227415.27166_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK thread priorities on different OSes </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1305228065.29428_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK thread priorities on different OSes </a></td></tr>
+</table>
+<pre>
+On Thu, May 12, 2011 at 1:22 AM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+
+&gt; Look at the table at the bottom of
+&gt; http://msdn.microsoft.com/en-us/library/ms685100(v=vs.85).aspx
+&gt; (the "Base priority")
+&gt;
+&gt; Basically the way I understand is:
+&gt;
+&gt; - in *any* process priory class, the
+&gt; THREAD_PRIORITY_TIME_CRITICAL (currently used for audio and
+&gt; MIDI RT) is actually 15
+&gt;
+&gt; - the only way to boost that value is to move the *entire process* to
+&gt; REALTIME_PRIORITY_CLASS but then *all other threads* of this
+&gt; process will get crazy values between 16 and 31, that is *above* any
+&gt; THREAD_PRIORITY_TIME_CRITICAL value that a process *below*
+&gt; REALTIME_PRIORITY_CLASS would have taken... this is just wrong.
+
+I'm not convinced that this is wrong in every case.  I think that
+giving the choice to the user and letting him/her determine the best
+process priority for his/her system is a good idea.  I think issuing a
+very obvious warning containing lots of capital letters when running
+in REALTIME_PRIORITY_CLASS is also a good idea. :)
+
+The process priority is less important if MMCSS is available, but
+that's not always the case.  It's my understanding that many Windows
+pro audio users still use Windows XP.
+
+&gt; - in the presence of MIDI and audio thread, what should we do? keep
+&gt; the process in NORMAL_PRIORITY_CLASS , set the audio RT to
+&gt; THREAD_PRIORITY_HIGHEST (so actually 10) and the MIDI RT to
+&gt; THREAD_PRIORITY_TIME_CRITICAL (so actually 15). Not sure it
+&gt; will improve the situation..
+
+I think the process should run in NORMAL_PRIORITY_CLASS by default,
+and that the process priority should be adjustable via a command line
+argument.
+
+I'm not totally convinced it will improve the situation either, but,
+given that JACK 2 runs on Windows and is going to continue to run on
+Windows, I would like to see the situation improve as much as it
+possibly can.
+
+&gt;&gt; MMCSS, when it's implemented, adds another sort of priority when the
+&gt;&gt; -P switch is set to 90 or above.
+&gt;&gt;
+&gt;&gt; I can't help but feel that the current situation is hackish and cheap.
+&gt;
+&gt; So my feeling is that this process/thread priority description is
+&gt; basically flawed on Windows, and this is probably the reason they
+&gt; added another flawed concept like MMCSS...
+
+I mostly agree with you, but I think MMCSS does help the situation a
+bit.  When MMCSS is available, it should definitely be used, as it
+solves the problem with process priorities that you identified
+earlier; that is, that a higher process priority changes the priority
+of *every* thread instead of the changing the priority of the threads
+that need to have high priorities.
+
+Some possible mappings using MMCSS:
+
+PRIORITY_AUDIO: Task Name - "Pro Audio", AVRT_PRIORITY_HIGH
+PRIORITY_CALLBACK: no MMCSS, THREAD_PRIORITY_NORMAL
+PRIORITY_MIDI_TERMINAL: Task Name - "Pro Audio", AVRT_PRIORITY_CRITICAL
+
+&gt;&gt; I can think of a potential practical use for this sort of thing.
+&gt;&gt; Let's assume that someone wanted to write an audio driver for bindings
+&gt;&gt; that were available on more than one operating system (i.e.
+&gt;&gt; PortAudio), or wanted to write a MIDI driver for bindings that were
+&gt;&gt; available on more than one operating system (i.e. PortMIDI, RtMidi).
+&gt;&gt; Instead of creating a bunch of ugly #ifdef's, the driver could use the
+&gt;&gt; appropriate constant to set the thread priority.
+&gt;
+&gt; Sure I agree with that, I'm just saying we can improve a bit (abstract
+&gt; some OS specificities) but not expect miracles...
+
+I don't expect any miracles.  However, since JACK 2 is running on
+Windows, I would like to see Windows users get a fighting chance.
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305225262.20078_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1305227415.27166_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1305227128.26082_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1305227128.26082_0.ltw:2,a&nbsp;&lt;BANLkTinGeJryh9_oM8H-nLXY1sqi9nuthg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

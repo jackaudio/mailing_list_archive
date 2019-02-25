@@ -1,0 +1,86 @@
+Date:        Tue, 11 Jun 2013 23:20:39 +0200
+From:        Ruslan N. Marchenko  <[hidden] at ruff dot mobi>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Bearcat Şándor [Jack-Devel] Fwd: Fwd: Jack and pulse -- who's on first? (1370248445.27142_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Fwd: Fwd: Jack and pulse -- who's on first?
+
+Hi Bearcat,
+
+Am Mo 03 Jun 2013 10:33:36 CEST schrieb Bearcat Şándor:
+>
+> Actually, Robin, looking at alsamixer again shed a little light on
+> this. When jack is stopped and started, if i bring up alsamixer i am
+> shown a card called "pulseaudio" with only 1 playback control called
+> "master". Adjusting that volume does nothing. If i hit f6 and select
+> my soundcard i can adjust volumes in alsamixer.
+>
+> Does that sat anything about why i can't adjust volumes in pavucontrol
+> or the gnome mixer?
+>
+Looks like simply because it's not used. Or you're changing volume on 
+wrong port (sink).
+You can use commands with pacmd/pactl to identify whether pa is used 
+and which port if it is.
+I.e. here's how I'd do it
+ruff@box:~$ lsof -n | awk '/\/dev\/snd\//{print$1}'|sort -u
+jackdbus
+## snd is used exclusively by jack
+ruff@box:~$ jack_lsp -c | grep -m1 -A3 system:playback_1
+system:playback_1
+   PulseAudio JACK Sink:front-left
+system:playback_2
+   PulseAudio JACK Sink:front-right
+### playback is connected to Pulse only right now
+ruff@box:~$ pacmd list-sinks
+Welcome to PulseAudio! Use "help" for usage information.
+>>> 1 sink(s) available.
+  * index: 1
+	name: <jack_out>
+	driver: <module-jack-sink.c>
+	flags: DECIBEL_VOLUME LATENCY
+	state: SUSPENDED
+	suspend cause: IDLE
+	priority: 0
+	volume: 0:  97% 1:  97%
+	        0: -0,79 dB 1: -0,79 dB
+	        balance 0,00
+...
+### Pulse has jack_out sink as default and it is set to 97% volume
+ruff@box:~$ pacmd list-sink-inputs 1
+Welcome to PulseAudio! Use "help" for usage information.
+>>> 1 sink input(s) available.
+    index: 8
+	driver: <protocol-native.c>
+	flags:
+	state: RUNNING
+	sink: 1 <jack_out>
+	volume: 0: 100% 1: 100%
+... snip ...
+	client: 24 <ALSA plug-in [plugin-container]>
+	properties:
+		media.name = "ALSA Playback"
+		application.name = "ALSA plug-in [plugin-container]"
+		native-protocol.peer = "UNIX socket client"
+		native-protocol.version = "27"
+		application.process.id = "4253"
+### and it plays sound from firefox plugin container
+
+If you wish you can reconnect source to another sink (eg. if it plays 
+not to jack_out but to alsa directly)
+$ pacmd move-sink-input 8 1
+### move input with id 8 (ff plugin) to sink 1 (jack_out)
+$ pacmd set-sink-volume 1 32000
+### set volume on sink 1 to 50% (of 65536)
+$ pacmd set-sink-input-volume 8 65535
+### set volume on input 8 to 100%
+etc.
+
+Regards
+--
+Looking forward to reading yours...
+     Ruslan N. Marchenko
+
+1370985685.12739_0.ltw:2, <51B794A7.3020109 at ruff dot mobi>
+________________________________________________________________________________
+

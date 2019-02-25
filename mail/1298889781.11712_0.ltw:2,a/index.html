@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298889542.11393_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298890566.12503_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298889781.11712_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 28 Feb 2011 11:42:42 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> torbenh </span> &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Chris Caudle &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Chris Caudle
+<a href='../1298866752.9478_0.ltw:2,a/index.html'>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2 </a></td></tr>
+</table>
+<pre>
+On Sun, Feb 27, 2011 at 10:17:54PM -0600, Chris Caudle wrote:
+&gt; Seems like interest and events are coming together all around.
+&gt; Using standard networking hardware to connect audio devices has been
+&gt; something
+&gt; I have wanted for quite a while, but most solutions were proprietary and
+&gt; because
+&gt; of that didn't play well in the Linux ecosystem.  NetJack was a notable
+&gt; exception, but I just couldn't convince myself that running a jack server
+&gt; on my
+&gt; ADC was the right way to do it.
+&gt; 
+&gt; Sorry for the length of this, I'm just catching up on several digests.
+
+digests are pretty ugly.
+they break the whole mail conversation.
+
+&gt; 
+&gt; On Fri, February 25, Christoph Kuhr wrote:
+&gt; &gt; I want do integrate this standard into jack2.
+&gt; &gt; I want to choose AVB (not ALSA or NET) from the driver dropdown box.
+&gt; 
+&gt; Is there a particular reason you want to make it native in JACK and not
+&gt; incorporate it into the ALSA drivers?  I have been considering the same
+&gt; question, whether it is better to have a driver native in JACK, or whether it
+&gt; would be better to have it independent of JACK so that it could hopefully
+&gt; attract developers from the non-JACK audio world as well.  Having an
+&gt; interface
+&gt; compatible with ALSA would be attractive from that standpoint, because any
+&gt; other
+&gt; Linux application should be able to use it, and JACK should still be able
+&gt; to use
+&gt; it through the ALSA backend.
+
+i think the correct point would be an alsa plugin.
+developing this stuff in userspace, makes it easier to debug.
+
+&gt; 
+&gt; Florian Faber wrote:
+&gt; &gt; And you are aware that you cannot do AVB without proper hardware support?
+&gt; 
+&gt; Do you mean because of the IEEE-1588 based clock synchronization?
+&gt; There are software implementations of 1588, are they not accurate enough to
+&gt; meet AVB requirements?
+
+there are already ptp patches for linux floating around.
+not sure about the status. but i think they are almost ready for
+mainline.
+
+&gt; torbenh wrote:
+&gt; &gt; so for the case where you want to slave jack to some avb devices,
+&gt; &gt; you need to write a backend.
+&gt; &gt; this use-case is particularly interesting, because it will work with
+&gt; &gt; normal hardware. (it probably doesnt even need a software ptp
+&gt; &gt; implementation)
+&gt; 
+&gt; Torben, can you elaborate on that a bit?  We've gone from Florian saying that
+&gt; we need PTP capable hardware, to you saying that we don't even need software
+&gt; PTP.
+&gt; For that to be the case, would you not need some type of feedback signal from
+&gt; an output sink (e.g. DAC) to let you know when the output buffers were too
+&gt; low
+&gt; or too full? Some network equivalent of the interrupt you get from a PCI
+&gt; card,
+&gt; and the values in the status register that let you know that it needs more
+&gt; buffers to DMA.
+
+if the endpoint is a soundcard.
+it would be sending an rtp stream from its ADC.
+from this stream we could extract the clock.
+this is pretty much what netjack does.
+
+that said, if the device only has DACs and cant be made to send an empty
+stream. we would need a software ptp.
+
+i was thinking, that there was some facility in rtcp which published
+jitter buffer fill level.
+this information can be used to adjust the rate at which we are
+outputting packets.
+but i didnt find it. maybe i confused it with another protocoll.
+
+
+
+&gt; 
+&gt; &gt; but to just output a stream.... no special hardware is needed.
+&gt; 
+&gt; How to you make sure that the DAC buffers do not underrun, or that you do
+&gt; not send too much data too closely together and cause overrun?  I'll
+&gt; ignore ADC
+&gt; for the moment, that seems the easy case as long as your PC is fast
+&gt; enough to keep up with the amount of data that the ADC is sending.
+&gt; 
+&gt; Florian Faber wrote:
+&gt; &gt; You mean in the case where jack would only operate on AVB streams and
+&gt; &gt; not use any local sound interface?
+&gt; 
+&gt; That is the case I find interesting.  A network attached ADC/DAC, either a
+&gt; single device, or possible separate devices which may have an external clock
+&gt; synchronization, or which both have hardware PTP capability and synchronize
+&gt; their internal clocks that way.  Then a standard PC or server (which all have
+&gt; Gb capable network interfaces, often more than one) can be connected to that
+&gt; device for audio I/O without requiring to spend an additional $1500 on a MADI
+&gt; card.  Something just seems odd about spending $1000 on the computer and
+&gt; $1500
+&gt; on the audio interface card.  I don't mind spending money on good ADC and
+&gt; DAC,
+&gt; but it doesn't seem right to spend so much money for (relatively) low bit
+&gt; rate
+&gt; data transfer between the PC and the data source/sink.
+
+yes. this is the most interesting case.
+
+&gt; 
+&gt; &gt; I was thinking of the case where jack operates on a local backend and
+&gt; &gt; does SRC on AVB ports, if neccessary.
+&gt; 
+&gt; That seems to unnecessarily complicate the problem before the first steps are
+&gt; even taken.
+
+it not bittransparent either.
+and burns cpu. 
+very uncompelling.
+
+
+-- 
+torben Hohn
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298889542.11393_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298890566.12503_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298889781.11712_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1298889781.11712_0.ltw:2,a&nbsp;&lt;20110228104242.GD2977 at siel dot b&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

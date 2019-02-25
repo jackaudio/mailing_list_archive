@@ -1,0 +1,85 @@
+Date:        Sun, 25 Jun 2017 18:38:03 +0200
+From:        Kjetil Matheussen  <[hidden] at gmail dot com>
+To:          jonetsu <[hidden] at teksavvy dot com>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+
+Subject:     Re: [Jack-Devel] [LAU] jackd terminates on its own
+
+(Just forwarding the reply to list now. Sorry if there's html in this mail,
+it seems
+like gnome terminal has started to copy fonts/colors/as well when copying
+to the clipboard
+(why?). Hope this doesn't manifest itself as html in the email.)
+
+
+
+On Sun, 25 Jun 2017 17:43:33 +0200
+Kjetil Matheussen <[hidden]> wrote:
+
+(I haven't subscribed to the list yet, so I'm also sending to your
+address just in case)
+
+> In my opinion, we should remove the code that automatically starts
+> the jack server from a client. It's just messy.
+
+I removed the -T switch.
+
+The current calling is:
+
+/usr/bin/jackd -v --sync -P80 -ndefault -dalsa -dhw:M1010LT -r44100
+-p256 -n8
+
+The behaviour without the -T switch has indeed changed although the
+problem remains as described.  At one point in loading projects Bitwig
+will not be able to enable audio.  Here's the change in behaviour.
+
+These few lines from jackd were taken when Bitwig cannot enable audio.
+
+
+[...]
+Jack: JackRequest::UnRegisterPort
+Jack: JackEngine::PortUnRegister ref = 2 port_index = 39
+Jack: JackEngine::PortDisconnect ref = -1 src = 39 dst = 65535
+Jack: JackGraphManager::DisconnectAllOutput port_index = 39
+Jack: JackConnectionManager::RemoveOutputPort ref = 2 port_index = 39
+Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 9
+Jack: JackSocketServerChannel::Execute : fPollTable i = 2 fd = 10
+Jack: JackRequest::UnRegisterPort
+Jack: JackEngine::PortUnRegister ref = 2 port_index = 40
+Jack: JackEngine::PortDisconnect ref = -1 src = 40 dst = 65535
+Jack: JackGraphManager::DisconnectAllOutput port_index = 40
+Jack: JackConnectionManager::RemoveOutputPort ref = 2 port_index = 40
+Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 9
+Jack: JackRequest::Notification
+Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name =
+freewheel notify = 18 Jack: JackDriver::ClientNotify ref = 1 driver =
+freewheel name = freewheel notify = 18 Jack: JackDriver::ClientNotify
+ref = 1 driver = freewheel name = freewheel notify = 18 Jack:
+JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel
+notify = 18 Jack: JackEngine::ClientNotify: no callback for
+notification = 4 Jack: JackEngine::ClientNotify: no callback for
+notification = 4 Jack: JackEngine::ClientNotify: no callback for
+notification = 4 Jack: JackSocketServerChannel::Execute : fPollTable i
+= 2 fd = 10 Jack: JackSocketServerChannel::Execute : fPollTable i = 1
+fd = 9 Jack: JackSocketServerChannel::Execute : fPollTable i = 2 fd =
+10 Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 9
+Jack: JackSocketServerChannel::Execute : fPollTable i = 2 fd = 10 Jack:
+JackSocketServerChannel::Execute : fPollTable i = 1 fd = 9 Jack:
+JackSocketServerChannel::Execute : fPollTable i = 2 fd = 10 Jack:
+JackSocketServerChannel::Execute : fPollTable i = 1 fd = 9 Jack:
+JackSocketServerChannel::Execute : fPollTable i = 2 fd = 10 Jack:
+JackSocketServerChannel::Execute : fPollTable i = 1 fd = 9 Jack:
+JackSocketServerChannel::Execute : fPollTable i = 2 fd = 10
+
+It loops endlessly with the last two lines during which time the
+audio is not enabled in the newly loaded Bitwig project.  The
+loop frequency is slow, perhaps each 5 seconds.
+
+Curiously, after closing Bitwig jackd will continue looping with
+the last line below.
+
+Jack: JackDriver::ClientNotify ref = 2 driver = sys
+
+1498408700.24033_0.ltw:2,a <CAC6niELpAOPKyju8NxeVt8948BRVV4w+GH2MVvnjyHnVdzg=qA at mail dot gmail dot com>
+________________________________________________________________________________
+

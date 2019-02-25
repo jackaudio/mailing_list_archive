@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] [PATCH 1/6] Added the beginnings of the IIO driver.</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] [PATCH 1/6] Added the beginnings of the IIO driver.</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1392326711.14288_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1392326716.14310_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1392326713.14291_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 14 Feb 2014 08:24:42 +1100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Matt Flax </span> &lt;[hidden] at flatmax dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Matt Flax
+<a href='../1392326701.14272_0.ltw:2,a/index.html'>[Jack-Devel] [PATCH 0/6] Jack2 IIO driver </a></td></tr>
+</table>
+<pre>
+---
+ codeBlocks/jack2.cbp      | 660 ++++++++++++++++++++++++++++++++++++++++++++++
+ codeBlocks/jack2.layout   | 179 +++++++++++++
+ linux/iio/JackIIODriver.C | 172 ++++++++++++
+ linux/iio/JackIIODriver.H |  65 +++++
+ linux/wscript             |  45 +++-
+ wscript                   |  13 +-
+ 6 files changed, 1125 insertions(+), 9 deletions(-)
+ create mode 100644 codeBlocks/jack2.cbp
+ create mode 100644 codeBlocks/jack2.layout
+ create mode 100644 linux/iio/JackIIODriver.C
+ create mode 100644 linux/iio/JackIIODriver.H
+
+diff --git a/codeBlocks/jack2.cbp b/codeBlocks/jack2.cbp
+new file mode 100644
+index 0000000..f2f56db
+--- /dev/null
++++ b/codeBlocks/jack2.cbp
+@@ -0,0 +1,660 @@
++&lt;?xml version="1.0" encoding="UTF-8" standalone="yes" ?&gt;
++&lt;CodeBlocks_project_file&gt;
++	&lt;FileVersion major="1" minor="6" /&gt;
++	&lt;Project&gt;
++		&lt;Option title="jack2" /&gt;
++		&lt;Option pch_mode="2" /&gt;
++		&lt;Option compiler="gcc" /&gt;
++		&lt;Build&gt;
++			&lt;Target title="Debug"&gt;
++				&lt;Option output="bin/Debug/jack2" prefix_auto="1" extension_auto="1" /&gt;
++				&lt;Option object_output="obj/Debug/" /&gt;
++				&lt;Option type="1" /&gt;
++				&lt;Option compiler="gcc" /&gt;
++				&lt;Compiler&gt;
++					&lt;Add option="-g" /&gt;
++				&lt;/Compiler&gt;
++			&lt;/Target&gt;
++			&lt;Target title="Release"&gt;
++				&lt;Option output="bin/Release/jack2" prefix_auto="1" extension_auto="1" /&gt;
++				&lt;Option object_output="obj/Release/" /&gt;
++				&lt;Option type="1" /&gt;
++				&lt;Option compiler="gcc" /&gt;
++				&lt;Compiler&gt;
++					&lt;Add option="-O2" /&gt;
++				&lt;/Compiler&gt;
++				&lt;Linker&gt;
++					&lt;Add option="-s" /&gt;
++				&lt;/Linker&gt;
++			&lt;/Target&gt;
++		&lt;/Build&gt;
++		&lt;Compiler&gt;
++			&lt;Add option="-Wall" /&gt;
++		&lt;/Compiler&gt;
++		&lt;Unit filename="../common/JackAC3Encoder.cpp" /&gt;
++		&lt;Unit filename="../common/JackAC3Encoder.h" /&gt;
++		&lt;Unit filename="../common/JackAPI.cpp" /&gt;
++		&lt;Unit filename="../common/JackActivationCount.cpp" /&gt;
++		&lt;Unit filename="../common/JackActivationCount.h" /&gt;
++		&lt;Unit filename="../common/JackArgParser.cpp" /&gt;
++		&lt;Unit filename="../common/JackArgParser.h" /&gt;
++		&lt;Unit filename="../common/JackAtomic.h" /&gt;
++		&lt;Unit filename="../common/JackAtomicArrayState.h" /&gt;
++		&lt;Unit filename="../common/JackAtomicState.h" /&gt;
++		&lt;Unit filename="../common/JackAudioAdapter.cpp" /&gt;
++		&lt;Unit filename="../common/JackAudioAdapter.h" /&gt;
++		&lt;Unit filename="../common/JackAudioAdapterFactory.cpp" /&gt;
++		&lt;Unit filename="../common/JackAudioAdapterInterface.cpp" /&gt;
++		&lt;Unit filename="../common/JackAudioAdapterInterface.h" /&gt;
++		&lt;Unit filename="../common/JackAudioDriver.cpp" /&gt;
++		&lt;Unit filename="../common/JackAudioDriver.h" /&gt;
++		&lt;Unit filename="../common/JackAudioPort.cpp" /&gt;
++		&lt;Unit filename="../common/JackChannel.h" /&gt;
++		&lt;Unit filename="../common/JackClient.cpp" /&gt;
++		&lt;Unit filename="../common/JackClient.h" /&gt;
++		&lt;Unit filename="../common/JackClientControl.h" /&gt;
++		&lt;Unit filename="../common/JackClientInterface.h" /&gt;
++		&lt;Unit filename="../common/JackCompilerDeps.h" /&gt;
++		&lt;Unit filename="../common/JackConnectionManager.cpp" /&gt;
++		&lt;Unit filename="../common/JackConnectionManager.h" /&gt;
++		&lt;Unit filename="../common/JackConstants.h" /&gt;
++		&lt;Unit filename="../common/JackControlAPI.cpp" /&gt;
++		&lt;Unit filename="../common/JackControlAPI.h" /&gt;
++		&lt;Unit filename="../common/JackDebugClient.cpp" /&gt;
++		&lt;Unit filename="../common/JackDebugClient.h" /&gt;
++		&lt;Unit filename="../common/JackDriver.cpp" /&gt;
++		&lt;Unit filename="../common/JackDriver.h" /&gt;
++		&lt;Unit filename="../common/JackDriverInfo.h" /&gt;
++		&lt;Unit filename="../common/JackDriverLoader.cpp" /&gt;
++		&lt;Unit filename="../common/JackDriverLoader.h" /&gt;
++		&lt;Unit filename="../common/JackDummyDriver.cpp" /&gt;
++		&lt;Unit filename="../common/JackDummyDriver.h" /&gt;
++		&lt;Unit filename="../common/JackEngine.cpp" /&gt;
++		&lt;Unit filename="../common/JackEngine.h" /&gt;
++		&lt;Unit filename="../common/JackEngineControl.cpp" /&gt;
++		&lt;Unit filename="../common/JackEngineControl.h" /&gt;
++		&lt;Unit filename="../common/JackEngineProfiling.cpp" /&gt;
++		&lt;Unit filename="../common/JackEngineProfiling.h" /&gt;
++		&lt;Unit filename="../common/JackError.cpp" /&gt;
++		&lt;Unit filename="../common/JackError.h" /&gt;
++		&lt;Unit filename="../common/JackException.cpp" /&gt;
++		&lt;Unit filename="../common/JackException.h" /&gt;
++		&lt;Unit filename="../common/JackExternalClient.cpp" /&gt;
++		&lt;Unit filename="../common/JackExternalClient.h" /&gt;
++		&lt;Unit filename="../common/JackFilters.h" /&gt;
++		&lt;Unit filename="../common/JackFrameTimer.cpp" /&gt;
++		&lt;Unit filename="../common/JackFrameTimer.h" /&gt;
++		&lt;Unit filename="../common/JackFreewheelDriver.cpp" /&gt;
++		&lt;Unit filename="../common/JackFreewheelDriver.h" /&gt;
++		&lt;Unit filename="../common/JackGenericClientChannel.cpp" /&gt;
++		&lt;Unit filename="../common/JackGenericClientChannel.h" /&gt;
++		&lt;Unit filename="../common/JackGlobals.cpp" /&gt;
++		&lt;Unit filename="../common/JackGlobals.h" /&gt;
++		&lt;Unit filename="../common/JackGraphManager.cpp" /&gt;
++		&lt;Unit filename="../common/JackGraphManager.h" /&gt;
++		&lt;Unit filename="../common/JackInternalClient.cpp" /&gt;
++		&lt;Unit filename="../common/JackInternalClient.h" /&gt;
++		&lt;Unit filename="../common/JackInternalClientChannel.h" /&gt;
++		&lt;Unit filename="../common/JackLibAPI.cpp" /&gt;
++		&lt;Unit filename="../common/JackLibClient.cpp" /&gt;
++		&lt;Unit filename="../common/JackLibClient.h" /&gt;
++		&lt;Unit filename="../common/JackLibGlobals.h" /&gt;
++		&lt;Unit filename="../common/JackLibSampleRateResampler.cpp" /&gt;
++		&lt;Unit filename="../common/JackLibSampleRateResampler.h" /&gt;
++		&lt;Unit filename="../common/JackLockedEngine.h" /&gt;
++		&lt;Unit filename="../common/JackLoopbackDriver.cpp" /&gt;
++		&lt;Unit filename="../common/JackLoopbackDriver.h" /&gt;
++		&lt;Unit filename="../common/JackMessageBuffer.cpp" /&gt;
++		&lt;Unit filename="../common/JackMessageBuffer.h" /&gt;
++		&lt;Unit filename="../common/JackMidiAPI.cpp" /&gt;
++		&lt;Unit filename="../common/JackMidiAsyncQueue.cpp" /&gt;
++		&lt;Unit filename="../common/JackMidiAsyncQueue.h" /&gt;
++		&lt;Unit filename="../common/JackMidiAsyncWaitQueue.cpp" /&gt;
++		&lt;Unit filename="../common/JackMidiAsyncWaitQueue.h" /&gt;
++		&lt;Unit filename="../common/JackMidiBufferReadQueue.cpp" /&gt;
++		&lt;Unit filename="../common/JackMidiBufferReadQueue.h" /&gt;
++		&lt;Unit filename="../common/JackMidiBufferWriteQueue.cpp" /&gt;
++		&lt;Unit filename="../common/JackMidiBufferWriteQueue.h" /&gt;
++		&lt;Unit filename="../common/JackMidiDriver.cpp" /&gt;
++		&lt;Unit filename="../common/JackMidiDriver.h" /&gt;
++		&lt;Unit filename="../common/JackMidiPort.cpp" /&gt;
++		&lt;Unit filename="../common/JackMidiPort.h" /&gt;
++		&lt;Unit filename="../common/JackMidiRawInputWriteQueue.cpp" /&gt;
++		&lt;Unit filename="../common/JackMidiRawInputWriteQueue.h" /&gt;
++		&lt;Unit filename="../common/JackMidiRawOutputWriteQueue.cpp" /&gt;
++		&lt;Unit filename="../common/JackMidiRawOutputWriteQueue.h" /&gt;
++		&lt;Unit filename="../common/JackMidiReadQueue.cpp" /&gt;
++		&lt;Unit filename="../common/JackMidiReadQueue.h" /&gt;
++		&lt;Unit filename="../common/JackMidiReceiveQueue.cpp" /&gt;
++		&lt;Unit filename="../common/JackMidiReceiveQueue.h" /&gt;
++		&lt;Unit filename="../common/JackMidiSendQueue.cpp" /&gt;
++		&lt;Unit filename="../common/JackMidiSendQueue.h" /&gt;
++		&lt;Unit filename="../common/JackMidiUtil.cpp" /&gt;
++		&lt;Unit filename="../common/JackMidiUtil.h" /&gt;
++		&lt;Unit filename="../common/JackMidiWriteQueue.cpp" /&gt;
++		&lt;Unit filename="../common/JackMidiWriteQueue.h" /&gt;
++		&lt;Unit filename="../common/JackMutex.h" /&gt;
++		&lt;Unit filename="../common/JackNetAPI.cpp" /&gt;
++		&lt;Unit filename="../common/JackNetAdapter.cpp" /&gt;
++		&lt;Unit filename="../common/JackNetAdapter.h" /&gt;
++		&lt;Unit filename="../common/JackNetDriver.cpp" /&gt;
++		&lt;Unit filename="../common/JackNetDriver.h" /&gt;
++		&lt;Unit filename="../common/JackNetInterface.cpp" /&gt;
++		&lt;Unit filename="../common/JackNetInterface.h" /&gt;
++		&lt;Unit filename="../common/JackNetManager.cpp" /&gt;
++		&lt;Unit filename="../common/JackNetManager.h" /&gt;
++		&lt;Unit filename="../common/JackNetOneDriver.cpp" /&gt;
++		&lt;Unit filename="../common/JackNetOneDriver.h" /&gt;
++		&lt;Unit filename="../common/JackNetSocket.h" /&gt;
++		&lt;Unit filename="../common/JackNetTool.cpp" /&gt;
++		&lt;Unit filename="../common/JackNetTool.h" /&gt;
++		&lt;Unit filename="../common/JackNotification.h" /&gt;
++		&lt;Unit filename="../common/JackPlatformPlug.h" /&gt;
++		&lt;Unit filename="../common/JackPort.cpp" /&gt;
++		&lt;Unit filename="../common/JackPort.h" /&gt;
++		&lt;Unit filename="../common/JackPortType.cpp" /&gt;
++		&lt;Unit filename="../common/JackPortType.h" /&gt;
++		&lt;Unit filename="../common/JackProfiler.cpp" /&gt;
++		&lt;Unit filename="../common/JackProfiler.h" /&gt;
++		&lt;Unit filename="../common/JackRequest.h" /&gt;
++		&lt;Unit filename="../common/JackRequestDecoder.cpp" /&gt;
++		&lt;Unit filename="../common/JackRequestDecoder.h" /&gt;
++		&lt;Unit filename="../common/JackResampler.cpp" /&gt;
++		&lt;Unit filename="../common/JackResampler.h" /&gt;
++		&lt;Unit filename="../common/JackRestartThreadedDriver.cpp" /&gt;
++		&lt;Unit filename="../common/JackRestartThreadedDriver.h" /&gt;
++		&lt;Unit filename="../common/JackServer.cpp" /&gt;
++		&lt;Unit filename="../common/JackServer.h" /&gt;
++		&lt;Unit filename="../common/JackServerAPI.cpp" /&gt;
++		&lt;Unit filename="../common/JackServerGlobals.cpp" /&gt;
++		&lt;Unit filename="../common/JackServerGlobals.h" /&gt;
++		&lt;Unit filename="../common/JackServerLaunch.h" /&gt;
++		&lt;Unit filename="../common/JackSession.h" /&gt;
++		&lt;Unit filename="../common/JackShmMem.cpp" /&gt;
++		&lt;Unit filename="../common/JackShmMem.h" /&gt;
++		&lt;Unit filename="../common/JackSynchro.h" /&gt;
++		&lt;Unit filename="../common/JackSystemDeps.h" /&gt;
++		&lt;Unit filename="../common/JackThread.h" /&gt;
++		&lt;Unit filename="../common/JackThreadedDriver.cpp" /&gt;
++		&lt;Unit filename="../common/JackThreadedDriver.h" /&gt;
++		&lt;Unit filename="../common/JackTime.h" /&gt;
++		&lt;Unit filename="../common/JackTimedDriver.cpp" /&gt;
++		&lt;Unit filename="../common/JackTimedDriver.h" /&gt;
++		&lt;Unit filename="../common/JackTools.cpp" /&gt;
++		&lt;Unit filename="../common/JackTools.h" /&gt;
++		&lt;Unit filename="../common/JackTransportEngine.cpp" /&gt;
++		&lt;Unit filename="../common/JackTransportEngine.h" /&gt;
++		&lt;Unit filename="../common/JackTypes.h" /&gt;
++		&lt;Unit filename="../common/JackWaitThreadedDriver.cpp" /&gt;
++		&lt;Unit filename="../common/JackWaitThreadedDriver.h" /&gt;
++		&lt;Unit filename="../common/JackWeakAPI.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../common/Jackdmp.cpp" /&gt;
++		&lt;Unit filename="../common/driver_interface.h" /&gt;
++		&lt;Unit filename="../common/jack/control.h" /&gt;
++		&lt;Unit filename="../common/jack/intclient.h" /&gt;
++		&lt;Unit filename="../common/jack/jack.h" /&gt;
++		&lt;Unit filename="../common/jack/jslist.h" /&gt;
++		&lt;Unit filename="../common/jack/midiport.h" /&gt;
++		&lt;Unit filename="../common/jack/net.h" /&gt;
++		&lt;Unit filename="../common/jack/ringbuffer.h" /&gt;
++		&lt;Unit filename="../common/jack/session.h" /&gt;
++		&lt;Unit filename="../common/jack/statistics.h" /&gt;
++		&lt;Unit filename="../common/jack/systemdeps.h" /&gt;
++		&lt;Unit filename="../common/jack/thread.h" /&gt;
++		&lt;Unit filename="../common/jack/transport.h" /&gt;
++		&lt;Unit filename="../common/jack/types.h" /&gt;
++		&lt;Unit filename="../common/jack/weakjack.h" /&gt;
++		&lt;Unit filename="../common/jack/weakmacros.h" /&gt;
++		&lt;Unit filename="../common/memops.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../common/memops.h" /&gt;
++		&lt;Unit filename="../common/netjack.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../common/netjack.h" /&gt;
++		&lt;Unit filename="../common/netjack_packet.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../common/netjack_packet.h" /&gt;
++		&lt;Unit filename="../common/ringbuffer.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../common/shm.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../common/shm.h" /&gt;
++		&lt;Unit filename="../common/timestamps.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../common/timestamps.h" /&gt;
++		&lt;Unit filename="../common/varargs.h" /&gt;
++		&lt;Unit filename="../common/wscript" /&gt;
++		&lt;Unit filename="../dbus/audio_reserve.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../dbus/audio_reserve.h" /&gt;
++		&lt;Unit filename="../dbus/controller.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../dbus/controller.h" /&gt;
++		&lt;Unit filename="../dbus/controller_iface_configure.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../dbus/controller_iface_control.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../dbus/controller_iface_introspectable.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../dbus/controller_iface_patchbay.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../dbus/controller_iface_session_manager.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../dbus/controller_iface_transport.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../dbus/controller_internal.h" /&gt;
++		&lt;Unit filename="../dbus/jackdbus.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../dbus/jackdbus.h" /&gt;
++		&lt;Unit filename="../dbus/list.h" /&gt;
++		&lt;Unit filename="../dbus/org.jackaudio.service.in" /&gt;
++		&lt;Unit filename="../dbus/params.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../dbus/params.h" /&gt;
++		&lt;Unit filename="../dbus/reserve.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../dbus/reserve.h" /&gt;
++		&lt;Unit filename="../dbus/sigsegv.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../dbus/sigsegv.h" /&gt;
++		&lt;Unit filename="../dbus/wscript" /&gt;
++		&lt;Unit filename="../dbus/xml.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../dbus/xml.h" /&gt;
++		&lt;Unit filename="../dbus/xml_expat.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../dbus/xml_nop.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../dbus/xml_write_raw.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/alias.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/alsa_in.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/alsa_out.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/bufsize.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/capture_client.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/connect.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/control.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/cpu_load.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/evmon.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/freewheel.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/impulse_grabber.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/inprocess.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/internal_metro.cpp" /&gt;
++		&lt;Unit filename="../example-clients/internal_metro.h" /&gt;
++		&lt;Unit filename="../example-clients/ipload.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/ipunload.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/latent_client.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/lsp.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/metro.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/midi_dump.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/midi_latency_test.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/midiseq.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/midisine.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/monitor_client.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/netmaster.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/netslave.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/netsource.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/samplerate.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/server_control.cpp" /&gt;
++		&lt;Unit filename="../example-clients/session_notify.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/showtime.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/simple_client.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/simple_session_client.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/thru_client.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/transport.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/tw.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/wait.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../example-clients/wscript" /&gt;
++		&lt;Unit filename="../example-clients/zombie.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../linux/JackAtomic_os.h" /&gt;
++		&lt;Unit filename="../linux/JackLinuxTime.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../linux/JackPlatformPlug_os.h" /&gt;
++		&lt;Unit filename="../linux/alsa/JackAlsaAdapter.cpp" /&gt;
++		&lt;Unit filename="../linux/alsa/JackAlsaAdapter.h" /&gt;
++		&lt;Unit filename="../linux/alsa/JackAlsaDriver.cpp" /&gt;
++		&lt;Unit filename="../linux/alsa/JackAlsaDriver.h" /&gt;
++		&lt;Unit filename="../linux/alsa/alsa_driver.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../linux/alsa/alsa_driver.h" /&gt;
++		&lt;Unit filename="../linux/alsa/alsa_midi.h" /&gt;
++		&lt;Unit filename="../linux/alsa/alsa_midi_impl.h" /&gt;
++		&lt;Unit filename="../linux/alsa/alsa_midi_jackmp.cpp" /&gt;
++		&lt;Unit filename="../linux/alsa/alsa_rawmidi.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../linux/alsa/alsa_seqmidi.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../linux/alsa/bitset.h" /&gt;
++		&lt;Unit filename="../linux/alsa/generic.h" /&gt;
++		&lt;Unit filename="../linux/alsa/generic_hw.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../linux/alsa/hammerfall.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../linux/alsa/hammerfall.h" /&gt;
++		&lt;Unit filename="../linux/alsa/hardware.h" /&gt;
++		&lt;Unit filename="../linux/alsa/hdsp.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../linux/alsa/hdsp.h" /&gt;
++		&lt;Unit filename="../linux/alsa/ice1712.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../linux/alsa/ice1712.h" /&gt;
++		&lt;Unit filename="../linux/alsa/jslist.h" /&gt;
++		&lt;Unit filename="../linux/alsa/midi_pack.h" /&gt;
++		&lt;Unit filename="../linux/alsa/midi_unpack.h" /&gt;
++		&lt;Unit filename="../linux/alsa/usx2y.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../linux/alsa/usx2y.h" /&gt;
++		&lt;Unit filename="../linux/alsarawmidi/JackALSARawMidiDriver.cpp" /&gt;
++		&lt;Unit filename="../linux/alsarawmidi/JackALSARawMidiDriver.h" /&gt;
++		&lt;Unit filename="../linux/alsarawmidi/JackALSARawMidiInputPort.cpp" /&gt;
++		&lt;Unit filename="../linux/alsarawmidi/JackALSARawMidiInputPort.h" /&gt;
++		&lt;Unit filename="../linux/alsarawmidi/JackALSARawMidiOutputPort.cpp" /&gt;
++		&lt;Unit filename="../linux/alsarawmidi/JackALSARawMidiOutputPort.h" /&gt;
++		&lt;Unit filename="../linux/alsarawmidi/JackALSARawMidiPort.cpp" /&gt;
++		&lt;Unit filename="../linux/alsarawmidi/JackALSARawMidiPort.h" /&gt;
++		&lt;Unit filename="../linux/alsarawmidi/JackALSARawMidiReceiveQueue.cpp" /&gt;
++		&lt;Unit filename="../linux/alsarawmidi/JackALSARawMidiReceiveQueue.h" /&gt;
++		&lt;Unit filename="../linux/alsarawmidi/JackALSARawMidiSendQueue.cpp" /&gt;
++		&lt;Unit filename="../linux/alsarawmidi/JackALSARawMidiSendQueue.h" /&gt;
++		&lt;Unit filename="../linux/alsarawmidi/JackALSARawMidiUtil.cpp" /&gt;
++		&lt;Unit filename="../linux/alsarawmidi/JackALSARawMidiUtil.h" /&gt;
++		&lt;Unit filename="../linux/cycles.h" /&gt;
++		&lt;Unit filename="../linux/driver.h" /&gt;
++		&lt;Unit filename="../linux/firewire/JackFFADODriver.cpp" /&gt;
++		&lt;Unit filename="../linux/firewire/JackFFADODriver.h" /&gt;
++		&lt;Unit filename="../linux/firewire/JackFFADOMidiInputPort.cpp" /&gt;
++		&lt;Unit filename="../linux/firewire/JackFFADOMidiInputPort.h" /&gt;
++		&lt;Unit filename="../linux/firewire/JackFFADOMidiOutputPort.cpp" /&gt;
++		&lt;Unit filename="../linux/firewire/JackFFADOMidiOutputPort.h" /&gt;
++		&lt;Unit filename="../linux/firewire/JackFFADOMidiReceiveQueue.cpp" /&gt;
++		&lt;Unit filename="../linux/firewire/JackFFADOMidiReceiveQueue.h" /&gt;
++		&lt;Unit filename="../linux/firewire/JackFFADOMidiSendQueue.cpp" /&gt;
++		&lt;Unit filename="../linux/firewire/JackFFADOMidiSendQueue.h" /&gt;
++		&lt;Unit filename="../linux/firewire/ffado_driver.h" /&gt;
++		&lt;Unit filename="../linux/freebob/JackFreebobDriver.cpp" /&gt;
++		&lt;Unit filename="../linux/freebob/JackFreebobDriver.h" /&gt;
++		&lt;Unit filename="../linux/freebob/freebob_driver.h" /&gt;
++		&lt;Unit filename="../linux/iio/JackIIODriver.C"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../linux/iio/JackIIODriver.H" /&gt;
++		&lt;Unit filename="../linux/wscript" /&gt;
++		&lt;Unit filename="../macosx/JackAtomic_os.h" /&gt;
++		&lt;Unit filename="../macosx/JackCompilerDeps_os.h" /&gt;
++		&lt;Unit filename="../macosx/JackMachSemaphore.cpp" /&gt;
++		&lt;Unit filename="../macosx/JackMachSemaphore.h" /&gt;
++		&lt;Unit filename="../macosx/JackMachThread.cpp" /&gt;
++		&lt;Unit filename="../macosx/JackMachThread.h" /&gt;
++		&lt;Unit filename="../macosx/JackMachTime.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../macosx/JackPlatformPlug_os.h" /&gt;
++		&lt;Unit filename="../macosx/coreaudio/JackCoreAudioAdapter.cpp" /&gt;
++		&lt;Unit filename="../macosx/coreaudio/JackCoreAudioAdapter.h" /&gt;
++		&lt;Unit filename="../macosx/coreaudio/JackCoreAudioDriver.cpp" /&gt;
++		&lt;Unit filename="../macosx/coreaudio/JackCoreAudioDriver.h" /&gt;
++		&lt;Unit filename="../macosx/coreaudio/TiPhoneCoreAudioRenderer.cpp" /&gt;
++		&lt;Unit filename="../macosx/coreaudio/TiPhoneCoreAudioRenderer.h" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiDriver.cpp" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiDriver.h" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiInputPort.cpp" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiInputPort.h" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiOutputPort.cpp" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiOutputPort.h" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiPhysicalInputPort.cpp" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiPhysicalInputPort.h" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiPhysicalOutputPort.cpp" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiPhysicalOutputPort.h" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiPort.cpp" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiPort.h" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiUtil.cpp" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiUtil.h" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiVirtualInputPort.cpp" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiVirtualInputPort.h" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiVirtualOutputPort.cpp" /&gt;
++		&lt;Unit filename="../macosx/coremidi/JackCoreMidiVirtualOutputPort.h" /&gt;
++		&lt;Unit filename="../macosx/iphone/iPhoneNetAppDelegate.h" /&gt;
++		&lt;Unit filename="../posix/JackCompilerDeps_os.h" /&gt;
++		&lt;Unit filename="../posix/JackFifo.cpp" /&gt;
++		&lt;Unit filename="../posix/JackFifo.h" /&gt;
++		&lt;Unit filename="../posix/JackNetUnixSocket.cpp" /&gt;
++		&lt;Unit filename="../posix/JackNetUnixSocket.h" /&gt;
++		&lt;Unit filename="../posix/JackPosixMutex.cpp" /&gt;
++		&lt;Unit filename="../posix/JackPosixMutex.h" /&gt;
++		&lt;Unit filename="../posix/JackPosixProcessSync.cpp" /&gt;
++		&lt;Unit filename="../posix/JackPosixProcessSync.h" /&gt;
++		&lt;Unit filename="../posix/JackPosixSemaphore.cpp" /&gt;
++		&lt;Unit filename="../posix/JackPosixSemaphore.h" /&gt;
++		&lt;Unit filename="../posix/JackPosixServerLaunch.cpp" /&gt;
++		&lt;Unit filename="../posix/JackPosixThread.cpp" /&gt;
++		&lt;Unit filename="../posix/JackPosixThread.h" /&gt;
++		&lt;Unit filename="../posix/JackShmMem_os.h" /&gt;
++		&lt;Unit filename="../posix/JackSocket.cpp" /&gt;
++		&lt;Unit filename="../posix/JackSocket.h" /&gt;
++		&lt;Unit filename="../posix/JackSocketClientChannel.cpp" /&gt;
++		&lt;Unit filename="../posix/JackSocketClientChannel.h" /&gt;
++		&lt;Unit filename="../posix/JackSocketNotifyChannel.cpp" /&gt;
++		&lt;Unit filename="../posix/JackSocketNotifyChannel.h" /&gt;
++		&lt;Unit filename="../posix/JackSocketServerChannel.cpp" /&gt;
++		&lt;Unit filename="../posix/JackSocketServerChannel.h" /&gt;
++		&lt;Unit filename="../posix/JackSocketServerNotifyChannel.cpp" /&gt;
++		&lt;Unit filename="../posix/JackSocketServerNotifyChannel.h" /&gt;
++		&lt;Unit filename="../posix/JackSystemDeps_os.h" /&gt;
++		&lt;Unit filename="../posix/JackTypes_os.h" /&gt;
++		&lt;Unit filename="../solaris/JackAtomic_os.h" /&gt;
++		&lt;Unit filename="../solaris/JackPlatformPlug_os.h" /&gt;
++		&lt;Unit filename="../solaris/JackSolarisTime.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../solaris/oss/JackBoomerDriver.cpp" /&gt;
++		&lt;Unit filename="../solaris/oss/JackBoomerDriver.h" /&gt;
++		&lt;Unit filename="../solaris/oss/JackOSSAdapter.cpp" /&gt;
++		&lt;Unit filename="../solaris/oss/JackOSSAdapter.h" /&gt;
++		&lt;Unit filename="../solaris/oss/JackOSSDriver.cpp" /&gt;
++		&lt;Unit filename="../solaris/oss/JackOSSDriver.h" /&gt;
++		&lt;Unit filename="../tests/cpu.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../tests/external_metro.cpp" /&gt;
++		&lt;Unit filename="../tests/external_metro.h" /&gt;
++		&lt;Unit filename="../tests/iodelay.cpp" /&gt;
++		&lt;Unit filename="../tests/test.cpp" /&gt;
++		&lt;Unit filename="../tests/testAtomic.cpp" /&gt;
++		&lt;Unit filename="../tests/testMutex.cpp" /&gt;
++		&lt;Unit filename="../tests/testSem.cpp" /&gt;
++		&lt;Unit filename="../tests/testSynchroClient.cpp" /&gt;
++		&lt;Unit filename="../tests/testSynchroServer.cpp" /&gt;
++		&lt;Unit filename="../tests/testSynchroServerClient.cpp" /&gt;
++		&lt;Unit filename="../tests/testThread.cpp" /&gt;
++		&lt;Unit filename="../tests/wscript" /&gt;
++		&lt;Unit filename="../windows/JackAtomic_os.h" /&gt;
++		&lt;Unit filename="../windows/JackCompilerDeps_os.h" /&gt;
++		&lt;Unit filename="../windows/JackMMCSS.cpp" /&gt;
++		&lt;Unit filename="../windows/JackMMCSS.h" /&gt;
++		&lt;Unit filename="../windows/JackNetWinSocket.cpp" /&gt;
++		&lt;Unit filename="../windows/JackNetWinSocket.h" /&gt;
++		&lt;Unit filename="../windows/JackPlatformPlug_os.h" /&gt;
++		&lt;Unit filename="../windows/JackRouter/JackRouter.cpp" /&gt;
++		&lt;Unit filename="../windows/JackRouter/JackRouter.h" /&gt;
++		&lt;Unit filename="../windows/JackRouter/profport.cpp" /&gt;
++		&lt;Unit filename="../windows/JackRouter/profport.h" /&gt;
++		&lt;Unit filename="../windows/JackRouter/psapi.h" /&gt;
++		&lt;Unit filename="../windows/JackRouter/resource.h" /&gt;
++		&lt;Unit filename="../windows/JackRouter/resource.rc" /&gt;
++		&lt;Unit filename="../windows/JackShmMem_os.h" /&gt;
++		&lt;Unit filename="../windows/JackSystemDeps_os.h" /&gt;
++		&lt;Unit filename="../windows/JackTypes_os.h" /&gt;
++		&lt;Unit filename="../windows/JackWinEvent.cpp" /&gt;
++		&lt;Unit filename="../windows/JackWinEvent.h" /&gt;
++		&lt;Unit filename="../windows/JackWinMutex.cpp" /&gt;
++		&lt;Unit filename="../windows/JackWinMutex.h" /&gt;
++		&lt;Unit filename="../windows/JackWinNamedPipe.cpp" /&gt;
++		&lt;Unit filename="../windows/JackWinNamedPipe.h" /&gt;
++		&lt;Unit filename="../windows/JackWinNamedPipeClientChannel.cpp" /&gt;
++		&lt;Unit filename="../windows/JackWinNamedPipeClientChannel.h" /&gt;
++		&lt;Unit filename="../windows/JackWinNamedPipeNotifyChannel.cpp" /&gt;
++		&lt;Unit filename="../windows/JackWinNamedPipeNotifyChannel.h" /&gt;
++		&lt;Unit filename="../windows/JackWinNamedPipeServerChannel.cpp" /&gt;
++		&lt;Unit filename="../windows/JackWinNamedPipeServerChannel.h" /&gt;
++		&lt;Unit filename="../windows/JackWinNamedPipeServerNotifyChannel.cpp" /&gt;
++		&lt;Unit filename="../windows/JackWinNamedPipeServerNotifyChannel.h" /&gt;
++		&lt;Unit filename="../windows/JackWinProcessSync.cpp" /&gt;
++		&lt;Unit filename="../windows/JackWinProcessSync.h" /&gt;
++		&lt;Unit filename="../windows/JackWinSemaphore.cpp" /&gt;
++		&lt;Unit filename="../windows/JackWinSemaphore.h" /&gt;
++		&lt;Unit filename="../windows/JackWinServerLaunch.cpp" /&gt;
++		&lt;Unit filename="../windows/JackWinThread.cpp" /&gt;
++		&lt;Unit filename="../windows/JackWinThread.h" /&gt;
++		&lt;Unit filename="../windows/JackWinTime.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../windows/getopt.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../windows/getopt.h" /&gt;
++		&lt;Unit filename="../windows/getopt1.c"&gt;
++			&lt;Option compilerVar="CC" /&gt;
++		&lt;/Unit&gt;
++		&lt;Unit filename="../windows/jackaudioadapter.rc" /&gt;
++		&lt;Unit filename="../windows/jackd.rc" /&gt;
++		&lt;Unit filename="../windows/jackdummydriver.rc" /&gt;
++		&lt;Unit filename="../windows/jackloopbackdriver.rc" /&gt;
++		&lt;Unit filename="../windows/jacknetadapter.rc" /&gt;
++		&lt;Unit filename="../windows/jacknetdriver.rc" /&gt;
++		&lt;Unit filename="../windows/jacknetmanager.rc" /&gt;
++		&lt;Unit filename="../windows/jacknetonedriver.rc" /&gt;
++		&lt;Unit filename="../windows/jackportaudio.rc" /&gt;
++		&lt;Unit filename="../windows/jackwinmme.rc" /&gt;
++		&lt;Unit filename="../windows/libjack.rc" /&gt;
++		&lt;Unit filename="../windows/libjacknet.rc" /&gt;
++		&lt;Unit filename="../windows/libjackserver.rc" /&gt;
++		&lt;Unit filename="../windows/portaudio/JackPortAudioAdapter.cpp" /&gt;
++		&lt;Unit filename="../windows/portaudio/JackPortAudioAdapter.h" /&gt;
++		&lt;Unit filename="../windows/portaudio/JackPortAudioDevices.cpp" /&gt;
++		&lt;Unit filename="../windows/portaudio/JackPortAudioDevices.h" /&gt;
++		&lt;Unit filename="../windows/portaudio/JackPortAudioDriver.cpp" /&gt;
++		&lt;Unit filename="../windows/portaudio/JackPortAudioDriver.h" /&gt;
++		&lt;Unit filename="../windows/portaudio/pa_asio.h" /&gt;
++		&lt;Unit filename="../windows/portaudio/portaudio.h" /&gt;
++		&lt;Unit filename="../windows/resource.h" /&gt;
++		&lt;Unit filename="../windows/resource_vc.h" /&gt;
++		&lt;Unit filename="../windows/samplerate.h" /&gt;
++		&lt;Unit filename="../windows/winmme/JackWinMMEDriver.cpp" /&gt;
++		&lt;Unit filename="../windows/winmme/JackWinMMEDriver.h" /&gt;
++		&lt;Unit filename="../windows/winmme/JackWinMMEInputPort.cpp" /&gt;
++		&lt;Unit filename="../windows/winmme/JackWinMMEInputPort.h" /&gt;
++		&lt;Unit filename="../windows/winmme/JackWinMMEOutputPort.cpp" /&gt;
++		&lt;Unit filename="../windows/winmme/JackWinMMEOutputPort.h" /&gt;
++		&lt;Unit filename="../windows/winmme/JackWinMMEPort.cpp" /&gt;
++		&lt;Unit filename="../windows/winmme/JackWinMMEPort.h" /&gt;
++		&lt;Unit filename="../wscript" /&gt;
++		&lt;Extensions&gt;
++			&lt;envvars /&gt;
++			&lt;code_completion /&gt;
++			&lt;debugger /&gt;
++		&lt;/Extensions&gt;
++	&lt;/Project&gt;
++&lt;/CodeBlocks_project_file&gt;
+diff --git a/codeBlocks/jack2.layout b/codeBlocks/jack2.layout
+new file mode 100644
+index 0000000..5246258
+--- /dev/null
++++ b/codeBlocks/jack2.layout
+@@ -0,0 +1,179 @@
++&lt;?xml version="1.0" encoding="UTF-8" standalone="yes" ?&gt;
++&lt;CodeBlocks_layout_file&gt;
++	&lt;ActiveTarget name="Debug" /&gt;
++	&lt;File name="../common/JackAudioDriver.cpp" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="4660" topLine="27" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/Jackdmp.cpp" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="4598" topLine="118" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackArgParser.cpp" open="1" top="0" tabpos="15" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="6777" topLine="174" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackThreadedDriver.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="1045" topLine="18" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/netjack.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="2364" topLine="63" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../linux/iio/JackIIODriver.C" open="1" top="1" tabpos="5" split="0" active="1" splitpos="0" zoom_1="2" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="6665" topLine="143" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../wscript" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="6258" topLine="129" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../linux/firewire/JackFFADODriver.cpp" open="1" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="30896" topLine="804" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackDummyDriver.cpp" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="950" topLine="15" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackError.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="2588" topLine="78" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackDriver.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="0" topLine="108" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../linux/alsa/JackAlsaDriver.h" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="1319" topLine="36" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackControlAPI.cpp" open="0" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="10513" topLine="360" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/driver_interface.h" open="1" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="4239" topLine="0" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../linux/driver.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="1320" topLine="25" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../linux/freebob/freebob_driver.h" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="0" topLine="0" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackLoopbackDriver.cpp" open="0" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="2289" topLine="93" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackAudioAdapterFactory.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="2313" topLine="68" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../linux/iio/JackIIODriver.H" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="1872" topLine="26" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../linux/freebob/JackFreebobDriver.cpp" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="0" topLine="24" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackInternalClient.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="877" topLine="13" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackDriverLoader.cpp" open="1" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="23261" topLine="752" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackAudioDriver.h" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="3119" topLine="37" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackTools.cpp" open="1" top="0" tabpos="16" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="3683" topLine="118" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../dbus/wscript" open="1" top="0" tabpos="14" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="814" topLine="0" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../linux/firewire/ffado_driver.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="5335" topLine="170" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../linux/wscript" open="1" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="1135" topLine="30" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../linux/alsa/JackAlsaAdapter.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="3500" topLine="23" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackNetDriver.cpp" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="27095" topLine="694" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackArgParser.h" open="1" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="836" topLine="0" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackAPI.cpp" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="15232" topLine="275" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../linux/firewire/JackFFADODriver.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="0" topLine="2" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../linux/alsa/JackAlsaDriver.cpp" open="0" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="0" topLine="24" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../common/JackDriver.cpp" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="2693" topLine="64" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++	&lt;File name="../linux/freebob/JackFreebobDriver.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0"&gt;
++		&lt;Cursor&gt;
++			&lt;Cursor1 position="2786" topLine="43" /&gt;
++		&lt;/Cursor&gt;
++	&lt;/File&gt;
++&lt;/CodeBlocks_layout_file&gt;
+diff --git a/linux/iio/JackIIODriver.C b/linux/iio/JackIIODriver.C
+new file mode 100644
+index 0000000..1b598c9
+--- /dev/null
++++ b/linux/iio/JackIIODriver.C
+@@ -0,0 +1,172 @@
++/*
++Copyright (C) 2013 Matt Flax &lt;flatmax@&gt;
++
++This program is free software; you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation; either version 2 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program; if not, write to the Free Software
++Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++
++*/
++
++#include "JackIIODriver.H"
++#include "driver_interface.h"
++
++#define IIO_DEFAULT_SAMPLERATE 1e6; ///&lt; The default sample rate for the default chip
++#define IIO_DEFAULT_PERIODSIZE 1024; ///&lt; The defaul period size
++
++namespace Jack {
++
++int JackIIODriver::Open(jack_nframes_t buffer_size,
++                          jack_nframes_t samplerate,
++                          bool capturing,
++                          bool playing,
++                          int inchannels,
++                          int outchannels,
++                          bool monitor,
++                          const char* capture_driver_name,
++                          const char* playback_driver_name,
++                          jack_nframes_t capture_latency,
++                          jack_nframes_t playback_latency)
++{
++    return JackAudioDriver::Open(buffer_size, samplerate, capturing, playing, inchannels, outchannels,
++        monitor, capture_driver_name, playback_driver_name, capture_latency, playback_latency);
++}
++
++} // end namespace Jack
++
++
++#ifdef __cplusplus
++extern "C"
++{
++#endif
++
++    SERVER_EXPORT const jack_driver_desc_t *
++    driver_get_descriptor () {
++        jack_driver_desc_t * desc;
++        jack_driver_desc_filler_t filler;
++        jack_driver_param_value_t value;
++
++        desc = jack_driver_descriptor_construct("iio", JackDriverMaster, "Linux Industrial IO backend", &amp;filler);
++
++        strcpy(value.str, "AD7476");
++        jack_driver_descriptor_add_parameter(
++            desc,
++            &amp;filler,
++            "device",
++            'd',
++            JackDriverParamString,
++            &amp;value,
++            NULL,
++            "The IIO chip to use.",
++            "The IIO chip to use. Specifies which chip name to scan for on all devices present in /sys/bus/iio.");
++
++        value.ui = IIO_DEFAULT_PERIODSIZE;
++        jack_driver_descriptor_add_parameter(desc, &amp;filler, "period", 'p', JackDriverParamUInt, &amp;value, NULL, "Frames per period", NULL);
++
++        value.ui = 2;
++        jack_driver_descriptor_add_parameter(desc, &amp;filler, "nperiods", 'n', JackDriverParamUInt, &amp;value, NULL, "Number of periods of playback latency", NULL);
++
++        value.ui = (IIO_DEFAULT_SAMPLERATE)U;
++        jack_driver_descriptor_add_parameter(desc, &amp;filler, "rate", 'r', JackDriverParamUInt, &amp;value, NULL, "Sample rate", NULL);
++
++        value.i = 0;
++        jack_driver_descriptor_add_parameter(desc, &amp;filler, "capture", 'C', JackDriverParamBool, &amp;value, NULL, "Provide capture ports.", NULL);
++        jack_driver_descriptor_add_parameter(desc, &amp;filler, "playback", 'P', JackDriverParamBool, &amp;value, NULL, "Provide playback ports.", NULL);
++
++        value.i = 0;
++        jack_driver_descriptor_add_parameter(desc, &amp;filler, "duplex", 'D', JackDriverParamBool, &amp;value, NULL, "Provide both capture and playback ports.", NULL);
++
++        value.ui = 0;
++        jack_driver_descriptor_add_parameter(desc, &amp;filler, "input-latency", 'I', JackDriverParamUInt, &amp;value, NULL, "Extra input latency (frames)", NULL);
++        jack_driver_descriptor_add_parameter(desc, &amp;filler, "output-latency", 'O', JackDriverParamUInt, &amp;value, NULL, "Extra output latency (frames)", NULL);
++
++        value.ui = 0;
++        jack_driver_descriptor_add_parameter(desc, &amp;filler, "inchannels", 'i', JackDriverParamUInt, &amp;value, NULL, "Number of input channels to provide (note: currently ignored)", NULL);
++        jack_driver_descriptor_add_parameter(desc, &amp;filler, "outchannels", 'o', JackDriverParamUInt, &amp;value, NULL, "Number of output channels to provide (note: currently ignored)", NULL);
++
++        value.ui = 3;
++        jack_driver_descriptor_add_parameter(desc, &amp;filler, "verbose", 'v', JackDriverParamUInt, &amp;value, NULL, "gtkIOStream verbose level", NULL);
++
++//        value.i = 0;
++//        jack_driver_descriptor_add_parameter(desc, &amp;filler, "snoop", 'X', JackDriverParamBool, &amp;value, NULL, "Snoop firewire traffic", NULL);
++
++        return desc;
++    }
++
++    SERVER_EXPORT Jack::JackDriverClientInterface* driver_initialize(Jack::JackLockedEngine* engine, Jack::JackSynchro* table, const JSList* params) {
++        const JSList * node;
++        const jack_driver_param_t * param;
++
++        char *device_name=(char*)"AD7476";
++
++        for (node = params; node; node = jack_slist_next (node)) {
++            param = (jack_driver_param_t *) node-&gt;data;
++
++            switch (param-&gt;character) {
++                case 'd':
++                    device_name = const_cast&lt;char*&gt;(param-&gt;value.str);
++                    break;
++                case 'p':
++                    cmlparams.period_size = param-&gt;value.ui;
++                    cmlparams.period_size_set = 1;
++                    break;
++                case 'n':
++                    cmlparams.buffer_size = param-&gt;value.ui;
++                    cmlparams.buffer_size_set = 1;
++                    break;
++                case 'r':
++                    cmlparams.sample_rate = param-&gt;value.ui;
++                    cmlparams.sample_rate_set = 1;
++                    break;
++                case 'i':
++                    cmlparams.capture_ports = param-&gt;value.ui;
++                    break;
++                case 'o':
++                    cmlparams.playback_ports = param-&gt;value.ui;
++                    break;
++                case 'I':
++                    cmlparams.capture_frame_latency = param-&gt;value.ui;
++                    break;
++                case 'O':
++                    cmlparams.playback_frame_latency = param-&gt;value.ui;
++                    break;
++                case 'x':
++                    cmlparams.slave_mode = param-&gt;value.ui;
++                    break;
++//                case 'X':
++//                    cmlparams.snoop_mode = param-&gt;value.i;
++//                    break;
++                case 'v':
++                    cmlparams.verbose_level = param-&gt;value.ui;
++            }
++        }
++
++        /* duplex is the default */
++        if (!cmlparams.playback_ports &amp;&amp; !cmlparams.capture_ports) {
++            cmlparams.playback_ports = 1;
++            cmlparams.capture_ports = 1;
++        }
++
++        iio.findDevicesByChipName(chipName);
++
++        // Special open for FFADO driver...
++        if (ffado_driver-&gt;Open(&amp;cmlparams) == 0) {
++            return threaded_driver;
++        } else {
++            delete threaded_driver; // Delete the decorated driver
++            return NULL;
++        }
++    }
++
++#ifdef __cplusplus
++}
++#endif
+diff --git a/linux/iio/JackIIODriver.H b/linux/iio/JackIIODriver.H
+new file mode 100644
+index 0000000..d93e599
+--- /dev/null
++++ b/linux/iio/JackIIODriver.H
+@@ -0,0 +1,65 @@
++/*
++Copyright (C) 2013 Matt Flax &lt;flatmax@&gt;
++
++This program is free software; you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation; either version 2 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program; if not, write to the Free Software
++Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++
++*/
++
++#ifndef JACKIIODRIVER_H
++#define JACKIIODRIVER_H
++
++#include "JackAudioDriver.h"
++#include "JackThreadedDriver.h"
++
++#include &lt;IIO/IIO.H&gt;
++
++namespace Jack {
++
++/** The Linux Industrial IO (IIO) subsystem driver for Jack.
++Currently this driver only supports capture.
++*/
++class JackIIODriver : public JackAudioDriver {
++
++    IIO iio; ///&lt; The actual IIO device
++
++public:
++    /** Constructor
++    */
++    JackIIODriver(const char* name, const char* alias, JackLockedEngine* engine, JackSynchro* table) : JackAudioDriver(name, alias, engine, table) {
++    }
++
++    /** Destructor
++    */
++    virtual ~JackIIODriver() {
++    }
++
++    /**
++    */
++    virtual int Open(jack_nframes_t buffer_size,
++                    jack_nframes_t samplerate,
++                    bool capturing,
++                    bool playing,
++                    int inchannels,
++                    int outchannels,
++                    bool monitor,
++                    const char* capture_driver_name,
++                    const char* playback_driver_name,
++                    jack_nframes_t capture_latency,
++                    jack_nframes_t playback_latency);
++
++};
++
++} // end of Jack namespace
++#endif // JACKIIODRIVER_H
+diff --git a/linux/wscript b/linux/wscript
+index a2bb6ba..3cd9426 100644
+--- a/linux/wscript
++++ b/linux/wscript
+@@ -1,6 +1,8 @@
+ #! /usr/bin/env python
+ # encoding: utf-8
+ 
++from waflib import Context
++
+ def configure(conf):
+     conf.check_cfg(package='alsa', atleast_version='1.0.18', args='--cflags --libs', mandatory=False)
+     conf.env['BUILD_DRIVER_ALSA'] = conf.is_defined('HAVE_ALSA')
+@@ -11,7 +13,35 @@ def configure(conf):
+     conf. check_cfg(package='libffado', atleast_version='1.999.17', args='--cflags --libs', mandatory=False)
+     conf.env['BUILD_DRIVER_FFADO'] = conf.is_defined('HAVE_LIBFFADO')
+ 
+-    conf.define('HAVE_PPOLL', 1 )
++    conf.check_cfg(package='gtkIOStream', atleast_version='1.4.0', args='--cflags --libs', mandatory=False)
++    conf.env['BUILD_DRIVER_IIO'] = conf.is_defined('HAVE_GTKIOSTREAM')
++    conf.check_cfg(package='eigen3', atleast_version='3.2.0', args='--cflags --libs', mandatory=False)
++    conf.env['BUILD_DRIVER_IIO'] += conf.is_defined('HAVE_EIGEN3')
++    conf.check_cfg(package='sox', atleast_version='14.4.1', args='--cflags --libs', mandatory=False)
++    conf.env['BUILD_DRIVER_IIO'] += conf.is_defined('HAVE_SOX')
++    #conf.env['BUILD_DRIVER_IIO'] += conf.is_defined('HAVE_EIGEN3')
++    #print conf.env
++    #conffile.write("\n".join(myconf))
++    #conf.define('HAVE_PPOLL', 1 )
++
++    conf.find_program("mkoctfile", var="MKOCTFILE")
++    if conf.env.MKOCTFILE:
++        conf.env['HAVE_OCTAVE']=1
++        conf.env['define_key'] += ['HAVE_OCTAVE']
++        conf.env['DEFINES'] += ['HAVE_OCTAVE=1']
++        #conf.env('Octave')
++        conf.env['INCLUDES_OCTAVE'] = conf.cmd_and_log([conf.env.MKOCTFILE, "--print", "INCFLAGS" ],
++                                   output=Context.STDOUT).replace('\n', '').replace('-I','').split()
++        lflags = conf.cmd_and_log([conf.env.MKOCTFILE, "--print", "LFLAGS" ],
++                                   output=Context.STDOUT)
++        conf.env['LIB_OCTAVE'] = conf.cmd_and_log([conf.env.MKOCTFILE, "--print", "OCTAVE_LIBS" ],
++                                   output=Context.STDOUT).replace('\n', '').replace('-l','').split()
++        #conf.append("INCFLAGS: " + incflags)
++        #conf.append("LFLAGS: " + lflags)
++        #conf.append("LIBS: " + libs)
++        print conf.env
++    #import pdb; pdb.set_trace()
++
+ 
+ def create_jack_driver_obj(bld, target, sources, uselib = None):
+     driver = bld(features = ['c', 'cxx', 'cxxshlib', 'cshlib'])
+@@ -36,15 +66,15 @@ def build(bld):
+         jackd.defines = ['HAVE_CONFIG_H','SERVER_SIDE']
+         jackd.source = ['../common/Jackdmp.cpp']
+         jackd.use = ['serverlib']
+-        if bld.env['IS_LINUX'] and bld.env['BUILD_JACKDBUS']: 
+-            jackd.source += ['../dbus/reserve.c', '../dbus/audio_reserve.c'] 
++        if bld.env['IS_LINUX'] and bld.env['BUILD_JACKDBUS']:
++            jackd.source += ['../dbus/reserve.c', '../dbus/audio_reserve.c']
+             jackd.use += ['PTHREAD', 'DL', 'RT', 'M', 'STDC++', 'DBUS-1']
+         else:
+             jackd.use += ['PTHREAD', 'DL', 'RT', 'M', 'STDC++']
+         jackd.target = 'jackd'
+-  	
++
+     create_jack_driver_obj(bld, 'dummy', '../common/JackDummyDriver.cpp')
+-    
++
+     alsa_driver_src = [
+                        'alsa/JackAlsaDriver.cpp',
+                        'alsa/alsa_rawmidi.c',
+@@ -74,6 +104,8 @@ def build(bld):
+                         'firewire/JackFFADOMidiSendQueue.cpp'
+                        ]
+ 
++    iio_driver_src = ['iio/JackIIODriver.C']
++
+     if bld.env['BUILD_DRIVER_ALSA'] == True:
+         create_jack_driver_obj(bld, 'alsa', alsa_driver_src, ["ALSA"])
+         create_jack_driver_obj(bld, 'alsarawmidi', alsarawmidi_driver_src,
+@@ -85,6 +117,9 @@ def build(bld):
+     if bld.env['BUILD_DRIVER_FFADO'] == True:
+         create_jack_driver_obj(bld, 'firewire', ffado_driver_src, ["LIBFFADO"])
+ 
++    if bld.env['BUILD_DRIVER_IIO'] == True:
++        create_jack_driver_obj(bld, 'iio', iio_driver_src, ["GTKIOSTREAM", "EIGEN3", "OCTAVE"])
++
+     create_jack_driver_obj(bld, 'net', '../common/JackNetDriver.cpp')
+ 
+     create_jack_driver_obj(bld, 'loopback', '../common/JackLoopbackDriver.cpp')
+diff --git a/wscript b/wscript
+index 0c3b350..aef4bd8 100644
+--- a/wscript
++++ b/wscript
+@@ -83,6 +83,7 @@ def options(opt):
+     opt.add_option('--firewire', action='store_true', default=False, help='Enable FireWire driver (FFADO)')
+     opt.add_option('--freebob', action='store_true', default=False, help='Enable FreeBob driver')
+     opt.add_option('--alsa', action='store_true', default=False, help='Enable ALSA driver')
++    opt.add_option('--iio', action='store_true', default=False, help='Enable IIO driver')
+     opt.add_option('--autostart', type='string', default="default", help='Autostart method. Possible values: "default", "classic", "dbus", "none"')
+     opt.add_option('--portaudio', action='store_true', default=False, help='Enable Portaudio driver')
+     opt.add_option('--winmme', action='store_true', default=False, help='Enable WinMME driver')
+@@ -136,7 +137,7 @@ def configure(conf):
+         conf.check_tool('compiler_cc')
+         conf.env.append_unique('CCDEFINES', '_POSIX')
+         conf.env.append_unique('CXXDEFINES', '_POSIX')
+- 
++
+     conf.env.append_unique('CXXFLAGS', '-Wall')
+     conf.env.append_unique('CFLAGS', '-Wall')
+ 
+@@ -149,9 +150,12 @@ def configure(conf):
+             conf.fatal('FreeBob driver was explicitly requested but cannot be built')
+         if Options.options.firewire and not conf.env['BUILD_DRIVER_FFADO']:
+             conf.fatal('FFADO driver was explicitly requested but cannot be built')
++        if Options.options.iio and not conf.env['BUILD_DRIVER_IIO']:
++            conf.fatal('IIO driver was explicitly requested but cannot be built')
+         conf.env['BUILD_DRIVER_ALSA'] = Options.options.alsa
+         conf.env['BUILD_DRIVER_FFADO'] = Options.options.firewire
+         conf.env['BUILD_DRIVER_FREEBOB'] = Options.options.freebob
++        conf.env['BUILD_DRIVER_IIO'] = Options.options.iio
+     if conf.env['IS_WINDOWS']:
+         conf.sub_config('windows')
+         if Options.options.portaudio and not conf.env['BUILD_DRIVER_PORTAUDIO']:
+@@ -319,7 +323,7 @@ def configure(conf):
+ 
+     print("Build with a maximum of %d JACK clients" % Options.options.clients)
+     print("Build with a maximum of %d ports per application" % Options.options.application_ports)
+- 
++
+     display_msg("Install prefix", conf.env['PREFIX'], 'CYAN')
+     display_msg("Library directory", conf.all_envs[""]['LIBDIR'], 'CYAN')
+     if conf.env['BUILD_WITH_32_64'] == True:
+@@ -350,11 +354,12 @@ def configure(conf):
+         display_feature('Build with ALSA support', conf.env['BUILD_DRIVER_ALSA'] == True)
+         display_feature('Build with FireWire (FreeBob) support', conf.env['BUILD_DRIVER_FREEBOB'] == True)
+         display_feature('Build with FireWire (FFADO) support', conf.env['BUILD_DRIVER_FFADO'] == True)
++        display_feature('Build with IIO support', conf.env['BUILD_DRIVER_IIO'] == True)
+ 
+     if conf.env['IS_WINDOWS']:
+         display_feature('Build with WinMME support', conf.env['BUILD_DRIVER_WINMME'] == True)
+         display_feature('Build with Portaudio support', conf.env['BUILD_DRIVER_PORTAUDIO'] == True)
+-       
++
+     if conf.env['BUILD_JACKDBUS'] == True:
+         display_msg('D-Bus service install directory', conf.env['DBUS_SERVICES_DIR'], 'CYAN')
+         #display_msg('Settings persistence', xxx)
+@@ -407,7 +412,7 @@ def build(bld):
+         bld.add_subdirs('man')
+         if bld.env['BUILD_JACKDBUS'] == True:
+            bld.add_subdirs('dbus')
+-  
++
+     if bld.env['IS_MACOSX']:
+         bld.add_subdirs('macosx')
+         bld.add_subdirs('example-clients')
+-- 
+1.8.3.2
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1392326711.14288_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1392326716.14310_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1392326713.14291_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1392326713.14291_0.ltw:2,a&nbsp;&lt;1392326687-3964-2-git-send-email-flatmax at flatmax dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

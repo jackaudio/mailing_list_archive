@@ -1,0 +1,70 @@
+Date:        Mon, 04 Jun 2012 18:41:44 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          JACK Mailing List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] how you can love JACK back (1338826600.23734_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] how you can love JACK back
+
+On 06/04/2012 06:16 PM, Paul Davis wrote:
+> On Mon, Jun 4, 2012 at 12:14 PM, Harry van Haaren <[hidden]>wrote:
+> 
+>> Hi all,
+>>
+>> I'm willing to contribute some time to this. I've pulled code a la Robin's
+>> suggestion, and have "Meld" doing the dirty work: it compares similar files
+>> and graphically shows the changes.
+
+I don't think meld is a good choice here. You don't want to merge
+anything. git's colored diff and a regexp editor will be your best
+friend here.
+
+>> I've a little situation: what if the documentation is different for a
+>> function?
+>>
+>> Eg Jack1:
+>> /* <b>THIS FUNCTION IS DEPRECATED AND SHOULD NOT BE USED IN
+>>  *  NEW JACK CLIENTS</b>
+>> */
+>>
+>> Jack2:
+>> /* \bold THIS FUNCTION IS DEPRECATED AND SHOULD NOT BE USED IN
+>> *  NEW JACK CLIENTS
+>> *
+>> * @deprecated Please use jack_client_open().
+>> */
+>>
+>> I'm not very familiar with doxygen tags etc, but it seems nice to tag the
+>> function as deprecated and point to _open?
+>>
+>> Do we edit the JACK1 file, or how do we want to merge these?
+>>
+> 
+> the initial goal is to be *able* to ask these qestions.
+
+We are :)
+
+> once we can ask them easily and across the entire API, the next goal is to
+> actually *ask* them :)
+
+let me try some answers:
+
+Remove all the trailing whitespace from jack1's header-files. Trailing
+white-space is ugly. jack2 has removed most of them already.
+  %s/  *$//g
+
+use 8-space tab-stops throughout the code and a shift-width of 8.
+jack1's headers are pretty consistent WRT to that, jack2's header are not.
+
+\bold is correct for doxygen. Many of the doxygen comments in jack2 have
+fixed typos and doxygen syntax-errors (e.g. @a references) in the jack1
+headers.
+
+I suggest to fix the doxygen-syntax and remove duplicate whitespace, but
+retain other typos and differences in the comments as they are for now.
+
+2c,
+robin
+
+1338828126.24640_0.ltw:2,a <4FCCE548.9050200 at gareus dot org>
+________________________________________________________________________________
+

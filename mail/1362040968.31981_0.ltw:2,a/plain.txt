@@ -1,0 +1,61 @@
+Date:        Thu, 28 Feb 2013 09:42:32 +0100
+From:        Roland Mas  <[hidden] at debian dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Tommaso Cucinotta [Jack-Devel] Linux to Linux jacknet ? (1362018165.31359_0.ltw:2,a)
+Follow-Up:   Tommaso Cucinotta Re: [Jack-Devel] Linux to Linux jacknet ? (1362043866.4325_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Linux to Linux jacknet ?
+
+Tommaso Cucinotta, 2013-02-28 02:22:34 +0000 :
+
+> Hi all,
+>
+> I'd like to use a server PC as a MIDI synthesizer, with a client PC
+> sending out MIDI messages, and getting back synthesized audio.
+>
+> AFAIU, I can use "jackd -d net" on the server side, and "jackd
+> opts...& jack_netsource -H <server-ip-addr>" on the client side to
+> connect the two.
+>
+> However, it doesn't seem to work. When I run jack_netsource, it says
+> "Not connected". What may be going wrong here ? Also, on the server
+> side, I can't connect any jack client. I guess that, until I don't
+> have a master connected, the server-side jackd doesn't really start.
+>
+> What is "jack_load netmanager" useful for, instead ?
+>
+> Can anyone suggest a supposedly working set-up involving Linux on both
+> client and server ends ? (I'm using latest jackd2 as from official
+> Ubuntu repos).
+
+I'm sure we could argue all day about which end is the client and which
+is the server, but something that works here (order may matter):
+
+- on the laptop (elastomir), "jack_load netmanager" (it probably starts
+  listening to messages or broadcasting that it is ready to do so);
+- on the desktop (polymir), "jackd -d net" (actually I start it through
+  Qjackctl, but whatever).
+
+  Then the desktop gets two source channels and two sink channels which
+are respectively routed from and to similar pairs of channels named
+polymir:from_slave_1/2 and polymir:to_slave_1/2 on the laptop.  If I
+send audio to the sinks on the desktop (for instance with PulseAudio),
+then use Patchage (or qjackctl) on the laptop to patch the
+polymir:from_slave_1/2 sources into the local system:playback_1/2, then
+the sound goes out from the laptop's soundcard.  If I send the laptop's
+PulseAudio stream to polymir:to_slave_1/2 instead, it can run through an
+effects rack that runs on the desktop, then be sent back to the laptop.
+
+  I have no idea about jack_netsource; I'd welcome more details, but the
+described setup works and may be helpful :-)
+
+Roland.
+-- 
+Roland Mas
+
+C'est dans la boue la plus nauséeuse que plongent les racines de
+l'étincelante fleur de lotus. -- in Sri Raoul le petit yogi (Gaudelette)
+
+1362040968.31981_0.ltw:2,a <87sj4gg77r.fsf at polymir dot internal dot placard dot fr dot eu dot org>
+________________________________________________________________________________
+

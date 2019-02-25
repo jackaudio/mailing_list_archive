@@ -1,0 +1,56 @@
+Date:        Sun, 26 Jun 2011 21:50:29 -0300
+From:        Carlos Eduardo da Fonseca  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Devin Anderson Re: [Jack-Devel] JACK midi events lost on 64 bit machines (1309140654.18988_0.ltw:2,a)
+
+Subject:     [Jack-Devel] JACK midi events lost on 64 bit machines
+
+I have an application using JACK MIDI under Linux. It works perfectly on 32
+bit machines, but on my new one, which is 64 bits, I get event loss all the
+time.
+
+I checked:
+
+   - Values coming from jack_ringbuffer_read, they are OK (valid 2-3 bytes
+   MIDI messages);
+   - midi_out_port and client, they are OK (non-null) and appearing on my
+   JACK port list.
+
+Here is part of my code:
+
+#define MidiMessageSize 3
+
+jack_client_t* client;
+jack_port_t* midi_out_port;
+char current_message[MidiMessageSize];
+
+jack_ringbuffer_t* midi_rb;
+int process (jack_nframes_t nframes, void *arg) {
+  void* output_buffer = jack_port_get_buffer(midi_out_port, nframes);
+  jack_midi_clear_buffer(output_buffer);
+  int read_space = jack_ringbuffer_read_space(midi_rb);
+  if (read_space == 0) return 0;
+  int i;
+  for (i = 0; i < read_space; i += MidiMessageSize) {
+    jack_ringbuffer_read(midi_rb, current_message, MidiMessageSize);
+    jack_midi_event_write(output_buffer, i/MidiMessageSize,
+			   (jack_midi_data_t*)current_message, MidiMessageSize);
+    if (jack_midi_get_lost_event_count(midi_out_port)) {
+      printf("Lost\n"); /* Never get here on 32 bit but always on 64 */
+    }
+  }
+  jack_ringbuffer_reset(midi_rb);
+  return 0;
+}
+
+
+What may be wrong?
+
+Thanks,
+
+-- 
+Carlos Eduardo da Fonseca
+
+1309135855.10077_0.ltw:2,a <BANLkTimresrnUho=ztKJ0vgqueKJ5enmmg at mail dot gmail dot com>
+________________________________________________________________________________
+

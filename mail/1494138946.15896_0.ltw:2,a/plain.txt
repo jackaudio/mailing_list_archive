@@ -1,0 +1,71 @@
+Date:        Sun, 07 May 2017 08:35:22 +0200
+From:        David Kastrup  <[hidden] at gnu dot org>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   David Kastrup Re: [Jack-Devel] How does --hwmon work? (1494139362.16505_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] How does --hwmon work?
+
+Ralf Mardorf <[hidden]> writes:
+
+> On Sat, 06 May 2017 22:24:29 +0200, David Kastrup wrote:
+>>dak@lola:~$ ps ax k priority -o priority,comm |grep irq
+>>-91 irq/8-rtc0
+>>-81 irq/17-firewire
+>>-71 irq/32-snd_hda_
+>> [snip]
+>> 20 irqbalance
+>>
+>>Looks like somebody is prioritizing my soundcards.
+>
+> Much likely it's Rui's rtirq script. For what ever reason Ubuntu
+> keeps it in init.d and doesn't start it by a systemd unit.
+>
+> http://packages.ubuntu.com/yakkety/rtirq-init
+>
+> Instead of ps, you could run
+>
+> /etc/init.d/rtirq status
+>
+> I can't speak for your computer, but usually rtc shouldn't be
+> prioritised anymore and irqbalance should be completely removed.
+
+It's been years since I touched the config file.  Probably I should
+remove, install from scratch.
+
+Oh wait.  snd_hda_ would be the laptop internal sound card, not the
+Hammerfall DSP.  The latter doesn't have its own interrupt apparently,
+so this would rather be, uh, irq/16-yenta ?  That one's at the bottom in
+the list.  Darn it.  I probably removed it when I put the Hammerfall
+into storage.  And got it out again since the Mackie Onyx mixer is too
+bulky for Free Software conference duty.
+
+So maybe I should give the Hammerfall a better chance at working.
+
+> Take a look at /etc/default/rtirq (on Arch Linux
+> it's /etc/conf.d/rtirq ;):
+>
+> [rocketmouse@archlinux ~]$ grep RTIRQ_NAME_LIST /etc/conf.d/rtirq | grep -v "#"
+> RTIRQ_NAME_LIST="usb snd_hdsp snd_ice1"
+
+You probably have a PCI (or express) card rather than a Cardbus one?
+
+> Check the output of
+>
+> cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+>
+> Perhaps setting it to performance helps to reduce xruns
+
+I seem to remember that CPU switching speed with the Penryn is supposed
+to be close enough, but I admit that if it were instantaneous it would
+be indistinguishable from a power-saving halt state but full speed
+otherwise.  I think I had the system on performance for a while but it
+did not make a noticeable difference with regard to xruns.
+
+I'll keep it in mind.
+
+-- 
+David Kastrup
+
+1494138946.15896_0.ltw:2,a <87o9v5b2dx.fsf at fencepost dot gnu dot org>
+________________________________________________________________________________
+

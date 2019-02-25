@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1299145089.14761_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1299232614.13730_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1299213799.26685_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 03 Mar 2011 22:42:32 -0600 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>torbenh
+<a href='../1299232614.13730_0.ltw:2,a/index.html'>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Duncan Gray
+<a href='../1299244744.27531_0.ltw:2,a/index.html'>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2 </a></td></tr>
+</table>
+<pre>
+On Thu, March 3, Duncan Gray wrote:
+&gt; I have been spoiled by pro audio.
+&gt; I am dis-satisfied if the clock jitter is worse than 500 ps. 50 ps
+&gt; RMS was my goal and no kernel-timed PLL will ever get there.
+
+You would never use a software PLL to drive the sampling clock of an ADC
+or DAC.  It would have to be a hardware clock, with a very long time
+constant (low corner frequency on the PLL loop filter) to keep the
+sampling clock and the PTP derived clock in synchronization.
+
+&gt; Once again ... AVB was designed for this very accurate timing
+&gt; domain, the anticipated case was to have a PLL directly in the NIC
+&gt; to derive a word clock.
+
+Yes, the ADC or DAC would definitely have a PLL.  You don't need that in
+the PC, however.  It gets confusing now that both the PC and the audio
+equipment have network interfaces.  We need to be clear what type of
+device we are talking about, because the requirements are drastically
+different.
+
+&gt; True. But be careful of the word master clock. This is a reserved
+&gt; word in the PTP dictionary and can only be the physical Ethernet
+&gt; bit clock in the NIC.
+
+Are you sure about that?  I've been looking at all the 1588 information I
+can find, and I don't see anywhere that the PTP clock is referenced to the
+Ethernet phy clock.  Am I missing something?  I'll see if I can get the
+full IEEE spec.  If you have a reference to a particular section in the
+standard, I'll take a look.  I have the 2002 spec, but the IEEE server is
+having problems serving up the 2008 spec, so I'll have to get that sorted
+later.
+
+
+&gt; The soundcard interrupt can then be a 1788 Stream master clock
+&gt; carried within the PTP framework.
+
+You've mentioned 1788 several times.  Do you actually mean 1588?  Or is
+there some connection between IEEE1788 and clock synchronization?  I
+suspect you mean 1588, "IEEE Standard for a Precision Clock
+Synchronization Protocol for Networked Measurement and Control Systems."
+
+&gt; IEEE 1588, the grandfather of PTP,
+
+1588=PTP.  Grandfather would seem to imply that PTP is some recent
+descendent.  PTPv1 is IEEE1588-2002, and PTPv2 is IEEE1588-2008.
+
+Perhaps you mean that 1588 is the father of 802.1AS  That is an Ethernet
+specific implementation of 1588, and the spec is not finalized yet.
+
+&gt;&gt; the current kernel patches allow for accessing ptp clocks
+&gt;&gt; inside network cards. but there is no software clock yet.
+...
+&gt; Do you know of software-only PTP clocks anywhere?
+
+I believe the link I previously provided implements a software clock.
+http://ptpd.sourceforge.net/
+There are a couple of others, not sure which is likely to be best
+developed.  These seem to be a newer fork of an older project:
+http://ptpd2.sourceforge.net/
+http://ptpd1.sourceforge.net/
+
+&gt; If the NIC doesn't have one, the timestamp resolution
+&gt; of a kernel PTP is one jiffy.
+
+I think Torben already pointed out that you would probably use high
+resolution timers, and not the jiffy based timers.
+
+&gt; The AES-11 frequency accuracy (Grade-2) spec of 10 ppm for a
+&gt; clock is nice, but probably won't be present in any PTP stream
+&gt; from anyone I know of except Apogee.
+
+The time and instrumentation guys will definitely have better than that.  
+You can already get PTP clocks from Symmetricom which will lock to GPS and
+give you long term accuracies better than 1ppb (10^-9).
+http://www.symmetricom.com/products/ieee-1588-ptp-solutions/
+
+&gt; Absolute frequency is not AVB's strength. The local clock
+&gt; on the motherboard, servoed to NTP will be good enough.
+&gt; What application might demand such low jitter RTC?
+
+Absolute frequency accuracy and jitter are independent concepts.  There is
+no reason that the long term average frequency could not approach
+trivially close to 0 error if you are locked to a stratum 1 source such as
+GPS.
+Jitter is a more difficult issue, and you will have the same kinds of
+problems deriving a frame or bit clock from PTP as from Firewire. 
+Probably worse, you will definitely need a lot of jitter attenuation on
+your sampling clock PLL.
+
+I think we're getting off track here, though. This is jack-devel, not
+network-attached-audio-equipment-devel.  Let's start with the expectation
+that someone else (or at least on a different mailing list) will make some
+hardware that uses PTP to synchronize sampling clocks, does it properly
+with lots of jitter attenuation, does it in a way that is AVB compliant,
+and has some higher level protocol that we can use, probably based on
+RTP/UDP/IP.
+At that point, JACK just has to make sure it sends groups of packets with
+audio samples, not too fast to overrun the buffers, not too slow to
+underrun the buffers.  That should be feasible with a software clock
+implementation, either using hardware assist in the NIC, or (hopefully)
+using a fully software implemented solution so that current generation
+hardware without explicit PTP support can be used.
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1299145089.14761_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1299232614.13730_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1299213799.26685_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1299213799.26685_0.ltw:2,a&nbsp;&lt;c205205707cbc17ec91352f6f00f0c07.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

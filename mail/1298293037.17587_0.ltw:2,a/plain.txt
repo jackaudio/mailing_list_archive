@@ -1,0 +1,111 @@
+Date:        Mon, 21 Feb 2011 13:56:53 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          "[hidden] at lists dot jackaudio dot org List" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: torbenh Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1298139207.6776_0.ltw:2,a)
+Follow-Up:   torbenh Re: [Jack-Devel] jackdus - was Re: Jack 1.9.7 on ARM crashes when killing a client (1298297661.27553_0.ltw:2,a)
+
+Subject:     [Jack-Devel] jackdus - was Re: Jack 1.9.7 on ARM crashes when killing a client
+
+On 02/19/2011 07:13 PM, torbenh wrote:
+> On Sat, Feb 19, 2011 at 02:22:26PM +0100, Robin Gareus wrote:
+>> On 02/18/2011 12:23 PM, torbenh wrote:
+>>> On Thu, Feb 17, 2011 at 02:01:06PM +0100, Robin Gareus wrote:
+>> [..]
+>>>>
+>>>>
+>>>> while you're at it: Would it be unreasonable to ask looking into 
+>>>> ignoring device disconnect?  f.i. have jackd survive and not crash
+>>>> when an interface (eg ALSA-USB) goes away.
+>>>>
+>>>> No further action should be taken by JACK (well, maybe some
+>>>> hook-script could be invoked or a d-bus command send); some 3rd
+>>>> party software could issue d-bus commands to switch backends.
+>>>
+>>> i basically did this with tschack. using pyjackd this should be
+>>> working. not well tested, as i dont have an usb soundcard with me
+>>> very often.
+>>
+>> I've updated jackdmp and tschack to latest svn/git and check this with a
+>> USB UA-25. annotated logs attached.
+>>
+>>
+>> 	tschack (git 7b7a48d)
+>> terminates with exit 0 if the interface goes away.
+> 
+> you did not use pyjackd.
+> the jackd binary that comes with tschack is supposed to behave excactly
+> like a jackd binary should.
+> i didnt add a callback to the control api yet. but pyjackd should be
+> ignoring the SIGUSR2 thats sent to the process leader upon backend exit.
+> 
+> so it probably wont exit.
+> the behaviour of tschack while it doesnt have a backend, is probably not
+> really nice. (there are places where it waits for a graph switch) 
+> this is definitely fixable though.
+
+Hi Torben,
+
+mmh. python/jackd.py is not executable. I could neither find a dbus
+.service file nor a README and and
+http://hochstrom.endofinternet.org/trac/tschack does not tell much about
+it either.
+
+How do I launch tschack's dbus control server? Can I do so in a sandbox
+or chroot (1)?
+
+with jack2, I can use a few symlinks with LD_LIBRARY_PATH and
+JACK_DRIVER_DIR to start 'jackdbus auto' and run the whole thing from
+the source-tree. This schema only works with tschack's jackd, but not
+with jackd.py.
+
+
+(1) Well.. I don't wanna mess up my main systems and a VM is not good
+for testing physical-sound I/O.
+
+
+>> 	jack2d 1.9.7~svn4120 ( --classic --dbus )
+>> keeps running when the USB/ALSA interface goes away - it no longer
+>> live-locks or crashes. - All JACK clients stall.
+>> With the dbus-version: the backend can be changed. After switching to a
+>> new backend (here: internal card) JACK resumes to run nicely.
+>>
+>> After the device had been disconnected, the current port-connections can
+>> no longer be queried (jack_lsp can not connect) until the backend is
+>> re-initialized with `jack_control sm`.
+>> Calling 'switch-master' re-creates the physical output ports and the
+>> information about previous port-connections to the outputs are lost.
+
+I found a way around this. jackdbus' org.jackaudio.JackPatchbay
+interface keeps an independent internal connection list. It is also much
+faster to use this (compared to jack_lsp and jack_connect).
+Alas it is/was buggy: http://trac.jackaudio.org/ticket/213
+
+> loss of port-connections is to be expected. its a backend switch.
+> the ports might be different. recreating the correct connections, should
+> be done by some kind of sessionmanager. this is out of scope for jackd.
+> 
+
+indeed. jackd should just signal the condition. Some other tool should
+take care of handling the condition (switch backends or not,
+re-connect ports or map them depending on the interfaces switched
+between...)
+
+If you want to see a prototype in action: http://rg42.org/blog/jack2dbus
+The good-news: it works. the bad-news: it's not sth. my mum could
+install on her desktop [,yet]. Somehow it also feels from to be
+"pioneering" JACK desktop-integration in 2011.
+
+ciao,
+robin
+
+-- 
+Robin Gareus
+web: http://gareus.org/                mail: [hidden]
+lab: http://citu.fr/                   chat: xmpp:[hidden]
+
+Public Key at http://pgp.mit.edu/  http://gareus.org/public.asc
+Fingerprint : 7107 840B 4DC9 C948 076D 6359 7955 24F1 4F95 2B42
+
+1298293037.17587_0.ltw:2,a <4D626115.1050405 at gareus dot org>
+________________________________________________________________________________
+

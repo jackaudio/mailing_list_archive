@@ -1,0 +1,96 @@
+Date:        Wed, 02 May 2012 12:21:36 +0930
+From:        Jonathan Woithe  <[hidden] at just42 dot net>
+To:          Allan Klinbail <[hidden] at iinet dot net dot au>
+Cc:          Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>, [hidden] at lists dot jackaudio dot org, [hidden] at just42 dot net
+In-Reply-To: Allan Klinbail Re: [Jack-Devel] incompatible version of ffado error message (1335911757.5475_0.ltw:2,a)
+Follow-Up:   Allan Klinbail Re: [Jack-Devel] incompatible version of ffado error message (1335967197.23963_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] incompatible version of ffado error message
+
+Hi Allan
+
+On Wed, May 02, 2012 at 08:32:45AM +1000, Allan Klinbail wrote:
+> > > Oh hang on: Allan, you said "the latest jack svn version".  Did you
+> > > literally use jack's subversion repository?  That is no longer carrying the
+> > > latest jackd source as far as I know: if you want the latest jackd you need
+> > > to get it using git.  This is described at
+> > > 
+> > >   http://jackaudio.org/download
+> > 
+> > Okay, jackd was built from the "live" ebuild in the gentoo pro-audio
+> > repository, I would have to look at the ebuild for that to determine if
+> > it was taking the older svn version or the git version. 
+> 
+> and there lies the problem ..
+> 
+> DESCRIPTION="Jackdmp jack implemention for multi-processor machine"
+> HOMEPAGE="http://www.grame.fr/~letz/jackdmp.html"
+> 
+> ESVN_REPO_URI="http://subversion.jackaudio.org/jack/jack2/trunk/jackmp"
+> 
+> LICENSE="GPL-2"
+> SLOT="0"
+> KEYWORDS=""
+>
+> it's using SVN..
+
+It is indeed.  Using the above URL I just checked out the code tree that
+this would result in and it definitely pre-dates the latest round of work on
+the JACK firewire driver (which uses libffado, in case that wasn't obvious).
+
+In this version of jack the conditional determining libffado compatibility
+is
+
+  if (ffado_get_api_version() != FIREWIRE_REQUIRED_FFADO_API_VERSION) {
+    printError("Incompatible libffado version! ...
+  }
+
+Now, what's interesting is that FIREWIRE_REQUIRED_FFADO_API_VERSION is 8
+here (see the top of the linux/firewire/JackFFADODriver.cpp file).  Having
+compiled libffado against the old jackd, ffado_get_api_version() should
+still be returning 8, so again this shouldn't have tripped up.
+
+Allan, if convenient, could you run scons again in the libffado directory
+and post the initial lines reported prior to compilation started?  I'm
+particularly interested in the "Checking for" lines, especially those
+relating to jack.  Perhaps libffado was mis-detecting the version of jack on
+this system.
+
+Having written that, I've taken a closer look at the source that gentoo was
+pulling.  Interestingly enough, it appears that its version is set to 1.9.9. 
+If this is indeed the version reported on your system (check with 
+"jackd --version") then that may explain the problem.
+
+Jackmp 1.9.9 is, as far as I can tell, still in pre-release.  When released
+it will be the first version to support the new libffado API revision (which
+adds setbufsize support).  If compiled on a system whose jackmp reports a
+version of 1.9.9 then libffado will enable the new API version.
+
+On your system, it seems almost certain that jackmp will report a version
+number of 1.9.9 even though this hasn't been released yet and evidently
+isn't a true 1.9.9 (since it's lacking all the changes made since jack moved
+to git from svn).  The libffado configuration script will enable the new API
+version on this system, since it sees a jackmp version 1.9.9.
+
+With the new API enabled, ffado_get_api_version() will return 9.  That then
+completely explains why you're getting the "Incompatible libffado version"
+message.
+
+To work around the issue for now, you could recompile libffado and force the
+use of the older API revision:
+
+  scons ENABLE_SETBUFFERSIZE_API_VER=false
+
+That should at least get you up and running again until the jackmp issue is
+resolved.
+
+> I will report this back to the gentoo pro-audio list 
+
+That sounds like a good idea.
+
+Regards
+  jonathan
+
+1335927103.10239_0.ltw:2, <20120502025136.GE22252 at marvin dot atrad dot com dot au>
+________________________________________________________________________________
+

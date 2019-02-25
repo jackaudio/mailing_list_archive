@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] jack 1.9.8 + many many connections = problems?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] jack 1.9.8 + many many connections = problems?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325007676.19456_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325039347.22593_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325037816.11061_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 27 Dec 2011 18:03:23 -0800 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fernando Lopez-Lezcano </span> &lt;[hidden] at ccrma dot Stanford dot EDU&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org, Fernando Lopez-Lezcano &lt;[hidden] at ccrma dot Stanford dot EDU&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robert M. Riches Jr.
+<a href='../1325039347.22593_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack 1.9.8 + many many connections = problems? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1325071615.20554_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack 1.9.8 + many many connections = problems? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1325100474.741_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack 1.9.8 + many many connections = problems? </a></td></tr>
+</table>
+<pre>
+Hi all, has anyone out there experienced something similar to what I 
+describe below? Sorry for the length of the post.
+
+I'm really puzzled...
+
+(running jack 1.9.8, freshly built today, just in case - running with 
+4096 total ports and 768 ports per client)
+
+I have a quite complex jack based system (OpenMixer in our Listening 
+Room driving 22 speakers plus 4 subs). Many programs, all interconnected 
+through jack and running under Linux (ie: jack itself, three instances 
+of supercollider, three instances of ambdec, two instances of 
+jconvolver, four internal 24 channel netjack1 clients, etc, etc). 
+Everything is run from inside the supercollider language and startup is 
+automatic from a boot of the workstation. All jack connections are 
+managed by writing them to a file and then running aj-snapshot.
+
+Lately one or two speakers are "silent" after startup. Restarting the 
+audio engine sometimes fixes the problem, sometimes moves it to a 
+different speaker. Not all speakers are equal in that sense, in most of 
+them this never happens, in some of them it nearly always does. There is 
+nothing special in the speakers that sometimes fail, they all come from 
+the same hardware source. And from the clues described below it does not 
+look like it is a hardware problem.
+
+As far as I can tell jack gets into a state where sometimes a given port 
+goes nowhere instead of going to the soundcard output it should go to.
+
+That is, system:playback_25 is there, other ports connect and disconnect 
+to it normally, no errors are logged and yet input to that port does not 
+go to the corresponding speaker (all the associated equipment seems to 
+be fine). If I restart the system suddenly the port works fine. Or not. 
+Or some other port does not work. At most two or three fail, usually 
+just one, sometimes none (the problem seems to have gotten worse since I 
+added more things to the system that implied more clients and total 
+ports and connections).
+
+If I do _not_ run the aj-snapshot port connection process and I manually 
+send a signal (from jnoise) to the ports that are normally affected, 
+everything is fine, that is, in my tests I never managed to get the 
+system to fail in that state (ie: everything running, no ports connected).
+
+It would seem that something bad is happening when all ports are being 
+connected and the end result is that inside jack some of the soundcard 
+ports seem to go nowhere.
+
+The aj-snapshot process that connects everything takes a bit to run and 
+as it progresses jack reports more and more xruns until it finishes. It 
+would seem that something is running inside jack when ports are 
+connected that is proportional to the number of existing connections 
+(the graph reordering?, that would make sense - but it should not 
+generate xruns, right?).
+
+It also appears to be that if I minimize the number of ports I'm 
+connecting the problem goes away (but then of course the system is not 
+completely functional :-).
+
+Clues?
+Ways to debug?
+Anyone seen something similar?
+
+-- Fernando
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325007676.19456_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325039347.22593_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325037816.11061_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1325037816.11061_0.ltw:2,a&nbsp;&lt;4EFA78EB.7080505 at localhost&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

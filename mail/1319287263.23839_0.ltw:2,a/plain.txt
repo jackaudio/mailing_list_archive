@@ -1,0 +1,135 @@
+Date:        Sat, 22 Oct 2011 14:40:06 +0200
+From:        Royi Freifeld  <[hidden] at bgu dot ac dot il>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] Segmentation fault using jackctl_server_start (1319133897.9122_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Segmentation fault using jackctl_server_start
+
+I have installed 1.9.7 and now it's doing nothing, and it seems that the API
+hasn't changed...
+I'm stuck
+
+On Thu, Oct 20, 2011 at 8:04 PM, Stéphane Letz <[hidden]> wrote:
+
+> It seems that you are using an old version of control API.
+>
+> Try with latest SVN tree (http://jackaudio.org/download)
+>
+> Stéphane
+>
+>
+> Le 20 oct. 2011 à 19:35, Royi Freifeld a écrit :
+>
+> > I have managed to narrow it down to the part where I set the server to be
+> real-time. I know that real-time mode is the default but I wonder why didn't
+> it work??
+> > In the .cpp file:
+> > line 221-222 is where I set the realtime status
+> > set_parameter method is line 188
+> > jackctl_get_parameter is a function I created, not one of  the control
+> API (line 95).
+> >
+> > The testing main function :
+> > #include <unistd.h>
+> > int main()
+> > {
+> >   JackServerManager* jsm = new JackServerManager();
+> >   jsm->start_server();
+> >   sleep(30);
+> >   jsm->stop_server();
+> >   delete jsm;
+> > }
+> >
+> > The program crashes after trying to run jackctl_server_start on line 70.
+> When I remove lines 221-222 It works.
+> >
+> > Thnx
+> >
+> > On Thu, Oct 20, 2011 at 2:34 PM, Stéphane Letz <[hidden]> wrote:
+> > Can you send your code?
+> >
+> > Thanks.
+> >
+> > Stéphane
+> >
+> > Le 19 oct. 2011 à 16:24, Royi Freifeld a écrit :
+> >
+> > > I need to configure the server and connect unknown number of clients to
+> it.
+> > > Once everything is connected and running, nothing is changed until some
+> stop button is pressed. I can stop all clients and send a close command
+> (jackctl_server_stop), and basically exit the program.
+> > > Can I do it differently, without using the control API?
+> > >
+> > > On Wed, Oct 19, 2011 at 4:02 PM, Stéphane Letz <[hidden]> wrote:
+> > > Why are you using the control API (which jackctl_server_start is port
+> of) in the first place?
+> > >
+> > > Stéphane
+> > >
+> > > Le 19 oct. 2011 à 15:54, Royi Freifeld a écrit :
+> > >
+> > > > It's not a client and JackNoStartServer is passed to each new client
+> being opened.
+> > > > I must configure the server before creating and connecting any client
+> > > >
+> > > > On Wed, Oct 19, 2011 at 2:35 PM, Adrian Knoth <
+> [hidden]> wrote:
+> > > > On Wed, Oct 19, 2011 at 02:26:18PM +0200, Royi Freifeld wrote:
+> > > >
+> > > > > Hey all,
+> > > >
+> > > > Hi!
+> > > >
+> > > > > I'm developing an application using JACK (alsa as backend).
+> > > > > After setting all parameters, the jackctl_server_start function is
+> being
+> > > > > called, the JACK outputs:
+> > > >
+> > > > Is it a client? If so, there's no need to explicitly start the
+> server,
+> > > > you can always assume it is running.
+> > > >
+> > > > And if not, jack_client_open() would start the server unless
+> > > > JackNoStartServer is passed.
+> > > >
+> > > >
+> > > > Cheers
+> > > > 
+> > > > Jack-Devel mailing list
+> > > > [hidden]
+> > > > http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> > > >
+> > > >
+> > > >
+> > > > --
+> > > > Carpe Diem
+> > > > 
+> > > > Jack-Devel mailing list
+> > > > [hidden]
+> > > > http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> > >
+> > >
+> > >
+> > >
+> > > --
+> > > Carpe Diem
+> >
+> >
+> >
+> >
+> > --
+> > Carpe Diem
+> >
+> > <JackServerManager.hpp><JackServerManager.cpp>
+>
+>
+
+
+-- 
+Carpe Diem
+
+1319287263.23839_0.ltw:2,a <CAD-ce51SFwJCP6QAwCtU+cVyQaAJeS-4oNm3L8BDzKvyn4Dydw at mail dot gmail dot com>
+________________________________________________________________________________
+

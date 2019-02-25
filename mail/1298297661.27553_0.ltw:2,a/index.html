@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jackdus - was Re: Jack 1.9.7 on ARM crashes when killing a client</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jackdus - was Re: Jack 1.9.7 on ARM crashes when killing a client</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298296505.24906_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298304451.9029_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298297661.27553_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 21 Feb 2011 15:13:57 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> torbenh </span> &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Robin Gareus &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>"[hidden] at lists dot jackaudio dot org List" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1298293037.17587_0.ltw:2,a/index.html'>[Jack-Devel] jackdus - was Re: Jack 1.9.7 on ARM crashes when killing a client </a></td></tr>
+</table>
+<pre>
+On Mon, Feb 21, 2011 at 01:56:53PM +0100, Robin Gareus wrote:
+&gt; On 02/19/2011 07:13 PM, torbenh wrote:
+&gt; &gt; On Sat, Feb 19, 2011 at 02:22:26PM +0100, Robin Gareus wrote:
+&gt; &gt;&gt; On 02/18/2011 12:23 PM, torbenh wrote:
+&gt; &gt;&gt;&gt; On Thu, Feb 17, 2011 at 02:01:06PM +0100, Robin Gareus wrote:
+&gt; &gt;&gt; [..]
+&gt; &gt;&gt;&gt;&gt;
+&gt; &gt;&gt;&gt;&gt;
+&gt; &gt;&gt;&gt;&gt; while you're at it: Would it be unreasonable to ask looking into 
+&gt; &gt;&gt;&gt;&gt; ignoring device disconnect?  f.i. have jackd survive and not crash
+&gt; &gt;&gt;&gt;&gt; when an interface (eg ALSA-USB) goes away.
+&gt; &gt;&gt;&gt;&gt;
+&gt; &gt;&gt;&gt;&gt; No further action should be taken by JACK (well, maybe some
+&gt; &gt;&gt;&gt;&gt; hook-script could be invoked or a d-bus command send); some 3rd
+&gt; &gt;&gt;&gt;&gt; party software could issue d-bus commands to switch backends.
+&gt; &gt;&gt;&gt;
+&gt; &gt;&gt;&gt; i basically did this with tschack. using pyjackd this should be
+&gt; &gt;&gt;&gt; working. not well tested, as i dont have an usb soundcard with me
+&gt; &gt;&gt;&gt; very often.
+&gt; &gt;&gt;
+&gt; &gt;&gt; I've updated jackdmp and tschack to latest svn/git and check this with a
+&gt; &gt;&gt; USB UA-25. annotated logs attached.
+&gt; &gt;&gt;
+&gt; &gt;&gt;
+&gt; &gt;&gt; 	tschack (git 7b7a48d)
+&gt; &gt;&gt; terminates with exit 0 if the interface goes away.
+&gt; &gt; 
+&gt; &gt; you did not use pyjackd.
+&gt; &gt; the jackd binary that comes with tschack is supposed to behave excactly
+&gt; &gt; like a jackd binary should.
+&gt; &gt; i didnt add a callback to the control api yet. but pyjackd should be
+&gt; &gt; ignoring the SIGUSR2 thats sent to the process leader upon backend exit.
+&gt; &gt; 
+&gt; &gt; so it probably wont exit.
+&gt; &gt; the behaviour of tschack while it doesnt have a backend, is probably not
+&gt; &gt; really nice. (there are places where it waits for a graph switch) 
+&gt; &gt; this is definitely fixable though.
+&gt; 
+&gt; Hi Torben,
+&gt; 
+&gt; mmh. python/jackd.py is not executable. I could neither find a dbus
+&gt; .service file nor a README and and
+&gt; http://hochstrom.endofinternet.org/trac/tschack does not tell much about
+&gt; it either.
+
+its still in its infancy.
+it accepts the same options as jackd.
+(but options are obtained via controlapi)
+
+the python directory in the tschack repo is going to go away at some
+point, i already created a separate PyJackd package with a setup.py
+
+
+it will enter a commandline prompt, where you can issue a switch
+command:
+
+jack&gt; switch alsa -d hw:0
+
+for example. 
+
+&gt; 
+&gt; How do I launch tschack's dbus control server? Can I do so in a sandbox
+&gt; or chroot (1)?
+
+tschack doesnt have dbus yet.
+
+&gt; 
+&gt; with jack2, I can use a few symlinks with LD_LIBRARY_PATH and
+&gt; JACK_DRIVER_DIR to start 'jackdbus auto' and run the whole thing from
+&gt; the source-tree. This schema only works with tschack's jackd, but not
+&gt; with jackd.py.
+
+hmm... maybe ctypes is not honouring LD_LIBRARY_PATH
+you can probably use the full path to the libs in python/jackctl.py
+
+
+-- 
+torben Hohn
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298296505.24906_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298304451.9029_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298297661.27553_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1298297661.27553_0.ltw:2,a&nbsp;&lt;20110221141357.GA10799 at siel dot b&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

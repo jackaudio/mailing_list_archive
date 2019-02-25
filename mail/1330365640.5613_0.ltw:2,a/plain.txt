@@ -1,0 +1,70 @@
+Date:        Mon, 27 Feb 2012 10:00:22 -0800
+From:        Devin Anderson  <[hidden] at gmail dot com>
+To:          [hidden] at linutronix dot de
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: [hidden] at linutronix dot de Re: [Jack-Devel] jack1 version jack2 public headers comparison (1330334179.12795_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] jack1 version jack2 public headers comparison (1330366738.7303_0.ltw:2,a)
+Follow-Up:   [hidden] at linutronix dot de Re: [Jack-Devel] jack1 version jack2 public headers comparison (1330538373.28854_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack1 version jack2 public headers comparison
+
+On Mon, Feb 27, 2012 at 1:16 AM,  <[hidden]> wrote:
+> On Sat, Feb 25, 2012 at 02:29:34PM -0800, Devin Anderson wrote:
+>> On Fri, Feb 24, 2012 at 9:44 AM, Stéphane Letz <[hidden]> wrote:
+>>
+>> > Le 24 févr. 2012 à 17:41, Paul Davis a écrit :
+>> >
+>> >>> Reworked :
+>> >>> ==========
+>> >>>
+>> >>> jackctl_server_start/jackctl_server_close reworked in a
+>> >>> jackctl_server_open/jackctl_server_start/jackctl_server_stop/jackctl_server_close
+>> >>
+>> >> seems reasonable, though what's the justification?
+>> >
+>> >
+>> > (Not completely sure anymore), but I think it was related to
+>> > slave backend management when Devin Anderson did the MIDI
+>> > backend rewrite in JACK2. This open/start/stop/close scheme
+>> > was a better way to separated the steps.
+>>
+>> See the last four comments on this ticket:
+>>
+>>     http://trac.jackaudio.org/ticket/219
+>
+> i fail to understand, why this justifies this splitup.
+> it seems that, in order to add slave drivers, the server needs to be
+> opened ?
+
+IIRC, 'jackctl_server_open' instantiates the master audio driver.
+Calls to 'jackctl_server_add_slave' instantiate slave drivers, each of
+which is added to the master driver.
+
+> and because the implementation is lacking support for adding slaves
+> while the server is running, you need to add them in between.
+>
+> the implementation in jack1 is equally bad. we even lack the controlapi
+> bits. however... i dont see why we cant just save a proper list of slave
+> drivers in the jackctl_server_t which are then instantiated during
+> server start.
+
+AFAIK, there isn't really a reason, save that some of the internal
+structures would have to be changed in JACK 2.
+
+However, that doesn't mean your idea is necessarily better.  There
+would still need to be functionality to add and remove the master
+driver.  You could make the case that the calls could be renamed to
+'jackctl_server_add_master' and 'jackctl_server_remove_master'.  Since
+the server requires a master driver to run, I think that the
+'jackctl_server_open' and 'jackctl_server_close' names are just fine.
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+synthclone - http://synthclone.googlecode.com/
+
+1330365640.5613_0.ltw:2,a <CAG7zqTpo76VHTU-ck9+NCk-X5xdwixDoJMnL6pu4vhJisa4fBw at mail dot gmail dot com>
+________________________________________________________________________________
+

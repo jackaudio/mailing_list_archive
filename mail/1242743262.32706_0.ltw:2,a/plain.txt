@@ -1,0 +1,43 @@
+Date:        Tue, 19 May 2009 16:23:30 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Jack devel <[hidden] at lists dot jackaudio dot org>, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>
+Follow-Up:   Krzysztof Foltman Re: [LAD] A picture...of the global mess (1242743578.551_0.ltw:2,a)
+Follow-Up:   Nedko Arnaudov Re: [LAD] [Jack-Devel] A picture...of the global mess (1242745569.2077_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [LAD] [Jack-Devel] A picture...of the global mess (1242848900.5899_0.ltw:2,a)
+
+Subject:     [LAD] A picture...of the global mess
+
+He all,
+
+A picture to try  summary what I understand about we would like :
+
+- a new shared library called "libjackontrol.so" : is does implement  
+the so called control API and a IPC mechanism to use it.
+
+-  "jackcontrol" is an *always" running deamon that defined an entry  
+IPC point.  jackcontrol get requests from control applications.  
+"jackcontrol" can start a seprated server called "jackserver (using a  
+fork+exec) way. "jackcontrol" is a *unique* place where setting are  
+handled.
+
+- "jackd" is a recoded  control application that parse it's command  
+line, and use the control IPC to speak to "jackcontrol" (then just  
+quits). jackcontrol then start the "jackserver" whith the appropriate  
+paramaters.
+
+- "jackddbus" is a D-Bus aware control application; It receive DBus  
+requests and translate them to control IPC to speak to "jackcontrol".  
+jackcontrol then start the "jackserver" whith the appropriate paramaters
+
+- "libjack.so" speaks also to "jackcontrol" using the control IPC: an  
+client that auto-start actually use this mecanism
+
+Does it helps?
+
+Stephane
+* Attachment: '1242743262.32706_0.ltw:2,a/files/jackcontrol.pdf'
+content-type: application/pdf
+
+1242743262.32706_0.ltw:2,a <04EE6ED2-2C13-4C9C-846A-47E635594FEB at grame dot fr>
+________________________________________________________________________________
+

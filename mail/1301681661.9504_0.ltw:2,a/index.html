@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1301676342.4507_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1301682805.10567_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1301681661.9504_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 01 Apr 2011 11:13:49 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at charityfinders dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1301644819.27203_0.ltw:2,a/index.html'>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1301682805.10567_0.ltw:2,a/index.html'>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages </a></td></tr>
+</table>
+<pre>
+On Fri, Apr 1, 2011 at 1:00 AM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+
+&gt; I guess I would help to understand the new API if you provide some
+&gt; "pseudo" example of a JACK client using it.
+
+Good idea. :)
+
+Here's an example that sends out an identify request message to a BOSS
+GT-10, and waits for an identity reply containing the software
+revision level on the GT-10.  I've omitted error checking to simplify
+the code.
+
+I obviously haven't compiled this code.  Please forgive any errors.
+
+----------
+
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+#include &lt;semaphore.h&gt;
+
+#include &lt;jack/jack.h&gt;
+#include &lt;jack/midiport.h&gt;
+
+int blob_reclaimed;
+sem_t blob_semaphore;
+jack_client_t *client;
+jack_midi_blob_t *identity_request_blob;
+jack_port_t *in_port;
+jack_port_t *out_port;
+sem_t reply_semaphore;
+int reply_sent;
+int request_sent;
+jack_midi_data_t software_revision_level[4];
+
+int
+process(jack_nframes_t frames, void *arg)
+{
+    jack_nframes_t event_count;
+    jack_nframes_t i;
+    void *port_buffer = jack_port_get_buffer(out_port, frames);
+    jack_midi_clear_buffer(port_buffer);
+    if (reply_sent) {
+        return 0;
+    }
+    if (! request_sent) {
+        jack_midi_event_write_blob(port_buffer, 0, identity_request_blob);
+        request_sent = 1;
+        return 0;
+    }
+    port_buffer = jack_port_get_buffer(in_port, frames);
+    event_count = jack_midi_get_event_count(port_buffer);
+    for (i = 0; i &lt; event_count; i++) {
+        jack_midi_data_t data[15];
+        jack_midi_event_t event;
+        jack_midi_event_get(&amp;event, port_buffer, i);
+        if (! event.size) {
+            // We have a blob.
+            const jack_midi_blob_t *blob = event.blob;
+            jack_midi_blobstream_t stream;
+            if (jack_midi_blob_size(blob) != 15) {
+                continue;
+            }
+            jack_midi_blobstream_open_read(&amp;stream, blob);
+            jack_midi_blobstream_read(&amp;stream, data, 15);
+            jack_midi_blobstream_close(&amp;stream);
+        } else if (event.size == 15) {
+            // There probably shouldn't be two ways to receive this message.
+            memcpy(data, event.buffer, 15 * sizeof(jack_midi_data_t));
+        } else {
+            continue;
+        }
+
+        // We're searching for an identity reply message.
+        if ((data[0] == 0xf0) &amp;&amp; (data[1] == 0x7e) &amp;&amp; (data[2] == 0x0) &amp;&amp;
+            (data[3] == 0x6) &amp;&amp; (data[4] == 0x2) &amp;&amp; (data[5] == 0x41) &amp;&amp;
+            (data[6] == 0x2f) &amp;&amp; (data[7] == 0x2) &amp;&amp; (data[8] == 0x0) &amp;&amp;
+            (data[9] == 0x0)) {
+
+            // Found it!
+            software_revision_level[0] = data[10];
+            software_revision_level[1] = data[11];
+            software_revision_level[2] = data[12];
+            software_revision_level[3] = data[13];
+            reply_sent = 1;
+
+            // Inform the main thread.
+            sem_post(&amp;reply_semaphore);
+            return 0;
+        }
+    }
+    return 0;
+}
+
+void
+reclaim_blob(jack_midi_blob_t *blob, void *arg)
+{
+    sem_post(&amp;blob_semaphore);
+}
+
+int
+main(void)
+{
+    // Identity request for a BOSS GT-10 with device ID '0'.  The MIDI
+    // implementation for the GT-10 is here:
+    //
+    //     http://media.rolandus.com/manuals/GT-10_MI.pdf
+    jack_midi_data_t identity_request[6] = {0xf0, 0x7e, 0x0, 0x6, 0x1, 0xf7};
+
+    jack_midi_blobstream_t stream;
+
+    // Initialization
+    client = jack_client_open("gt10-finder", JackNullOption, NULL);
+    in_port = jack_port_register(client, "in", JACK_DEFAULT_MIDI_TYPE,
+                                 JackPortIsInput, 0);
+    out_port = jack_port_register(client, "out", JACK_DEFAULT_MIDI_TYPE,
+                                  JackPortIsOutput, 0);
+    jack_set_midi_blob_callback(client, reclaim_blob, NULL);
+    jack_set_process_callback(client, process, NULL);
+    identity_request_blob = jack_midi_blob_create(client, 6);
+    jack_midi_blobstream_open_write(&amp;stream, identity_request_blob);
+    jack_midi_blobstream_write(&amp;stream, identity_request, 6);
+    jack_midi_blobstream_close(&amp;stream);
+    sem_init(&amp;blob_semaphore, 0, 0);
+    sem_init(&amp;reply_semaphore, 0, 0);
+    blob_reclaimed = 0;
+    reply_sent = 0;
+    request_sent = 0;
+
+    jack_activate(client);
+    sem_wait(&amp;reply_semaphore);
+
+    unsigned int major_version =
+        (((unsigned int) software_revision_level[0]) &lt;&lt; 7) |
+        ((unsigned int) software_revision_level[1]);
+    unsigned int minor_version =
+        (((unsigned int) software_revision_level[2]) &lt;&lt; 7) |
+        ((unsigned int) software_revision_level[3]);
+
+    printf("Found a BOSS GT-10 with software revision level: %d.%d",
+           major_version, minor_version);
+
+    printf("Waiting for clients to finish using our MIDI blob ...");
+
+    sem_wait(&amp;blob_semaphore);
+
+    // Cleanup
+    jack_deactivate(client);
+    sem_destroy(&amp;reply_semaphore);
+    sem_destroy(&amp;blob_semaphore);
+    jack_midi_blob_free(identity_request_blob);
+    jack_client_close(client);
+    return 0;
+}
+
+----------
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1301676342.4507_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1301682805.10567_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1301681661.9504_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1301681661.9504_0.ltw:2,a&nbsp;&lt;AANLkTikqreeBRYmo0uxN6MZbzMy2wee=us_oU-7GauGJ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

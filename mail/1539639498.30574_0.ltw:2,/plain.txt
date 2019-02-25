@@ -1,0 +1,35 @@
+Date:        Mon, 15 Oct 2018 23:37:49 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fons Adriaensen [Jack-Devel] memory lock (1539636738.28094_0.ltw:2,)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] memory lock (1539674631.4058_0.ltw:2,)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] memory lock (1539718010.5441_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] memory lock
+
+On 10/15/2018 10:51 PM, Fons Adriaensen wrote:
+> Hello all,
+> 
+> A simple question: does libjack (try to) lock client memory ?
+
+There is no simple answer, except "depends".
+
+jack2: no.
+
+jack1: yes, for client threads. jack1 also calls mlockall() and has a
+blacklist of system-wide libs/path to not lock [1]. You can however
+disable it with an option at compile and runtime.
+
+
+Both jack1 and jack2's libjack's ringbuffer implementation has an API
+jack_ringbuffer_mlock(), but that needs an explicit call.
+
+Cheers!
+robin
+
+
+[1] https://github.com/jackaudio/jack1/blob/master/libjack/unlock.c
+
+1539639498.30574_0.ltw:2, <b06f6dc3-1566-612e-02df-3445e167b9bd at gareus dot org>
+________________________________________________________________________________
+

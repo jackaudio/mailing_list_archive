@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] packed data structures in jack2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] packed data structures in jack2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1342646224.25828_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1342673701.13088_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1342669279.6949_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 18 Jul 2012 20:41:12 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Basil Nutmeg </span> &lt;[hidden] at li95-58 dot members dot linode dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1342673701.13088_0.ltw:2,a/index.html'>Re: [Jack-Devel] packed data structures in jack2 </a></td></tr>
+</table>
+<pre>
+Hello,
+
+I found Jack2 was crashing on my ARM cpu, and I traced it down to a
+misuse of __attribute__((packed)).
+
+This CPU doesn't support misaligned memory references. packed structs are
+supported, by having the compiler emit a longer sequence of instructions.
+However, consider this code from common/JackAtomicArrayState.h:
+
+... CAS(Counter1(old_val), Counter1(new_val), (UInt32*)&amp;fCounter) ...
+
+fCounter is a member of a class which is packed, and this happens to make
+it misaligned. Its address is taken and passed off to a different
+function, where it appears to the compiler to be an ordinary pointer. The
+compiler justifiably assumes the pointer is aligned, so it emits normal
+code, and the code crashes at runtime because the pointer isn't actually
+aligned.
+
+Looking around, I was surprised to see that lots of classes in Jack2 are
+marked packed, for example classes like JackConnectionManager,
+JackClientControl, and JackEngineControl, and I'm puzzled.
+
+Making JackEngineControl packed, for example, shrinks its nominal size
+from 1040 to 1032 (on this platform). It doesn't look like there are that
+many JackEngineControl instances floating around at runtime, so this isn't
+actually saving much memory. And it doesn't appear to be serialized
+anywhere. And on the down side, packed makes many of JackEngineControl's
+fields misaligned, making them slower to access.
+
+Also, it's possible to shrink JackEngineControl to size 1032 just by
+reordering the fields, without using packed at all.
+
+So I'm curious, why so much use of packed? Is there some reason I missed,
+or is it just a general attempt to save memory? If the latter, could I
+politely suggest this approach be reconsidered?
+
+Thanks,
+
+-- Basil
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1342646224.25828_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1342673701.13088_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1342669279.6949_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1342669279.6949_0.ltw:2,a&nbsp;&lt;20120719034112.GA27528 at li95-58 dot members dot linode dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

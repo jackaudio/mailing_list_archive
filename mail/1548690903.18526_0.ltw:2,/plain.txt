@@ -1,0 +1,41 @@
+Date:        Mon, 28 Jan 2019 10:54:31 -0500
+From:        Sunset Tech  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Chris Caudle Re: [Jack-Devel] Adjustable port alias limit (1548693797.21622_0.ltw:2,)
+
+Subject:     [Jack-Devel] Adjustable port alias limit
+
+Greetings! I attempted to see if there was any work or discussion on this,
+but brought up nothing, I hope I am not duplicating some effort/thought
+here.
+I recently developed a small script allowing me to assign ports to groups,
+using aliases, so that I may autoconnect these groups to ardour buses.
+However, I quickly discovered there is a limit of two aliases per port,
+which is admittedly workable, but not pleasantly so. perhaps there is a
+better method of achieving this functionality? but I wanted to continue
+using jack-matchmaker.
+So I've patched a local copy of jack2 to allocate an array for aliases per
+port, and allow its size to be specified via the compile time flag
+--aliases-per-port. However, the implementation is not the best, I needed
+to introduce a seperate version of jack_port_get_aliases, suffixed with _b,
+which can be used in conjunction a new function, jack_port_max_aliases, to
+safely retrieve aliases beyond the first two. applications using the old
+jack_port_get_aliases will still be shown only the first two aliases in the
+list. however the matching functions will match against all aliases.
+Additionally there is what looks like serialization&matching code in
+JackDriver, which i have not yet attempted to patch.
+I've also patched copys of jack-matchmaker and luajack to make use of this.
+I dont imagine such functionality would be accepted into jack in its
+current state? it seems there is sort of a bind here regarding external api
+design. I would love to contribute this to jack, so i'm emailing to see
+what the possibility of that is, and if anyone has any ideas about how to
+go about it. I am willing to patch jack1 as well for it, the relevant code
+looks near identical. I would also like to dynamically manage the array
+size or string memory allocation, perhaps within the limit, as statically
+allocating even port_num*(alias_limit=8)*name_size to store mostly unused
+aliases seems rather heavy, but it looked like everything regarding ports
+is statically allocated for a reason?
+
+1548690903.18526_0.ltw:2, <CANYjeQydLL3Tfy+iy+EjM7zMuannxodThLAwAvB5AhAthCefaQ at mail dot gmail dot com>
+________________________________________________________________________________
+

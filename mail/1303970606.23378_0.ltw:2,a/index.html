@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] ringbuffer problems</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] ringbuffer problems</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303968532.19331_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303975152.32455_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303970606.23378_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 28 Apr 2011 08:03:07 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Arnold Krille </span> &lt;[hidden] at arnoldarts dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Timothy Godfrey
+<a href='../1303968532.19331_0.ltw:2,a/index.html'>[Jack-Devel] ringbuffer problems </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Tim E. Real
+<a href='../1303975152.32455_0.ltw:2,a/index.html'>Re: [Jack-Devel] ringbuffer problems </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1303975247.32630_0.ltw:2,a/index.html'>Re: [Jack-Devel] ringbuffer problems </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Dylan Gleason
+<a href='../1303975961.1592_0.ltw:2,a/index.html'>[Jack-Devel] rtprio troubles </a></td></tr>
+</table>
+<pre>
+Hi,
+
+On Thursday 28 April 2011 07:28:27 Timothy Godfrey wrote:
+&gt; The jack_ringbuffer_t documentation says
+&gt; 
+&gt; "The key attribute of a ringbuffer is that it can be safely accessed
+&gt; by two threads simultaneously -- one reading from the buffer and the
+&gt; other writing to it -- without using any synchronization or mutual
+&gt; exclusion primitives. For this to work correctly, there can only be a
+&gt; single reader and a single writer thread. Their identities cannot be
+&gt; interchanged. "
+&gt; 
+&gt; What are the specifics of these conditions? I am writing to the
+&gt; ringbuffer in the process() callback of my application, and I am
+&gt; reading from the ringbuffer in the main loop. Does this count as being
+&gt; in different threads?
+
+As the process()-callback is executed within the audio-thread jack creates for 
+you inside your application, this counts as two different threads. And its 
+exactly what the ringbuffer is created for.
+
+&gt; For testing/education purposes, does it work to read and write to the
+&gt; ringbuffer from within a single thread (to check that data went in
+&gt; correctly, for example), without any other threads involved?
+
+That is also possible. The things that don't work with a lock-free ringbuffer 
+like the one in jack:
+ - Multiple writers in several threads writing to the same ringbuffer.
+ - Multiple readers in several threads reading from the same ringbuffer.
+
+&gt; Would
+&gt; constitute a violation of the rule, 'Their identities cannot be
+&gt; interchanged'?
+
+This rule is there because when one thread is the reader and then another 
+thread starts reading, there is a chance that for a short time both threads 
+read. And that is not safe without locks on the ringbuffer or somewhere else. 
+(Same for writers.)
+
+&gt; Will I run into trouble if I am mixing a c++ (jack2?) application with
+&gt; a jack1 server?
+
+That shouldn't give you any trouble...
+
+Have fun,
+
+Arnold
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303968532.19331_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303975152.32455_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303970606.23378_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1303970606.23378_0.ltw:2,a&nbsp;&lt;201104280803.11739.arnold at arnoldarts dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

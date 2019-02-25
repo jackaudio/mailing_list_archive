@@ -1,0 +1,101 @@
+Date:        Tue, 30 Dec 2014 15:52:41 +0100
+From:        Markus Seeber  <[hidden] at spectralbird dot de>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] jack2 example clients, headers, tools (1419282230.28181_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] jack2 example clients, headers, tools
+
+> 
+> the example clients and tools folders can and should be identical.
+> 
+
+Unfortunately, they are not.
+
+The first thing I did was moving the "tools" out of the example clients
+directory in jack2 [1]. The the tools seemed to be the lowest hanging
+fruit on a source code level of the problem so let's see what files have
+changed:
+
+diff -q jack1/tools/ jack2/tools-jack2/ | sort
+
+Files jack1/tools/alias.c and jack2/tools-jack2/alias.c differ
+Files jack1/tools/alsa_in.c and jack2/tools-jack2/alsa_in.c differ
+Files jack1/tools/alsa_out.c and jack2/tools-jack2/alsa_out.c differ
+Files jack1/tools/bufsize.c and jack2/tools-jack2/bufsize.c differ
+Files jack1/tools/connect.c and jack2/tools-jack2/connect.c differ
+Files jack1/tools/evmon.c and jack2/tools-jack2/evmon.c differ
+Files jack1/tools/freewheel.c and jack2/tools-jack2/freewheel.c differ
+Files jack1/tools/ipload.c and jack2/tools-jack2/ipload.c differ
+Files jack1/tools/ipunload.c and jack2/tools-jack2/ipunload.c differ
+Files jack1/tools/lsp.c and jack2/tools-jack2/lsp.c differ
+Files jack1/tools/midi_dump.c and jack2/tools-jack2/midi_dump.c differ
+Files jack1/tools/monitor_client.c and
+jack2/tools-jack2/monitor_client.c differ
+Files jack1/tools/netsource.c and jack2/tools-jack2/netsource.c differ
+Files jack1/tools/samplerate.c and jack2/tools-jack2/samplerate.c differ
+Files jack1/tools/session_notify.c and
+jack2/tools-jack2/session_notify.c differ
+Files jack1/tools/transport.c and jack2/tools-jack2/transport.c differ
+Files jack1/tools/tw.c and jack2/tools-jack2/tw.c differ
+Files jack1/tools/wait.c and jack2/tools-jack2/wait.c differ
+Only in jack1/tools/: .git
+Only in jack1/tools/: .gitignore
+Only in jack1/tools/: iodelay.c
+Only in jack1/tools/: load_test.c
+Only in jack1/tools/: Makefile.am
+Only in jack1/tools/: property.c
+Only in jack1/tools/: zalsa
+Only in jack2/tools-jack2/: wscript
+
+A lot of differences, I also attached a full diff [2] showing that the
+files have diverged quite a bit. (many "trivial" changes but also stuff
+which looks more complicated)
+
+I also checked the API files [3][4]. The situation here looks a bit
+better, most of the changes just seem to be about formatting.
+The remaining example_clients [5][6] also have differences that have to
+be reviewed and jack2 has some additional examples.
+
+So basically quite some work to do on both projects.
+
+But how to tackle this?
+
+(1) Going through the diffs and the history and try to submit patches to
+both projects to make them converge. Include the shared repos in jack2
+when they have converged far enough.
++ no repository changes needed yet
++ simple infrastructure
+- low awareness of the issue, a shared repo shows, that there is a
+conses needed, separated repos don't empathize this.
+
+(2) Integrating a shared repo as soon as possible and create temporary
+branches for each project. These branches are going to be merged.
++ high awareness for developers, that the sources are supposed to be shared
+- complicated infrastructure
+- the fact that the sources are still different is hidden. People see
+one repository but the truth is, that the branches may be very different.
+
+What are the priorities? The headers first or the example clients?
+
+
+[1] https://github.com/mseeber/jack2/commits/prepare-for-tool-submodule
+[2] tools.diff.gz
+[3] files_api.diff
+[4] api.diff.gz
+[5] example_clients_files.diff
+[6] example_clients.diff.gz
+* Attachment: '1419954968.27200_0.ltw:2,/files/tools.diff.gz'
+content-type: application/gzip
+* Attachment: '1419954968.27200_0.ltw:2,/files/files_api.diff'
+content-type: text/x-patch
+* Attachment: '1419954968.27200_0.ltw:2,/files/api.diff.gz'
+content-type: application/gzip
+* Attachment: '1419954968.27200_0.ltw:2,/files/example_clients_files.diff'
+content-type: text/x-patch
+* Attachment: '1419954968.27200_0.ltw:2,/files/example_clients.diff.gz'
+content-type: application/gzip
+
+1419954968.27200_0.ltw:2, <54A2BC39.4010801 at spectralbird dot de>
+________________________________________________________________________________
+

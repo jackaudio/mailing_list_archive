@@ -1,0 +1,126 @@
+Date:        Wed, 28 Dec 2011 20:27:10 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Fernando Lopez-Lezcano <[hidden] at ccrma dot Stanford dot EDU>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fernando Lopez-Lezcano [Jack-Devel] jack 1.9.8 + many many connections = problems? (1325037816.11061_0.ltw:2,a)
+Follow-Up:   Fernando Lopez-Lezcano Re: [Jack-Devel] jack 1.9.8 + many many connections = problems? (1325104584.7919_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack 1.9.8 + many many connections = problems?
+
+On 12/28/2011 03:03 AM, Fernando Lopez-Lezcano wrote:
+> Hi all, has anyone out there experienced something similar to what I
+> describe below? Sorry for the length of the post.
+> 
+> I'm really puzzled...
+> 
+> (running jack 1.9.8, freshly built today, just in case - running with
+> 4096 total ports and 768 ports per client)
+> 
+> I have a quite complex jack based system (OpenMixer in our Listening
+> Room driving 22 speakers plus 4 subs). Many programs, all interconnected
+> through jack and running under Linux (ie: jack itself, three instances
+> of supercollider, three instances of ambdec, two instances of
+> jconvolver, four internal 24 channel netjack1 clients, etc, etc).
+> Everything is run from inside the supercollider language and startup is
+> automatic from a boot of the workstation. All jack connections are
+> managed by writing them to a file and then running aj-snapshot.
+> 
+> Lately one or two speakers are "silent" after startup.
+
+Does downgrading jackd to 1.9.7 help?
+
+Which version of aj-snapshot are you using?
+There's been some activity the the last weeks. e.g 4 weeks ago:
+  "graph reorder jackd bug workaround implemented"
+I don't know the details, but there's more:
+http://aj-snapshot.git.sourceforge.net/git/gitweb.cgi?p=aj-snapshot/aj-snapshot;a=log
+
+
+> Restarting the
+> audio engine sometimes fixes the problem, sometimes moves it to a
+> different speaker. Not all speakers are equal in that sense, in most of
+> them this never happens, in some of them it nearly always does. There is
+> nothing special in the speakers that sometimes fail, they all come from
+> the same hardware source. And from the clues described below it does not
+> look like it is a hardware problem.
+> 
+> As far as I can tell jack gets into a state where sometimes a given port
+> goes nowhere instead of going to the soundcard output it should go to.
+> 
+> That is, system:playback_25 is there, other ports connect and disconnect
+> to it normally, no errors are logged and yet input to that port does not
+> go to the corresponding speaker (all the associated equipment seems to
+> be fine). If I restart the system suddenly the port works fine. Or not.
+> Or some other port does not work. At most two or three fail, usually
+> just one, sometimes none (the problem seems to have gotten worse since I
+> added more things to the system that implied more clients and total
+> ports and connections).
+> 
+> If I do _not_ run the aj-snapshot port connection process and I manually
+> send a signal (from jnoise) to the ports that are normally affected,
+> everything is fine, that is, in my tests I never managed to get the
+> system to fail in that state (ie: everything running, no ports connected).
+>
+>
+> It would seem that something bad is happening when all ports are being
+> connected and the end result is that inside jack some of the soundcard
+> ports seem to go nowhere.
+
+sounds like jackd's internal connection state somehow becomes
+inconsistent. There was a bug in the dbus code a while ago (1.9.6): the
+dbus layer kept an independent list of the connections but that was
+fixed in 1.9.6+svn before 1.9.7.
+
+I can't see how aj-snapshot could be the culprit; but minimizing the
+number of tools involved makes it easy.
+
+
+> The aj-snapshot process that connects everything takes a bit to run and
+> as it progresses jack reports more and more xruns until it finishes. It
+> would seem that something is running inside jack when ports are
+> connected that is proportional to the number of existing connections
+> (the graph reordering?, that would make sense - but it should not
+> generate xruns, right?).
+> 
+> It also appears to be that if I minimize the number of ports I'm
+> connecting the problem goes away (but then of course the system is not
+> completely functional :-).
+> 
+> Clues?
+> Ways to debug?
+
+pinpoint _when_ it goes wrong -> that makes it easier to determine
+_where_ it goes wrong.
+
+1)Try `jnoise` after startup -> verify signals end up at speakers.
+2)Launch all apps; walk the `jnoise` again.
+3)run aj-connect.
+4)`jnoise` again.
+
+sth like:
+
+#!/bin/bash
+jnoise; sleep 1;
+i=1; while [ $i -lt 26 ]; do \
+  jack_connect jnoise:pink system:playback_$i; \
+  sleep 1;
+  jack_disconnect jnoise:pink system:playback_$i; \
+  sleep 1;
+  i=$[ $i + 1 ];\
+done
+
+
+`jack_lsp -c | grep "^ " | wc -l` counts the current number of
+connections times two. Maybe things go amiss after 4096 connections are
+made or sth... just guessing.
+
+> Anyone seen something similar?
+no.
+
+> -- Fernando
+
+robin
+
+1325100474.741_0.ltw:2,a <4EFB6D8E.6090204 at gareus dot org>
+________________________________________________________________________________
+

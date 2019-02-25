@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Netjack crashes, alignment broken recently</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Netjack crashes, alignment broken recently</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1457694363.16240_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1457695272.17942_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1457695079.17624_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 11 Mar 2016 12:17:50 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Filipe Coelho &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Filipe Coelho
+<a href='../1457694363.16240_0.ltw:2,a/index.html'>Re: [Jack-Devel] Netjack crashes, alignment broken recently </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Xavier Mendez
+<a href='../1457697066.21362_0.ltw:2,a/index.html'>Re: [Jack-Devel] Netjack crashes, alignment broken recently </a></td></tr>
+</table>
+<pre>
+Le 11 mars 2016 &#xE0; 12:05, Filipe Coelho &lt;[hidden]&gt; a &#xE9;crit :
+
+&gt; On 10.03.2016 18:41, Xavier Mendez wrote:
+&gt;&gt; Just compiled the latest jackd2, and when using Netjack both manager and driver crash after sending parameters. I traced back to this change from 02f74a659, which modifies the network parameter struct:
+&gt;&gt; 
+&gt;&gt; --- a/common/JackNetTool.h
+&gt;&gt; +++ b/common/JackNetTool.h
+&gt;&gt; @@ -94,9 +94,9 @@ namespace Jack
+&gt;&gt; -        char fName[JACK_CLIENT_NAME_SIZE];
+&gt;&gt; -        char fMasterNetName[JACK_SERVER_NAME_SIZE];
+&gt;&gt; -        char fSlaveNetName[JACK_SERVER_NAME_SIZE];
+&gt;&gt; +        char fName[JACK_CLIENT_NAME_SIZE+1];
+&gt;&gt; +        char fMasterNetName[JACK_SERVER_NAME_SIZE+1];
+&gt;&gt; +        char fSlaveNetName[JACK_SERVER_NAME_SIZE+1];
+&gt;&gt; 
+&gt;&gt; That extra byte for the NUL terminator breaks the alignment, and somehow causes some ints to be sent as little-endian:
+&gt;&gt; 
+&gt;&gt;    Sample rate : 12288000 frames per second
+&gt;&gt;    Period size : 131072 frames per period
+&gt;&gt; 
+&gt;&gt; Reverting the three lines seems to resolve the problem. I don't really see the use for having the NUL terminator go through the network...
+&gt;&gt; 
+&gt;&gt; What do you think?
+&gt; 
+&gt; I can confirm this is an issue for me.
+&gt; The "-d net" option stopped working some time ago and I've been wondering why, that change seems to be the reason.
+&gt; 
+&gt; Reverting it in both client&amp;server makes netmanager work again.
+&gt; 
+&gt; 
+&gt; Please do a pull request against jack2's github repo.
+&gt; That would be the fastest way to get this fixed upstream.
+&gt; 
+
+It would be better to understand why changing the  data structure (which is used both side of the connection&#x2026; ) caused the crash. Are you sure the code is correctly recompiled everywhere?
+
+St&#xE9;phane
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1457694363.16240_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1457695272.17942_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1457695079.17624_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1457695079.17624_0.ltw:2,&nbsp;&lt;5BCD890C-E036-488A-95C7-C31F50EFD112 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

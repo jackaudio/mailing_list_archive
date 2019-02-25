@@ -1,0 +1,46 @@
+Date:        Wed, 02 Aug 2017 19:00:32 +0200
+From:        David Kastrup  <[hidden] at gnu dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jörg Müller Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels (1501689380.2930_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels
+
+Jörg Müller <[hidden]> writes:
+
+> This is months old, but I have news to this topic.
+>
+> The suggested changes work and we have set up 11x16channel audio
+> monitors. That is 176 speakers!
+>
+> However, running Jack is highly unstable, it crashes roughly every two
+> minutes and causes a huge amount of XRuns even at buffer sizes like
+> 16000. CPU is down at 5%, so that is not the issue. Jack runs without a
+> problem when using just one card. However, we need to combine the three
+> MADI-Cards via .asoundrc in order to eventually get to 768 channels.
+>
+> I have the jack logs here: https://pastebin.com/ke25cdXB
+>
+> Do you have any idea what could cause the issue?
+
+768 channels is a whole lot of throughput.  The MADI cards work with
+some bus mastering setup if I remember correctly, so the CPU load should
+be a weak indication of how close you are to choking the system as long
+jack is working efficiently: in that case the CPU load will be choked
+_low_ when things go south.
+
+So this looks like your next go-to area is the hardware.  Interrupt
+priorities (rtirq), PCI burst lengths for the cards involved (make them
+long enough to be efficient and short enough that the CPU can shovel the
+stuff off to disk eventually).
+
+Of course, you also _must_ make sure that the clocks of your converters
+are _all_ hardware-synchronized or Jack has no chance to keep up with
+both the slowest and fastest unit without eventually dropping samples on
+the fast one.
+
+-- 
+David Kastrup
+
+1501693255.6533_0.ltw:2,a <87efstkiq7.fsf at fencepost dot gnu dot org>
+________________________________________________________________________________
+

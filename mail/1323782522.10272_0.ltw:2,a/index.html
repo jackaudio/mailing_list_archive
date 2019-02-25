@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] The Situation(s) With JACK</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] The Situation(s) With JACK</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1323770249.26745_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1323790655.24541_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1323782522.10272_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 13 Dec 2011 14:22:06 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1323732550.31956_0.ltw:2,a/index.html'>Re: [Jack-Devel] The Situation(s) With JACK </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1323790655.24541_0.ltw:2,a/index.html'>Re: [Jack-Devel] The Situation(s) With JACK </a></td></tr>
+</table>
+<pre>
+Le 13 d&#xE9;c. 2011 &#xE0; 00:29, Paul Davis a &#xE9;crit :
+
+&gt; On Mon, Dec 12, 2011 at 4:59 PM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+&gt; 
+&gt;&gt; 3) You and Torben seems to have problems with the C++ class model of JACK2. It seems some others can at least accomodate:  Nedko was able to add the (purely written in C) control API,  Romain Moret added the NetJack2 stuff, Devin Anderson did the awesome job of rewriting the entire MIDI backend part, at lot of others over the years sent code improvements, cleanup and C++ class restructuring patches...etc... See the JACK2 ChangeLog quite long "contributors" section. All of them should be thanked for all their great work that make the code base better, mode robust and more easily maintainable.
+&gt; 
+&gt; Absolutely. And as I said, if there is one person or a team of people
+&gt; who want to step up and say "we will take responsibility for not just
+&gt; maintaining JACK but continuing to improve it", I'm entirely happy to
+&gt; get out of the way. The problem is that in the experience of actual
+&gt; users, Jack1 and Jack2 each have some distinct benefits, so neither
+&gt; one is really redundant.
+
+Could we first precisely describe that?
+
+&gt; In addition, despite the contributions of
+&gt; many people to both Jack1 and Jack2, at present it does not appear
+&gt; that there is any real energy from anyone to do anything substantive
+&gt; about the list of issues that I mentioned. If that assessment is
+&gt; wrong, and Grame and/or some other group of people are willing to
+&gt; "take JACK and run with it", that would be great. I just can't see
+&gt; that happening, given the history of the last couple of years.
+
+Part of the problem was a lack of clear vision for the future of the code base : what is supposed to be the code base reference to be worked on?
+
+&gt; 
+&gt;&gt; 4) I'm not against removing from the *official* tree some parts like the NetJack2 work, that (as I told you privately recently) is now something that we at Grame want to play with for our own needs. Note that NetJack1 has been added in JACK2 tree since something like 2 years. If the community wants NetJack2 out of the tree, then it will need some work for us to "detach" in a maintainable way, but it can certainly be done. But I will not put any energy into NetJack1maintenance.
+&gt; 
+&gt; Totally understandable, and also totally indicative of why we have a
+&gt; problem in this area. But ... see my prior response to Tobias. I don't
+&gt; really care what the solution is, we just need to be able to provide
+&gt; good, clear, simple solutions to users' needs.
+
+Assuming we can define a "common minimal set of needed features": can we describe that?
+
+&gt; 
+&gt;&gt; 5) Better control API "exposure" as a separated protocol or component can certainly be done. Back in summer 2008, the JACK dev community had this painful discussion that finally went nowhere. But I think the work could be restarted.
+&gt; 
+&gt; jackd.py in the jack1 tree is a working proof-of-concept already of
+&gt; providing a D-Bus &lt;=&gt; Control API that is separated from the server
+&gt; itself, so in that sense, the work has already been restarted. Its
+&gt; just that its come to a halt again.
+&gt; 
+&gt;&gt; 6) Multiple device support handled by server : no clear idea for now (note that this seems really like a ALSA issue), but I don't see why it could not be done in current JACK2 code base.
+&gt; 
+&gt; Its not an ALSA issue. Its about a framework the server to allow
+&gt; streaming to/from other devices with the same quality of sync that
+&gt; alsa_in/alsa_out currently provides for ALSA devices, along with the
+&gt; other options that those tools provide. Neither Jack1 nor Jack2 really
+&gt; have a framework right now to allow this in a user-centric way.
+
+My point is that I'm not sure this framework makes sense outside of the ALSA context, since for instance CoreAudio does "multiple device aggregation" at a lower level. But I may be wrong. And anyway the needs have to be refined. I don't have a clear view of them. Do you?
+
+
+&gt; 
+&gt;&gt; 7) Full support for device sharing with PulseAudio : is it something new compared to what is correctly implemented in JACK2?
+&gt; 
+&gt; No.
+
+OK.
+
+&gt; 
+&gt;&gt; 7) Multiple OS support and bridges/routers for platform specific APIs (ALSA (pcm &amp; MIDI), CoreAudio, CoreMIDI, winMIDI, ASIO:  up to now and AFAICS Grame is the *only* developer/maintainer/tester of OSX and Windows specific code base (with some recent contributions by John Emmas for Windows). Grame wrote the CoreAudio backend, Grame wrote the first version of CoreMidi backend (later improved by Devin Anderson). Grame wrote the first version of WinMME backend (later improved by Devin Anderson). Grame wrote the PortAudio backend for Windows (supporting every API PortAudio supports, that is WinMMe, DirectSound, ASIO). Grame wrote a Solaris version in 2008.
+&gt; 
+&gt;   [ ... and more ... ]
+&gt; 
+&gt; I don't wish to ever write anything that fails to acknowledge the
+&gt; ENORMOUS impact that the work you and others at GRAME have had on
+&gt; JACK. The list of things is at least as you have written here,
+&gt; arguably longer. JACK would not exist as a cross-platform system
+&gt; without your work, and it would almost certainly lack the many other
+&gt; great features that Jack2 has developed and refined. Even if I did the
+&gt; original implementation of JACK, it is almost certainly true today
+&gt; that more people are using an implementation that you created and have
+&gt; maintained, developed and extended over many years.
+&gt; 
+&gt;&gt; I think this gives now a more precise view of the situation as seen by Grame. We keep fully interested in multi-OS support. If the new proposal is not really a new implementation, I still don't see what is it exactly. Without any new developers working on "non" Linux parts, I don't see how the new proposal can succeed.
+&gt; 
+&gt; Me neither. So do you have an alternative that doesn't require that?
+&gt; Or do you believe that the list of problems I gave at the beginning is
+&gt; not really a list of problems (or at least, that the ones that are
+&gt; worth solving do not require any significant coding) ?
+
+1) We have to list  "Jack1 and Jack2 each distinct benefits"
+
+2) We have to choose what is the reference code base
+
+3) We have to establish a plan for the reference code base to evolve until it reach the list of expected features.
+
+Stephane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1323770249.26745_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1323790655.24541_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1323782522.10272_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1323782522.10272_0.ltw:2,a&nbsp;&lt;6AEBD5DE-FAB0-4400-BE6C-1A306E4199C0 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

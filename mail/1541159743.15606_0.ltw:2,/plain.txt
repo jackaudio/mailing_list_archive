@@ -1,0 +1,52 @@
+Date:        Fri, 02 Nov 2018 12:55:04 +0100
+From:        Kjetil Matheussen  <[hidden] at gmail dot com>
+To:          Kjetil Matheussen <[hidden] at notam02 dot no>, [hidden] at gmail dot com
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Kjetil Matheussen Re: [Jack-Devel] Looking for visual "Clipping indicator" (linux command line interface) (1541157725.13103_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Looking for visual "Clipping indicator" (linux command line interface)
+
+On Fri, Nov 2, 2018 at 12:21 PM Kjetil Matheussen
+<[hidden]> wrote:
+>
+> On Fri, Nov 2, 2018 at 11:16 AM Jaime T <[hidden]> wrote:
+> >
+> > Hi all.
+> >
+> > Is there software that someone could recommend that would provide a
+> > visual indicator of clipping occuring in a jack stream? Extra points
+> > if the visual indicator remains set until manually reset. Double extra
+> > points if the program can run inside a (linux) command-line
+> > environment?
+>
+> You can use jack_capture and record to /dev/null
+> The red color shown when clipping is reset after around 2 seconds though,
+> but you can probably fix this quite easily in the source code.
+
+Apply this patch:
+
+diff --git a/jack_capture.c b/jack_capture.c
+index 3f77c56..f62e883 100644
+--- a/jack_capture.c
++++ b/jack_capture.c
+@@ -647,9 +647,11 @@ static void print_console(bool
+move_cursor_to_top_doit,bool force_update){
+        vu_peaks[ch]    = pos;
+        vu_peakvals[ch] = val;
+        vu_times[ch]    = 0;
++        /*
+      } else if (vu_times[ch]++ > 40) {
+        vu_peaks[ch]    = pos;
+        vu_peakvals[ch] = val;
++        */
+      }
+
+and run this line:
+
+while true ; do jack_capture /dev/null ; done
+
+then you can reset peaks by pressing return.
+
+1541159743.15606_0.ltw:2, <CAC6niELvWmkfOfFAPJkLu=UgKFHMY-9bL+dn3KCaPjVF4bKTtQ at mail dot gmail dot com>
+________________________________________________________________________________
+

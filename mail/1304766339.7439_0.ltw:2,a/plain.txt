@@ -1,0 +1,100 @@
+Date:        Sat, 07 May 2011 12:04:58 +0100
+From:        Peter L Jones  <[hidden] at drealm dot info>
+To:          [hidden] at jackaudio dot org
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4376) for Windows 64 and 32 bits (1304760282.1296_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4376) for Windows 64 and 32 bits
+
+Stéphane,
+
+Server setup:
+jackd -R -S -P 91 -X winmme -d portaudio -d"ASIO::ASIO Echo FireWire"
+>%TEMP%\jackd-err.log
+
+Here's the logfile with stderr as a screen-scrape from the DOS Prompt window:
+http://dino.drealm.info/peter/media/jackd-err.log
+
+...
+> JackAudioDriver::ProcessSync: process error, skip cycle...
+--> I hit CTRL-C here.
+> WARNING: 1 message buffer overruns!
+...
+
+Client command line:
+jack_midi_latency_test "winmme:2- AudioFire4-a MIDI:out3" "winmme:2-
+AudioFire4-a MIDI:in2"
+
+(log as previous)
+
+Thanks,
+
+-- Peter
+
+On 07/05/2011 10:24, Stéphane Letz wrote:
+> Can you explain how this (problematic yes indeed..) case happens?
+> 
+> Any *complete* log?
+> 
+> Stéphane 
+> 
+> 
+> Le 7 mai 2011 à 10:29, Peter L Jones a écrit :
+> 
+>> Stéphane,
+>>
+>> It's the subsequent repeat-until-server-killed spew of
+>>> JackWinSemaphore::TimedWait name = jack_pipe.default_freewheel time_out
+>>> JackFreewheelDriver::ProcessSync SuspendRefNum error
+>>> JackAudioDriver::ProcessGraphSync: ProcessWriteSlaves error, engine may now behave abnormally!!
+>>> JackAudioDriver::ProcessSync: process error, skip cycle...
+>>> JackWinSemaphore::Signal name = jack_pipe.default_jack_midi_latency_test err = 6
+>>> JackFreewheelDriver::ProcessReadSync: ResumeRefNum error
+>>> JackAudioDriver::ProcessGraphSync: ProcessReadSlaves error, engine may now behave abnormally!!
+>>> JackWinSemaphore::TimedWait name = jack_pipe.default_freewheel time_out
+>>> JackFreewheelDriver::ProcessSync SuspendRefNum error
+>>> JackAudioDriver::ProcessGraphSync: ProcessWriteSlaves error, engine may now behave abnormally!!
+>>> JackAudioDriver::ProcessSync: process error, skip cycle...
+>>> JackWinSemaphore::Signal name = jack_pipe.default_jack_midi_latency_test err = 6
+>> that worries me.  Why would a simple command line error in a client cause that
+>> in the server?
+>>
+>> Thanks,
+>>
+>> -- Peter
+>>
+>>
+>> On 07/05/2011 08:20, Stéphane Letz wrote:
+>>>
+>>> Le 7 mai 2011 à 00:03, Devin Anderson a écrit :
+>>>
+>>>> On Fri, May 6, 2011 at 2:29 PM, Peter L Jones <[hidden]> wrote:
+>>>>
+>>>>> http://dino.drealm.info/peter/media/Jack1.9.8(SVN4376).7z
+>>>>> A selection of log files:
+>>>>> jackd-\d+-{,latency}.log - the jackd and jack_midi_latency output for varying
+>>>>> numbers of periods: 64, 128, 512.
+>>>>
+>>>> Could you run the tests again with the '-v' flag?  I added a bunch of
+>>>> debug messages to the WinMME driver regarding MIDI timing that are
+>>>> only output when the verbose flag is set.
+>>>>
+>>>>> jackd-err-{,latency}.log - something odd happens to make jackd unhappy when I
+>>>>> get the port names around the wrong way...
+>>>>
+>>>> Hmmm ... I'm not sure what's going on.  Stéphane may know more.
+>>>>
+>>>> -
+>>> The error message is pretty clear: "Destination port in attempted (dis)connection..."
+>>>
+>>> Connection in the wrong order of between port with wrong type.
+>>>
+>>> Stéphane  
+>>
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1304766339.7439_0.ltw:2,a <iq3914$503$1 at dough dot gmane dot org>
+________________________________________________________________________________
+

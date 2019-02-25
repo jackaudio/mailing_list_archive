@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How does --hwmon work?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How does --hwmon work?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1494073940.9708_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1494082277.18826_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1494079115.15263_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 06 May 2017 15:53:21 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Tobias Hoffmann </span> &lt;[hidden] at thax dot hardliners dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>David Kastrup &lt;[hidden] at gnu dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>David Kastrup
+<a href='../1494068906.4660_0.ltw:2,a/index.html'>Re: [Jack-Devel] How does --hwmon work? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>David Kastrup
+<a href='../1494082277.18826_0.ltw:2,a/index.html'>Re: [Jack-Devel] How does --hwmon work? </a></td></tr>
+</table>
+<pre>
+On 06/05/17 13:08, David Kastrup wrote:
+&gt;&gt; 1. Different audio interfaces provide completely different routing
+&gt;&gt; capabilities, so what you want to get isn't that easy to do, if at
+&gt;&gt; all.
+&gt; Sorry, but that's just handwaving.  An audio interface will either be
+&gt; able to route some input to some output with a given volume or not.  The
+&gt; API to jack (or something doing that kind of job for the connection
+&gt; management on its behalf) would just request the connection and would
+&gt; not need to know how it was going to be established.  Many many
+&gt; soundcards already provide amixer controls that can be used for this
+&gt; functionality if you know how, and the "if you know how" part can be
+&gt; described in a database.
+&gt;
+&gt; As the database grows, more cards will transparently support hardware
+&gt; monitoring.
+&gt;
+&gt; It most definitely _is_ easy to do since the hard work is in the ALSA
+&gt; controls of individual drivers (or even other kinds of command line
+&gt; utilities used for accessing mixers) and those are already there for a
+&gt; whole lot of cards.
+
+This thread is going on for much too long already.
+
+Here is an actual datapoint wrt. current Hardware:
+Take the Focusrite Scarlett class of USB-based Audio Devices (for which 
+I happened to write the Alsa-mixer driver [based on previous work by 
+Robin Gareus]).
+These devices use the standardized USB-HID-Endpoints for the audio, but 
+use custom endpoints for accessing the Mixer. Therefore Audio-I/O did 
+work out of the box, with the standard linux driver, but Mixer-control 
+needs an hardware-specific driver, for reasons that might become clear 
+in the following exposition.
+
+For the Scarlett 18i8 there are 18 Inputs and 8 Outputs. Internally 
+there is a 18x8 mixing matrix (the same(!) matrix size is actually used 
+for variants with less actual I/O ...).
+Actually, the above mentioned I/O numbers are the physical connectors. 
+Regarding USB, there are also 18 Capture-"Endpoints" and 8 
+Playback-"Endpoints".
+Now the thing is, these Capture/Playback-Endpoints aren't tied to a 
+specific electrical I/O, but for each Matrix-Input, Physical-Output and 
+Capture-Input there is a software-configurable - i.e. exposed as alsa 
+mixer enum-type control - Multiplexer to choose from any of the 
+available Matrix-Outputs, Physical-Inputs and Playback-Outputs (except 
+you can't directly connect a Matrix-Output to a Matrix-Input).
+That's the - quite flexible - topology of the Device, which can and 
+should - obviously - allow for hardware-monitoring...
+
+Let's now assume that JACK provides some kind of hardware monitoring 
+support by detecting direct connections between capture-inputs and 
+playback-outputs and instead of copying audio data on the software side 
+chooses to modify the mixer instead (I don't know what --hwmon really does).
+Now how could it do that?
+
+First, it needs some kind of mapping which physical i/o corresponds to 
+which mixer control. As you can see, this entirely depends on the 
+device's topology. So, for a solution to be  any good, it has to support 
+different topologies. There are at least "Summing" nodes, "Gain control" 
+nodes, "Multiplexer" nodes, "Switch" nodes (-&gt; Mute) and "Duplicate" 
+nodes required to model current hardware. These nodes could be more or 
+less arbitrarily connected (source -&gt; sink), like a DAG (directed 
+acyclic graph).
+
+Secondly, we have have to find a path through this graph from a certain 
+hardware-input to a certain hardware-output. But Jack actually does not 
+deal with hardware-inputs and hardware-ouputs, but with capture-inputs 
+and playback-outputs. For the Scarlett, we know that we have to look at 
+the capture-mux to find the hardware-input it is connected to (but it 
+might even be connected to something else). We also look at the 
+Playback-output and have to find the Hardware output. There are actually 
+two ways a hardware-output could be connected to a hardware-input: 
+Either the Hardware-Output-Mux directly selects a Hardware-Input, or it 
+selects a Matrix-Output where some Matrix-Input is actually connected, 
+via the Matrix-Input-Mux, to a given hardware-input. Notice how the 
+device is perfectly capable of sending the monitoring signal to a 
+hardware-output which is not connected to a capture-input. So the whole 
+idea that JACK works with capture-inputs instead of physical hardware 
+inputs is detrimental to what we actually want to achieve. But it does 
+not stop there: To establish a new monitoring connection, there are now 
+also *two* possible paths to choose from: Either via the mixer (might 
+still need some MUX-reconfiguration!), or via the Output-Mux. Except you 
+can't use the Output mux method if you want to route more than one input 
+to the same output (i.e. sum them). To add another twist, the 
+Matrix-hardware does not allow Mute/Unmute (unlike the Output-Masters, 
+they can be muted). A hardware-specific mixer software can actually 
+implement these by storing the old value and setting the gain to "0" 
+(which actually is labeled -128dB, on the Scarlett). As JACK was 
+(intentionally, AFAIK) designed to not provide any gain control by 
+itself, there somewhere has to be this "magic" gain value to be used to 
+"Unmute" a certain Matrix connection. While "0 dB" might seem a 
+reasonable choice, it clearly falls behind the actual capabilities of 
+the device and using a fixed value would certainly be an annoying 
+limitation, in practice.
+It basically boils down to: "Who controls the mixer?"
+E.g. for MUX settings there has to be one single master who decides how 
+the device is going to be configured and who is free to make any 
+changes, as required.
+Any software that places itself to become that "master" should better 
+work with whatever flexibility a given interface has, instead of 
+arbitrary limiting it. In other words, it has to, more or less, support 
+all features a device has. JACK is not - and will most certainly never 
+be - able to handle such things. And IMHO it shouldn't. From a 
+software-engineering standpoint, a dedicated mixer app as "master" is 
+the simplest solution, and - by far - the most flexible.
+
+A side node: The alsa mixer stuff is quite horrible. E.g. the ordering 
+of the controls is determined by some heuristics in the user-space alsa 
+libs (that takes a snd_hctl_* (hardware control) from the kernel and 
+provides the snd_ctl_* an application actually works with). To get some 
+kind of sensible ordering with the about 200 controls the Scarlet driver 
+exposes, I had to choose the names "just right" to get avoid any special 
+cases and drop through to the "lexical sorting" case.
+And, while there are alsa control-types that could be used for metering 
+purposes, *no* mixing application supports these; furthermore the device 
+actually returns the monitoring information as "block" (e.g. "all 
+captures"-block, "all outputs"-block, ...) and not "per channel", as 
+required by alsa. There is no simple way to associate the monitor with 
+the actual gain control (IIRC, if you choose the names "correctly" alsa 
+will combine these snd_hctl_* into one snd_ctl_* - at least that's what 
+happens with Mute). This is the point where some drivers fall back to 
+providing snd_hwdep_* (hardware dependent api) access, which requires a 
+corresponding user-space program. Because of the severe lack of 
+documentation on this part of alsa, the current Scarlett-driver simply 
+does not support metering.
+Also, during the process of upstreaming the driver, the "Save mixer 
+settings to hardware (NVRAM)" (for standalone operation) had to go, 
+because alsa just has no appropriate control element type to expose that 
+feature of the device.
+
+&gt; That kind of "let the hardware do the job on its own whenever it can" 
+&gt; mind frame was what made Firewire the choice for professional work for 
+&gt; a really long time. So the user notices that monitoring with effects 
+&gt; leads to larger time lag and larger CPU load and higher likelihood of 
+&gt; dropouts. He has a choice then. He can switch off the effects.
+For most of the history of digital music/video/..., computers were not 
+fast enough to do any serious processing. So to get anywhere, reliably, 
+you simply *had to* use hardware, where ever you can.
+Nowadays even digital mixer consoles tend towards software effect 
+processing / plugins on general purpose CPUs instead of dedicated DSP 
+chips. The earlier digital audio consoles were also quite limited by the 
+hardware implementation, e.g. "You can route X to Y, but not to Z, 
+because reasons". On the other hand, I believe the Focusrite Scarlett is 
+so flexible, is because it's based on the xCORE chip, which has up 32 
+CPU/microcontroller cores that can easily implement tasks like "gain", 
+"mux", ... - because it is all *software*. It's all about *controlling* 
+latency and load - which is exactly what JACK tries to do.
+
+   Tobias
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1494073940.9708_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1494082277.18826_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1494079115.15263_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1494079115.15263_0.ltw:2,a&nbsp;&lt;590DD551.5090106 at thax dot hardliners dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

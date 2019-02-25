@@ -1,0 +1,52 @@
+Date:        Sat, 23 May 2009 21:13:18 +0200
+From:        hermann meyer  <[hidden] at web dot de>
+To:          [hidden] at yahoo dot com
+Cc:          [hidden] at lists dot jackaudio dot org, [hidden] at lists dot linuxaudio dot org
+In-Reply-To: [hidden] at yahoo dot com Re: [LAD] [ANN] guitarix-0.04.4-1 release (1243080308.9407_0.ltw:2,a)
+
+Subject:     Re: [LAD] [ANN] guitarix-0.04.4-1 release
+
+Am Samstag, den 23.05.2009, 05:04 -0700 schrieb [hidden]:
+> discussion started at LAD about changing the jack server latency from the app called guitarix (like ardour does from its menu JACK -> Latency). Proposed guitarix patch (by me) works nice against jack2 but not against jack1. See below.
+> 
+> Hermann,
+> 
+> I quickly ran guitarix in debug mode through gdb. You get a crash at dsp_audio.cpp, line 469. Looks like memory at output[2] and output[3] cannot be accessed. I tried to understand what you attempt to do but this function (mydsp::compute) is way to much for me to understand. It looks like some sort of auto-code ...
+> 
+> Anyway, output[2] and output[3] are passed in from process() (process callback function). I believe these arrays should correspond to buffers that you receive from jack audio ports 2 and 3. However, at the time we try to change the latency, they are already unregistered because of DSP.setNumOutputs().
+> 
+> So it looks to me that resetting the jack buffer size on the fly from guitarix badly interacts with how jack1 handled your port deregistration requests. I don't know why it works with jack2. Running guitarix through gdb against jack2, I could see that output[2] and output[3] were still valid memory locations after changing the jack buffer size on the fly. 
+
+This port register/unregister behaviour from jackd/jackd2 brings me a
+lot of headage, but on the other hand it's clear that they interact in
+different way's, it seems to be a question of time. Can't exactly say
+that, but it look to me that jackd2 is a lot faster in handling such a
+request.
+The port's 2 and 3 used by guitarix for pass the output over a wet/dry
+slider to jconv. This way you can mix the output from jconv and guitarix
+(to your soundcart or what ever) to your need's.
+They are unused when jconv dont run, that meen unregister and fill'd
+with sero's.
+
+>   
+> This is a bit unfortunate that we get different behaviors when using jack1 or jack2. I hope you'll sort it out, I don't have more time to spend on it. 
+> 
+> J.
+I have run this prob first time when I switch to jackdmp, so I know now
+how to handle this. I have a idea and will try it tomorow, let you know
+the result. Good point to the ports 2 and 3.
+I have the same output from gdb, but line 469 point to outputport_0 so I
+dont think on ports 2 and 3.
+
+
+> PS: by the way, be careful with hardcoded values. On one hand you have gNumOutChans (= 4), on the other you have arrays declared with [4].
+That are different variables you talk about, 
+float* 	gOutChannel[4]; --> pointers to the jack_port_buffers
+int	gNumOutChans;  --> counter for the used output ports
+
+regards 
+         hermann
+
+1243105466.20665_0.ltw:2,a <1243105998.3228.22.camel at box>
+________________________________________________________________________________
+

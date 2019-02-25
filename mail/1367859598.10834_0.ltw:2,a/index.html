@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack on arm hf</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack on arm hf</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1367855902.4448_0.ltw:2,Sa/index.html'>Prev</a></td><td><a href='../1367860360.12239_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1367859598.10834_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 06 May 2013 18:56:55 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> [hidden] at freenet dot de </span> &lt;[hidden] at freenet dot de </td></tr>
+<tr><td class='col1'>To</td><td>Robin Gareus &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack mailing list &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Chris Caudle
+<a href='../1367860360.12239_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack on arm hf </a></td></tr>
+</table>
+<pre>
+&gt; The most common error: you're using a self-compiled jackd and libjack&#13;
+&gt; but there are some files remaining from distribution's jack packages.&#13;
+&gt; check /usr/lib/armhf-linux-gnu/jack/ vs /usr/lib/jack/ for example.&#13;
+&#13;
+Ok, I do have .so files in /usr/lib/jack, but there's no /usr/lib/armhf-linux-gnu dir. Something like that has been my suspicion as well, since I have installed/reinstalled/compiled quite a few times now. Will try a complete system reinstall next week.&#13;
+&#13;
+&#13;
+&gt; It might also just be missing RT&#13;
+&gt; privileges and/or related to you not starting jackd manually but let&#13;
+&gt; supercollider start a temporary jack server...&#13;
+&#13;
+jackd will start up seemingly fine when started manually. It has RT privileges.&#13;
+&#13;
+&gt; Can you post the complete log from jack startup? or best a gdb backtrace&#13;
+&gt; of the crash.&#13;
+&#13;
+Sorry, I haven't figured out how to do a gdb backtrace (Linux semi-noob here).&#13;
+&#13;
+This is the output when I start jack manually:&#13;
+&#13;
+----------------&#13;
+axel@xlpicuntu:~$ jackd -s -d alsa -d hw:HDMI -r 44100 -p 512&#13;
+jackdmp 1.9.10&#13;
+Copyright 2001-2005 Paul Davis and others.&#13;
+Copyright 2004-2013 Grame.&#13;
+jackdmp comes with ABSOLUTELY NO WARRANTY&#13;
+This is free software, and you are welcome to redistribute it&#13;
+under certain conditions; see the file COPYING for details&#13;
+JACK server starting in realtime mode with priority 10&#13;
+creating alsa driver ... hw:HDMI|hw:HDMI|512|2|44100|0|0|nomon|swmeter|-|32bit&#13;
+configuring for 44100Hz, period = 512 frames (11.6 ms), buffer = 2 periods&#13;
+ALSA: final selected sample format for playback: 16bit little-endian&#13;
+ALSA: use 3 periods for playback&#13;
+------------------&#13;
+&#13;
+Seems fine. Now when I connect jack_simple_client&#13;
+&#13;
+-----------------&#13;
+axel@xlpicuntu:~$ jack_simple_client&#13;
+Cannot lock down 68157440 byte memory area (Cannot allocate memory)&#13;
+Cannot lock down 2048917504 byte memory area (Cannot allocate memory)&#13;
+Cannot lock down 25165824 byte memory area (Cannot allocate memory)&#13;
+You cannot set callbacks on an active client&#13;
+You cannot set callbacks on an active client&#13;
+no physical playback ports&#13;
+axel@xlpicuntu:~$ &#13;
+-------------------&#13;
+&#13;
+When I start sclang and run s.boot:&#13;
+&#13;
+-------------------&#13;
+sc3&gt; s.boot&#13;
+booting 57110&#13;
+localhost&#13;
+sc3&gt; Cannot lock down 68157440 byte memory area (Cannot allocate memory)&#13;
+Cannot lock down 2048917504 byte memory area (Cannot allocate memory)&#13;
+Cannot lock down 25165824 byte memory area (Cannot allocate memory)&#13;
+JackDriver: client name is ''&#13;
+You cannot set callbacks on an active client&#13;
+You cannot set callbacks on an active client&#13;
+You cannot set callbacks on an active client&#13;
+You cannot set callbacks on an active client&#13;
+You cannot set callbacks on an active client&#13;
+You cannot set callbacks on an active client&#13;
+SC_AudioDriver: sample rate = 2890137600.000000, driver's block size = 33554432&#13;
+SuperCollider 3 server ready.&#13;
+sc3&gt; ERROR: server failed to start&#13;
+--------------------------------&#13;
+&#13;
+Hmm, when I quit SC I do have an scsynth running alongside jackd which is still running (no crash) although it previously said "server failed to start". Weird&#x2026;.&#13;
+&#13;
+Axel&#13;
+&#13;
+&#13;
+&#13;
+
+
+---
+Alle Postf&#xE4;cher an einem Ort. Jetzt wechseln und E-Mail-Adresse mitnehmen! http://email.freenet.de/produkte/basic/index.html
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1367855902.4448_0.ltw:2,Sa/index.html'>Prev</a></td><td><a href='../1367860360.12239_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1367859598.10834_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1367859598.10834_0.ltw:2,a&nbsp;&lt;7b4e9c1359ce251adb5151562fe83821 at email dot freenet dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

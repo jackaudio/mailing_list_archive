@@ -1,0 +1,60 @@
+Date:        Fri, 11 Feb 2011 17:00:33 +0100
+From:        Valerio Pilo  <[hidden] at akhela dot com>
+To:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1297435943.21691_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1297440453.31490_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client
+
+In data venerdì 11 febbraio 2011 15:52:14, hai scritto:
+> > 1) I've attached a test (jackd-test3-dummydriver.log.bz2) with the dummy
+> > driver; which works - no issue. Seems to really be an ALSA driver
+> > problem.
+> 
+> OK.
+> 
+> > 2) i'll start from there
+> 
+> Well the old code was more "relaxed' since an ALSA backend Read/Write error
+> (-1 code) was just handled as a "skipped cycle", then the error handling
+> code *inside* the ALSA driver was changed a bit so that "recoverable" ALSA
+> error would be handled internally in the backend and not returned in the
+> JackAudioDriver layer.
+> 
+> But is seems something goes really wrong in your ALSA backend, does JACK1
+> behaves better in the same situation?
+
+> 
+> > 3) After the first test run with async mode (no "-S" argument) it seemed
+> > to work - but i rebooted and tried some 5 more times and it broke every
+> > time. The log of the last attempt is attached
+> > (jackd-test4-asyncmode.log.bz2).
+> 
+> This continuous message  "ALSA XRun wait_status" basically says that the
+> ALSA driver is in a bad state again....
+> 
+> Stéphane
+
+I just tried Jack 0.118 on the ARM box - it works without a problem, using 
+this cmdline:
+> jackd -v -r -t 2000 -d alsa -d chrouter -D -r 44100 -S -p 2048 -n 4
+
+So the eyes are on jack2's ALSA driver class, now.
+
+Any suggestion? I'm already ripping that class up to shreds atm
+
+-- 
+Valerio Pilo
+Software Engineer
+--
+X O R O V O
+A University of Cagliari spin-off company
+Parco Tecnologico della Sardegna, Edificio 1
+09010 - Pula, loc. Piscinamanna (CA) - Italy
+--
+skype: valerio.pilo
+phone: 070 9243 2663
+
+1297440063.30574_0.ltw:2,a <201102111700.33376.valerio.pilo at akhela dot com>
+________________________________________________________________________________
+

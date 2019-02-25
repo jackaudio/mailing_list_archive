@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack "capsule/container" implementation?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack "capsule/container" implementation?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297623065.13461_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297624392.16174_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297623473.14191_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 13 Feb 2011 19:57:22 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Arne Jacobs </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>torbenh
+<a href='../1297623065.13461_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack "capsule/container" implementation? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>torbenh
+<a href='../1297624392.16174_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack "capsule/container" implementation? </a></td></tr>
+</table>
+<pre>
+I thought about using some graph library first (like from boost), but as
+of now I just have a VERY simple proprietary graph structure.
+
+The graph is not really ordered, but execution follows a simple
+depth-first search: if some client's input is connected to another
+client's output, process that client first... Yes I know it does not
+allow for cycles :-) (which I forgot to add to the list of what is not
+supported yet). Depth-first search is started at some arbitrary
+yet-unprocessed client, after that is finished, another arbitrary
+unprocessed client is taken, until all clients have been processed.
+
+I didn't know what is the expected behaviour with graph cycles for JACK,
+so I just skipped that for now... can you enlighten me how it is done in
+jack1/jack2/tschak?
+
+Cheers,
+
+Arne
+
+P.S.: reminds me that I should probably at least add some kind of check
+to avoid making connections which lead to cycles.. :-)
+
+On 13.02.2011 19:50, torbenh wrote:
+&gt; On Sun, Feb 13, 2011 at 07:15:44PM +0100, Arne Jacobs wrote:
+&gt;&gt; Hi again...
+&gt;&gt;
+&gt;&gt; I gave it a try and made a first proof-of-concept JACK wrapper. The JACK
+&gt;&gt; clients I made so far all compile and run nicely with it. However I
+&gt;&gt; stumbled upon some things in the JACK API which are not quite clear to
+&gt;&gt; me from the documentation. Maybe you can help me with those?
+&gt;&gt;
+&gt;&gt; - The function jack_port_disconnect(jack_client_t*, jack_port_t*) makes
+&gt;&gt; me wonder what it should really do. The documentation doesn't help me,
+&gt;&gt; because it says it performs the same function as jack_disconnect(), but
+&gt;&gt; I can't see how it could with those parameters...?
+&gt;&gt;
+&gt;&gt; - jack_port_type_id_t jack_port_type_id(const jack_port_t *port):
+&gt;&gt; This is totally unclear to me. It seems to be in my JACK header but it's
+&gt;&gt; not in the online documentation. Probably I can just ignore that?
+&gt;&gt;
+&gt;&gt; - jack_port_get_total_latency(jack_client_t*, jack_port_t*):
+&gt;&gt; The semantics of this is not quite clear to me. Would I be correct to
+&gt;&gt; assume that (given none of my wrapped clients introduce any latency) I
+&gt;&gt; could just call this on my wrapper client's input and output ports and
+&gt;&gt; take the maximum of all?
+&gt;&gt;
+&gt;&gt; - Can there only be one error/info function at the same time? It seems
+&gt;&gt; so to me...
+&gt;&gt;
+&gt;&gt; - Regarding MIDI buffers: how large are these typically? Currently I
+&gt;&gt; make them the same size as the audio buffers (i.e.,
+&gt;&gt; sizeof(jack_default_audio_t) * nframes bytes)...
+&gt;&gt;
+&gt;&gt; Apart from that, if there is any interest in this subject I could try to
+&gt;&gt; compile that stuff into some little library for those who would like to
+&gt;&gt; test it out.
+&gt;&gt;
+&gt;&gt; Not the whole JACK API is implemented right now, though. What is not
+&gt;&gt; supported yet:
+&gt;&gt; - anything regarding latency (I just return 0 latency in any related
+&gt;&gt; function)
+&gt;&gt; - anything regarding monitoring (I guess this has no place in a wrapper
+&gt;&gt; anyway)
+&gt;&gt; - port lookup using regular expressions (didn't look for a low-footprint
+&gt;&gt; regex-lib here yet)
+&gt;&gt; - setting error and info handlers (wouldn't make sense anyway if there
+&gt;&gt; could be only one of each at any time)
+&gt;&gt; - some callbacks are not called yet (only client and port (un-)register,
+&gt;&gt; connection and process callbacks so far)
+&gt;&gt; - port types other than the default MIDI and audio types
+&gt;&gt; - port aliases
+&gt;&gt;
+&gt;&gt; Also, all wrapped clients are running in the same process thread
+&gt;&gt; (because they are considered one single client by the JACK server). The
+&gt;&gt; wrapper client currently also supports only one audio input and output
+&gt;&gt; as well as one MIDI input/output.
+&gt;&gt;
+&gt;&gt; And the last limitation: of course you can't use any JACK control app to
+&gt;&gt; make the connections between the wrapped clients. They have to be done
+&gt;&gt; programmatically. Well, in theory you could link e.g. patchage to the
+&gt;&gt; JACK wrapper and use it for all wrapped connections, but this seems a
+&gt;&gt; bit too much effort :-).
+&gt;&gt;
+&gt;&gt; But like I said: proof of concept...
+&gt; 
+&gt; hmm... interesting. 
+&gt; how are you doing the graph sort ?
+&gt; 
+&gt;&gt;
+&gt;&gt; Cheers,
+&gt;&gt;
+&gt;&gt; Arne
+&gt;&gt; 
+&gt;&gt; Jack-Devel mailing list
+&gt;&gt; [hidden]
+&gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt; 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297623065.13461_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297624392.16174_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297623473.14191_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1297623473.14191_0.ltw:2,a&nbsp;&lt;4D582992.40207 at gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

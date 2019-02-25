@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] A lot of Xrun Callbacks ... really xruns?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] A lot of Xrun Callbacks ... really xruns?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1340184974.3608_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1340193245.16546_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1340186705.6377_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 20 Jun 2012 11:12:12 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> John Rigg </span> &lt;[hidden] at jrigg dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>John Rigg
+<a href='../1340184974.3608_0.ltw:2,a/index.html'>Re: [Jack-Devel] A lot of Xrun Callbacks ... really xruns? </a></td></tr>
+</table>
+<pre>
+On Wed, Jun 20, 2012 at 10:43:19AM +0100, John Rigg wrote:
+&gt; My workaround has been to turn off xrun markers in Ardour and ignore the
+&gt; problem. Not very helpful I know, but I haven't had time to look into it
+&gt; further and it hasn't prevented me from getting work done.
+
+One thing I did get time to do recently was add some printfs to
+jackd/engine.c to try and work out what was happening. I reported the
+results to this list a few weeks ago, but I don't think anyone had time
+to look at it.
+
+Here's a copy of that email (apologies for repeating it, but I couldn't
+access the list archives to link to the original):
+
+&gt; I've been looking at the XRun detection code in jackd/engine.c 
+&gt; (jack 0.121.3) to see if I could find any clues to why JACK clients
+&gt; like Ardour2 report xruns in some situations, when nothing is apparently
+&gt; wrong with the audio and the alsa driver doesn't report any xruns.
+&gt; I encounter this regularly when using ALSA pcm_multi to combine several
+&gt; sound cards into one virtual device (as described here: 
+&gt; http://www.jrigg.co.uk/linuxaudio/ice1712multi.html).
+&gt; 
+&gt; Here's what appears to be the relevant section in jackd/engine.c starting
+&gt; at line 2071 (extra printfs added by me):
+&gt; 
+&gt; 
+&gt; static void
+&gt; jack_engine_delay (jack_engine_t *engine, float delayed_usecs)
+&gt; {
+&gt; 	jack_event_t event;
+&gt; 	
+&gt; 	engine-&gt;control-&gt;frame_timer.reset_pending = 1;
+&gt; 
+&gt; /*****************************************************************************/
+&gt; 	printf("xrun_delayed_usecs %f\n", engine-&gt;control-&gt;xrun_delayed_usecs);
+&gt; 	printf("max_delayed_usecs %f\n", engine-&gt;control-&gt;max_delayed_usecs);
+&gt; 	printf("delayed_usecs %f\n", delayed_usecs);
+&gt; /*****************************************************************************/
+&gt; 
+&gt; 	engine-&gt;control-&gt;xrun_delayed_usecs = delayed_usecs;
+&gt; 
+&gt; 	if (delayed_usecs &gt; engine-&gt;control-&gt;max_delayed_usecs)
+&gt; 		engine-&gt;control-&gt;max_delayed_usecs = delayed_usecs;
+&gt; 
+&gt; 	event.type = XRun;
+&gt; 	
+&gt; 	jack_deliver_event_to_all (engine, &amp;event);
+&gt; }
+&gt; 
+&gt; 
+&gt; The above code doesn't run when I use a single sound card. Running a pair
+&gt; of ice1712 based cards with pcm_multi produces a slew of printf messages
+&gt; like these, scrolling rapidly off the screen:
+&gt; 
+&gt; xrun_delayed_usecs 0.000000
+&gt; max_delayed_usecs 0.000000
+&gt; delayed_usecs 0.000000
+&gt; 
+&gt; The values are always zero.
+&gt; 
+&gt; xrun_delayed_usecs gets initialised to 0 on line 1997.
+&gt; max_delayed_usecs gets initialised to 0 on line 1998.
+&gt; 
+&gt; I couldn't find anywhere where these values get changed between
+&gt; initialisation and being used in the above code. Can this be correct?
+
+John
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1340184974.3608_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1340193245.16546_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1340186705.6377_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1340186705.6377_0.ltw:2,a&nbsp;&lt;20120620101212.GA2797 at localhost0 dot localdomain&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

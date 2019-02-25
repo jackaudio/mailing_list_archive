@@ -1,0 +1,648 @@
+Date:        Wed, 26 Nov 2014 02:51:56 +0200
+From:        Athanasios Silis  <[hidden] at gmail dot com>
+To:          Developers JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Athanasios Silis Re: [Jack-Devel] connecting jack between a linux audio master and a windows slave (1416176958.31022_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] connecting jack between a linux audio master and a windows slave
+
+bringing this up again..
+I have compiled my own version of jack2 - v1.9.10 and used that as a master
+server just in case the precompiled version that comes with ubuntu studio
+lacks a feature or something.
+jack starts file with cmd:
+./jackd -v -s -R  -dalsa -dhw:DSP24,0 -r44100 -p64 -n2
+and the messages that appear once it has been loaded:
+Jack: .....
+Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel
+notify = 18
+Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel
+notify = 18
+Jack: JackEngine::ClientNotify: no callback for notification = 4
+Jack: JackEngine::ClientNotify: no callback for notification = 4
+Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 8
+
+
+once I start the windows client in verbose mode with cmd
+
+jackd.exe. -v -S -R -dnet
+
+I see
+
+Jack: .....
+Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel
+notify = 18
+Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel
+notify = 18
+Jack: JackEngine::ClientNotify: no callback for notification = 4
+Jack: JackEngine::ClientNotify: no callback for notification = 4
+Jack: JackClientPipeThread::Execute 31fe60
+
+
+and at the same time the server prints
+
+Jack: JackNetMasterManager::InitMaster slave : <winClientHostname>
+waiting for a slave...
+Jack: JackNetMasterManager::InitMaster slave : <winClientHostname>
+Waiting for a slave...
+
+......
+.....
+so the packets arrive at the jackd server . What could be making the client
+deaf?
+
+Thank you once again very much for your help!
+
+On Mon, Nov 17, 2014 at 12:29 AM, Athanasios Silis <
+[hidden]> wrote:
+
+> Hi Chris,
+> please discard completely the command
+>     C:\Program Files (x86)\Jack>jackd.exe -v -dnet  -i2 -o9 -C8 -p8
+> instead lets stick to
+>     C:\Program Files (x86)\Jack>jackd.exe -v -dnet
+> it will choose default values for the above and we won't get confused. I
+> tried the above anyway because another developer , is using the exact
+> command successfully for his setup. You can see what each argument of "net"
+> backend does here:
+> https://github.com/jackaudio/jackaudio.github.com/wiki/WalkThrough_User_NetJack2
+> (see chapter 5)
+>
+> so on linux client which works fine, the verbose output looks like (beyond
+> the bold statement is all that is different in the linux client):
+>
+> ~$ /usr/bin/jackd -S -R -v -dnet
+> jackdmp 1.9.10
+> Copyright 2001-2005 Paul Davis and others.
+> Copyright 2004-2013 Grame.
+> jackdmp comes with ABSOLUTELY NO WARRANTY
+> This is free software, and you are welcome to redistribute it
+> under certain conditions; see the file COPYING for details
+> no message buffer overruns
+> no message buffer overruns
+> no message buffer overruns
+> JACK server starting in realtime mode with priority 10
+> Jack: JackPosixThread::StartImp : create non RT thread
+> Jack: JackPosixThread::ThreadHandler : start
+> Jack: JackNetDriver::JackNetDriver ip 225.3.19.154, port 19000
+> Jack: JackDriver::Open capture_driver_name = from_master_
+> Jack: JackDriver::Open playback_driver_name = to_master_
+> Jack: Check protocol client = 8 server = 8
+> Jack: JackEngine::ClientInternalOpen: name = system
+> Jack: JackEngine::AllocateRefNum ref = 0
+> Jack: JackPosixSemaphore::Allocate name = jack_sem.1000_default_system val
+> = 0
+> Jack: JackEngine::NotifyAddClient: name = system
+> Jack: JackGraphManager::SetBufferSize size = 1024
+> Jack: JackConnectionManager::DirectConnect first: ref1 = 0 ref2 = 0
+> Jack: JackGraphManager::ConnectRefNum cur_index = 0 ref1 = 0 ref2 = 0
+> Jack: JackDriver::SetupDriverSync driver sem in normal mode
+> Jack: JackSocketServerChannel::Open
+> Jack: JackServerSocket::Bind : addr.sun_path /dev/shm/jack_default_1000_0
+> Jack: JackSocketServerChannel::BuildPoolTable size = 1
+> Jack: JackEngine::Open
+> Jack: JackClientSocket::Connect : addr.sun_path
+> /dev/shm/jack_default_1000_0
+> Jack: JackEngine::ClientInternalOpen: name = freewheel
+> Jack: JackEngine::AllocateRefNum ref = 1
+> Jack: JackPosixSemaphore::Allocate name = jack_sem.1000_default_freewheel
+> val = 0
+> Jack: JackEngine::NotifyAddClient: name = freewheel
+> Jack: JackDriver::ClientNotify ref = 1 driver = system name = freewheel
+> notify = 0
+> Jack: JackDriver::ClientNotify ref = 0 driver = freewheel name = system
+> notify = 0
+> Jack: JackConnectionManager::DirectConnect first: ref1 = 1 ref2 = 1
+> Jack: JackGraphManager::ConnectRefNum cur_index = 0 ref1 = 1 ref2 = 1
+> Jack: JackDriver::SetupDriverSync driver sem in normal mode
+> Jack: Clock source : system clock via clock_gettime
+> Jack: JackServer::Start
+> Jack: JackThreadedDriver::Start
+> Jack: JackPosixThread::StartImp : create non RT thread
+> Jack: JackPosixThread::ThreadHandler : start
+> Jack: JackPosixThread::StartImp : create non RT thread
+> Jack: JackThreadedDriver::Init real-time
+> Jack: JackPosixThread::AcquireRealTimeImp priority = 10
+> Jack: JackPosixThread::ThreadHandler : start
+> Jack: JackNetDriver::Initialize
+> Jack: JackNetDriver::FreePorts
+> Jack: JackPosixThread::StartImp : create non RT thread
+> Jack: JackPosixThread::ThreadHandler : start
+> Jack: JackSocketServerChannel::ClientCreate socket
+> Jack: JackSocketServerChannel::BuildPoolTable size = 2
+> Jack: JackSocketServerChannel::BuildPoolTable fSocketTable i = 1 fd = 5
+> Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+> Jack: JackRequest::Notification
+> Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel
+> notify = 18
+> Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel
+> notify = 18
+> Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel
+> notify = 18
+> Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel
+> notify = 18
+> Jack: JackEngine::ClientNotify: no callback for notification = 4
+> Jack: JackEngine::ClientNotify: no callback for notification = 4
+> NetDriver started in sync mode without Master's transport sync.
+> Jack: JackNetSlaveInterface::Init()
+> Jack: JackNetSlaveInterface::SendAvailableToMaster()
+> Jack: JackNetUnixSocket::SetTimeout 10000000 usecs
+> *Waiting for a master...*
+> Initializing connection with starkill...
+> Jack: JackNetSlaveInterface::SendStartToMaster
+> Jack: JackNetSlaveInterface::SetParams audio in = 12 audio out = 10 MIDI
+> in = 6 MIDI out = 7
+> Jack: audio_size 6000.000000
+> Jack: midi_size 1500.000000
+> Jack: SetNetBufferSize bufsize = 270000
+> Jack: JackNetDriver::AllocPorts fBufferSize = 1024 fSampleRate = 48000
+> Jack: JackEngine::PortRegister ref = 0 name = system:capture_1 type = 32
+> bit float mono audio flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 1 name =
+> system:capture_1 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 1
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fCapturePortList[0] audio_port_index = 1
+> fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:capture_2 type = 32
+> bit float mono audio flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 2 name =
+> system:capture_2 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 2
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fCapturePortList[1] audio_port_index = 2
+> fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:capture_3 type = 32
+> bit float mono audio flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 3 name =
+> system:capture_3 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 3
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fCapturePortList[2] audio_port_index = 3
+> fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:capture_4 type = 32
+> bit float mono audio flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 4 name =
+> system:capture_4 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 4
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fCapturePortList[3] audio_port_index = 4
+> fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:capture_5 type = 32
+> bit float mono audio flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 5 name =
+> system:capture_5 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 5
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fCapturePortList[4] audio_port_index = 5
+> fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:capture_6 type = 32
+> bit float mono audio flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 6 name =
+> system:capture_6 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 6
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fCapturePortList[5] audio_port_index = 6
+> fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:capture_7 type = 32
+> bit float mono audio flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 7 name =
+> system:capture_7 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 7
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fCapturePortList[6] audio_port_index = 7
+> fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:capture_8 type = 32
+> bit float mono audio flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 8 name =
+> system:capture_8 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 8
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fCapturePortList[7] audio_port_index = 8
+> fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:capture_9 type = 32
+> bit float mono audio flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 9 name =
+> system:capture_9 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fCapturePortList[8] audio_port_index = 9
+> fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:capture_10 type = 32
+> bit float mono audio flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 10 name =
+> system:capture_10 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 10
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fCapturePortList[9] audio_port_index =
+> 10 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:capture_11 type = 32
+> bit float mono audio flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 11 name =
+> system:capture_11 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 11
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fCapturePortList[10] audio_port_index =
+> 11 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:capture_12 type = 32
+> bit float mono audio flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 12 name =
+> system:capture_12 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 12
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fCapturePortList[11] audio_port_index =
+> 12 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:playback_1 type = 32
+> bit float mono audio flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 13 name =
+> system:playback_1 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 13
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fPlaybackPortList[0] audio_port_index =
+> 13 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:playback_2 type = 32
+> bit float mono audio flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 14 name =
+> system:playback_2 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 14
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fPlaybackPortList[1] audio_port_index =
+> 14 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:playback_3 type = 32
+> bit float mono audio flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 15 name =
+> system:playback_3 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 15
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fPlaybackPortList[2] audio_port_index =
+> 15 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:playback_4 type = 32
+> bit float mono audio flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 16 name =
+> system:playback_4 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 16
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fPlaybackPortList[3] audio_port_index =
+> 16 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:playback_5 type = 32
+> bit float mono audio flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 17 name =
+> system:playback_5 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 17
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fPlaybackPortList[4] audio_port_index =
+> 17 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:playback_6 type = 32
+> bit float mono audio flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 18 name =
+> system:playback_6 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 18
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fPlaybackPortList[5] audio_port_index =
+> 18 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:playback_7 type = 32
+> bit float mono audio flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 19 name =
+> system:playback_7 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 19
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fPlaybackPortList[6] audio_port_index =
+> 19 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:playback_8 type = 32
+> bit float mono audio flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 20 name =
+> system:playback_8 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 20
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fPlaybackPortList[7] audio_port_index =
+> 20 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:playback_9 type = 32
+> bit float mono audio flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 21 name =
+> system:playback_9 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 21
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fPlaybackPortList[8] audio_port_index =
+> 21 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:playback_10 type = 32
+> bit float mono audio flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 22 name =
+> system:playback_10 type = 32 bit float mono audio
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 22
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fPlaybackPortList[9] audio_port_index =
+> 22 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:midi_capture_1 type =
+> 8 bit raw midi flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 23 name =
+> system:midi_capture_1 type = 8 bit raw midi
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 23
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fMidiCapturePortList[0] midi_port_index
+> = 23 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:midi_capture_2 type =
+> 8 bit raw midi flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 24 name =
+> system:midi_capture_2 type = 8 bit raw midi
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 24
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fMidiCapturePortList[1] midi_port_index
+> = 24 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:midi_capture_3 type =
+> 8 bit raw midi flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 25 name =
+> system:midi_capture_3 type = 8 bit raw midi
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 25
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fMidiCapturePortList[2] midi_port_index
+> = 25 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:midi_capture_4 type =
+> 8 bit raw midi flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 26 name =
+> system:midi_capture_4 type = 8 bit raw midi
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 26
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fMidiCapturePortList[3] midi_port_index
+> = 26 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:midi_capture_5 type =
+> 8 bit raw midi flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 27 name =
+> system:midi_capture_5 type = 8 bit raw midi
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 27
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fMidiCapturePortList[4] midi_port_index
+> = 27 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:midi_capture_6 type =
+> 8 bit raw midi flags = 22 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 28 name =
+> system:midi_capture_6 type = 8 bit raw midi
+> Jack: JackConnectionManager::AddOutputPort ref = 0 port = 28
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fMidiCapturePortList[5] midi_port_index
+> = 28 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:midi_playback_1 type
+> = 8 bit raw midi flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 29 name =
+> system:midi_playback_1 type = 8 bit raw midi
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 29
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fMidiPlaybackPortList[0] midi_port_index
+> = 29 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:midi_playback_2 type
+> = 8 bit raw midi flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 30 name =
+> system:midi_playback_2 type = 8 bit raw midi
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 30
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fMidiPlaybackPortList[1] midi_port_index
+> = 30 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:midi_playback_3 type
+> = 8 bit raw midi flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 31 name =
+> system:midi_playback_3 type = 8 bit raw midi
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 31
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fMidiPlaybackPortList[2] midi_port_index
+> = 31 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:midi_playback_4 type
+> = 8 bit raw midi flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 32 name =
+> system:midi_playback_4 type = 8 bit raw midi
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 32
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fMidiPlaybackPortList[3] midi_port_index
+> = 32 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:midi_playback_5 type
+> = 8 bit raw midi flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 33 name =
+> system:midi_playback_5 type = 8 bit raw midi
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 33
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fMidiPlaybackPortList[4] midi_port_index
+> = 33 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:midi_playback_6 type
+> = 8 bit raw midi flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 34 name =
+> system:midi_playback_6 type = 8 bit raw midi
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 34
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fMidiPlaybackPortList[5] midi_port_index
+> = 34 fPortLatency = 0
+> Jack: JackEngine::PortRegister ref = 0 name = system:midi_playback_7 type
+> = 8 bit raw midi flags = 21 buffer_size = 1024
+> Jack: JackGraphManager::AllocatePortAux port_index = 35 name =
+> system:midi_playback_7 type = 8 bit raw midi
+> Jack: JackConnectionManager::AddInputPort ref = 0 port = 35
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackEngine::ClientNotify: no callback for notification = 9
+> Jack: JackNetDriver::AllocPorts() fMidiPlaybackPortList[6] midi_port_index
+> = 35 fPortLatency = 0
+> **************** Network parameters ****************
+> Name : starmaze
+> Protocol revision : 7
+> MTU : 1500
+> Master name : starkill
+> Slave name : starmaze
+> ID : 13
+> Transport Sync : no
+> Send channels (audio - midi) : 12 - 6
+> Return channels (audio - midi) : 10 - 7
+> Sample rate : 44100 frames per second
+> Period size : 64 frames per period
+> Network latency : 5 cycles
+> SampleEncoder : Float
+> Slave mode : sync
+> ****************************************************
+> Jack: JackGraphManager::SetBufferSize size = 64
+> Jack: JackEngine::ClientNotify: no callback for notification = 5
+> Jack: JackEngine::ClientNotify: no callback for notification = 5
+> Jack: JackEngine::ClientNotify: no callback for notification = 6
+> Jack: JackEngine::ClientNotify: no callback for notification = 6
+> Jack: JackPosixThread::ThreadHandler : exit
+> Jack: JackNetUnixSocket::SetTimeout 500000 usecs
+> Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+> Jack: JackRequest::Notification
+> Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel
+> notify = 18
+> Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel
+> notify = 18
+> Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel
+> notify = 18
+> Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name = freewheel
+> notify = 18
+> Jack: JackEngine::ClientNotify: no callback for notification = 4
+> Jack: JackEngine::ClientNotify: no callback for notification = 4
+> Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+> Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 5
+>
+>
+>
+>
+>
+> On Sun, Nov 16, 2014 at 10:08 PM, Chris Caudle <[hidden]>
+> wrote:
+>
+>> I'm not so familiar with netjack, but perhaps if you can clarify some
+>> things someone else will notice something.
+>>
+>> First, pastebin is not convenient, maybe some people have not seen your
+>> verbose output
+>> because you made it more difficult.  80 lines of text is not unreasonable
+>> for an email, just paste it in.  I have copied your pastebin verbose
+>> output to this message for convenience.
+>>
+>>     C:\Program Files (x86)\Jack>jackd.exe -v -dnet  -i2 -o9 -C8 -p8
+>>
+>> Can you explain what you intended each command line argument to mean?  I
+>> have looked at the man page on my Fedora 20 system and I do not see a
+>> section for net, just netone, which is a slightly different protocol.
+>>
+>> For netone, -i2 would mean 2 capture channels, -o9 would be 9 playback
+>> channels, there is no -C argument shown, and -p means frames per period.
+>> I don't think 8 frames per period would make sense, and also given the
+>> verbose output it seems like it may have been interpreted as IP port
+>> number:
+>>  Jack: JackNetDriver::JackNetDriver ip 225.3.19.154, port 8
+>>
+>> You used the exact same command line arguments on the linux slave machines
+>> which worked correctly?
+>> Maybe if you capture the verbose output from a working linux slave some
+>> difference might become obvious.  The port number 8 being associated with
+>> the address 225.3.19.154 stands out as looking suspicious to me after all
+>> the previous talk of port 19000, I don't think using a privileged port
+>> number is really what you intended.
+>>
+>> --
+>> Chris Caudle
+>>
+>>
+>>
+>>     C:\Program Files (x86)\Jack>jackd.exe -v -dnet  -i2 -o9 -C8 -p8
+>>     jackdmp 1.9.10
+>>     Copyright 2001-2005 Paul Davis and others.
+>>     Copyright 2004-2014 Grame.
+>>     jackdmp comes with ABSOLUTELY NO WARRANTY
+>>     This is free software, and you are welcome to redistribute it
+>>     under certain conditions; see the file COPYING for details
+>>     Drivers/internals found in : C:\Windows
+>>     Drivers/internals found in : C:\Windows
+>>     JACK server starting in realtime mode with priority 10
+>>     self-connect-mode is "Don't restrict self connect requests"
+>>     Jack: JackWinThread::StartImp : create non RT thread
+>>     Jack: JackWinThread::ThreadHandler : start
+>>     Jack: JackNetDriver::JackNetDriver ip 225.3.19.154, port 8
+>>     Jack: JackDriver::Open capture_driver_name = from_master_
+>>     Jack: JackDriver::Open playback_driver_name = to_master_
+>>     Jack: Check protocol client = 8 server = 8
+>>     Jack: JackEngine::ClientInternalOpen: name = system
+>>     Jack: JackEngine::AllocateRefNum ref = 0
+>>     Jack: JackWinSemaphore::Allocate name = jack_pipe.default_system val
+>> = 0
+>>     Jack: JackEngine::NotifyAddClient: name = system
+>>     Jack: JackGraphManager::SetBufferSize size = 1024
+>>     Jack: JackConnectionManager::DirectConnect first: ref1 = 0 ref2 = 0
+>>     Jack: JackGraphManager::ConnectRefNum cur_index = 0 ref1 = 0 ref2 = 0
+>>     Jack: JackDriver::SetupDriverSync driver sem in flush mode
+>>     Jack: JackWinNamedPipeServerChannel::Open
+>>     Jack: JackWinNamedPipeServer::BindAux : fName
+>> \\.\pipe\server_jack_default_0
+>>     Jack: JackEngine::Open
+>>     Jack: JackWinNamedPipeClient::ConnectAux : fName
+>> \\.\pipe\server_jack_default_0
+>>     Jack: JackEngine::ClientInternalOpen: name = freewheel
+>>     Jack: JackEngine::AllocateRefNum ref = 1
+>>     Jack: JackWinSemaphore::Allocate name = jack_pipe.default_freewheel
+>> val = 0
+>>     Jack: JackEngine::NotifyAddClient: name = freewheel
+>>     Jack: JackDriver::ClientNotify ref = 1 driver = system name =
+>> freewheel notify =
+>>      0
+>>     Jack: JackDriver::ClientNotify ref = 0 driver = freewheel name =
+>> system notify =
+>>      0
+>>     Jack: JackConnectionManager::DirectConnect first: ref1 = 1 ref2 = 1
+>>     Jack: JackGraphManager::ConnectRefNum cur_index = 0 ref1 = 1 ref2 = 1
+>>     Jack: JackDriver::SetupDriverSync driver sem in flush mode
+>>     InitTime : multimedia timer resolution set to 1 milliseconds
+>>     Jack: JackServer::Start
+>>     Jack: JackThreadedDriver::Start
+>>     Jack: JackWinThread::StartImp : create non RT thread
+>>     Jack: JackWinThread::ThreadHandler : start
+>>     Jack: JackWinThread::StartImp : create non RT thread
+>>     Jack: JackThreadedDriver::Init real-time
+>>     Jack: JackWinThread::AcquireRealTimeImp priority = 10
+>>     MMCSS API not used...
+>>     Jack: JackWinThread::ThreadHandler : start
+>>     Jack: JackNetDriver::Initialize
+>>     Jack: JackNetDriver::FreePorts
+>>     NetDriver started in async mode without Master's transport sync.
+>>     Jack: JackNetSlaveInterface::Init()
+>>     Jack: JackNetSlaveInterface::SendAvailableToMaster try_count =
+>> 2147483647
+>>     Jack: JackNetSlaveInterface::SendAvailableToMaster try_count =
+>> 2147483647
+>>     Jack: JackWinThread::ThreadHandler : start
+>>     Jack: JackWinNamedPipeServerChannel::Init
+>>     Jack: JackWinNamedPipeServerChannel::ClientAdd size 0
+>>     Jack: JackWinThread::StartImp : create non RT thread
+>>     Jack: JackWinNamedPipeServer::BindAux : fName
+>> \\.\pipe\server_jack_default_0
+>>     Jack: JackWinThread::StartImp : create non RT thread
+>>     Jack: JackWinThread::ThreadHandler : start
+>>     Jack: JackClientPipeThread::Execute 321750
+>>     Jack: JackRequest::Notification
+>>     Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name =
+>> freewheel notify = 18
+>>     Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name =
+>> freewheel notify = 18
+>>     Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name =
+>> freewheel notify = 18
+>>     Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name =
+>> freewheel notify = 18
+>>     Jack: JackEngine::ClientNotify: no callback for notification = 4
+>>     Jack: JackEngine::ClientNotify: no callback for notification = 4
+>>     Jack: JackClientPipeThread::Execute 321750
+>>     Jack: JackNetWinSocket::SetTimeout 1000000 usec
+>>     Waiting for a master...
+>>
+>>
+>>
+>>
+>
+
+1416963128.17530_0.ltw:2, <CADgchntag3nB_NTqP5=qnqCd3+hu6+Qwz+g8ee6e0_j46U8czA at mail dot gmail dot com>
+________________________________________________________________________________
+

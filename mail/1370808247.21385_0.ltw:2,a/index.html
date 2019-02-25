@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Cannot connect to server socket err</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Cannot connect to server socket err</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1370774609.32261_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1370809819.22790_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1370808247.21385_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 09 Jun 2013 22:01:23 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Thorsten Wilms </span> &lt;[hidden] at freenet dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>David
+<a href='../1370774609.32261_0.ltw:2,a/index.html'>Re: [Jack-Devel] Cannot connect to server socket err </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Jamie Heilman
+<a href='../1370811003.23487_0.ltw:2,a/index.html'>Re: [Jack-Devel] Cannot connect to server socket err </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Thorsten Wilms
+<a href='../1370936892.30879_0.ltw:2,/index.html'>Re: [Jack-Devel] Cannot connect to server socket err </a></td></tr>
+</table>
+<pre>
+On 06/09/2013 12:43 PM, David wrote:
+&gt; You could try using strace, with a simple client like jack_lsp for
+&gt; instance.
+
+jack_lsp is the exception that works.
+
+The interesting part of
+~: strace jalv.gtk  http://gareus.org/oss/lv2/balance
+is probably:
+
+socket(PF_FILE, SOCK_STREAM, 0)         = 9
+getuid()                                = 1000
+connect(9, {sa_family=AF_FILE, path="/dev/shm/jack_default_1000_0"}, 
+110) = -1 ENOENT (No such file or directory)
+
+
+The full thing for jack_simple_client:
+~: strace jack_simple_client
+execve("/usr/bin/jack_simple_client", ["jack_simple_client"], [/* 50 
+vars */]) = 0
+brk(0)                                  = 0x20d9000
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or 
+directory)
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) 
+= 0x7f9d79bbc000
+access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or 
+directory)
+open("/usr/lib64/tls/x86_64/libjack.so.0", O_RDONLY|O_CLOEXEC) = -1 
+ENOENT (No such file or directory)
+stat("/usr/lib64/tls/x86_64", 0x7fffddc5b180) = -1 ENOENT (No such file 
+or directory)
+open("/usr/lib64/tls/libjack.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No 
+such file or directory)
+stat("/usr/lib64/tls", 0x7fffddc5b180)  = -1 ENOENT (No such file or 
+directory)
+open("/usr/lib64/x86_64/libjack.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT 
+(No such file or directory)
+stat("/usr/lib64/x86_64", 0x7fffddc5b180) = -1 ENOENT (No such file or 
+directory)
+open("/usr/lib64/libjack.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, 
+"\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0\0^\0\0\0\0\0\0"..., 832) 
+= 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=238881, ...}) = 0
+mmap(NULL, 2226592, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 
+0) = 0x7f9d7977c000
+mprotect(0x7f9d79792000, 2093056, PROT_NONE) = 0
+mmap(0x7f9d79991000, 8192, PROT_READ|PROT_WRITE, 
+MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x15000) = 0x7f9d79991000
+mmap(0x7f9d79993000, 35232, PROT_READ|PROT_WRITE, 
+MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7f9d79993000
+close(3)                                = 0
+open("/usr/lib64/libc.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such 
+file or directory)
+open("/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+fstat(3, {st_mode=S_IFREG|0644, st_size=172704, ...}) = 0
+mmap(NULL, 172704, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f9d79b91000
+close(3)                                = 0
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or 
+directory)
+open("/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, 
+"\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0\200\30\2\0\0\0\0\0"..., 
+832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=1811128, ...}) = 0
+mmap(NULL, 3925208, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 
+0) = 0x7f9d793bd000
+mprotect(0x7f9d79572000, 2093056, PROT_NONE) = 0
+mmap(0x7f9d79771000, 24576, PROT_READ|PROT_WRITE, 
+MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1b4000) = 0x7f9d79771000
+mmap(0x7f9d79777000, 17624, PROT_READ|PROT_WRITE, 
+MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7f9d79777000
+close(3)                                = 0
+open("/usr/lib64/librt.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such 
+file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or 
+directory)
+open("/lib/x86_64-linux-gnu/librt.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, 
+"\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0\340!\0\0\0\0\0\0"..., 
+832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=31752, ...}) = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) 
+= 0x7f9d79b90000
+mmap(NULL, 2128984, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 
+0) = 0x7f9d791b5000
+mprotect(0x7f9d791bc000, 2093056, PROT_NONE) = 0
+mmap(0x7f9d793bb000, 8192, PROT_READ|PROT_WRITE, 
+MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x6000) = 0x7f9d793bb000
+close(3)                                = 0
+open("/usr/lib64/libm.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such 
+file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or 
+directory)
+open("/lib/x86_64-linux-gnu/libm.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, 
+"\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0pU\0\0\0\0\0\0"..., 832) 
+= 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=1030512, ...}) = 0
+mmap(NULL, 3125544, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 
+0) = 0x7f9d78eb9000
+mprotect(0x7f9d78fb4000, 2093056, PROT_NONE) = 0
+mmap(0x7f9d791b3000, 8192, PROT_READ|PROT_WRITE, 
+MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0xfa000) = 0x7f9d791b3000
+close(3)                                = 0
+open("/usr/lib64/libpthread.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No 
+such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or 
+directory)
+open("/lib/x86_64-linux-gnu/libpthread.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, 
+"\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0\200l\0\0\0\0\0\0"..., 
+832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=135366, ...}) = 0
+mmap(NULL, 2212904, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 
+0) = 0x7f9d78c9c000
+mprotect(0x7f9d78cb4000, 2093056, PROT_NONE) = 0
+mmap(0x7f9d78eb3000, 8192, PROT_READ|PROT_WRITE, 
+MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x17000) = 0x7f9d78eb3000
+mmap(0x7f9d78eb5000, 13352, PROT_READ|PROT_WRITE, 
+MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7f9d78eb5000
+close(3)                                = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) 
+= 0x7f9d79b8f000
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) 
+= 0x7f9d79b8e000
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) 
+= 0x7f9d79b8d000
+arch_prctl(ARCH_SET_FS, 0x7f9d79b8e700) = 0
+mprotect(0x7f9d79771000, 16384, PROT_READ) = 0
+mprotect(0x7f9d78eb3000, 4096, PROT_READ) = 0
+mprotect(0x7f9d791b3000, 4096, PROT_READ) = 0
+mprotect(0x7f9d793bb000, 4096, PROT_READ) = 0
+mprotect(0x7f9d79991000, 4096, PROT_READ) = 0
+mprotect(0x601000, 4096, PROT_READ)     = 0
+mprotect(0x7f9d79bbe000, 4096, PROT_READ) = 0
+munmap(0x7f9d79b91000, 172704)          = 0
+set_tid_address(0x7f9d79b8e9d0)         = 4090
+set_robust_list(0x7f9d79b8e9e0, 0x18)   = 0
+futex(0x7fffddc5ba7c, FUTEX_WAIT_BITSET_PRIVATE|FUTEX_CLOCK_REALTIME, 1, 
+NULL, 7f9d79b8e700) = -1 EAGAIN (Resource temporarily unavailable)
+rt_sigaction(SIGRTMIN, {0x7f9d78ca2750, [], SA_RESTORER|SA_SIGINFO, 
+0x7f9d78cabcb0}, NULL, 8) = 0
+rt_sigaction(SIGRT_1, {0x7f9d78ca27e0, [], 
+SA_RESTORER|SA_RESTART|SA_SIGINFO, 0x7f9d78cabcb0}, NULL, 8) = 0
+rt_sigprocmask(SIG_UNBLOCK, [RTMIN RT_1], NULL, 8) = 0
+getrlimit(RLIMIT_STACK, {rlim_cur=8192*1024, rlim_max=RLIM_INFINITY}) = 0
+mmap(NULL, 8392704, PROT_READ|PROT_WRITE, 
+MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK, -1, 0) = 0x7f9d7849b000
+brk(0)                                  = 0x20d9000
+brk(0x20fa000)                          = 0x20fa000
+mprotect(0x7f9d7849b000, 4096, PROT_NONE) = 0
+clone(child_stack=0x7f9d78c9aff0, 
+flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, 
+parent_tidptr=0x7f9d78c9b9d0, tls=0x7f9d78c9b700, 
+child_tidptr=0x7f9d78c9b9d0) = 4091
+access("/usr/lib/lightdm/lightdm/jackd", X_OK) = -1 ENOENT (No such file 
+or directory)
+access("/usr/local/sbin/jackd", X_OK)   = -1 ENOENT (No such file or 
+directory)
+access("/usr/local/bin/jackd", X_OK)    = -1 ENOENT (No such file or 
+directory)
+access("/usr/sbin/jackd", X_OK)         = -1 ENOENT (No such file or 
+directory)
+access("/usr/bin/jackd", X_OK)          = 0
+pipe2([3, 4], O_CLOEXEC)                = 0
+clone(child_stack=0, 
+flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLD, 
+child_tidptr=0x7f9d79b8e9d0) = 4092
+close(4)                                = 0
+fcntl(3, F_SETFD, 0)                    = 0
+fstat(3, {st_mode=S_IFIFO|0600, st_size=0, ...}) = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) 
+= 0x7f9d79bbb000
+read(3, "/dev/shm\n", 4096)             = 9
+close(3)                                = 0
+wait4(4092, [{WIFEXITED(s) &amp;&amp; WEXITSTATUS(s) == 0}], 0, NULL) = 4092
+--- SIGCHLD (Child exited) @ 0 (0) ---
+munmap(0x7f9d79bbb000, 4096)            = 0
+open("/proc/cpuinfo", O_RDONLY)         = 3
+fstat(3, {st_mode=S_IFREG|0444, st_size=0, ...}) = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) 
+= 0x7f9d79bbb000
+read(3, "processor\t: 0\nvendor_id\t: Genuin"..., 1024) = 1024
+close(3)                                = 0
+munmap(0x7f9d79bbb000, 4096)            = 0
+socket(PF_FILE, SOCK_STREAM, 0)         = 3
+getuid()                                = 1000
+connect(3, {sa_family=AF_FILE, 
+path="/dev/shm/jack-1000/default/jack_0"}, 110) = 0
+write(3, 
+"\31\0\0\0\1\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0simple\0\0\0\0\0\0"..., 5174) 
+= 5174
+read(3, "\0\0\0\0\3\0\0\0/dev/shm/jack-1000/defau"..., 4162) = 4162
+getuid()                                = 1000
+semget(0x282929, 0, 0)                  = 294919
+semop(294919, {{0, -1, SEM_UNDO}}, 1)   = 0
+shmget(0x282929, 6200, 0666)            = 557062
+shmat(557062, 0, 0)                     = ?
+semop(294919, {{0, 1, SEM_UNDO}}, 1)    = 0
+shmat(589831, 0, 0)                     = ?
+shmat(786442, 0, 0)                     = ?
+shmctl(786442, IPC_RMID, 0)             = 0
+socket(PF_FILE, SOCK_STREAM, 0)         = 4
+connect(4, {sa_family=AF_FILE, 
+path="/dev/shm/jack-1000/default/jack_ack_0"}, 110) = 0
+write(4, "\5\0\0\0", 4)                 = 4
+read(4, "\0", 1)                        = 1
+fstat(1, {st_mode=S_IFCHR|0620, st_rdev=makedev(136, 3), ...}) = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) 
+= 0x7f9d79bb8000
+write(1, "engine sample rate: 48000\n", 26engine sample rate: 48000
+) = 26
+write(3, "\1\0\0\0simple:input\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 
+5170) = 5170
+read(3, "\1\0\0\0simple:input\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 5170) 
+= 5170
+write(3, "\1\0\0\0simple:output\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 5170) 
+= 5170
+read(3, "\1\0\0\0simple:output\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 5170) 
+= 5170
+mlockall(MCL_CURRENT|MCL_FUTURE)        = 0
+mmap(NULL, 528384, PROT_READ|PROT_WRITE, 
+MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK, -1, 0) = 0x7f9d79ad2000
+mprotect(0x7f9d79ad2000, 4096, PROT_NONE) = 0
+clone(child_stack=0x7f9d79b51ff0, 
+flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, 
+parent_tidptr=0x7f9d79b529d0, tls=0x7f9d79b52700, 
+child_tidptr=0x7f9d79b529d0) = 4094
+sched_setscheduler(4094, SCHED_OTHER, { 0 }) = 0
+futex(0x7f9d79992744, FUTEX_WAIT_PRIVATE, 1, NULL) = 0
+futex(0x7f9d79992700, FUTEX_WAKE_PRIVATE, 1) = 0
+write(3, "\6\0\0\0\5\0\0\0le:output\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 
+5170) = 5170
+read(3, "\6\0\0\0\5\0\0\0le:output\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 
+5170) = 5170
+write(3, "\3\0\0\0system:capture_1\0\0\0\0\0\0\0\0\0\0\0\0"..., 5170) = 5170
+read(3, "\3\0\0\0system:capture_1\0\0\0\0\0\0\0\0\0\0\0\0"..., 5170) = 5170
+write(3, "\3\0\0\0simple:output\0_1\0\0\0\0\0\0\0\0\0\0\0\0"..., 5170) = 
+5170
+read(3, "\3\0\0\0simple:output\0_1\0\0\0\0\0\0\0\0\0\0\0\0"..., 5170) = 5170
+rt_sigprocmask(SIG_BLOCK, [CHLD], [], 8) = 0
+rt_sigaction(SIGCHLD, NULL, {SIG_DFL, [], 0}, 8) = 0
+rt_sigprocmask(SIG_SETMASK, [], NULL, 8) = 0
+nanosleep({4294967295, 0},
+
+
+-- 
+Thorsten Wilms
+
+thorwil's design for free software:
+http://thorwil.wordpress.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1370774609.32261_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1370809819.22790_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1370808247.21385_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1370808247.21385_0.ltw:2,a&nbsp;&lt;51B4DF13.9060909 at freenet dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

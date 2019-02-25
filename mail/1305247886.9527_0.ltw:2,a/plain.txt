@@ -1,0 +1,80 @@
+Date:        Fri, 13 May 2011 03:50:43 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          [hidden] at jackaudio dot org
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] jack2 libsamplerate-less build is broken (+ fix proposal) (1305274281.5520_0.ltw:2,a)
+
+Subject:     [Jack-Devel] jack2 libsamplerate-less build is broken (+ fix proposal)
+
+Salut Stéphane and list,
+
+jack2 fails to build if libsamplerate is not present.
+
+libsamplerate is checked and correctly marked as missing during
+configure stage. However netlib build is still attempted:
+
+-------------------------------------------
+[ 66/230] cxx: common/JackLibSampleRateResampler.cpp -> build/default/common/JackLibSampleRateResampler_2.o
+In file included from ../common/JackLibSampleRateResampler.cpp:20:
+../common/JackLibSampleRateResampler.h:26:24: error: samplerate.h: No such file or directory
+In file included from ../common/JackLibSampleRateResampler.cpp:20:
+../common/JackLibSampleRateResampler.h:40: error: ISO C++ forbids declaration of 'SRC_STATE' with no type
+../common/JackLibSampleRateResampler.h:40: error: expected ';' before '*' token
+../common/JackLibSampleRateResampler.cpp: In constructor 'Jack::JackLibSampleRateResampler::JackLibSampleRateResampler()':
+../common/JackLibSampleRateResampler.cpp:29: error: 'fResampler' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:29: error: 'SRC_LINEAR' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:29: error: 'src_new' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:31: error: 'src_strerror' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp: In constructor 'Jack::JackLibSampleRateResampler::JackLibSampleRateResampler(unsigned int)':
+../common/JackLibSampleRateResampler.cpp:39: error: 'SRC_LINEAR' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:42: error: 'SRC_ZERO_ORDER_HOLD' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:45: error: 'SRC_SINC_FASTEST' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:48: error: 'SRC_SINC_MEDIUM_QUALITY' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:51: error: 'SRC_SINC_BEST_QUALITY' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:60: error: 'fResampler' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:60: error: 'src_new' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:62: error: 'src_strerror' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp: In destructor 'virtual Jack::JackLibSampleRateResampler::~JackLibSampleRateResampler()':
+../common/JackLibSampleRateResampler.cpp:67: error: 'fResampler' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:67: error: 'src_delete' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp: In member function 'virtual void Jack::JackLibSampleRateResampler::Reset(unsigned int)':
+../common/JackLibSampleRateResampler.cpp:73: error: 'fResampler' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:73: error: 'src_reset' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp: In member function 'virtual unsigned int Jack::JackLibSampleRateResampler::ReadResample(jack_default_audio_sample_t*, unsigned int)':
+../common/JackLibSampleRateResampler.cpp:79: error: 'SRC_DATA' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:79: error: expected ';' before 'src_data'
+../common/JackLibSampleRateResampler.cpp:92: error: 'src_data' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:99: error: 'fResampler' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:99: error: 'src_process' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:101: error: 'src_strerror' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp: In member function 'virtual unsigned int Jack::JackLibSampleRateResampler::WriteResample(jack_default_audio_sample_t*, unsigned int)':
+../common/JackLibSampleRateResampler.cpp:129: error: 'SRC_DATA' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:129: error: expected ';' before 'src_data'
+../common/JackLibSampleRateResampler.cpp:142: error: 'src_data' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:149: error: 'fResampler' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:149: error: 'src_process' was not declared in this scope
+../common/JackLibSampleRateResampler.cpp:151: error: 'src_strerror' was not declared in this scope
+In file included from ../common/JackAudioAdapterInterface.cpp:26:
+../common/JackLibSampleRateResampler.h:26:24: error: samplerate.h: No such file or directory
+[ 67/230] cxx: common/JackResampler.cpp -> build/default/common/JackResampler_2.o
+In file included from ../common/JackAudioAdapterInterface.cpp:26:
+../common/JackLibSampleRateResampler.h:40: error: ISO C++ forbids declaration of 'SRC_STATE' with no type
+../common/JackLibSampleRateResampler.h:40: error: expected ';' before '*' token
+Build failed
+ -> task failed (err #1): 
+        {task: cxx JackAudioAdapterInterface.cpp -> JackAudioAdapterInterface_2.o}
+-------------------------------------------
+
+I've made a changeset that disables build of netlib, jack_net_slave and
+jack_net_master when libsamplerate is not available. The commit is in
+the git branch called fix-libsamplerate-less-build.
+
+Feel free to correct/improve in that branch and remove it if it gets
+merged to master/trunk.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1305247886.9527_0.ltw:2,a <87zkmrv2xo.fsf at arnaudov dot name>
+________________________________________________________________________________
+

@@ -1,0 +1,44 @@
+Date:        Wed, 26 Jul 2017 18:36:09 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Yuri [Jack-Devel] Why frame sizes are limited to the powers of 2? (1501052326.5179_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Why frame sizes are limited to the powers of 2?
+
+On Tue, Jul 25, 2017 at 11:58:25PM -0700, Yuri wrote:
+
+> The Opus codec (http://opus-codec.org/) doesn't like such frame
+> sizes. It defines frame sizes in milliseconds, and allows 5 ms, 10
+> ms, 20 ms, 25 ms, ... which in case of 48,000 sample rate are never
+> a power of two.
+> 
+> It seems like Jack shouldn't be so strict in limiting frame rates to
+> the powers of 2.
+> 
+> 
+> How to solve this problem?
+
+Just put some buffering between the jack callback and the codec.
+You will need this anyway, as you can't assume that the codec and
+whatever is at the other end of the codec (file, network,...) is
+real-time safe. In practice you can be pretty sure it won't be.
+ 
+Jack is typically used to interconnect a soundcard and any number
+of applications. What if two applications have different preferred
+frame sizes ? Which one should win and impose its choice on all
+the others ? Forcing Jack to use a frame size required by any
+app is not a practical solution except in some trivial cases,
+e.g. when the app is the only one using Jack.
+
+Ciao, 
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+
+1501094185.18545_0.ltw:2,a <20170726183609.GA129346 at linuxaudio dot org>
+________________________________________________________________________________
+

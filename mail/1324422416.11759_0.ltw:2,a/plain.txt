@@ -1,0 +1,77 @@
+Date:        Tue, 20 Dec 2011 23:06:45 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Robin Gareus <[hidden] at gareus dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Robin Gareus Re: [Jack-Devel] How to get mplayer and firefox/flash to play (1324418665.8895_0.ltw:2,a)
+Follow-Up:   Robin Gareus Re: [Jack-Devel] How to get mplayer and firefox/flash to play (1324427805.15991_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] How to get mplayer and firefox/flash to play
+
+On Tue, Dec 20, 2011 at 11:03:57PM +0100, Robin Gareus wrote:
+
+> > Which still leaves the question why things don't just work
+> > with the alsa->jack plugin. 
+> 
+> Do you really think that this is interesting and important?
+
+Yes. _Why_ can't we just have something that looks like an
+ALSA hw device on one end (so apps can see it and use it),
+and a Jack client at the other end ?
+
+> Why don't you have a look?
+
+If I would charge the hours spent 'having a look' and you would
+be so good as to pay that bill, then probably your next action
+would have to be go looking for a nice bridge to sleep under :-)
+
+> I assume that it's due to the multitude of possible ways that clients
+> can interact with ALSA: some push, some pull, some request specific
+> buffer-sizes and/or bit-depth,... others use weird workarounds for
+> internal [timing] issues: In particular closed source apps like flash,
+> skype..
+
+Returning to my question above, there is no logical problem
+with such a thing. Every ALSA hw device, once configured for
+a particular sample rate, imposes that sample rate on its
+client. It doesn't matter if the client 'pulls' or 'pushes',
+if it uses read/write or mmap - these are just interface
+details. The client has to produce/accept samples at the
+rate determined by the the device, no matter how it talks
+to that device.
+
+So an ALSA *device* (as opposed to a plugin) that takes its
+timing from Jack's process callback instead of from a sound
+card interrupt should just be possible. It would amount to
+1/2 aloop + a Jack client + something. It could even be 100%
+userspace. 
+
+But the fact that after all those years such a thing does not
+exist makes me think that there is some fundamental problem
+with ALSA that makes it impossible. And after lots of hours
+trying to penetrate ALSA's endless layers of syntactic sugar,
+indirections, and abstractions for abstraction's sake I still
+don't know what that fundamental problem is. I do know that
+every time I try to go deeper into it the frustration grows.
+
+> > For one, it doesn't show up in aplay -L or -l. Which probably
+> > means some apps won't ever use it (anything based on juce for
+> > example).
+> 
+> Indeed, they're created dynamically.
+
+And that is a fundamental mistake. If it shouldn't matter to an
+app if it is using a real HW card or a ALSA plugin such as dmix
+etc., then the plugins should just look as if they were HW devices
+and be discoverable in the same way.
+
+
+Ciao,
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+
+1324422416.11759_0.ltw:2,a <20111220230645.GB16936 at linuxaudio dot org>
+________________________________________________________________________________
+

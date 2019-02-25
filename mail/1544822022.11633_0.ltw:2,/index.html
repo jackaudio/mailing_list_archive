@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jackd start/stop</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jackd start/stop</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1544814418.4258_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1544897266.15089_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1544822022.11633_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 14 Dec 2018 15:13:09 -0600 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>[hidden] at grossmann-venter dot com
+<a href='../1544775139.27067_0.ltw:2,/index.html'>[Jack-Devel] jackd start/stop </a></td></tr>
+</table>
+<pre>
+On Fri, December 14, 2018 2:11 am, [hidden] wrote:
+&gt; jackd is not a service as I tried to stop and start it with
+&gt; service jackd stop/start and it reports no such service
+
+Correct, it is a userspace application that needs to be started under your
+user account.  Applications using jackd for routing have to be able to
+share a memory buffer, so you cannot for example run jackd as a system
+service that any or multiple users could use.
+
+&gt; Therefore it seems the only way to stop jackd is with
+&gt; kill -9 &lt;pid&gt;
+
+If you start from a command line you can use control-c key combination. 
+Often users start from the qjackcontrol application, the application has a
+"stop" button which can be used to stop jackd.  I also have my
+qjackcontrol set to run "killall jackd" on exiting just in case the jackd
+process hung for some reason and did not respond to control commands, but
+I have not actually seen that happen, it is just a precaution.
+
+Look in your applications directory, probably /usr/bin on most
+distributions, might be in /bin on some.
+There should be several apps with jack in the name.  These could be useful
+to you:
+/usr/bin/jack_connect
+/usr/bin/jack_control
+/usr/bin/jack_disconnect
+/usr/bin/jack_lsp
+/usr/bin/jack_samplerate
+/usr/bin/jack_server_control
+
+
+&gt; That would be fine, but there is no such process jackd when i do ps.
+&gt; # ps -A |grep -i jack
+&gt;   2905 ?        00:01:02 jackdbus
+&gt;
+&gt; There is is only jackdbus which must be something else.
+
+There are two variants of what is called version 2 of jackd, stand alone
+jackd and jackdbus, which is jackd which exposes dbus controls.  For
+various historical reasons what I called version 2 of jackd is not really
+a continuation of version 1, it is another implementation of the same
+userspace API with a completely different engine.  It started as an
+experiment to try out some different features, but jackd 1 and jackd 2
+ended up continuing in parallel, with slightly different internal
+features, but same API presented to applications.  Since you have jackdbus
+on your system that indicates your distribution ships jackd 2.
+
+The jackdbus application is started using dbus, if you attempt to start it
+manually it gives a warning:
+jackdbus should be auto-executed by D-Bus message bus daemon.
+If you want to run it manually anyway, specify "auto" as only parameter
+
+Probably some application automatically started jackdbus when you started
+the application. Hard to know which one that would have been.
+
+&gt; I can see that ardour/mixbus calls jackd with parameters at startup, but
+&gt; if I manually try to start jackd it says it is already running .... but
+&gt; it has no PID. So is it a runaway process on my system.
+
+More probably jackd detects that there is already a process providing jack
+API services, in your case jackdbus.  Use jack_control to query the
+parameters, stop, etc.
+
+&gt; jack disappears often and I have to reboot to get it back
+
+You do not really have to reboot, if your system is configured to use
+jackdbus then just start an application which needs jackd and it will be
+automatically started, or use jack_control start to start it manually.
+
+Which distribution are you using?  You should be able to configure your
+system to use jackd instead of jackdbus.  If you manually start jackd from
+a terminal before starting any audio applications then jackdbus should
+detect that another jackd server is running and not start, but you can
+probably configure the audio applications to start jackd instead of
+jackdbus if you would prefer.
+
+Can you check what is in the ~/.jackdrc file?
+(by the way, not sure how familiar you are with linux terminal use, just
+reply if something is unclear, e.g. "~" means your user home directory).
+Possibly either that file, or a system file in /etc/jackdrc is configured
+to use jackdbus as the default jack server.  My drc file has this for
+example:
+/usr/bin/jackd -P70 -t2000 -dalsa -dhw:Lambda -r48000 -p1024 -n3 -zt -I376
+-O376
+
+That indicates to applications that want to automatically start a jack
+server that my preference is jackd (instead of jackdbus), 2000 millisecond
+timeout for applications to respond, ALSA driver backend, my Lambda audio
+interface, 48k sample rate, 1024 samples per period, 3 periods buffering
+latency, use triangular PDF dither, and report 376 samples of input and
+output latency.
+You do not have to set all of those backend parameters, you may be able to
+get away with defaults for some.
+
+I doubt you will care about the differences between jackd and jackdbus
+though after finding jack_control, it sounds like you just have not
+experimented enough to find all the various jack application yet. 
+Admittedly they are not documented very well.  I'm not sure jackdbus is
+documented anywhere in an easy to find form, the jack website just has man
+pages for jackd, which has probably contributed to your confusion:
+https://github.com/jackaudio/jackaudio.github.com/wiki/jackd(1)
+https://github.com/jackaudio/jackaudio.github.com/wiki/jackdrc%285%29
+
+The jack_control wiki page is probably the only place that mentions jackdbus:
+https://github.com/jackaudio/jackaudio.github.com/wiki/WalkThrough_User_jack_control
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1544814418.4258_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1544897266.15089_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1544822022.11633_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1544822022.11633_0.ltw:2,&nbsp;&lt;81916eee3062c55d9235d572cbc4a048.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

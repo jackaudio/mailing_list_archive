@@ -1,0 +1,74 @@
+Date:        Fri, 07 Jul 2017 00:29:07 +0200
+From:        IOhannes m zmölnig  <[hidden] at iem dot at>
+To:          [hidden] at lists dot jackaudio dot org
+
+Subject:     [Jack-Devel] weak linking on ubuntu
+
+after a long session of debugging i finally found out the problem of a
+friend of mine, why my jack-enabled application (hooray: Pd) would crash
+on their system.
+
+to cut it short:
+- Pd is including <jack/weakjack.h> to support weak linking (mainly for
+OSX; but while we are there, I think we'd like to support that on all
+platforms)
+- Ubuntu-16.04LTS' linker seems to have "--as-needed" enabled by default.
+
+now in general, I think that the "--as-needed" flag is nice, as it
+removed plenty of cruft from all application.
+
+unfortunately "man 1 ld" says:
+  --as-needed causes a DT_NEEDED tag to only be emitted for
+           a library that at that point in the link satisfies a non-weak
+           undefined symbol reference from a regular object file
+
+now, it seems that *all* symbols defined in <jack/jack.h> are defined as
+WEAK.
+this means that it is impossible for libjack to acquire a DT_NEEDED tag
+for any application (since there are only weak symbols in libjack for
+the application to depend on), which in turn means that the linker will
+happily optimize away the dependency on libjack.
+
+the application ends up not dylinking against libjack, with all symbols
+being set to NULL.
+
+example:
+
+<snip>
+$ cat <<EOF >myjack.c
+#include <jack/weakjack.h>
+#include <jack/jack.h>
+int main() {
+  jack_client_open("foobar", JackNoStartServer, 0, 0);
+  return 0;
+}
+$ gcc -o myjack myjack.c  -Wl,--as-needed -ljack
+$ ldd myjack | grep jack
+$
+</snip>
+
+with ubuntu-16.04LTS, the commandline is just
+    gcc -o myjack myjack.c -ljack
+
+
+this is certainly wrong.
+i do want weak symbols in jack, and still be able to use jack if the
+library is present and filled with symbols.
+(in linux there we only have weak symbols anyhow; no "weak linking" as
+in OSX where the .so file need not be present).
+
+what's the proper way to make my application link against libjack,
+without having to add special linker magic (that is not announced via
+pkg-config)?
+
+
+gfmrdsa
+IOhannes
+
+
+PS: on IRC, harry suggested that robin has some weirdo shit for this
+problem...
+
+1499380168.26809_0.ltw:2,a <c6bc4695-2d06-dfdd-6860-69660d731448 at iem dot at>
+________________________________________________________________________________
+

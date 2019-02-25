@@ -1,0 +1,164 @@
+Date:        Mon, 25 May 2009 17:29:16 +0200
+From:        Christian  <[hidden] at freenet dot de>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>
+In-Reply-To: Stéphane Letz [LAD] Keeping "guardians" and "rebels" on the same boat (1243244566.7768_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [LAD] Keeping "guardians" and "rebels" on the same boat (1243269944.10187_0.ltw:2,a)
+
+Subject:     Re: [LAD] Keeping "guardians" and "rebels" on the same boat
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Stéphane Letz schrieb:
+> Hi all,
+> 
+> I would be happy to get some reactions of this proposal that tries to  
+> keep the "guardians" and the "rebels" on the same boat. The pdf file  
+> for this proposal is : http://www.grame.fr/~letz/jackcontrol2.pdf.  
+> Compared to latest Fons proposal, this proposal basically combine the  
+> "control daemon" and the "jackd" server in a *unique* extended jackd  
+> (with control API IPC) (see 5). It also tries to minimize the number  
+> of shared libraries in the system, although we may decide to break-up  
+> the code in separated libraries if this is really needed (see 3).  
+> Concerning Torben proposal to have "control plug-ins" be part of the  
+> server, I agree with Fons here: this would be quite limited and more  
+> complex:  a new interface would have to be defined, "who" is loading  
+> those plug-ins in the server... and so on.
+> 
+> Let me explain it again:
+> 
+> The first "big" conceptual change compared to the current SVN state is  
+> this new "control IPC" scheme. That is the so called control API can  
+> be used on client side also. The other point is this concept of "multi- 
+> config share state" (see 3).
+> 
+> 1) Server side:
+> 
+> - libjackserver.so contains: server code + C control API  + "new" IPC  
+> control API (server side) +  C Jack API  + IPC Jack API (server side)
+> 
+> - jackd executable is linked with libjackserver.so  (nothing new here)
+> 
+> - backends (ALSA, dummy...) are linked with libjackserver.so  (nothing  
+> new here)
+> 
+> - a "standalone" client (that wants to embed the server in it's  
+> process) is linked with libjackserver.so and directly uses the C  
+> control API  to control/start the server and C Jack API to be a client  
+> (nothing new here).
+> 
+> 
+> 2) Client side:
+> 
+> - libjack.so contains :  "new" IPC control API (client side) + IPC  
+> Jack API (client side) + config API (TO BE DEFINED)
+> 
+> - clients are linked to libjack.so (nothing new here)
+> 
+> - new control front-end (jackdbus, jackOSC...) are linked to  
+> libjack.so: they control the server using the IPC control API (client  
+> side), they can be regular clients using IPC Jack API (client side) to  
+> deal with connections management and so on...
+> 
+> - a "default" centralized state for the server is always kept in ~/ 
+> jackdrc. When a client wants to auto-start, this "default" state is  
+> used. (this is important to keep in mind)
+> 
+> - libjack may have to start the "jackd" executable using the fork+exec  
+> way, or the "jackd" process is an "always running + relaunch" process  
+> (this has to be more defined later on...)
+> 
+> - Qjakctl stays as a regular client, it can still start the "jackd"  
+> process as usual. It can keep its own way of keeping multiple  
+> configurations as it does now.
+> 
+> - more sophisticated control front-end (jackdbus, jackOSC...) are now  
+> regular clients. They can use the IPC control API (client side) for  
+> more sophisticated control of the server. As regular clients, they  
+> access the API to control connections... and so on. The important  
+> thing is that those clients are *obliged* to deal with this "default"  
+> centralized state.
+> 
+> 
+> 3) Centralized multi-settings share state
+> 
+> - the idea is to provide a way to *share* multiple server  
+> configurations in a unique place for all control applications. This is  
+> part the D-Bus proposal in some sense. WE HAVE TO DECIDE IF WE WANT  
+> THIS FEATURE BE PART OF JACK OR NOT (this can be coded as part of  
+> libjack.so or in a separated library called "libjackconfig.so" is we  
+> need to share this code between the sever and client side).
+> 
+> - If we don't share a unique state, then any control application  
+> (jackdbus or any other in the future) will have the choice to use any  
+> format (XML...) but then obviously we loose the fact that all control  
+> applications would always see the same settings.
+> 
+> 
+> 4) General:
+> 
+> - a single jack2 package is needed. It contains the "jackd" daemon/ 
+> server as before.
+> 
+> - "jackdbus" is now conceptually separated from the Jack source code.  
+> It only uses jack.h + control.h + config.h (??) and is linked to  
+> libjack.so as any regular client. It can be distributed separately as  
+> a more sophisticated control front-end available, or be available in  
+> the jack2 package.
+> 
+> 
+> 5) Points of discussion:
+> 
+> - this model is somewhat simplified compared to the latest Fons  
+> proposal (a daemon process + [possibly] several separated jackd  
+> servers). The point is that separated processes for control daemon and  
+> jackd servers would need another mechanism for "control daemon" <===>   
+> jackd server communications (that is: the control daemon launches the  
+> jackd server, but then has to control it while it is running, possibly  
+> get some info from it (notifications.. etc..)).  If we stay with a  
+> unique "extended jackd" (with control API IPC), then things are a lot  
+> simpler. We can consider that having a single running jackd server is  
+> a common case and having several running jackd server a "corner case".  
+> It we decide that several running jackd servers is really necessary,  
+> then the "extended jackd" can still handle the situation if we accept  
+> to have several jackd servers running in a same process. Otherwise a  
+> more complex model for "completely separated control daemon and  
+> several jackd servers" has to be defined.
+> 
+> - multi-config stare state: is this part of Jack or not?
+> 
+> - if  multi-config share state is part of Jack, then a new API to  
+> handle that has to be defined
+> 
+> - when proposing new things, please keep in mind that jack2 is now  
+> multi-platform... don't be too Linux focused.
+> 
+> Comments welcome!
+> 
+> Stéphane
+> 
+> Linux-audio-dev mailing list
+> [hidden]
+> http://lists.linuxaudio.org/mailman/listinfo/linux-audio-dev
+> 
+> 
+
+Not that much related, but as I'm reading this comes to my mind:
+For this app you need jackOSC, for that app you need jackDBUS, for the
+other app you need jack* ....
+I hope these control-applications will be compatible with each other and
+don't interfere.
+Christian
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iEYEARECAAYFAkoauUwACgkQVC26eJ+o0+3L7ACeMXXIoNMkQX0rKy5xMbVIckwp
+k98AnjvyT7i7Uzlu5BdY+1E1XCq61lyY
+=3tI2
+-----END PGP SIGNATURE-----
+
+1243269086.8576_0.ltw:2,a <4A1AB94C.9070702 at freenet dot de>
+________________________________________________________________________________
+

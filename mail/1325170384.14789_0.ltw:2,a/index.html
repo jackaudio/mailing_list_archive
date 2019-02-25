@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] alsa-jack plugin : wrong revents ?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] alsa-jack plugin : wrong revents ?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325104584.7919_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325170614.15081_0.ltw:2,Sa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325170384.14789_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 29 Dec 2011 14:52:51 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1325170614.15081_0.ltw:2,Sa/index.html'>Re: [Jack-Devel] alsa-jack plugin : wrong revents ? </a></td></tr>
+</table>
+<pre>
+Hello all,
+
+I'm using code to interface with ALSA pcm devices that is
+functionally identical to what alsa_driver_wait() in
+Jack's alsa_driver.c is doing. More in particular the
+parts
+
+        if (need_playback) {
+           if (snd_pcm_poll_descriptors_revents
+                (driver-&gt;playback_handle, &amp;driver-&gt;pfd[0],
+                 driver-&gt;playback_nfds, &amp;revents) &lt; 0) {
+                jack_error ("ALSA: playback revents failed");
+                *status = -6;
+                return 0;
+            }
+
+            if (revents &amp; POLLERR) {
+                xrun_detected = TRUE;
+            }
+
+            if (revents &amp; POLLOUT) {
+                need_playback = 0;
+
+and
+
+        if (need_capture) {
+            if (snd_pcm_poll_descriptors_revents
+                (driver-&gt;capture_handle, &amp;driver-&gt;pfd[ci],
+                 driver-&gt;capture_nfds, &amp;revents) &lt; 0) {
+                jack_error ("ALSA: capture revents failed");
+                *status = -6;
+                return 0;
+            }
+
+            if (revents &amp; POLLERR) {
+                xrun_detected = TRUE;
+            }
+
+            if (revents &amp; POLLIN) {
+                need_capture = 0;
+
+
+Now when the ALSA device is actually the alsa&lt;-&gt;jack plugin used
+for both playback and capture it seems that the expected POLLOUT
+on the playback side revents never appears, instead I get a POLLIN
+there as well. 
+
+The same device works perfectly when tested for capture or playback
+separately.
+
+If I understand ALSA's snd_pcm_poll_descriptors_revents() correctly
+it should 'normalize' the revents so that one always gets POLLOUT
+for playback and POLLIN for capture. It seems that the plugin's
+code is not doing this correctly when used in duplex mode.
+
+
+Ciao,
+
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325104584.7919_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325170614.15081_0.ltw:2,Sa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325170384.14789_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1325170384.14789_0.ltw:2,a&nbsp;&lt;20111229145251.GA22822 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,132 @@
+Date:        Wed, 02 Nov 2011 20:14:58 +0100
+From:        hermann  <[hidden] at web dot de>
+To:          [hidden] at lists dot jackaudio dot org
+Cc:          guitarix-developer <[hidden] at lists dot sourceforge dot net>
+Follow-Up:   Paul Davis Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] (1320262433.22676_0.ltw:2,a)
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] (1320321251.20327_0.ltw:2,a)
+
+Subject:     [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash]
+
+Hi
+
+We have a wired problem with jack_session_manager diffs in 
+jack1 <-> jack2 
+for functions:
+
+A)  jack_client_get_uuid
+B)  jack_get_uuid_for_client_name
+
+Therefore I forward our results to you. (attached)
+
+Is that a known issue ?
+
+regards
+hermann
+> Could nail it on
+> string GxJack::get_uuid_insert()
+>
+> replacing
+> char* uuid = jack_client_get_uuid(client_insert);
+> with
+> const char* uuid = jack_get_uuid_for_client_name(client_insert,
+> client_insert_name.c_str());
+>
+> works here.
+> I'm on jackd2, but as rosea already reported a crash with jackd1 and the
+> old version, there seems to be a incompatibility in both versions of
+> jack-session manager (jack1 <->jack2). That's more then strange. . .  .
+
+yes, we have incompatibilities in all directions, that's really bad. I tested
+with ubuntu jackd1 (1:0.121.0+svn4) and jackd2 (1.9.7~dfsg-1ubuntu2)
+
+functions:
+
+A)  jack_client_get_uuid
+B)  jack_get_uuid_for_client_name
+
+Both functions are defined with weak linkage in the header files of both
+packages. But jackd1 has only A in its shared library, while jackd2 has
+only B.
+
+To make the mess complete, the weak linking doesn't work as
+advertised by the jackd developers. At least my understanding and
+that of the ubuntu / debian packagers seems to be:
+
+ 1) you can compile and link with either package (works)
+ 2) when the function is not in the shared library used at
+     runtime, the function address will be 0. Does NOT work.
+
+2) only works when the shared lib used at runtime is the same as
+the one used when linking. The compiler / linker will set the address
+of a weak function that it does not find in the libraries supplied to
+constant 0. Even when the funktion is in the library which is used at
+runtime, there will be no runtime linking.
+
+Even worse, when the funktion is found while building the
+executable, there will be an entry in the ELF PLT (Procedure Linkage
+Table). The address of the function in the program will be that of
+the PLT entry. So the function address is != 0 even when the
+runtime linker can't resolve the function and produces a jump
+to address 0 when calling the funktion.
+
+To solve the problem for guitarix, I had to make some ugly
+constructions:
+
+ - the functions must never be used directly (or you will get
+   a PLT entry so that dlsym() will only reflect the state while
+   building the executable)
+
+ - define typedefs for the function pointers that must be kept
+   in sync with the definitions of the functions in the jack header
+
+ - define global variables that are initialized with the function
+   addresses via dlsym().
+
+Example:
+
+typedef char *(*jack_client_get_uuid_type)(jack_client_t *);
+
+jack_client_get_uuid_type jack_client_get_uuid_fp =
+    reinterpret_cast<jack_client_get_uuid_type>(
+	dlsym(RTLD_DEFAULT, "jack_client_get_uuid"));
+
+Test program to verify the described behaviour:
+
+----------------------------------------------------------------
+#include <stdio.h>
+#include <jack/session.h>
+
+int main() {
+    printf("jack_client_get_uuid = %p, jack_get_uuid_for_client_name = %p\n",
+	   jack_client_get_uuid, jack_get_uuid_for_client_name);
+    return 0;
+}
+----------------------------------------------------------------
+
+test run (the ## lines represent deinstallation of jackd
+and installation of the displayed jackd version):
+
+----------------------------------------------------------------
+## libjack0            1:0.121.0+svn4
+$ gcc t.c -ljack
+$ ./a.out
+jack_client_get_uuid = 0x8048430, jack_get_uuid_for_client_name = (nil)
+
+## libjack-jackd2-dev  1.9.7~dfsg-1ubuntu2
+$ ./a.out
+jack_client_get_uuid = 0x8048430, jack_get_uuid_for_client_name = (nil)
+$ gcc t.c -ljack
+$ ./a.out
+jack_client_get_uuid = (nil), jack_get_uuid_for_client_name = 0x8048420
+
+## libjack0            1:0.121.0+svn4
+$ ./a.out
+jack_client_get_uuid = (nil), jack_get_uuid_for_client_name = 0x8048420
+----------------------------------------------------------------
+
+ciao
+Andreas
+
+1320261339.20695_0.ltw:2,a <1320261298.2111.31.camel at box>
+________________________________________________________________________________
+

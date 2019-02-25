@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Linux to Linux jacknet ?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Linux to Linux jacknet ?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1362252599.22469_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1362325215.12540_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1362324780.12245_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 03 Mar 2013 15:32:47 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Tommaso Cucinotta </span> &lt;[hidden] at sssup dot it&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Roland Mas
+<a href='../1362048397.11818_0.ltw:2,a/index.html'>Re: [Jack-Devel] Linux to Linux jacknet ? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1362325215.12540_0.ltw:2,/index.html'>Re: [Jack-Devel] Linux to Linux jacknet ? </a></td></tr>
+</table>
+<pre>
+On 28/02/13 10:46, Roland Mas wrote:
+&gt; Tommaso Cucinotta, 2013-02-28 09:30:56 +0000 :
+&gt; 
+&gt;&gt; On a related note, are the 2 machines constrained to be in the same
+&gt;&gt; subnet ?
+&gt; 
+&gt;   That would be a fair assumption, given the autodiscovery mentioned
+&gt; above.  But maybe a setup using jack_netsource can be rid of that
+&gt; constraint.
+
+Thanks for all the info. So, as in my network set-up I may have master
+and slave on different subnets, I guess I'll drop this connection method,
+and instead try the other one with jack_netsource where I can specify the
+slave host IP.
+
+However, it doesn't work again. Let me detail.
+
+slave side:
+$ jackd -d net
+jackdmp 1.9.9.5
+[...]
+JACK server starting in realtime mode with priority 10
+NetDriver started in async mode without Master's transport sync.
+Waiting for a master...
+
+master side:
+$ jackd -d alsa
+$ jack_netsource -H &lt;slave-ip&gt; -i2 -o2 -I1 -O1
+Not Connected
+
+It keeps saying Not Connected, I tried adding "-p19000" (btw, is it correct that the port over which this traffic is bound is 19000 on the slave side ? What about the client side ?).
+On the server side, it keeps "Waiting for a master...".
+
+I seem to have all iptables chains open here, what can be going wrong ?
+
+I wanted to try both slave and master on the same PC, using -H 127.0.0.1 (and I use a different name for the slave, i.e., jackd -n slave -d net), and in such a case I'm getting a slight different behaviour: when I launch jack_netsource without any -p option, nothing happens as before. But, if I add to jack_netsource the -p19000 option, then I can see something happening on the slave side:
+
+$ jackd -R -n slave -d net
+jackdmp 1.9.9.5
+[...]
+JACK server starting in realtime mode with priority 10
+NetDriver started in async mode without Master's transport sync.
+Waiting for a master...
+Initializing connection with ...
+**************** Network parameters ****************
+Name : 
+Protocol revision : 2
+MTU : 0
+Master name : 
+Slave name : 
+ID : 0
+Transport Sync : no
+Send channels (audio - midi) : 0 - 0
+Return channels (audio - midi) : 0 - 0
+Sample rate : 0 frames per second
+Period size : 0 frames per period
+Network latency : 0 cycles
+SampleEncoder : Float
+Slave mode : async
+****************************************************
+
+But, jack_netsource on master side keeps outputting "Not Connected". Also, when I kill jack_netsource, the slave side goes crazy with either infinite Xrun error messages, or with this [1] which I saw happening only once. I tried both the latest Ubuntu jackd and the one recompiled from git master. All non-working the same.
+
+How would you suggest to debug the problem ?
+
+Thanks again,
+
+	tom.
+
+[1]
+Recv connection lost error = Resource temporarily unavailable
+Driver is restarted
+Restarting driver...
+*** glibc detected *** /usr/local/jack-dev/bin/jackd: free(): invalid next size (fast): 0x00007fab54000e40 ***
+======= Backtrace: =========
+/lib/x86_64-linux-gnu/libc.so.6(+0x7eb96)[0x7fab6d899b96]
+/usr/lib/x86_64-linux-gnu/jack/jack_net.so(_ZN4Jack13JackNetDriver7FreeAllEv+0x5f)[0x7fab6ccdbfdf]
+/usr/lib/x86_64-linux-gnu/jack/jack_net.so(_ZN4Jack13JackNetDriver10InitializeEv+0x75)[0x7fab6ccdbc3b]
+/usr/lib/x86_64-linux-gnu/libjackserver.so.0(_ZN4Jack22JackWaitThreadedDriver17JackDriverStarter7ExecuteEv+0x2d)[0x7fab6e174917]
+/usr/lib/x86_64-linux-gnu/libjackserver.so.0(_ZN4Jack15JackPosixThread13ThreadHandlerEPv+0xd8)[0x7fab6e15edc8]
+/lib/x86_64-linux-gnu/libpthread.so.0(+0x7e9a)[0x7fab6d605e9a]
+/lib/x86_64-linux-gnu/libc.so.6(clone+0x6d)[0x7fab6d90ecbd]
+======= Memory map: ========
+00400000-00405000 r-xp 00000000 08:05 3636682                            /usr/local/jack-dev/bin/jackd
+00604000-00605000 r--p 00004000 08:05 3636682                            /usr/local/jack-dev/bin/jackd
+00605000-00606000 rw-p 00005000 08:05 3636682                            /usr/local/jack-dev/bin/jackd
+009c0000-00a48000 rw-p 00000000 00:00 0                                  [heap]
+7fab54000000-7fab54021000 rw-p 00000000 00:00 0 
+7fab54021000-7fab58000000 ---p 00000000 00:00 0 
+7fab58000000-7fab58021000 rw-p 00000000 00:00 0 
+7fab58021000-7fab5c000000 ---p 00000000 00:00 0 
+7fab5c000000-7fab5c021000 rw-p 00000000 00:00 0 
+7fab5c021000-7fab60000000 ---p 00000000 00:00 0 
+7fab61644000-7fab664bb000 rw-s 00000000 00:12 347648                     /run/shm/jack-1000-0
+7fab664bb000-7fab664bc000 ---p 00000000 00:00 0 
+7fab664bc000-7fab66ebd000 rw-p 00000000 00:00 0                          [stack:2437]
+7fab66ebd000-7fab66ebe000 ---p 00000000 00:00 0 
+7fab66ebe000-7fab678bf000 rw-p 00000000 00:00 0                          [stack:2436]
+7fab678bf000-7fab678c0000 ---p 00000000 00:00 0 
+7fab678c0000-7fab682c1000 rw-p 00000000 00:00 0                          [stack:2435]
+7fab69a5d000-7fab69a69000 r-xp 00000000 08:05 13907254                   /lib/x86_64-linux-gnu/libnss_files-2.15.so
+7fab69a69000-7fab69c68000 ---p 0000c000 08:05 13907254                   /lib/x86_64-linux-gnu/libnss_files-2.15.so
+7fab69c68000-7fab69c69000 r--p 0000b000 08:05 13907254                   /lib/x86_64-linux-gnu/libnss_files-2.15.so
+7fab69c69000-7fab69c6a000 rw-p 0000c000 08:05 13907254                   /lib/x86_64-linux-gnu/libnss_files-2.15.so
+7fab69c6a000-7fab6a2a7000 rw-p 00000000 00:00 0 
+7fab6a2a7000-7fab6a2bf000 r-xp 00000000 08:05 13907234                   /lib/x86_64-linux-gnu/libresolv-2.15.so
+7fab6a2bf000-7fab6a4bf000 ---p 00018000 08:05 13907234                   /lib/x86_64-linux-gnu/libresolv-2.15.so
+7fab6a4bf000-7fab6a4c0000 r--p 00018000 08:05 13907234                   /lib/x86_64-linux-gnu/libresolv-2.15.so
+7fab6a4c0000-7fab6a4c1000 rw-p 00019000 08:05 13907234                   /lib/x86_64-linux-gnu/libresolv-2.15.so
+7fab6a4c1000-7fab6a4c3000 rw-p 00000000 00:00 0 
+7fab6a4c3000-7fab6a4c9000 r-xp 00000000 08:05 3544791                    /usr/lib/x86_64-linux-gnu/libogg.so.0.8.0
+7fab6a4c9000-7fab6a6c8000 ---p 00006000 08:05 3544791                    /usr/lib/x86_64-linux-gnu/libogg.so.0.8.0
+7fab6a6c8000-7fab6a6c9000 r--p 00005000 08:05 3544791                    /usr/lib/x86_64-linux-gnu/libogg.so.0.8.0
+7fab6a6c9000-7fab6a6ca000 rw-p 00006000 08:05 3544791                    /usr/lib/x86_64-linux-gnu/libogg.so.0.8.0
+7fab6a6ca000-7fab6a6f5000 r-xp 00000000 08:05 3546526                    /usr/lib/x86_64-linux-gnu/libvorbis.so.0.4.5
+7fab6a6f5000-7fab6a8f5000 ---p 0002b000 08:05 3546526                    /usr/lib/x86_64-linux-gnu/libvorbis.so.0.4.5
+7fab6a8f5000-7fab6a8f6000 r--p 0002b000 08:05 3546526                    /usr/lib/x86_64-linux-gnu/libvorbis.so.0.4.5
+7fab6a8f6000-7fab6a8f7000 rw-p 0002c000 08:05 3546526                    /usr/lib/x86_64-linux-gnu/libvorbis.so.0.4.5
+7fab6a8f7000-7fab6abaa000 r-xp 00000000 08:05 3546013                    /usr/lib/x86_64-linux-gnu/libvorbisenc.so.2.0.8
+7fab6abaa000-7fab6ada9000 ---p 002b3000 08:05 3546013                    /usr/lib/x86_64-linux-gnu/libvorbisenc.so.2.0.8
+7fab6ada9000-7fab6adc5000 r--p 002b2000 08:05 3546013                    /usr/lib/x86_64-linux-gnu/libvorbisenc.so.2.0.8
+7fab6adc5000-7fab6adc6000 rw-p 002ce000 08:05 3546013                    /usr/lib/x86_64-linux-gnu/libvorbisenc.so.2.0.8
+7fab6adc6000-7fab6ae10000 r-xp 00000000 08:05 3544803                    /usr/lib/x86_64-linux-gnu/libFLAC.so.8.2.0
+7fab6ae10000-7fab6b010000 ---p 0004a000 08:05 3544803                    /usr/lib/x86_64-linux-gnu/libFLAC.so.8.2.0
+7fab6b010000-7fab6b011000 r--p 0004a000 08:05 3544803                    /usr/lib/x86_64-linux-gnu/libFLAC.so.8.2.0
+7fab6b011000-7fab6b012000 rw-p 0004b000 08:05 3544803                    /usr/lib/x86_64-linux-gnu/libFLAC.so.8.2.0
+7fab6b012000-7fab6b029000 r-xp 00000000 08:05 13907268                   /lib/x86_64-linux-gnu/libnsl-2.15.so
+7fab6b029000-7fab6b228000 ---p 00017000 08:05 13907268                   /lib/x86_64-linux-gnu/libnsl-2.15.so
+7fab6b228000-7fab6b229000 r--p 00016000 08:05 13907268                   /lib/x86_64-linux-gnu/libnsl-2.15.so
+7fab6b229000-7fab6b22a000 rw-p 00017000 08:05 13907268                   /lib/x86_64-linux-gnu/libnsl-2.15.so
+7fab6b22a000-7fab6b22c000 rw-p 00000000 00:00 0 
+7fab6b22c000-7fab6b231000 r-xp 00000000 08:05 3545517                    /usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0
+7fab6b231000-7fab6b430000 ---p 00005000 08:05 3545517                    /usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0
+7fab6b430000-7fab6b431000 r--p 00004000 08:05 3545517                    /usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0
+7fab6b431000-7fab6b432000 rw-p 00005000 08:05 3545517                    /usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0
+7fab6b432000-7fab6b434000 r-xp 00000000 08:05 3539857                    /usr/lib/x86_64-linux-gnu/libXau.so.6.0.0
+7fab6b434000-7fab6b634000 ---p 00002000 08:05 3539857                    /usr/lib/x86_64-linux-gnu/libXau.so.6.0.0
+7fab6b634000-7fab6b635000 r--p 00002000 08:05 3539857                    /usr/lib/x86_64-linux-gnu/libXau.so.6.0.0
+7fab6b635000-7fab6b636000 rw-p 00003000 08:05 3539857                    /usr/lib/x86_64-linux-gnu/libXau.so.6.0.0
+7fab6b636000-7fab6b63b000 r-xp 00000000 08:05 3546042                    /usr/lib/x86_64-linux-gnu/libasyncns.so.0.3.1
+7fab6b63b000-7fab6b83a000 ---p 00005000 08:05 3546042                    /usr/lib/x86_64-linux-gnu/libasyncns.so.0.3.1
+7fab6b83a000-7fab6b83b000 r--p 00004000 08:05 3546042                    /usr/lib/x86_64-linux-gnu/libasyncns.so.0.3.1
+7fab6b83b000-7fab6b83c000 rw-p 00005000 08:05 3546042                    /usr/lib/x86_64-linux-gnu/libasyncns.so.0.3.1
+7fab6b83c000-7fab6b89b000 r-xp 00000000 08:05 3544817                    /usr/lib/x86_64-linux-gnu/libsndfile.so.1.0.25
+Aborted (core dumped)
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1362252599.22469_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1362325215.12540_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1362324780.12245_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1362324780.12245_0.ltw:2,a&nbsp;&lt;51336D1F.5010906 at sssup dot it&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

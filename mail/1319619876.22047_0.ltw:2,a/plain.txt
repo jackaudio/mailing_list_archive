@@ -1,0 +1,115 @@
+Date:        Wed, 26 Oct 2011 16:04:11 +0700
+From:        IL'dar AKHmetgaleev  <[hidden] at gmail dot com>
+To:          Nedko Arnaudov <[hidden] at arnaudov dot name>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Nedko Arnaudov Re: [Jack-Devel] EMU 0404 with jack dbus (1319607568.7813_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] EMU 0404 with jack dbus
+
+На Wed, 26 Oct 2011 08:38:35 +0300
+Nedko Arnaudov <[hidden]> записано:
+
+> Both jackd and jackdbus use same code for interaction with ALSA. Its
+> in libjackserver.so and the JACK driver for ALSA. If you see
+> differences in interaction with ALSA, then you've configured jackdbus
+> differently than jackd. Or you are using different version of JACK.
+> Make sure to reactivate jackdbus process after installing new version
+> system wide.
+
+I played with jackd:
+
+$ jackd --realtime -dalsa -r44100 -p256 -n2 -Phw:2
+jackdmp 1.9.8 Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2011 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+no message buffer overruns
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 10
+creating alsa driver ... hw:2|-|256|2|44100|0|0|nomon|swmeter|-|32bit
+control device hw:2
+configuring for 44100Hz, period = 256 frames (5.8 ms), buffer = 2
+periods ALSA: final selected sample format for playback: 16bit
+little-endian ALSA: use 2 periods for playback
+
+This configuration plays well.
+
+but alsa_in with same device captures with lags.
+sample of lags: http://akhil.ru/drop/955v
+
+$ jackd --realtime -dalsa -r44100 -p256 -n2 -Chw:2
+jackdmp 1.9.8
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2011 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+no message buffer overruns
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 10
+creating alsa driver ... -|hw:2|256|2|44100|0|0|nomon|swmeter|-|32bit
+control device hw:0
+configuring for 44100Hz, period = 256 frames (5.8 ms), buffer = 2
+periods ALSA: final selected sample format for capture: 16bit
+little-endian ALSA: use 2 periods for capture
+
+This one captures well.
+
+$ jackd --realtime -dalsa -r44100 -p256 -n2 -Chw:2 -Phw:2
+jackdmp 1.9.8 Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2011 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+no message buffer overruns
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 10
+creating alsa driver ... hw:2|hw:2|256|2|44100|0|0|nomon|swmeter|-|32bit
+control device hw:2
+configuring for 44100Hz, period = 256 frames (5.8 ms), buffer = 2
+periods ALSA: final selected sample format for capture: 16bit
+little-endian ALSA: use 2 periods for capture
+ALSA: final selected sample format for playback: 16bit little-endian
+ALSA: use 2 periods for playback
+
+Lags both for capturing and playback. 
+This is sample of captured audio with lags http://akhil.ru/drop/c5hc
+
+Interesting thing:
+$ jackd --realtime -dalsa -r44100 -p256 -n2 -Chw:2,2 -Phw:2,3
+jackdmp
+1.9.8 Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2011 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+no message buffer overruns
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 10
+creating alsa driver ...
+hw:2,3|hw:2,2|256|2|44100|0|0|nomon|swmeter|-|32bit control device hw:2
+configuring for 44100Hz, period = 256 frames (5.8 ms), buffer = 2
+periods ALSA: final selected sample format for capture: 32bit integer
+little-endian ALSA: use 2 periods for capture
+ALSA: final selected sample format for playback: 16bit little-endian
+ALSA: use 2 periods for playback
+playback and capture sample rates do not match (48000 vs. 44100)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Seems like driver do not sets capture rate to 44100
+
+===8@))-<-<
+Ильдар Ахметгалеев aka AkhIL
+Ср. окт. 26 14:42:23 NOVT 2011
+Wed Oct 26 07:42:23 UTC 2011
+----------------------------------
+Заходите в гости: http://akhil.ru
+
+1319619876.22047_0.ltw:2,a <20111026160411.255cdb6e at artmotion dot home dot net>
+________________________________________________________________________________
+

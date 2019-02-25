@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK 2 is not real time safe on posix?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK 2 is not real time safe on posix?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1429446593.23786_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1429450549.27215_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1429448821.26255_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 19 Apr 2015 09:06:53 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Johannes Lorenz &lt;[hidden] at mailueberfall dot de&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Johannes Lorenz
+<a href='../1429437563.9317_0.ltw:2,/index.html'>[Jack-Devel] JACK 2 is not real time safe on posix? </a></td></tr>
+</table>
+<pre>
+There can be no such thing as strict real time safety in a system that
+involves task (context switching). JACK does the best possible
+approximation given the tools provided by the OS.
+
+You are advised to worry less about the design of JACK internals, which are
+now over a decade old and known to work extremely well on supported
+platforms, and worry more about your own JACK client code.
+
+On Sun, Apr 19, 2015 at 5:59 AM, Johannes Lorenz &lt;
+[hidden]&gt; wrote:
+
+&gt; Hello,
+&gt;
+&gt; it is often being said that JACK 2 is real time safe, for example in the
+&gt; JACK faq. I wondered how JACK 2 suspends a thread, so I checked what
+&gt; happens after the JackClient finished CallProcessCallback():
+&gt;
+&gt;   JackClient::CallProcessCallback()
+&gt;   -&gt; JackClient::CycleWaitAux()
+&gt;   -&gt; JackClient::WaitSync()
+&gt;   -&gt; JackGraphManager::SuspendRefNum()
+&gt;   -&gt; JackConnectionManager::SuspendRefNum()
+&gt;   -&gt; virtual JackSynchro::TimedWait()
+&gt;
+&gt; However, I found only two classes in the `posix' folder that implement
+&gt; this virtual function:
+&gt;
+&gt;   * JackPosixSemaphore: uses `sem_timedwait()' to block
+&gt;   * JackFifo: uses `read()' to block
+&gt;
+&gt; However, both `sem_timedwait()' and `read()' are syscalls, so they contain
+&gt; context switch, which means they are non realtime. Actually, the JACK
+&gt; documentation warns to use function like these if you pass a process()
+&gt; callback to jack [1].
+&gt;
+&gt; So how can JACK claim it would be realtime? (No objections, I just don't
+&gt; understand it)
+&gt;
+&gt; Best,
+&gt; Johannes
+&gt;
+&gt; [1]
+&gt; http://jackaudio.org/files/docs/html/group__ClientCallbacks.html#gafb5ec9fb4b736606d676c135fb97888b
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1429446593.23786_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1429450549.27215_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1429448821.26255_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1429448821.26255_0.ltw:2,&nbsp;&lt;CAFa_cKkYEv4BPiZk35UgYbZX0RfREditHm6+xmw_apnZbQK0tQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

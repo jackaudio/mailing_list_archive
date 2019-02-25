@@ -1,0 +1,44 @@
+Date:        Mon, 28 Feb 2011 18:52:22 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] jconvolver and OSX (1298917858.12744_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jconvolver and OSX
+
+On Mon, Feb 28, 2011 at 01:30:22PM -0500, Paul Davis wrote:
+
+> On Mon, Feb 28, 2011 at 12:54 PM, Fons Adriaensen <[hidden]> wrote:
+> > On Mon, Feb 28, 2011 at 11:19:22AM -0500, Paul Davis wrote:
+> >
+> >> the solution to this issue (or at least, a solution) has already been
+> >> posted by torben, from ardour3's code.
+> >
+> > Not a complete solution as you need sem_init() also to reset
+> > existing semaphores. It may work if you're lucky.
+> 
+> why do you ever need to reset them?
+
+Because the internal state of the convolver is as long as
+the longest IR that was configured, and therefore it has
+has start/stop/reset functions. This allows you to process
+a number of buffers without having to flush the complete
+state first (useful in non-RT mode). There is also cleanup(),
+which returns the object to its pristine state as after
+calling the constructor.
+
+Both reset() and cleanup() reset the semaphores.
+
+Now if you stopped cleanly, which means waiting until all
+threads have finished (there's a function to test for this),
+the semas will be at zero count anyway, so things should work
+even without sem_init(). It's there to be sure.
+
+Ciao,
+
+-- 
+FA
+
+1298919154.15309_0.ltw:2,a <20110228185221.GA17707 at linuxaudio dot org>
+________________________________________________________________________________
+

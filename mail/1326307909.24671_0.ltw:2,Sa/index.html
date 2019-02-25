@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] The Situation(s) With JACK</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] The Situation(s) With JACK</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1326307043.23428_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1326309135.26563_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1326307909.24671_0.ltw:2,Sa'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 11 Jan 2012 20:50:15 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Nedko Arnaudov </span> &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Adrian Knoth
+<a href='../1326288823.28625_0.ltw:2,a/index.html'>Re: [Jack-Devel] The Situation(s) With JACK </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1326319342.5022_0.ltw:2,a/index.html'>Re: [Jack-Devel] The Situation(s) With JACK </a></td></tr>
+</table>
+<pre>
+Paul Davis &lt;[hidden]&gt; writes:
+
+&gt; so, moving along, it seems that the first steps (very tiny baby steps)
+&gt; to resolving all this stuff involve finding a way to make the header
+&gt; files and common example and utility clients shareable by any
+&gt; implementation. the obvious solution to this involves putting them
+&gt; into a repository in some special way, or putting them in a special
+&gt; repository.
+&gt;
+&gt; i've looked at git submodules and they seem roughly OK for this task,
+&gt; but also to have some complications and potential risks. i don't even
+&gt; begin to claim to know enough about git or svn or SCM systems in
+&gt; general to identify the best way to go about doing this, but i have a
+&gt; feeling that someone else on this list does.
+
+Please share the complications and potential risks that are associated
+with use of git submodules for this task.
+
+Adrian Knoth &lt;[hidden]&gt; writes:
+
+&gt; On 01/11/2012 01:42 PM, Paul Davis wrote:
+&gt;
+&gt;&gt; so please comment: what is the best way to put the header files that
+&gt;&gt; define the JACK API, along with the source code for the
+&gt;&gt; example+utility clients somewhere that any implementation of the API
+&gt;&gt; could use them?
+&gt;
+&gt; I'm also not a big fan of submodules. How about the following:
+&gt;
+&gt;
+&gt;    jack-common --&gt; independent repo
+&gt;      + headers --&gt; branch in jack-common with the header files
+&gt;      + tools
+&gt;      + example-clients
+&gt;      + manpages
+&gt;
+&gt; The last three are also branches of the jack-common repo.
+&gt;
+&gt; The real jackd repositories:
+&gt;
+&gt;    jackd1   --&gt; independent repo
+&gt;    jackd2   --&gt; independent repo
+&gt;
+&gt; It doesn't really matter if it's one repo with two branches or two
+&gt; repos, but I guess the latter is more convenient to use. Correct me if
+&gt; I'm wrong.
+
+git submodules are about how jack-common branches appear in the jack1
+and jack2 repos. Whether submodules are used or not is up to the jack
+implementator.
+
+The jack-common repo itself probably doesnt need git submodules. But I
+agree that having one branch per part (headers, tools, etc) is good
+idea. Using single repo makes sense because it can be associated with
+single policy.
+
+According to the documentation git submodules can be used with a single
+jack-common repo and multiple branches (headers, tools, etc) by
+supplying the -b parameter to "git submodule add" command.
+
+Alternative to git submodules are direct merges. This somewhat implies
+that the common/shared branch already has appropriate directory
+structure. I.e. paths of shared files should not collide with the paths
+of non-shared files. We can make sure that it does not collide with
+existing implementations (jack1, jack2, tschack) but its still more
+restrictive than the submodules approach. Even in case of collisions,
+jack implementators can handle it but it could be more work for them
+because directory moves may be involved. Directory moves between
+branches are possible but tedious to merge.
+
+If we don't put different parts in subdirs, i.e. the headers branch does
+not have headers/ subdir, then those who want to use direct merges will
+face the tedious rename work on each sync. This situation is probably
+best for those who will use git submodule to import the shared stuff.
+
+If we put different parts into subdirs, those who want to use direct
+merges still risk to face tedious rename work on each sync but the risk
+is smaller than in previous case because they can do the smarter thing
+and adjust their own implementation not to conflict. This situation is
+not perfect for those who choose to use git submodules either. They will
+have additional subdir for each subdir. I.e. something like
+shared-headers/headers and shared-tools/tools. This can face stylistic
+feelings and force those that have them strong to do the tedious
+directory move work on each sync.
+
+jack-common is not that good because jack2 already has common/
+subdir. To reduce possibel confusion, I propose to use jack-shared
+instead.
+
+So the root question here is what sync strategy jack-shared will
+favour. I personally prefer git submodules but If we have one subdir per
+part then direct merges will be better. git submodules are safer unless
+there is applicable guarantee that jack-shared subdir strategy will
+never change.
+
+Having top-level stuff shared/used by different parts (in sybdirs) in
+the root directory, e.g. build system, greatly increases chance of path
+collisions and thus adds value to the git-submodule approach.
+
+I'd like to remind once again that jackd1/jackd2 is bad naming for
+repositories. Not only because of jackdbus in jack2 but also because
+jack1 and jack2 contain libjack as well. jackd is not "jack" its a/the
+jack server [binary] executable. The jack system has several parts,
+headers, client library, server library, jackd server, jackd.py (jack1),
+jackdbus (jack2), documentation, etc. Spreading the myth about jackd
+being "the whole jack" only promotes ignorance that quite often leads to
+confusion.
+
+Its like jackdmp vs jackmp. I guess we can learn from history... Can we?
+...Still my guitar gently weeps...
+
+-- 
+Nedko Arnaudov &lt;GnuPG KeyID: 5D1B58ED&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1326307043.23428_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1326309135.26563_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1326307909.24671_0.ltw:2,Sa'>Index</a></td></tr>
+</table>
+<p><small>1326307909.24671_0.ltw:2,Sa&nbsp;&lt;87ipkiul94.fsf at arnaudov dot name&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,66 @@
+Date:        Tue, 20 Dec 2016 12:31:31 +0000
+From:        Harry van Haaren  <[hidden] at gmail dot com>
+To:          ROBERT WOLF <[hidden] at hercsmusicsystems dot com dot au>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: ROBERT WOLF [Jack-Devel] jack midi event reserve vs. write (1482232160.13733_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack midi event reserve vs. write
+
+On Tue, Dec 20, 2016 at 11:09 AM, ROBERT WOLF <
+[hidden]> wrote:
+
+> Dear All,
+>
+
+Hi Robert,
+
+
+> What exactly is the difference between *jack_midi_event_reserve* and
+> *jack_midi_event_write* ?
+>
+
+From my understanding:
+- event_reserve() takes "size" number of bytes from JACKs internal MIDI
+buffers for a particular port, and returns the address to that buffer. Your
+application can now write to that pointer, and once the RT callback is
+done, JACK will transmit the data.
+
+- event_write() takes a pointer from your application, and copies the data
+pointed to into the JACK internal midi buffer. Your application can re-use
+or delete the buffer you passed to the event_write() function now, as JACK
+has a copy of the data.
+
+
+> In particular, if I call *jack_midi_event_write*, does it actually copy
+> the data from the buffer, which I provide?
+> Or does it use that same buffer.
+>
+
+See above.
+
+
+> Another question is how can I send midi events generated from GUI, (which
+> does not run in the audio callback)?
+> My guess is to cache them somewhere and transmit them inside the callback?
+> Am I guessing correctly?
+> <http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org>
+>
+
+In short: Yes. You need to transfer the MIDI data to be sent between two
+threads - this can be trivial with mutexs/semaphors/locking systems, but
+keep in mind that your real-time thread must *never* block. Personally, I
+am a big proponent of message passing, instead of locking based systems.
+
+To answer your question, I would use a ringbuffer (jack has a ringbuffer t)
+to move a message (struct with some metadata) to transfer an event (midi
+note one) between the GUI to JACK thread.
+
+Hope that helps, -Harry
+
+-- 
+
+http://www.openavproductions.com
+
+1482237109.18960_0.ltw:2,a <CAKudYbO7oN9JCksF19z=-9cMh8m=hDFOQsNzbfx3fp3rmKOvKQ at mail dot gmail dot com>
+________________________________________________________________________________
+

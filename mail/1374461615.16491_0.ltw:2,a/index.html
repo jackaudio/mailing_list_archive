@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Question about Jack-2's synchronization</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Question about Jack-2's synchronization</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1374440584.8109_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1374629797.18535_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1374461615.16491_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 21 Jul 2013 21:53:28 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> karthik poduval </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+</table>
+<pre>
+Hi All,
+
+I added a couple of logs to JackFifo class printing the calls made along
+with issuing process thread id. Please refer to a log excerpt below,
+questions follow:-
+
+
+   1137 [2]TimedWait for refnum-2 time-2147483647, pid[3453]
+   1138 [2]Signal for refnum-2 pid[3444]
+   1139 [2]Wait for refnum-2 pid[3453]
+   1140 [2]Signal for refnum-0 pid[3453]
+   1141 [2]Signal for refnum-1 pid[3453]
+   1142 [2]TimedWait for refnum-2 time-2147483647, pid[3453]
+
+
+1. How come I am not seeing a Wait call made for refnum 0 and 1, although
+there is a Signal call being made. Below is how I expected it to work,
+please correct my understanding on how the synchronization works.
+
+driver thread (Signal refnum-2, Wait refnum-0)
+client thread (Signal refnum-0, Wait refnum-2)
+driver thread (Signal refnum-2, Wait refnum-0)
+client thread (Signal refnum-0, Wait refnum-2)
+.....
+.....
+
+where driver thread is at refnum-0 and client thread is at refnum-2. I am
+running the client app after starting the server with alsa backend.
+
+2. Why is there a call to Wait (1139) and then another call to
+TimedWait(1142) for refnum-2 Wouldn't the call to the first invoked Wait
+put the thread(3453) to sleep ?
+
+Thanks in Advance.
+
+-- 
+Regards,
+Karthik Poduval
+
+P.S. To give a bigger picture I am trying to add the audio processing
+threads of JACK under the control of a custom scheduler built using the
+(HGS) hierarchical group scheduling framework developed by University of
+Kansas (http://www.ittc.ku.edu/kusp/).
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1374440584.8109_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1374629797.18535_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1374461615.16491_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1374461615.16491_0.ltw:2,a&nbsp;&lt;CAFP0Ok_eWBKvP3whUDZc1BG2D33PQTVgsQ+7Epd4HeuhQjUMHQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

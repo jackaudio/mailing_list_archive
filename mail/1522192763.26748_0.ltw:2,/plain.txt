@@ -1,0 +1,96 @@
+Date:        Wed, 28 Mar 2018 00:18:50 +0100
+From:        Christopher Obbard  <[hidden] at 64studio dot com>
+To:          [hidden] at chriscaudle dot org
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Chris Caudle Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes (1522105766.15768_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes
+
+Hi Chris,
+
+Success tonight!
+
+Jack running nicely with -r4800 -p64 -n2 -s
+The softmode flag I will talk about later...
+
+
+>> Ah, I've been running mainline stable 4.14, applied CONFIG_PREEMPT and
+>> ran a cyclictest on three threads with no extra load. It was giving me
+>> "ok" average latency, and terrible maximum latency.
+>
+> That is exactly the point of the RT patches.  "Most" of the time latency
+> is OK with the standard configuration options.  If you don't mind losing
+> some data occasionally the standard kernel config options are probably OK.
+
+I was just pointing out the latency difference between Mainline and TI
+kernel with RT patch applied.
+
+
+>> This time I have a printk message of "GBLCTL write error" every few us.
+>
+> Every few microseconds?  I took a quick look at the McASP documentation
+> and that register looks like a control register you would setup once when
+> starting the driver, and then not touch it again until you had to
+> reconfigure.  If it is being written more than a couple of times something
+> is wrong.  It is possible that something is triggering error handling to
+> kick in, it looks like that register has to be written again in certain
+> cases where clock synch is lost, or possibly lost.  Without knowing more
+> details of how you configured clocking and what your hardware looks like I
+> can't say much more than that could be something to investigate.
+
+More digging (just put some printks into the kernel), it turns out
+this repeated GBLCTL error is actually caused by jack xruns
+automatically trying to reset the soundcard.
+
+This repeats over & over while jack's softmode is enabled. This only
+happens with really tiny period values, with 256 and above it trys to
+restart the card once or twice.
+
+[  748.951772] AUDIOTEST davinci_mcasp_start stream: 0
+[  748.956704] AUDIOTEST mcasp_start_tx
+[  748.960317] AUDIOTEST davinci_mcasp_start stream: 1
+[  748.965219] AUDIOTEST mcasp_start_rx
+[  748.969932] AUDIOTEST GBLCTL write error reg: 96 val: 1
+[  748.976214] AUDIOTEST davinci_mcasp_stop stream: 0
+[  748.976420] davinci-mcasp 48038000.mcasp: Transmit buffer underflow
+[  748.987335] AUDIOTEST mcasp_stop_tx
+[  748.990847] AUDIOTEST davinci_mcasp_stop stream: 1
+[  748.995659] AUDIOTEST mcasp_stop_rx
+[  748.999212] davinci-mcasp 48038000.mcasp: unhandled rx event.
+rxstat: 0x00000104
+
+
+I think the problem is due to the following function call happening
+when Jack's started:
+
+my_driver_hw_params()
+  > sets cpu output format
+  > sets cpu sysclk
+  > sets cpu tdm slot
+  > sets codec sysclk & pll path
+
+davinci_mcasp_start()
+  > calls mcasp_start_tx() -- all OK
+  > calls mcasp_start_rx()
+      > calls mcasp_set_ctl_reg(DAVINCI_MCASP_GBLCTLR_REG, RXHCLKRST)
+-- craps out setting the receive clock. This is where the GBLCTL error
+message is coming from.
+
+This then causes an xrun in jack, calling davinchi_mcasp_stop() and
+then repeating all over again.
+
+Jack with the soft flag doesn't restart the alsa driver, so all is OK
+in the world there. Until there is a genuine xrun!
+
+I've verified the bitstream looks OK on logic analyser.
+
+Isn't software fun? :-)
+
+
+Cheers!
+
+Chris
+
+1522192763.26748_0.ltw:2, <CAP03XeoTsvDzDno=SCJe+tHEN4cGR6ohLE0+=hApQ+AWUrrxSw at mail dot gmail dot com>
+________________________________________________________________________________
+

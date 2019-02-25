@@ -1,0 +1,85 @@
+Date:        Sun, 15 May 2016 02:12:47 +0300
+From:        Chuckk Hubbard  <[hidden] at gmail dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] Implement a driver as a writable client? (1463182887.1790_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Implement a driver as a writable client?
+
+Thanks for the info, Paul.
+So, are you basically saying I need an extra buffer? A client takes audio
+input from the JACK server and writes it to a buffer, and I have to
+manually tweak the size of that buffer to avoid over- or underruns, and
+another thread writes from that buffer to the hardware I2S FIFO whenever
+it's writable? If I understand the implications of clients being unable to
+block as you say, the audio generation programs won't ever wait for my
+improvised "driver"... but I'm not sure if I get why that's something to
+worry about.
+-Chuckk
+
+
+
+On Sat, May 14, 2016 at 2:41 AM, Paul Davis <[hidden]>
+wrote:
+
+> You can't do duplex properly as a client. The main difference between a
+> JACK "driver" (aka "backend") and a client is that a driver consists of two
+> halves. One is executed at the start of a process cycle, to collect data
+> from the hardware; the other is executed at the end of a process cycle, to
+> deliver data to the hardware.
+>
+> If you're not doing duplex, you can do whatever you want in a client, but
+> keep in mind that it cannot block, meaning that you basically have to
+> shuffle the data to/from another thread that actually interacts with the
+> hardware.
+>
+>
+> On Fri, May 13, 2016 at 7:12 PM, Chuckk Hubbard <[hidden]
+> > wrote:
+>
+>> Hi.
+>> I've been sinking lots of time in trying to get ALSA to work with a
+>> SGTL5000 (Teensy Audio Adapter) in Raspbian on a Raspberry Pi 3. I have the
+>> complete documentation for how to manually set up the audio chip, and
+>> sufficient documentation on how to manually set up the Pi's ARM I2S
+>> peripheral. The ALSA solution is generalized for any kind of hardware you
+>> could want, is something I don't really want to know, at all, in my life,
+>> and seems just far too complex when I have detailed guides for both the
+>> audio chip and the CPU. The one combination of ALSA platform, machine and
+>> codec drivers that I've managed to get sound from plays more than 2x too
+>> fast and will not open with JACK.
+>>
+>> So, I'm reading about the JACK API, wondering about simply writing a C
+>> program to configure and write to the Pi's built-in I2S FIFOs, without even
+>> telling ALSA that I'm doing it; but I see that all JACK clients should use
+>> callback functions. Still, audio input from JACK into a program using the
+>> API is a regular thing, right? So how complicated might it be to set up
+>> such a client that gets audio input from JACK and writes that to the chip's
+>> I2S FIFO? My timing will be controlled by the audio chip, the Pi chip will
+>> be a slave to it. So as long as my program writes to the transmit FIFO fast
+>> enough, and waits if the FIFO is full, I think I don't need to worry about
+>> synchronizing JACK exactly to the audio chip's clock... right?
+>>
+>> I'm just a little fuzzy on this timing part.
+>> Thanks for any clarification.
+>>
+>> -Chuckk
+>>
+>>
+>> --
+>> http://www.badmuthahubbard.com
+>>
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>>
+>>
+>
+
+
+-- 
+http://www.badmuthahubbard.com
+
+1463267595.31470_0.ltw:2,a <CAFA-yJm-EgRgXVBD0qK9bg3mAeukw8KDR_9HeozqM2NPE+usYw at mail dot gmail dot com>
+________________________________________________________________________________
+

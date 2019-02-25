@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] [PATCH 3/3] [alsa-midi] add basic alsa-seq midi slave driver</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] [PATCH 3/3] [alsa-midi] add basic alsa-seq midi slave driver</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1306094576.3904_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1306094586.3933_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1306094580.3925_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 22 May 2011 22:02:24 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Torben Hohn </span> &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Torben Hohn
+<a href='../1306094576.3904_0.ltw:2,a/index.html'>[Jack-Devel] [PATCH 1/3] [core] add basic support for slave drivers to engine </a></td></tr>
+</table>
+<pre>
+---
+ drivers/alsa-midi/Makefile.am        |   11 +++
+ drivers/alsa-midi/alsa_midi.h        |   10 +++
+ drivers/alsa-midi/alsa_midi_driver.c |  122 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 143 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/alsa-midi/alsa_midi_driver.c
+
+diff --git a/drivers/alsa-midi/Makefile.am b/drivers/alsa-midi/Makefile.am
+index c499e9c..5c28128 100644
+--- a/drivers/alsa-midi/Makefile.am
++++ b/drivers/alsa-midi/Makefile.am
+@@ -1,5 +1,16 @@
+ MAINTAINERCLEANFILES=Makefile.in
+ 
++AM_CFLAGS = $(JACK_CFLAGS)
++
++plugindir = $(ADDON_DIR)
++
++plugin_LTLIBRARIES = jack_alsa_midi.la
++
++jack_alsa_midi_la_LDFLAGS = -module -avoid-version
++jack_alsa_midi_la_SOURCES = alsa_rawmidi.c alsa_seqmidi.c alsa_midi_driver.c
++
+ noinst_HEADERS = alsa_midi.h \
+ 		 midi_pack.h \
+ 		 midi_unpack.h
++
++jack_alsa_midi_la_LIBADD = $(ALSA_LIBS) 
+diff --git a/drivers/alsa-midi/alsa_midi.h b/drivers/alsa-midi/alsa_midi.h
+index 960c30b..2d8951b 100644
+--- a/drivers/alsa-midi/alsa_midi.h
++++ b/drivers/alsa-midi/alsa_midi.h
+@@ -20,6 +20,7 @@
+ #define __jack_alsa_midi_h__
+ 
+ #include &lt;jack/jack.h&gt;
++#include &lt;jack/driver.h&gt;
+ 
+ typedef struct alsa_midi_t alsa_midi_t;
+ struct alsa_midi_t {
+@@ -35,4 +36,13 @@ struct alsa_midi_t {
+ alsa_midi_t* alsa_rawmidi_new(jack_client_t *jack);
+ alsa_midi_t* alsa_seqmidi_new(jack_client_t *jack, const char* alsa_name);
+ 
++typedef struct _alsa_midi_driver {
++
++    JACK_DRIVER_DECL;
++
++    alsa_midi_t *midi;
++    jack_client_t *client;
++
++} alsa_midi_driver_t;
++
+ #endif /* __jack_alsa_midi_h__ */
+diff --git a/drivers/alsa-midi/alsa_midi_driver.c b/drivers/alsa-midi/alsa_midi_driver.c
+new file mode 100644
+index 0000000..b27f03c
+--- /dev/null
++++ b/drivers/alsa-midi/alsa_midi_driver.c
+@@ -0,0 +1,122 @@
++
++#include "alsa_midi.h"
++#include &lt;string.h&gt;
++
++static int
++alsa_midi_driver_attach( alsa_midi_driver_t *driver, jack_engine_t *engine )
++{
++	return driver-&gt;midi-&gt;attach(driver-&gt;midi);
++}
++
++static int
++alsa_midi_driver_detach( alsa_midi_driver_t *driver, jack_engine_t *engine )
++{
++	return driver-&gt;midi-&gt;detach(driver-&gt;midi);
++}
++
++static int
++alsa_midi_driver_read( alsa_midi_driver_t *driver, jack_nframes_t nframes )
++{
++	driver-&gt;midi-&gt;read(driver-&gt;midi, nframes);
++	return 0;
++}
++
++static int
++alsa_midi_driver_write( alsa_midi_driver_t *driver, jack_nframes_t nframes )
++{
++	driver-&gt;midi-&gt;write(driver-&gt;midi, nframes);
++	return 0;
++}
++
++static int
++alsa_midi_driver_start( alsa_midi_driver_t *driver )
++{
++	return driver-&gt;midi-&gt;start(driver-&gt;midi);
++}
++
++static int
++alsa_midi_driver_stop( alsa_midi_driver_t *driver )
++{
++	return driver-&gt;midi-&gt;stop(driver-&gt;midi);
++}
++
++static void
++alsa_midi_driver_delete( alsa_midi_driver_t *driver )
++{
++	if (driver-&gt;midi)
++		(driver-&gt;midi-&gt;destroy)(driver-&gt;midi);
++
++	free (driver);
++}
++
++static jack_driver_t *
++alsa_midi_driver_new (jack_client_t *client, const char *name)
++{
++	alsa_midi_driver_t *driver;
++
++	jack_info ("creating alsa_midi driver ..."); 
++
++	driver = (alsa_midi_driver_t *) calloc (1, sizeof (alsa_midi_driver_t));
++
++	jack_driver_init ((jack_driver_t *) driver);
++
++	driver-&gt;attach = (JackDriverAttachFunction) alsa_midi_driver_attach;
++	driver-&gt;detach = (JackDriverDetachFunction) alsa_midi_driver_detach;
++	driver-&gt;read = (JackDriverReadFunction) alsa_midi_driver_read;
++	driver-&gt;write = (JackDriverWriteFunction) alsa_midi_driver_write;
++	driver-&gt;start = (JackDriverStartFunction) alsa_midi_driver_start;
++	driver-&gt;stop = (JackDriverStartFunction) alsa_midi_driver_stop;
++
++
++	driver-&gt;midi   = alsa_seqmidi_new(client, NULL);
++	driver-&gt;client = client;
++
++	return (jack_driver_t *) driver;
++}
++
++/* DRIVER "PLUGIN" INTERFACE */
++
++const char driver_client_name[] = "alsa_midi";
++
++const jack_driver_desc_t *
++driver_get_descriptor ()
++{
++	jack_driver_desc_t * desc;
++	jack_driver_param_desc_t * params;
++	//unsigned int i;
++
++	desc = calloc (1, sizeof (jack_driver_desc_t));
++
++	strcpy (desc-&gt;name,"alsa_midi");
++	desc-&gt;nparams = 0;
++  
++	params = calloc (desc-&gt;nparams, sizeof (jack_driver_param_desc_t));
++
++	desc-&gt;params = params;
++
++	return desc;
++}
++
++jack_driver_t *
++driver_initialize (jack_client_t *client, const JSList * params)
++{
++	const JSList * node;
++	const jack_driver_param_t * param;
++
++	for (node = params; node; node = jack_slist_next (node)) {
++  	        param = (const jack_driver_param_t *) node-&gt;data;
++
++		switch (param-&gt;character) {
++			default:
++				break;
++		}
++	}
++			
++	return alsa_midi_driver_new (client, NULL);
++}
++
++void
++driver_finish (jack_driver_t *driver)
++{
++	alsa_midi_driver_delete ((alsa_midi_driver_t *) driver);
++}
+-- 
+1.7.2.5
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1306094576.3904_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1306094586.3933_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1306094580.3925_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1306094580.3925_0.ltw:2,a&nbsp;&lt;1306094544-12075-3-git-send-email-torbenh at gmx dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

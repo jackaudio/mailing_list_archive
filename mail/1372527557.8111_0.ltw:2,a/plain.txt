@@ -1,0 +1,51 @@
+Date:        Sat, 29 Jun 2013 19:36:57 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          Robin Gareus <[hidden] at gareus dot org>
+Cc:          [hidden] at jackaudio dot org, [hidden] at bugs dot debian dot org, Debian Multimedia Maintainers <[hidden] at lists dot alioth dot debian dot org>
+In-Reply-To: Robin Gareus netjack2 + opus custom modes + debian (1372521594.4507_0.ltw:2,a)
+Follow-Up:   Ron Re: Bug#686777: netjack2 + opus custom modes + debian (1372555204.29751_0.ltw:2,a)
+Follow-Up:   Ron Bug#686777: netjack2 + opus custom modes + debian (1372555278.32301_0.ltw:2,a)
+
+Subject:     Bug#686777: netjack2 + opus custom modes + debian
+
+On 06/29/2013 05:59 PM, Robin Gareus wrote:
+
+> To recap:
+>   netjack2's + opus needs libopus with --custom-modes
+>   but libopus on debian does not provide custom modes.
+>
+> Thoughts? Opinions? Volunteers?
+
+Ron, what do you think about the following?
+
+Instead of using embedded copies in jackd1/2, let's build two flavours
+of OPUS from a single source package.
+
+Just sketching now:
+
+libopus0 will provide /usr/lib/libopus.so.0 (business as usual)
+libopus-custom-0 will provide /usr/lib/libopus-custom.so.0
+
+In addition, we'll keep libopus-dev and introduce libopus-custom-dev
+containing the additional files and a dependency on libopus-custom-0.
+
+All packages will be co-installable, since no file conflict will occur.
+
+In jackd1/2, we'll build-depend on libopus-custom-dev and link against
+libopus-custom instead of libopus.
+
+
+It's certainly a bit of work on your side (building two binary sets from
+the same source). OTOH, at least CDBS supports flavours out of the box,
+we use it in ardour to build ardour (generic), ardour-i686 (SSE) and
+ardour-altivec.
+
+
+How does this sound to you?
+
+-- 
+To unsubscribe, send mail to [hidden].
+
+1372527557.8111_0.ltw:2,a <51CF1B39.3060807 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

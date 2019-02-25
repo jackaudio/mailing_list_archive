@@ -1,0 +1,33 @@
+Date:        Thu, 02 Jul 2015 18:47:09 +0200
+From:        Tobias Hoffmann  <[hidden] at thax dot hardliners dot org>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Tobias Hoffmann Re: [Jack-Devel] jack1: jack_transport does not work as master (1435851061.6508_0.ltw:2,)
+Follow-Up:   Paul Davis Re: [Jack-Devel] jack1: jack_transport does not work as master (1435856245.10933_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] jack1: jack_transport does not work as master
+
+On 02/07/15 17:30, Tobias Hoffmann wrote:
+> On 02/07/15 15:38, Paul Davis wrote:
+>> jack_transport is not intended to act as a the time master.
+> Well, comparing example-clients/transport_client.c and 
+> tools/transport.c, I'd say the one big difference between the two is 
+> that tools/transport.c (aka jack_transport) can act as a *simple* 
+> timebase master...
+
+Ok, I see now that the BBT update algorithm (in the "else" branch in 
+timebase()) in transport.c is quite broken, because it accumulates 
+rounding errors. However always using the first, recalculating branch 
+(basically: if (true)) seems to be stable -- or at least: better than 
+Hydrogen's timebase master, which updates the BBT only every few 
+cycles... (I've read that somewhere a completely rewritten Jack Master 
+implementation for Hydrogen is available, which I have not tested yet).
+
+I find it quite sad that even some code distributed in the jack tarball 
+is an example of how NOT to use the Jack API ...
+
+   Tobias
+
+1435855647.10372_0.ltw:2, <55956B0D.8020903 at thax dot hardliners dot org>
+________________________________________________________________________________
+

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] [jack2] hang on jack_deactivate</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] [jack2] hang on jack_deactivate</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1337157517.32657_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1337161373.2884_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1337160666.2343_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 16 May 2012 11:30:34 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> tim </span> &lt;[hidden] at klingt dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1337161373.2884_0.ltw:2,a/index.html'>Re: [Jack-Devel] [jack2] hang on jack_deactivate </a></td></tr>
+</table>
+<pre>
+another jack2 issue: when running my application inside a debugger,
+calls to jack_deactivate deadlock the application.
+
+this thread calls jack_deactivate, pthread_join hangs:
+
+&gt;  0 pthread_join     PC=0x7fa70a51d148, FP=0x7fffbcaa7740 [/usr/lib/debug/lib/x86_64-linux-gnu/libpthread-2.15.so]
+   1 _ZN4Jack15JackDebugClient19TransportRepositionEP15jack_position_t
+PC=0x7fa70b9914d4, FP=0x7fffbcaa7760
+[/usr/lib/x86_64-linux-gnu/libjack.so.0]
+   2 jack_client_has_session_callback PC=0x7fa70b97db87,
+FP=0x7fffbcaa7790 [/usr/lib/x86_64-linux-gnu/libjack.so.0]
+
+
+the other jack-related threads are in the following state:
+
+&gt;  0 pthread_cond_wait PC=0x7fa70a51fd84, FP=0x7fa6f5115db0 [/usr/lib/debug/lib/x86_64-linux-gnu/libpthread-2.15.so]
+   1 _ZN4Jack15JackDebugClient19TransportRepositionEP15jack_position_t
+PC=0x7fa70b9927ff, FP=0x7fa6f5115dd0
+[/usr/lib/x86_64-linux-gnu/libjack.so.0]
+   2 _ZN4Jack15JackDebugClient19TransportRepositionEP15jack_position_t
+PC=0x7fa70b98ddac, FP=0x7fa6f5115e00
+[/usr/lib/x86_64-linux-gnu/libjack.so.0]
+   3 _ZN4Jack15JackDebugClient19TransportRepositionEP15jack_position_t
+PC=0x7fa70b9911ad, FP=0x7fa6f5115e20
+[/usr/lib/x86_64-linux-gnu/libjack.so.0]
+   4 start_thread     PC=0x7fa70a51be93, FP=0x7fa6f5115f30
+[/usr/lib/debug/lib/x86_64-linux-gnu/libpthread-2.15.so]
+
+&gt;  0 __read_nocancel  PC=0x7fa70a522d2d, FP=0x7fa6f5094c20 [/usr/lib/debug/lib/x86_64-linux-gnu/libpthread-2.15.so]
+   1 _ZN4Jack15JackDebugClient19TransportRepositionEP15jack_position_t
+PC=0x7fa70b992fb5, FP=0x7fa6f5094c50
+[/usr/lib/x86_64-linux-gnu/libjack.so.0]
+   2 jack_get_client_pid PC=0x7fa70b995961, FP=0x7fa6f5094e00
+[/usr/lib/x86_64-linux-gnu/libjack.so.0]
+   3 _ZN4Jack15JackDebugClient19TransportRepositionEP15jack_position_t
+PC=0x7fa70b9911ad, FP=0x7fa6f5094e20
+[/usr/lib/x86_64-linux-gnu/libjack.so.0]
+   4 start_thread     PC=0x7fa70a51be93, FP=0x7fa6f5094f30
+[/usr/lib/debug/lib/x86_64-linux-gnu/libpthread-2.15.so]
+
+&gt;  0 sem_timedwait    PC=0x7fa70a5220c1, FP=0x7fa6f5013d10 [/usr/lib/debug/lib/x86_64-linux-gnu/libpthread-2.15.so]
+   1 _ZN4Jack15JackDebugClient19TransportRepositionEP15jack_position_t
+PC=0x7fa70b991bcd, FP=0x7fa6f5013d60
+[/usr/lib/x86_64-linux-gnu/libjack.so.0]
+   2 _ZStplIcSt11char_traitsIcESaIcEESbIT_T0_T1_ERKS6_S8_
+PC=0x7fa70b9806c4, FP=0x7fa6f5013d80
+[/usr/lib/x86_64-linux-gnu/libjack.so.0]
+   3 jack_client_has_session_callback PC=0x7fa70b97dcf6,
+FP=0x7fa6f5013e00 [/usr/lib/x86_64-linux-gnu/libjack.so.0]
+   4 _ZN4Jack15JackDebugClient19TransportRepositionEP15jack_position_t
+PC=0x7fa70b9911ad, FP=0x7fa6f5013e20
+[/usr/lib/x86_64-linux-gnu/libjack.so.0]
+   5 start_thread     PC=0x7fa70a51be93, FP=0x7fa6f5013f30
+[/usr/lib/debug/lib/x86_64-linux-gnu/libpthread-2.15.so]
+
+looks like a classic dead-lock: the second thread waits for a condition
+and the first thread waits for the second thread (or maybe another
+thread) ... maybe some of the other threads are involved as well ...
+
+hth, tim
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1337157517.32657_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1337161373.2884_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1337160666.2343_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1337160666.2343_0.ltw:2,a&nbsp;&lt;jovs3r$gbv$1 at dough dot gmane dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,228 @@
+Date:        Wed, 21 Dec 2011 10:28:34 -0500
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] How to get mplayer and firefox/flash to play (1324479945.11715_0.ltw:2,a)
+Follow-Up:   Eliot Blennerhassett Re: [Jack-Devel] How to get mplayer and firefox/flash to play (1324506456.26406_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] How to get mplayer and firefox/flash to play
+
+On Wed, Dec 21, 2011 at 10:05 AM, Fons Adriaensen <[hidden]> wrote:
+> On Wed, Dec 21, 2011 at 08:41:12AM -0500, Paul Davis wrote:
+>
+>> Indeed. The dmix device actually does almost precisely what you
+>> describe, and will appear in device listings *if* its configured in
+>> the relevant system-wide or per-user ALSA config file. Two years ago,
+>> most distributions shipped with dmix configured. With PulseAudio
+>> spreading, and more powerful, they tend to no longer do so. I remember
+>> Fedora at one point shipping with default=dmix, so that all audio
+>> processes that just opened the default device got their audio mixed
+>> (in user space, without a server). Note that there is also a
+>> server/client based solution too - I don't think its been used much by
+>> anyone.
+>>
+>> But there's a second problem. Look at the output of aplay -L. Now
+>> compare it to the list of devices shown by, say, qjackctl in its setup
+>> dialog. You'll note that they are not the same. The real problem here
+>> is not the gap between h/w device names and plugin device names. The
+>> problem is that there are indeed two namespaces within ALSA, one that
+>> references a card number, device number and possibly subdevice number,
+>> the other than is an alias for either a plugin or something specified
+>> using the first namespace. According to aplay, these two namespaces
+>> consist of:
+>>
+>>     -l, --list-devices      list all soundcards and digital audio devices
+>>     -L, --list-pcms         list device names
+>>
+>> So, having defined the "jack" plugin device, aplay -L will list it
+>> just like "default" and "hdmi" and "front" and so forth. But you're
+>> right that it doesn't show up in the other namespace, because its not
+>> a "card".
+>
+> Now I'm lost. I do have a ~/.asoundrc
+>
+> ----
+>
+> pcm.!default {
+>    type plug
+>    slave { pcm "jack" }
+> }
+>
+> pcm.jack {
+>    type jack
+>    playback_ports {
+>        0 system:playback_3
+>        1 system:playback_4
+>    }
+>    capture_ports {
+>        0 system:capture_3
+>        1 system:capture_4
+>    }
+> }
+>
+> ----
+>
+> and it works (mplayer, firefox, even alsaplayer use it).
+>
+> But it does *not* show up in either aplay -L or -l. So is
+> there are third namespace as well ?
+
+% cat ~/.asoundrc
+
+pcm.rawjack {
+    type jack
+    playback_ports {
+        0 system:playback_1
+        1 system:playback_2
+    }
+    capture_ports {
+        0 system:capture_1
+        1 system:capture_2
+    }
+}
+
+pcm.jack {
+    type plug
+    slave { pcm "rawjack" }
+    hint {
+ 	description "JACK Audio Connection Kit"
+    }
+}
+
+% aplay -L
+null
+    Discard all samples (playback) or generate zero samples (capture)
+jack
+    JACK Audio Connection Kit
+default:CARD=SB
+    HDA ATI SB, VT2020 Analog
+    Default Audio Device
+front:CARD=SB,DEV=0
+    HDA ATI SB, VT2020 Analog
+    Front speakers
+.....
+
+>> restrictions which ensure that JACK is not adopted by many
+>> programmers, and because of the SNAFU'ed state of the rest of Linux,
+>> make life complicated for users because RT access is considered
+>> "special".
+>
+> Yes, but Jack could have offered form the start a library, working
+> on top of Jack's native interface, that provides resampling, read()
+> and write(), buffering to allow non-RT operation, etc. Basically
+> allowing the author to define his own private 'soundcard' with a
+> fully traditional API.
+
+such libraries have been written. at least 4 of them. none of them
+were implemented well enough to work right, all the time, for
+precisely the reasons robin originally alluded to: apps try to play
+all kinds of silly games with platform audio APIs because of their
+developers' beliefs that the APIs and/or drivers are broken or wrong.
+sometimes they are right, sometimes they are wrong, but the result (as
+libasound, pulse, oss2jack, alsa2jack, bio2jack and others have all
+found) is that a variety of apps exhibit broken behaviour despite the
+"wrapper library" doing its best to provide a conformant layer.
+
+remember that lots of apps these days want timing information (video
+sync etc) that goes ye old open/read/write/close model (or an mmap
+variant). in fact, how to provide latency information is probably the
+principle difference at this point between all the callback-driven
+APIs across all platforms.
+
+> Believe me, I have. The last time just an hour ago. But AFAICS (and
+> please correct me if I'm missing something essential) it provides
+> all that only via the 'plugins', which the client apparently can't
+> discover in any standard way. In what I propose, the initiative to
+> use any conversions, buffering, etc. is taken by the client which
+> just specifies what it needs. This is fundamentally different from
+> offering predefined plugins which apart from being invisible will
+> also either be restrictive, or be forced to be 'too clever for their
+> own good'.
+
+the idea in ALSA originally was that apps would open a default device
+with properties much like "plughw:N" (that was the default
+originally). the app would ask for whatever SR, bit depth, etc. that
+it needed, and it would get it. then it would proceed whichever
+part(s) of the ALSA PCM API that it needed, and it would not matter
+one bit whether the parameters precisely matched the hardware or not.
+this actually works quite well, except that the SRC is very cpu
+expensive and of pretty poor quality, and if the number of channels is
+left unspecified, the number is absurdly high. put another way, the
+idea was that the PCM stream configuration API was identical to the
+API for opening the hardware device and configuring it, which meant
+that it didn't matter *what* the actual PCM stream was pointing at.
+This was a smart move, even if the implementation is a bit inelegant.
+
+the whole notion of "predefined plugins" really came much later, and
+was intended as a shorthand for things like "tell appFoo to play this
+sound, but over my rear speakers" or "tell appBar to send audio via a
+LADSPA plugin with the following settings". the plugins in ~/.asoundrc
+are absolutely not there to replace the ability that libasound (and
+specifically plughw:N) exists for: the app opens a named device, asks
+for a given configuration and gets it.
+
+the problem was that the feature set required by people began to
+exceed what libasound could reasonably do (at the time, anyway).
+people wanted user-space mixing, network streaming, per-app volume
+controls. the whole thing started to creak and so alternatives showed
+up (i.e. PulseAudio).
+
+>> I still don't understand how this all works without a server/client
+>> architecture. Dmix tries to do this, and its too clever for its own
+>> good (or that of users). The server/client nature of JACK and
+>> PulseAudio is one of the things that makes them fragile (to whatever
+>> extent they are fragile), and thus unloved by people negatively
+>> impacted by this sort of architecture (and often unnecessarily).
+>
+> In what sense do you see a server/client architecture as fundamentally
+> different from e.g. open(), read(), write() etc. ? Just the fact that
+> there is an 'active' entity (a daemon) involved instead of only system
+> calls ? That should be transparent to the user. So I somehow fail to
+> see the point you want to make.
+
+* the server has to be started, somehow
+* the server has to continue running somehow
+* all the bugs and properties of the server become part of the bugs
+and properties of the apps
+
+but that aside ...
+
+libasound already has a server architecture that does user-space
+mixing in precisely the way you are describing. apps just open a named
+ALSA device, they use the regular ALSA API
+(snd_pcm_open/snd_pcm_write/snd_pcm_read/snd_pcm_close etc), and their
+stream is magically mixed into the streams of other apps using the
+same named device.
+
+but wait! there's more ... this is also PRECISELY how PulseAudio works
+too! apps just open a named ALSA device (often "default" on many
+distros), they use the regular ALSA API
+(snd_pcm_open/snd_pcm_write/snd_pcm_read/snd_pcm_close etc), and their
+stream is magically mixed into the streams of other apps using the
+same named device.
+
+and there's more ... these apps (at least the ones that don't try to
+play games with the API) will work if told to open the hardware device
+directly too! because its all the same open/read/write/close API ...
+
+and yet, somehow, i don't think that you're tremendously thrilled
+about what PulseAudio or ALSA own rarely-used server does .. why? i
+think mostly because of something that is somehow related to
+"transparency" ...
+
+
+
+
+
+>
+> Ciao,
+>
+> --
+> FA
+>
+> Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+>
+
+1324481329.12855_0.ltw:2,a <CAFa_cKn5ym3tO9LB4MmP7H2TN3wyAfT+zqPKqTrmJWnYRYU7cw at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,51 @@
+Date:        Mon, 27 Jan 2014 21:43:00 +0100
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] Alignment trap: not handling instruction (1390854298.3105_0.ltw:2,RSa)
+
+Subject:     Re: [Jack-Devel] Alignment trap: not handling instruction
+
+On 01/27/14 21:24, Adrian Knoth wrote:
+
+>> Alignment trap: not handling instruction edc46a06 at [<b6eece14>]
+>> Unhandled fault: alignment exception (0x811) at 0xb6cc21e6
+> In jackd2, we've undefined POST_PACKED_STRUCTURE, but this breaks the
+> dummy driver on my raspberry.
+>
+> You can give it a try, if you like. In a couple of minutes, we most
+> likely have a single location for you to change, but I need more ARM
+> testers.
+
+Update your jackd1 git checkout (git pull && gitsubmodule update).
+
+You can now cd into jack/ and try the following patch:
+
+diff --git a/types.h b/types.h
+index 1e17917..8f2b8cb 100644
+--- a/types.h
++++ b/types.h
+@@ -38,7 +38,11 @@ typedef int32_t jack_shmsize_t;
+     than use the natural alignment of the processor and/or
+     compiler.
+  */
++#ifdef __arm__
++#  define POST_PACKED_STRUCTURE
++#else
+  #  define POST_PACKED_STRUCTURE __attribute__((__packed__))
++#endif /* ARM */
+  #else
+  /* Add other things here for non-gcc platforms */
+  #endif
+
+
+Note that this patch breaks the dummy driver on my raspberry, that's why
+I cannot commit it as-in. Maybe I'm missing something, but frankly, I'm
+not too familiar with ARM, yet.
+
+
+
+Cheers
+
+1390855387.3898_0.ltw:2,Sa <52E6C4D4.1020506 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

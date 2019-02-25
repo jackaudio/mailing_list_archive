@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] speaker management</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] speaker management</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1355300743.21494_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1355304872.28767_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1355302800.25199_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 12 Dec 2012 19:59:51 +1100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Patrick Shirkey </span> &lt;[hidden] at boosthardware dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Arnold Krille
+<a href='../1355269655.25168_0.ltw:2,/index.html'>Re: [Jack-Devel] speaker management </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1355304872.28767_0.ltw:2,/index.html'>Re: [Jack-Devel] speaker management </a></td></tr>
+</table>
+<pre>
+On Wed, December 12, 2012 10:46 am, Arnold Krille wrote:
+&gt; On Wed, 12 Dec 2012 08:45:00 +1100 (EST) "Patrick Shirkey"
+&gt; &lt;[hidden]&gt; wrote:
+&gt;&gt; On Wed, December 12, 2012 7:26 am, Arnold Krille wrote:
+&gt;&gt; &gt; On Tue, 11 Dec 2012 08:14:35 -0600 David Nielson
+&gt;&gt; &gt; &lt;[hidden]&gt; wrote:
+&gt;&gt; &gt;&gt; On 12/11/2012 03:30 AM, Arnold Krille wrote:
+&gt;&gt; &gt;&gt; &gt; I did something similar two years back: Recorded the
+&gt;&gt; &gt;&gt; &gt; impulse-response of my home-office, feed them to drc and then
+&gt;&gt; &gt;&gt; &gt; used the resulting files with jconvolver to correct four
+&gt;&gt; &gt;&gt; &gt; channels of speakers. I planned to do more but the amp for
+&gt;&gt; &gt;&gt; &gt; channels 3-8 is a diy-project and time ran out...
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt; What were the results? I've thought about doing something similar
+&gt;&gt; &gt;&gt; and wonder if it's worth my time.
+&gt;&gt; &gt;
+&gt;&gt; &gt; The results where very good and very worth the time! I started with
+&gt;&gt; &gt; good quality speakers and a fine listening experience. Then I
+&gt;&gt; &gt; introduced drc (and used some x-over with fons ambisonics decoder to
+&gt;&gt; &gt; feed the bass only to the bigger front speakers) and was blown away
+&gt;&gt; &gt; by the amazing sound. Of course it took some sinus-sweeps to get the
+&gt;&gt; &gt; room-response but none of the neighbors complained;-)
+&gt;&gt; &gt;
+&gt;&gt; &gt; If I find more time for audio again, I might even incorporate such a
+&gt;&gt; &gt; thing into my live setup.
+&gt;&gt; &gt;
+&gt;&gt; &gt; The only downside: when you start doing something with permanent drc
+&gt;&gt; &gt; and have to run drc and your regular synth/recording sessions on the
+&gt;&gt; &gt; same machine, you understand fons fighting for session managers that
+&gt;&gt; &gt; can be told to get out of your way and ignore certain apps with
+&gt;&gt; &gt; their settings (while still managing the same apps in different
+&gt;&gt; &gt; instances).
+&gt;&gt; This seems like it should be a simple flag in the session API. Can you
+&gt;&gt; explain this issue a little more?
+&gt;
+&gt; Lets see if I can manage to explain, maybe fons will chip in:
+&gt;
+&gt; The average jack session is with several apps all used for one project.
+&gt; you save the project and want to save the settings for all the apps.
+&gt; you restore (aka load) a project and want all the apps to come up again
+&gt; with the correct settings. All current session managers aim to make
+&gt; this as simple as possible (preferable by even supporting apps that
+&gt; don't have native session-management support). And thats a fine goal.
+&gt;
+&gt; But when you do drc and/or ambisonics you end with a setup slightly
+&gt; more complicated: there are some apps that are independant of the
+&gt; project and stationary to the machine. Some of these apps might even be
+&gt; the ones all the other apps should use as "hardware outputs" instead of
+&gt; the real hardware outputs.
+&gt; No problem when a) the session manager ignores these apps and b) the
+&gt; project is not meant to be movable to a different machine.
+&gt; By making session-management easier for 'most' people, todays
+&gt; session-managers
+&gt; break a) and forcefully support apps that don't want to be supported.
+&gt; And as neither jack supports something like static port aliases nor
+&gt; as session-managers correctly support the notion of distinct apps
+&gt; as "the global environment", b) breaks. Because nowadays the session
+&gt; connects to "alsa_pcm:playback_[12]" on one machine and has to connect
+&gt; to "jconvolver:in_[12]" on another machine.
+&gt;
+&gt; So while session management nowadays is easy for 'most' people and
+&gt; use-cases, its actually made impossible for these special cases.
+&gt; Special cases like: I have this super-cool ardour-project using two
+&gt; dozen synths and playing out to my native home-cinema surround-set. And
+&gt; the audio is so cool that I want to play the same project on one of the
+&gt; bigger ambisonics/wfs setups at the next LAC. Only my project connects
+&gt; to 'alsa_pcm:playback_[1-6]' and when I do that on the wfs-machine I am
+&gt; lucky when nothing of the hardware breaks because I sent my bass-beats
+&gt; to the highest speaker of a four-way...
+&gt;
+&gt;&gt; If the app doesn't have support for jack session management how can
+&gt;&gt; the session manager be in the way?
+&gt;
+&gt; See above, when you write a session-manager for audio and want it to be
+&gt; used, you support apps that don't support you...
+&gt;
+&gt;
+&gt; There are probably some easy solutions to these problems outlined
+&gt; above. But its "special cases" and it seemed to me the last years that
+&gt; many developers don't want to deal with this and don't want to listen
+&gt; to the people that have to deal with this.
+&gt;
+
+
+This all looks solveable to me. We have a few specific limitations. What
+is the easiest way to enable the flexibility required?
+
+
+&gt; But I am happy if I am proven wrong: if there is a session-management
+&gt; for audio-projects that knows which app is part of the project and
+&gt; which is part of the environment. If there is even a session-management
+&gt; that knows about something like "the environment" apart from
+&gt; alsa_pcm.
+&gt;
+
+We can assign static names to jack ports. IIUC, the main issue appears to
+be that alsa i/o cannot be easily renamed/mapped in a session file.
+
+So do we need a way to override the jack portnames in the JACK API?
+
+Seems like a reasonable addition to the API to me.
+
+Can you isolate the other issues that you feel would not be solved in this
+case?
+
+
+
+
+
+--
+Patrick Shirkey
+Boost Hardware Ltd
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1355300743.21494_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1355304872.28767_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1355302800.25199_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1355302800.25199_0.ltw:2,&nbsp;&lt;60915.188.25.62.163.1355302791.squirrel at boosthardware dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

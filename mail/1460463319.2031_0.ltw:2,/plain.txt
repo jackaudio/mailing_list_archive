@@ -1,0 +1,86 @@
+Date:        Tue, 12 Apr 2016 14:15:09 +0200
+From:        Jörn Nettingsmeier  <[hidden] at stackingdwarves dot net>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: mdrslmr [Jack-Devel] alsa_in/out increasing time between record and play on second card (1460450575.2381_0.ltw:2,)
+Follow-Up:   mdrslmr Re: [Jack-Devel] alsa_in/out increasing time between record and play on second card (1460464205.4778_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] alsa_in/out increasing time between record and play on second card
+
+On 04/12/2016 10:42 AM, mdrslmr wrote:
+> Hi,
+>
+> we are running a system with two sound cards. The second sound card is
+> attached to the jackd2 daemon using jack_load audioadapter.
+
+Just for the record, I'm not familiar with audioadapter. I'm using 
+zita-ajbridge, and it works very well.
+
+> We use a script starting:
+>
+> aplay -q -D $channel Test-Ton.wav &
+> arecord -q -D $channel -f S16_LE -r 48000 -c 1 -d 8 $result/recorded.wav
+
+Why are you using alsa tools when you are otherwise working with JACK? 
+This will make the problem analysis more complicated...
+
+> The resulting wav file shows that the time between the start of the
+> recording
+> and the start of the actual sound continuously increases.
+> In the beginning (after starting the system up) the time difference is
+> just about 3ms. It increases
+> constantly to almost one second now
+> after 8 weeks of uptime.
+
+If audioadapter works by just providing a big buffer (without any 
+resampling), the reason would be clock drift. Such a minuscule clock 
+drift between two consumer cards however would be sensationally good.
+
+> This happens most significantly on the channels of the second sound card
+> included by jack_load audioadapter and not noticeable on the first sound
+> card.
+
+To be expected.
+
+> The invocation of jackd and jack_load is shown below:
+> jackd -R -P59 -p 256 -d alsa --device hw:${CARDNUM_0},0 -p 512 --nperiods 3
+> jack_load -i "-i4 -o4 -q1 -C5 -p512 -n3 -r48000  -d hw:${CARDNUM_1},0"\
+>                                  jackadapter audioadapter
+>
+> jackd2 version is: 1.9.8~dfsg.4+20120529git007cdc37-5
+>
+>
+> I'm, not sure if we a consistent set of options for jackd and
+> audioadapter.
+>
+> Do you have a suggestion how we can set things up to prevent the
+> increase in time difference between recording and playback?
+
+First of all, consider if you can actually sync the cards. If both have 
+an SPDIF i/o, you can use that. Just connect the secondary card's SPDIF 
+in to the master's SPDIF out (no matter whether you use toslink or RCA), 
+and you can be sure your cards will be locked.
+
+Secondly, try zita-ajbridge. If you can sync the cards in hardware, 
+there is an option for zita-ajbridge to skip the resampling, which will 
+conserve cpu power.
+
+All best,
+
+
+Jörn
+
+
+
+
+-- 
+Jörn Nettingsmeier
+Lortzingstr. 11, 45128 Essen, Tel. +49 177 7937487
+
+Meister für Veranstaltungstechnik (Bühne/Studio)
+Tonmeister VDT
+
+http://stackingdwarves.net
+
+1460463319.2031_0.ltw:2, <570CE6CD.9050402 at stackingdwarves dot net>
+________________________________________________________________________________
+

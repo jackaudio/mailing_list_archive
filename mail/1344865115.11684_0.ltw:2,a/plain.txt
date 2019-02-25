@@ -1,0 +1,171 @@
+Date:        Mon, 13 Aug 2012 15:38:21 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Karsten Wiese [Jack-Devel] US-428 @jack2 (1344807228.11524_0.ltw:2,Sa)
+
+Subject:     Re: [Jack-Devel] US-428 @jack2
+
+On 08/12/2012 11:33 PM, Karsten Wiese wrote:
+
+> Hi,
+
+Hi!
+
+> US-428 ticks again here with attached patch applied on top of github's
+> jack2 master branch.
+
+I guess you're referring to the recent discussion on jackdevel. I was
+somewhat surprised to see a patch coming out of the blue without any
+reference to a ticket or discussion.
+
+> Rename linux/alsa/usx2y.c to linux/alsa/usx2y.cpp before applying the
+> patch.
+
+To get this straight: I don't like the patch in its current form. It is
+absolutely undocumented and mixes important changes with cosmetics.
+
+I'd definitely like to see this broken up into a series of patches with
+isolated functionality changes.
+
+Let's see:
+
+
+> From: Karsten Wiese <[hidden]>
+> Date: Sun, 12 Aug 2012 23:23:50 +0200
+> Subject: [PATCH] US-428: Make it work
+> 
+> Preconditions outside of jackd:
+> -1: RT-Kernel running.
+> 0: Connect to a real uhci, no hub nor ehci.
+>    That excludes most modern mainboards.
+> 1: modprobe snd-usb-usx2y nrpacks=1
+> 2: Make the uhci's irq priority high, like so:
+>    chrt -fp 90 `ps --ppid 2 -o pid,rtprio,cmd|grep irq/21-u|awk '{print $1}'`
+
+This is the only way to get it working? WTF? ;)
+
+
+>  linux/alsa/alsa_driver.c |   21 +++++----
+>  linux/alsa/usx2y.cpp     |  106 +++++++++++++++-------------------------------
+>  linux/alsa/usx2y.h       |    8 ++++
+>  linux/wscript            |    3 +-
+>  4 files changed, 55 insertions(+), 83 deletions(-)
+
+wscript and usx2y.h changes should clearly be two independent patches.
+
+
+> @@ -982,6 +974,9 @@ alsa_driver_start (alsa_driver_t *driver)
+>  	driver->poll_last = 0;
+>  	driver->poll_next = 0;
+>  
+> +	if (driver->nt_start)
+> +		return driver->nt_start(driver);
+> +
+
+That's new. Why? Does it harm other ALSA devices?
+
+> @@ -1513,6 +1508,9 @@ alsa_driver_wait (alsa_driver_t *driver, int extra_fd, int *status, float
+>  int
+>  alsa_driver_read (alsa_driver_t *driver, jack_nframes_t nframes)
+>  {
+> +	if (driver->read)
+> +		return driver->read(driver, nframes);
+> +
+
+Same issue as above.
+
+>  	snd_pcm_sframes_t contiguous;
+>  	snd_pcm_sframes_t nread;
+>  	snd_pcm_uframes_t offset;
+> @@ -1604,6 +1602,9 @@ alsa_driver_write (alsa_driver_t* driver, jack_nframes_t nframes)
+>  
+>  	driver->process_count++;
+>  
+> +	if (driver->write)
+> +		return driver->write(driver, nframes);
+> +
+
+And again. It at least has to be justified why the previous code was
+wrong.
+
+> @@ -76,21 +80,21 @@ usx2y_driver_get_channel_addresses_playback (alsa_driver_t *driver,
+>  		iso = h->hwdep_pcm_shm->playback_iso_start;
+>  		if (0 > iso)
+>  			return 0; /* FIXME: return -1; */
+> -		if (++iso >= ARRAY_SIZE(h->hwdep_pcm_shm->captured_iso))
+> +		if (++iso >= (int)ARRAY_SIZE(h->hwdep_pcm_shm->captured_iso))
+
+Why the additional cast? I don't challenge that it might be necessary,
+but I'd like to see it mentioned in the commit message of a separate
+commit.
+
+
+>  		while((bytes -= h->hwdep_pcm_shm->captured_iso[iso].length) > 0)
+> -			if (++iso >= ARRAY_SIZE(h->hwdep_pcm_shm->captured_iso))
+> +		  if (++iso >= (int)ARRAY_SIZE(h->hwdep_pcm_shm->captured_iso))
+
+Same here. Indentation is correct?
+
+
+> -	} else {
+> +	} else
+>  		iso = h->playback_iso_start;
+> -	}
+> +
+
+Whitespace change and cosmetics. Please separate from patches changing
+functionality.
+
+
+>  			iso = 0;
+>  		h->playback_iso_bytes_done = 0;
+>  	} else
+>  		h->playback_iso_bytes_done =
+>  			*playback_avail * (driver->playback_sample_bytes * 2);
+>  	h->playback_iso_start = iso;
+> +	memset(playback, 0, *playback_avail * driver->playback_sample_bytes * 2);
+
+Necessary? Again, I don't doubt it, but it's not obvious.
+
+
+>  	int f = 0;
+> -	unsigned *u = driver->capture_addr[0];
+> +	unsigned *u = (unsigned *)driver->capture_addr[0];
+
+Shouldn't this actually be uintptr_t?
+
+
+> -
+> +	/*
+>  	VERBOSE(driver->engine,
+>  		"usx2y_driver_null_cycle (%p, %i)", driver, nframes);
+> -
+> +	*/
+
+Relevant change or just a left-over to shut down annoying debug output
+while hacking?
+
+
+> -	if (!driver->capture_handle || driver->engine->freewheeling) {
+> +	if (!driver->capture_handle /*|| Jack::GetEngineControl()->freewheeling*/) {
+>  		return 0;
+>  	}
+
+No way this is ever going to enter the code base like this. Please clean
+up your code before submitting patches.
+
+
+> -	if (!driver->playback_handle || driver->engine->freewheeling) {
+> +
+> +	if (!driver->playback_handle /*|| driver->engine->freewheeling*/) {
+>  		return 0;
+
+As above.
+
+
+
+Cheers
+
+1344865115.11684_0.ltw:2,a <5029034D.8040100 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Alignment (again)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Alignment (again)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1312462673.1036_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1312470460.17762_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1312466019.8260_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 04 Aug 2011 08:53:12 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Gabriel Beddingfield </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Gabriel Beddingfield
+<a href='../1312462673.1036_0.ltw:2,a/index.html'>Re: [Jack-Devel] Alignment (again) </a></td></tr>
+</table>
+<pre>
+OK... after further thought, I retract my proposal.
+
+On Thu, Aug 4, 2011 at 7:57 AM, Gabriel Beddingfield &lt;[hidden]&gt; wrote:
+&gt; But now that I think of it... the problem with jack_ringbuffer is actually
+&gt; pretty fundamental.
+&gt;
+&gt; Suppose you allocate a ringbuffer of size N (where N is a power of 2). The
+&gt; storage space is (N-1). &#xA0;So even if you start with an aligned pointer...
+&gt; when you wrap around it will no longer be aligned. :-/
+
+When using the read/write vectors... the programmer must never EVER:
+
+  - Assume that the read/write vector jack_ringbuffer_data_t::buf
+    is aligned.
+
+  - Directly cast jack_ringbuffer_data_t::buf to anything with
+    a size &gt; 1 byte.
+
+I.e. the read/write vectors are only suitable for memcopying the data
+to a properly aligned float* buffer.  Therefore, I'll instead submit a
+documentation patch... to warn about this.
+
+-gabriel
+
+p.s. I made this programming error while playing around with
+read/write vectors in trying to create a test case for memory ordering
+issues.  (No flames or continued discussions, I was just having some
+fun.)
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1312462673.1036_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1312470460.17762_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1312466019.8260_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1312466019.8260_0.ltw:2,a&nbsp;&lt;CAPbw_hxLLcU=Pz-nu48pGuYt31TRDyrGBfe_62XJ_VAf+DmjQg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

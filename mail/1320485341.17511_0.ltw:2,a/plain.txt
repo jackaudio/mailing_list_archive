@@ -1,0 +1,63 @@
+Date:        Sat, 05 Nov 2011 10:28:18 +0100
+From:        Andreas Degert  <[hidden] at papyrus-gmbh dot de>
+To:          hermann <[hidden] at web dot de>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: hermann Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] (1320470430.23460_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash]
+
+On Sat, 05 Nov 2011 06:19:44 +0100
+hermann <[hidden]> wrote:
+
+> Am Freitag, den 04.11.2011, 18:35 -0400 schrieb Paul Davis:
+> > in reality, there is no support on Linux for what is described in
+> > the JACK header files. it just so happens that building with -fPIC
+> > happens to work, but more as a side-effect than anything
+> > intentional. __weak__ is designed as way to refer to symbols used
+> > by one library but obtained from another, not symbols used by an
+> > executable and obtained from a library. __weak_import__ on gcc-osx
+> > does what we actually want.
+> > 
+> > this is very confusing situation that will take some time to sort
+> > out. -fPIC is a potential solution, and apparently has some
+> > potential benefits because it allows the run time linker more
+> > freedom to optimize memory layout. but i don't think that it should
+> > be *the* solution. 
+
+yes, it's unfortunate to require fPIC or fPIE, even if you need it
+anyhow for shared libs and address randomization, it also has some
+disadvantages. For guitarix we kept manual loading with dlsym since we
+use libdl anyhow. But this is certainly not a good idea as a general
+api.
+
+Alternatives would be
+
+ a) adding a function which returns a 32bit word with each bit
+    reflecting the implementation status of one jack api function
+ b) the same, but using a bit vector (not restricted to 32 entries)
+ c) adding a functions which takes some sort of identifier (enum type)
+    and returns the implementation status
+ d) like above, but not return the status of single functions, but
+    subsystems (like session_support_level_1, which means a certain
+    set of functions must be implemented)
+
+For distributions like debian I think its not such a big problem as
+long as the distributed jack implementations keep in sync. The 2
+functions for getting the uuid with different implementation status in
+jackd1 and jackd2 are a problem, I don't know if there are more problem
+areas. Of course one can always add -fPIE to any program not working
+with all distributed jack version because of weak linking.
+
+[...]
+> but I really don't understand why we didn't just add the functionality
+> to the lib. (like Stéphane has done it for jack2)
+
++1 to add jack_get_uuid_for_client_name to jackd1 (to keep in sync with
+jackd2).
+
+ciao
+Andreas
+
+1320485341.17511_0.ltw:2,a <20111105102818.4511c3b9 at pluto dot noname>
+________________________________________________________________________________
+

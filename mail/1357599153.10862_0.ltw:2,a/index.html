@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357598486.9880_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357599157.10865_0.ltw:2,Sa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357599153.10862_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 07 Jan 2013 22:52:23 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> John Emmas </span> &lt;[hidden] at tiscali dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK List &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Adrian Knoth
+<a href='../1357597795.8865_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) </a></td></tr>
+</table>
+<pre>
+Some interesting ideas there Adrian.  I feel sure that they key to solving this problem is to realise that packing (in particular) need not be identical on the different platforms.
+
+It's very late here tonight and my brain is past its bedtime - but I think some good ideas have come out of this discussion.
+
+John
+
+
+On 7 Jan 2013, at 22:29, Adrian Knoth wrote:
+
+&gt; On 01/07/2013 10:58 PM, John Emmas wrote:
+&gt; 
+&gt;&gt; Historically (as Paul described earlier) struct packing was a way of
+&gt; [..]
+&gt;&gt; penalty in changing a compiler's default packing alignment.  This is
+&gt; [..]
+&gt;&gt; cases).  To me, this suggests that if JACK_ALIGN is working on that
+&gt;&gt; particular compiler, it's most likely a happy accident.
+&gt; 
+&gt; I read "struct packing", "packing alignment" and "alignment".
+&gt; 
+&gt; We should not mix terminology. Let's have a look at
+&gt; 
+&gt;   http://gcc.gnu.org/onlinedocs/gcc-4.7.0/gcc/Type-Attributes.html
+&gt; 
+&gt; It says:
+&gt; 
+&gt;  aligned (alignment)
+&gt;  This attribute specifies a minimum alignment (in bytes) for variables
+&gt;  of the specified type.
+&gt; 
+&gt; Helpful in the 32/64bit case. Maybe also for gcc/MSVC.
+&gt; 
+&gt; For packing:
+&gt; 
+&gt;   packed
+&gt;   This attribute, attached to struct or union type definition,
+&gt;   specifies that each member (other than zero-width bitfields) of the
+&gt;   structure or union is placed to minimize the memory required.
+&gt; 
+&gt; This would work for 32/64 and gcc/MSVC on x86, since it supports
+&gt; unaligned access, but breaks ARM. One could argue at great length what
+&gt; "minimize" means, but apparently, it means "as small as (im)possible,
+&gt; never mind the alignment requirements".
+&gt; 
+&gt; 
+&gt; And then, there is another possibly helpful attribute:
+&gt; 
+&gt;   ms_struct
+&gt;   gcc_struct
+&gt;   If packed is used on a structure, or if bit-fields are used it may be
+&gt;   that the Microsoft ABI packs them differently than GCC would normally
+&gt;   pack them. Particularly when moving packed data between functions
+&gt;   compiled with GCC and the native Microsoft compiler (either via
+&gt;   function call or as data in a file), it may be necessary to access
+&gt;   either format. Currently -m[no-]ms-bitfields is provided for the
+&gt;   Microsoft Windows X86 compilers to match the native Microsoft
+&gt;   compiler.
+&gt; 
+&gt; 
+&gt; So this leaves us with the following options:
+&gt; 
+&gt;   a) use aligned and provide the proper alignment size OR
+&gt;   b) use packed and disable it on ARM
+&gt;   c) use ms_struct on gcc Win x86
+&gt; 
+&gt; 
+&gt; Robin provided a patch for b) which may or may not break arm64. We have
+&gt; an almost working patch for a) if we hardcode sizeof(double) in the MSVC
+&gt; case. AFAIK, we haven't explored c).
+&gt; 
+&gt; If c) turns out to be working, one could combine it with a), leave
+&gt; sizeof() to gcc-non-Windows and everybody is happy.
+&gt; 
+&gt; 
+&gt; And now arm the compilers and figure out what's actually working. ;)
+&gt; 
+&gt; 
+&gt; 
+&gt; Cheers
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357598486.9880_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357599157.10865_0.ltw:2,Sa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357599153.10862_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1357599153.10862_0.ltw:2,a&nbsp;&lt;753BDF60-6721-4FD7-8E08-B620D323C419 at tiscali dot co dot uk&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

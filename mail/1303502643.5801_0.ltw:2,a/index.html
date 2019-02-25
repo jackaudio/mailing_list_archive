@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] RFC: driver descriptor helpers</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] RFC: driver descriptor helpers</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303494449.21961_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303503302.7154_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303502643.5801_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 22 Apr 2011 22:33:57 +0300 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Nedko Arnaudov </span> &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1303483920.2491_0.ltw:2,a/index.html'>Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1303503302.7154_0.ltw:2,a/index.html'>Re: [Jack-Devel] RFC: driver descriptor helpers </a></td></tr>
+</table>
+<pre>
+St&#xE9;phane Letz &lt;[hidden]&gt; writes:
+
+&gt; Le 22 avr. 2011 &#xE0; 15:35, Nedko Arnaudov a &#xE9;crit :
+&gt;
+&gt;&gt; St&#xE9;phane Letz &lt;[hidden]&gt; writes:
+&gt;&gt; 
+&gt;&gt;&gt; Le 22 avr. 2011 &#xE0; 09:59, Devin Anderson a &#xE9;crit :
+&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; On Thu, Apr 21, 2011 at 11:17 PM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+&gt;&gt;&gt;&gt;&gt; Le 22 avr. 2011 &#xE0; 06:53, Devin Anderson a &#xE9;crit :
+&gt;&gt;&gt;&gt;&gt;&gt; I think I figured it out.  'jack_ringbuffer_reset' gained a 'memset()'
+&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt; Ah yes, this probably comes from the merge of my old "libjacknet branch...
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; The fix is now in the 'newer-midi' branch.  Merge at your convenience. :)
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; Let me know if you encounter any more problems.
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt; Merge done.
+&gt;&gt; 
+&gt;&gt; I had to do some fixes [1][2] in trunk because I dont have
+&gt;&gt; celt. ladi-experimental now is suitable for creating ladish
+&gt;&gt; studio (or room project) for measuring the MIDI latency/jitter.
+&gt;&gt; 
+&gt;&gt; The second changeset suggests that we can have few helper functions for
+&gt;&gt; creating and filling parameter arrays. The current approach has proven
+&gt;&gt; to be error-prone. If you agree, I'd be happy to create such helpers and
+&gt;&gt; change the drivers to use them.
+&gt;
+&gt; Sure. Please do.
+
+http://repo.or.cz/w/jack2.git/shortlog/refs/heads/driver-descriptor-helpers
+http://repo.or.cz/w/jack2.git/commitdiff/a9e4628340a0fe4d36cc0e684c71af16a4e3717d
+
+I've tested only on Linux and only the alsa drivers. E.g., i've not
+built the ffado/firewire, macos, windows and solaris specific code. I
+have some access to macos and windows machine but I don't have access to
+solaris. Please tell me if I'm expected to setup build evirnment for
+macos and windows. Btw, we can setup a buildbot [1] with buildslaves for
+different platforms. Given that the xcode/codeblocks builds are
+scriptable...
+
+Devin, I saw a comment in the alsarawmidi code about you not being sure
+whether its parameters can be set. They can be set through
+jackdbus. ladiconf shows empty parameter list for alsarawmidi.
+
+I've noticed some problems with the parameter initialization code:
+
+ 1. There is some inconsistency with boolean parameters. We should set
+    the .i union member but there are/were some places where other
+    union member is accessed. The true/false constants are not fixed. In
+    different places we have 0/1, true/false and TRUE/FALSE.
+
+ 2. CoreAudio adapter and driver had uninitialized default values for
+   the 'P', 'C' and 'd' parameters. I've initialized them to empty
+   strings.
+
+[1] http://buildbot.net/
+
+-- 
+Nedko Arnaudov &lt;GnuPG KeyID: 7862B9E45D1B58ED&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303494449.21961_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303503302.7154_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303502643.5801_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1303502643.5801_0.ltw:2,a&nbsp;&lt;87sjtaullm.fsf_-_ at nuntu dot spacelabs dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

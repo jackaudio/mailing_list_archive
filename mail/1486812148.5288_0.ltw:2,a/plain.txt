@@ -1,0 +1,47 @@
+Date:        Sat, 11 Feb 2017 11:22:11 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Yuri [Jack-Devel] jackd consumes 0.12% CPU in the idle mode (1486764429.11543_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jackd consumes 0.12% CPU in the idle mode
+
+On Fri, Feb 10, 2017 at 02:06:55PM -0800, Yuri wrote:
+
+> 0.12% doesn't sound like much, but this consistently brings it up in 'top'.
+
+So what ?
+ 
+> If jackd doesn't have any connections, why does it wake up and do something?
+> It should be purely event driven, and the idle CPU use should be
+> disappearingly low. I think it does something redundant.
+
+Jackd is event driven. And even when there are no connections, it
+still has to write/read samples to/from the soundcard. Not doing
+that would result in a error condition that would take much more
+CPU to handle.
+
+Unless you propose that jackd should only attach to the soundcard
+when the first connection is made and release it when the last
+client disconnects. That would be a very bad idea for a variety
+of reasons. 
+
+> As a comparison, mpv player playing an audio mpeg stream consumes
+> only 1.2% CPU.
+
+If you are concerned about efficiency then you are focussing on
+the wrong targets. Take an audio app that consumes 5% CPU. It
+can probably be optimised a bit to use only 4.5% CPU. That means
+it's wasting four times as much CPU as Jack's idle load. 
+
+Ciao,
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+
+1486812148.5288_0.ltw:2,a <20170211112211.GA43469 at linuxaudio dot org>
+________________________________________________________________________________
+

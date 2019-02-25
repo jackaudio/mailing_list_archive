@@ -1,0 +1,62 @@
+Date:        Sat, 18 Nov 2017 21:55:14 +0100
+From:        Xavier Mendez  <[hidden] at jmendeth dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Markus Grabner Re: [Jack-Devel] questions about latency ranges (1510962617.20661_0.ltw:2,)
+Follow-Up:   Markus Grabner Re: [Jack-Devel] questions about latency ranges (1511043617.1880_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] questions about latency ranges
+
+El 18/11/17 a les 00:50, Markus Grabner ha escrit:
+> Am Mittwoch, 15. November 2017, 15:33:29 CET schrieb Xavier Mendez:
+>> (shameless self-citation) I made jack_lsync that does this, both
+>> jack_lset and jack_lsync can be found in:
+>> https://github.com/jmendeth/jack-tools/tree/latency-tools
+> Excellent, I was just starting to implement a similar tool myself, you saved
+> me a lot of work! Dropping in two instances of your client in the capture and
+> playback path precisely aligns the round-trip pulses in my Ardour test setup
+> (even in the pathological case that both signals are recorded into the same
+> track).
+> 
+> I vote for adding these tools to the Jack example clients. What do you think
+> about this?
+
+It'd be nice if they also supported synchronizing MIDI ports, but that's 
+TODO for now. For the rest, IMO they're pretty much ready to go.
+
+> 
+> BTW, one question regarding the "coefficient" parameter: I thought this should
+> always be "1" (align to maximum latency), but didn't notice any difference
+> when leaving its default value 0.5 (align to center), both variants gave
+> correct results. How does this coefficient affect the behaviour of your client?
+
+The coefficient has no effect when all ports' input latency has the same 
+minimum and maximum (i.e. one port [ 337 337 ] and the other [ 867 867 
+]). That's expected most of the time.
+
+If one port had [ 523 1024 ] latency you'd probably be doing it wrong, 
+but jack_lsync still has to deal with it, and that's what the parameter 
+is for. If coefficient was 0, lsync would assume 523 latency when 
+calculating the delays to apply, if it's 1 it'll assume 1024, and if 
+it's the default it'll just take the mean of min & max, and assume 773.
+
+So it's only there for those strange cases that should ideally never happen.
+
+PS: If you want to use alsa_out or alsa_in, note this bug which may make 
+them report wrong playback/capture latencies in some cases 
+https://github.com/jackaudio/tools/pull/8
+
+Xavi
+
+> 
+> 	Thanks & kind regards,
+> 		Markus
+> 
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> 
+
+1511038527.29240_0.ltw:2, <014ea07d-ad43-ccb4-1b44-bb75bb9c1179 at jmendeth dot com>
+________________________________________________________________________________
+

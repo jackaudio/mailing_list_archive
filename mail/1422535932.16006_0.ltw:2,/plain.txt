@@ -1,0 +1,54 @@
+Date:        Thu, 29 Jan 2015 12:52:04 +0000
+From:        Harry van Haaren  <[hidden] at gmail dot com>
+To:          Marjan Mrak <[hidden] at gmail dot com>, JACK <[hidden] at lists dot jackaudio dot org>
+
+Subject:     Re: [Jack-Devel] Dispersing MIDI messages: one to multiple
+
+On Thu, Jan 29, 2015 at 10:08 AM, Marjan Mrak <marjan.mrak@gmail.comwrote:
+> I have developed JACK MIDI client, which grabs midi messages from MIDI
+> keyboard on one port, and disperses it according to:
+Hey,
+
+> It works, but if I am using it, totaly at random sound output "hangs" for
+> like 10th of second.
+I'm not sure why it would "hang", and I'm not sure quite what you mean
+with that: are notes not passed through at all, or is it that certain
+notes are skipped?
+
+> I suspect my code is the problem. I would just like someone to examine it -
+> perhaps I am doiung something wrong here.
+I hope its the latter.. because there's a little bug hiding in the
+MIDI get code from JACK. It attempts to read *one* event, for every
+"nframe" that is available. The following code snippet is taken from
+the JACK example-clients - midisine.c
+
+jack_midi_event_t in_event;
+jack_nframes_t event_index = 0;
+jack_nframes_t event_count = jack_midi_get_event_count(port_buf);
+
+if(event_count 1)
+{
+   printf(" midisine: have %d events\n", event_count);
+   for(i=0; i<event_count; i++)
+   {
+      jack_midi_event_get(&in_event, port_buf, i);
+      printf(" event %d time is %d. 1st byte is 0x%x\n", i,
+in_event.time, *(in_event.buffer));
+   }
+}
+
+I'm not sure if your code is "production ready" - printf locks a
+mutex, a big no-no in RT code. Since MIDI handling and audio are in
+the same real-time thread, its not wise to printf in production code.
+It could cause xruns in JACK if the printf decides to lock and wait
+too long.
+
+Hope the above helps the issue, cheers, -Harry
+
+-- 
+
+http://www.openavproductions.com
+
+1422535932.16006_0.ltw:2, <CAKudYbM+_cnW6YGA--Ss_gjsTb61i5v3sXOGmUVAzG14=g4X7w at mail dot gmail dot com>
+________________________________________________________________________________
+

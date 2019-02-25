@@ -1,0 +1,88 @@
+Date:        Fri, 15 Nov 2013 22:59:03 +0100
+From:        Ruslan N. Marchenko  <[hidden] at ruff dot mobi>
+To:          Fernando Lopez-Lezcano <[hidden] at ccrma dot Stanford dot EDU>
+Cc:          JACK Mailing List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Fernando Lopez-Lezcano [Jack-Devel] jackd vs. dbus for embedded systems (1384546865.5062_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jackd vs. dbus for embedded systems
+
+On Fri, Nov 15, 2013 at 12:20:44PM -0800, Fernando Lopez-Lezcano wrote:
+> Hey, quick question...
+> 
+> In an embedded system where X is not running and jackd is compiled
+> with dbus support I cannot start jackd (because dbus is not happy
+> about not having X around).
+> 
+> I know, I know, I should build jackd without dbus and everyone would
+> be happy :-)
+>
+if it is ubuntu you can use following upstart script i created for my embeded box some time ago
+-------8<------------
+/etc/init/jack.conf
+description "Starts and stops jackd system service"
+author "Ruslan N. Marchenko <[hidden]>"
+
+start on started networking
+stop on stopping networking
+emits audio-bus
+emits jackaudio
+
+console log
+
+env HOME=/root
+
+pre-start script
+test -x /usr/bin/jackdmp || exit 0
+if [ ! -f /run/dbus/.env ]; then
+  eval `dbus-launch --auto-syntax`
+  echo "export DBUS_SESSION_BUS_PID=$DBUS_SESSION_BUS_PID" > /run/dbus/.env
+  echo "export DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS" >> /run/dbus/.env
+  chmod 600 /run/dbus/.env
+fi
+end script
+
+script
+test -x /usr/bin/jackdmp || /usr/bin/jackd -R -d alsa -d hw:0,3 -i2 -o2 -Chw:1,0
+end script
+
+post-start script
+test -x /usr/bin/jackdmp || exit 0
+. /run/dbus/.env
+jack_control start
+if [ -f /etc/default/jackd ]; then
+  awk '/^[esdri]/{system("jack_control "$0)}' /etc/default/jackd
+  awk '/^ /{system("jack_load "$0)}' /etc/default/jackd
+  awk '/^>/{  
+        system("jack_connect "$2":capture_1 "$3":playback_1");
+        system("jack_connect "$2":capture_2 "$3":playback_2");
+  }' /etc/default/jackd
+fi
+end script
+
+post-stop script
+test -x /usr/bin/jackdmp || exit 0
+. /run/dbus/.env
+if [ -f /etc/default/jackd ]; then
+  awk '/^ /{system("jack_unload "$1)}' /etc/default/jackd
+fi
+jack_control exit
+end script
+-----8<-----
+awk stuff here is just to init/load some internals and connect them. Didn't port them to jack1 yet :)
+
+ 
+> But in a distro that has jackd already compiled with dbus support,
+> and as a user, I would love to have a -nodbus command line option
+> that would make jackd work in both cases without rebuilding. Is that
+> possible?
+> 
+> -- Fernando
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> 
+
+1384552756.8648_0.ltw:2,a <20131115215903.GA10819 at ruff dot mobi>
+________________________________________________________________________________
+

@@ -1,0 +1,152 @@
+Date:        Fri, 05 Aug 2011 21:01:13 -0600
+From:        Dan Swain  <[hidden] at gmail dot com>
+To:          David Nielson <[hidden] at comcast dot net>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: David Nielson Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1312569286.24253_0.ltw:2,a)
+Follow-Up:   Jeroen Van den Keybus Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1312622260.3614_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea
+
+On Fri, Aug 5, 2011 at 12:33 PM, David Nielson <[hidden]>wrote:
+
+> On 08/04/2011 09:57 PM, Dan Swain wrote:
+>
+>> Of course, their approach is quite extensive in terms of remote control of
+>> devices beyond adjustment of gain, but I agree with the notion that this
+>> (our idea here) could become an open-source project. ARM is certainly an
+>> option, and a couple of years ago I was made aware of the Beagle Board
+>> systems, which are pretty flexible.
+>>
+> Beagleboards are great. I lean towards a solution based on ARM because
+> there could be a full JACK server on each client--so everything from basic
+> routing to DSP could be done inside that box and potentially not have to go
+> over the network at all.
+>
+> That sounds like a good idea! The amount of data that can be sent over the
+network is always going to be limited, so more is less is more in this case
+- which is a good thing! :-)
+
+
+> Aside: Remote gain control is a hard problem to solve. I think it would
+> actually make the most sense to have 3 or 4 preamps on each signal,
+> permanently set to specific gain levels, and then digitally recombine them
+> into signal that exposes the whole gain range. I haven't written anything up
+> on that, yet, because I don't have any mic duplicators here...
+>
+> That's true - I think the angle that I'm coming from is to have an audio
+interface that is configured in such a way that the audio signals don't
+clip, but then the 'gain' of each signal is then controlled in the host
+application, such as Ardour. Seeing as the work is ending up there, and I
+may use a system like this in a portable fashion, not having a mixing desk
+would be definitely beneficial, and the analogue signal path then remains
+much shorter and more direct.
+
+>
+> If all you need is more distance for a digital signal, you can get some
+> line driver chips from National that will take the TTL level signal from a
+> TOSLINK connector and drive it over CAT5 or equivalent for 100 meters or
+> more. (I've actually wanted to do that for a while, but it doesn't solve
+> remote gain at all.)
+>
+> Distance wasn't really the fundamental core of my thoughts on this project,
+more the saving of cables, and using non-proprietary hardware so that it's
+not limited to the people who 'throw money at it' :-) having a system
+transport data over a long distance would certainly be an option, as that
+wouldn't be limited to our hardware; we can use switches and repeaters
+already available on the market for that task.
+
+>
+> There are some 802.1 and 802.3 specs that just came out last year for audio
+> over routable ethernet. They're not really relevant to this conversation,
+> but I bring it up because the hardware they specifically mention is a
+> modified Netgear 24-port gigabit switch--the same one you can get on-line
+> for $200 or so--and all it has is better firmware so it knows how to
+> implement that protocol.
+>
+> Make sure the switch has enough backbone. Some larger gigabit switches only
+> have a 2-gigabit backbone, which will not suffice.
+>
+> Interesting - I'll have to read up on those specifications as I wasn't
+aware of that. I agree though, seeing as JACK sends its data via UDP
+packets, the performance of any switch or router will mostly depend on their
+ability to translate that traffic. It might be a bit of an overkill to have
+a large switch for an audio network (unless there were many one or
+two-channel devices, such as 'stage box' style interfaces), but again that's
+certainly something that's worth considering!
+
+>
+>  I've found a couple of ADC and DAC circuits through my searches on the
+>> internet, so replicating those would certainly make this an open-source
+>> project! However, the analogue side of this scenario is always the easy
+>> side, at least for me. In order for a system like this to work, and based
+>> from what I've read about the JACK system so far, would I need to 'spoof'
+>> some kind of audio interface that JACK would connect to?
+>>
+>
+> Depending on the ARM chip you went with, you could use an off-the-shelf,
+> consumer-grade ADC and DAC for a 2-in, 2-out unit; maybe more, even 2-in,
+> 8-out or something like that.
+>
+> To get more than that, you will almost certainly have to add an FPGA to the
+> board (just a little cheap one will suffice) and have someone who knows
+> about those things program the FPGA to translate ADC signals to something
+> the ARM chip can understand, like PCIe, and then translate the PCIe back
+> into signals for the DACs to send out. Paul Davis might know something about
+> that, having written the first Linux driver for the RME Hammerfall series of
+> cards, which use an FPGA setup to make ADAT signals available to the CPU.
+> Faberman (whose real name escapes me ATM) might also know.
+>
+> I certainly would like to see if Paul chimes in on this thread - especially
+if something could be produced that he approves of for Ardour. Like with
+RME's use of Xilinx FPGAs, we could certainly have a central 'core' system
+that interfaces any digital audio signals with JACK, and sends it off to the
+'master' machine via Ethernet. That would allow for a large number of
+combinations with the same core system, modifying the code slightly to
+reference the correct number of inputs and outputs for that specific device
+(say 2x2, or 16x16 devices as you mentioned in an earlier post, and also
+formats such as ADAT, TDIF, AES3 that would work as a simple unit to capture
+outputs from an existing mixer, recorder, et cetera).
+
+>
+>  Another 'guess' of mine is that if we're going to approach this hardware
+>> as a slave device to the main computer, are we going to need some kind of
+>> bi-directional connection when it comes to the synchronisation? Or, is it
+>> feasible for the whole system, given that low latency is a requirement (or
+>> at least a desirable element) that we could have the machine send out the
+>> 'master clock' signals, and assume that they reach the end unit as intended?
+>>
+>
+> Oh yeah, that's the other thing you'll use the FPGA for: to generate a
+> wordclock signal to match what's coming through the network.
+>
+> I'll also read up on the Word clock specifications - an area that I'm
+entirely unaware of, aside from recognising its usefulness! I used to have a
+RME Hammerfall (pre-HDSP) 9652 and two Behringer ADA8000 preamps, and
+setting one as master, one as slave, and then having the RME sync to the
+master was really simple. I think they included a schematic of the whole
+system, so I'll search on the internet to see if the manual shows anything
+useful in their implementation - you literally had two slider switches to
+set the sample rate and the master/slave options...it can't really get any
+simpler than that!
+
+
+> The new 802.1 standards do define how to keep a single wordclock present
+> across an entire network, but that all requires new and specialized (read:
+> stupidly expensive) NICs and switches, so I'm not sold on that.
+>
+> Agreed, stupidly expensive is just that - I feel the need for a reprieve
+from all of these costly items!
+
+Let's please make this happen. If someone made the product we were talking
+> about here, I would buy a bunch of them right off the bat!
+>
+> Me too! I'd love the chance to build my own studio, eventually, and on a
+more personal note, I feel the need to take a step up in my Music Technology
+knowledge while my music career is still getting off the ground. My wife and
+I are expecting our first child in December, so I definitely have the
+incentive to want to work on this if it makes their lives better too in the
+process :-)
+
+1312599702.22297_0.ltw:2,a <CABhkv4MT1367v8raEOrW42sOCtAQRby0xeWyiu00tv=z8O4MBQ at mail dot gmail dot com>
+________________________________________________________________________________
+

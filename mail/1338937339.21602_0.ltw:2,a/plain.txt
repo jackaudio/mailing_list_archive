@@ -1,0 +1,63 @@
+Date:        Wed, 06 Jun 2012 01:01:49 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Harry van Haaren <[hidden] at gmail dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Harry van Haaren Re: [Jack-Devel] how you can love JACK back (1338858367.12131_0.ltw:2,a)
+Follow-Up:   David Nielson Re: [Jack-Devel] how you can love JACK back (1338946324.25559_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] how you can love JACK back
+
+> On 06/04/2012 04:25 PM, Paul Davis wrote:
+>> what we need is a breakout of all the functions defined in the header
+>> files that get installed by jack1 and jack2. the result should be,
+>> preferably, a side-by-side (literally) juxtaposition of the
+>> comments/docs for each function, and the declaration of the function.
+
+[..]
+
+Going via git was not that bad after all. At least it's a good
+intermediate state. Attached side-by-side diff assumes you have a wide
+enough screen to display 200 characters per line and use 8 spaces/tab.
+
+Now, would someone know a suitable Wiki, code-annotation site or similar
+that can render this diff nicely and allow discussion?
+
+
+
+To re-create:
+
+  git clone git://github.com/x42/headers.git jack-headers
+  cd jack-headers
+  git checkout -b cmp_jack1 origin/cmp_jack1
+  git checkout -b cmp_jack2 origin/cmp_jack2
+  # git diff cmp_jack1...cmp_jack2
+
+  git difftool -y --extcmd='diff -y -W 200 ' cmp_jack1..cmp_jack2 \
+  > jack_header_compare.txt
+
+
+Now edit jack_header_compare.txt and remove all irrelevant lines :)
+That's actually only a 5-10 min task and reduced the diff from 4974 to
+951 lines (633 if you also remove the new net.h file).
+
+  * remove changes in comments and documentation when the function
+    definition is identical.
+  * remove NOOPs (added variable-names); e.g.
+    -int jack_set_port_connect_callback (jack_client_t *,
+    +int jack_set_port_connect_callback (jack_client_t *client,
+  * remove jack_position_t - the definition is identical, but the
+    coding and indent style is different.
+
+Note: Lines are cut short after 100 chars. This only affects the net.h
+header which was introduced in jack2 and a single line in transport.h
+that I've line-wrapped manually: "#define JACK_POSITION_MASK ..."
+
+
+have fun,
+robin
+* Attachment: '1338937339.21602_0.ltw:2,a/files/jack_header_compare.txt.gz'
+content-type: application/x-gzip
+
+1338937339.21602_0.ltw:2,a <4FCE8FDD.4060901 at gareus dot org>
+________________________________________________________________________________
+

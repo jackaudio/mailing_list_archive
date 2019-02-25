@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297434314.18056_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297435943.21691_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297435340.20372_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 11 Feb 2011 15:41:57 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Valerio Pilo </span> &lt;[hidden] at akhela dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1297434314.18056_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1297435943.21691_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client </a></td></tr>
+</table>
+<pre>
+In data venerd&#xEC; 11 febbraio 2011 15:25:04, St&#xE9;phane Letz ha scritto:
+&gt; Le 11 f&#xE9;vr. 2011 &#xE0; 15:08, Valerio Pilo a &#xE9;crit :
+&gt; &gt; Hello, I've been experiencing a serious stability problem when running
+&gt; &gt; JACK rev 4122 in my ARM box. I set up Jack, a couple clients, and a
+&gt; &gt; couple connections, and all goes well.
+&gt; &gt; 
+&gt; &gt; But as soon as I kill (anything like $(pidof clientname) ), JACK is dead: 
+this is calling jack_lsp after the fact:
+&gt; &gt; &gt; # jack_lsp
+&gt; &gt; &gt; JackSocketClientChannel read fail
+&gt; &gt; &gt; Cannot open lsp client
+&gt; &gt; &gt; jack_client_open() failed, status = 0x21
+&gt; &gt; &gt; #
+&gt; &gt; 
+&gt; &gt; Here's what jackd -v reports when I kill the client:
+&gt; &gt; &gt; Jack: Poll client error err = No such file or directory
+&gt; &gt; &gt; Jack: JackSocketServerChannel::ClientKill ref = 4
+&gt; &gt; &gt; Jack: JackServer::ClientKill ref = 4
+&gt; &gt; &gt; Jack: JackEngine::ClientDeactivate ref = 4 name =
+&gt; &gt; &gt; alsa-jack.jack_NAV_tP.1922.0 Jack: JackEngine::PortDisconnect src = 11
+&gt; &gt; &gt; dst = 65535
+&gt; &gt; &gt; Jack: JackEngine::PortDisconnect src = 12 dst = 65535
+&gt; &gt; &gt; Jack: JackEngine::NotifyClient: no callback for event = 10
+&gt; &gt; &gt; Jack: JackEngine::NotifyClient: no callback for event = 10
+&gt; &gt; &gt; Jack: JackExternalClient::ClientNotify ref = 2 name = busmanager notify
+&gt; &gt; &gt; = 10 Jack: JackEngine::NotifyClient: no callback for event = 10
+&gt; &gt; &gt; Jack: JackEngine::NotifyClient: no callback for event = 10
+&gt; &gt; &gt; Jack: JackEngine::NotifyClient: no callback for event = 10
+&gt; &gt; &gt; Jack: JackEngine::NotifyClient: no callback for event = 10
+&gt; &gt; &gt; Jack: JackExternalClient::ClientNotify ref = 2 name = busmanager notify
+&gt; &gt; &gt; = 10 Jack: JackEngine::NotifyClient: no callback for event = 10
+&gt; &gt; &gt; Jack: JackEngine::NotifyClient: no callback for event = 10
+&gt; &gt; &gt; Jack: JackConnectionManager::DirectDisconnect last: ref1 = 4 ref2 = 1
+&gt; &gt; &gt; Jack: JackGraphManager::DisconnectRefNum cur_index = 10 ref1 = 4 ref2 =
+&gt; &gt; &gt; 1 Jack: JackConnectionManager::DirectDisconnect last: ref1 = 1 ref2 =
+&gt; &gt; &gt; 4 Jack: JackGraphManager::DisconnectRefNum cur_index = 10 ref1 = 1
+&gt; &gt; &gt; ref2 = 4 Jack: JackProcessSync::TimedWait time out = 20000000
+&gt; &gt; 
+&gt; &gt; From that moment and on, jack is MIA until restarted.
+&gt; &gt; I've attached the full log of the session (jackd-test1.log.bz2), where I
+&gt; &gt; marked when I killed the client and ran lsp.
+&gt; &gt; 
+&gt; &gt; I've made the same test with jack_metro, obtained in an even simpler way:
+&gt; &gt; 1) start up jack: /usr/bin/jackd -v -S -r -t 2000 -d alsa -d chrouter -D
+&gt; &gt; -r 44100 -S -p 2048 -n 4 2) jack_lsp to ensure it's up (it is)
+&gt; &gt; 3) jack_metro -b 120
+&gt; &gt; 4) from another shell, pkill -9 jack_metro (SIGKILL, fyi)
+&gt; &gt; 5) jack_lsp to check if it's dead (it's really dead,  "jack_client_open()
+&gt; &gt; failed, status = 0x21") This test's log is jackd-test2.log.bz2 .
+&gt; &gt; 
+&gt; &gt; On my Centrino 64-bit laptop there's no problem, jack simply removes the
+&gt; &gt; dead client and keeps humming happily. But on ARM - an NVIDIA tegra
+&gt; &gt; ARMv7, btw - It's perfectly reproducible, I've tried it tons of times,
+&gt; &gt; with both the ALSA and the dummy plugins.
+&gt; &gt; 
+&gt; &gt; I started digging in the code, but I have no idea where the problem may
+&gt; &gt; be; do you have any idea or suggestion about this issue? Thanks in
+&gt; &gt; advance.
+&gt; 
+&gt; In both log I see:
+&gt; 
+&gt; ALSA: could not complete playback of 2048 frames: error = -32
+&gt; JackAudioDriver::ProcessSync: write error, stopping...
+&gt; 
+&gt; So basically ALSA driver stopped completely, so:
+&gt; 
+&gt; 1) can you provide a log with dummy driver, since it should behave
+&gt; differently?
+&gt; 
+&gt; 2) Backend error handling logic was changed in
+&gt; http://trac.jackaudio.org/changeset/4079, but the log shows that a serious
+&gt; non-revoverable error was detected in ALSA driver... maybe the change in r
+&gt; 4079 is still not correct.
+&gt; 
+&gt; 3) I see that jackd is started in synchronous mode (-S), can you try
+&gt; without -S (asynchronous mode) and send the log?
+&gt; 
+&gt; 
+&gt; St&#xE9;phane
+
+1) I've attached a test (jackd-test3-dummydriver.log.bz2) with the dummy 
+driver; which works - no issue. Seems to really be an ALSA driver problem.
+
+2) i'll start from there
+
+3) After the first test run with async mode (no "-S" argument) it seemed to 
+work - but i rebooted and tried some 5 more times and it broke every time. The 
+log of the last attempt is attached (jackd-test4-asyncmode.log.bz2).
+
+Thanks..
+
+-- 
+Valerio Pilo
+Software Engineer
+--
+X O R O V O
+A University of Cagliari spin-off company
+Parco Tecnologico della Sardegna, Edificio 1
+09010 - Pula, loc. Piscinamanna (CA) - Italy
+--
+skype: valerio.pilo
+phone: 070 9243 2663
+
+<a href='files/jackd-test3-dummydriver.log.bz2' target='_blank'>* Attachment: 'jackd-test3-dummydriver.log.bz2'</a>
+content-type: application/x-bzip
+<a href='files/jackd-test4-asyncmode.log.bz2' target='_blank'>* Attachment: 'jackd-test4-asyncmode.log.bz2'</a>
+content-type: application/x-bzip
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297434314.18056_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297435943.21691_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297435340.20372_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1297435340.20372_0.ltw:2,a&nbsp;&lt;201102111541.57714.valerio.pilo at akhela dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

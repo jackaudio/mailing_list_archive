@@ -1,0 +1,98 @@
+Date:        Mon, 28 Jan 2013 20:58:38 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          John Emmas <[hidden] at tiscali dot co dot uk>
+Cc:          JACK List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: John Emmas Re: [Jack-Devel] problems with system freezes when trying ot start jackd (1359371848.11481_0.ltw:2,a)
+Follow-Up:   John Emmas Re: [Jack-Devel] problems with system freezes when trying ot start jackd (1359405205.6788_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] problems with system freezes when trying ot start jackd
+
+Hi John,
+
+I 'm a bit surprised by your words.  I don't think we can say that "Jack has some pretty serious problems with USB and Firewire modules" when we get (rare...) feedback on issue on each platform; For example I am not aware of any specific issue on OSX (the platform that I know better...). 
+
+You have to understand that the backend is the part that is the more "fragile" in the system, because we have to deal with some many hardware. For the point of view of the JACK engine (inside the server) the backend is supposed to deliver an interrupt which can be the real one  (with callback based underlying API; CoreAudio, PortAudio,...) or "reconstructed" by wrapping a blocking based model (like ALSA) in a real-time thread.
+
+In JACK2 we also have the distinction between:
+
+- the asynchronous mode (server does not wait for graph end) which is more demanding because it *requires* that the backend delivers a *regular* time spaced interrupts.
+
+- the synchronous mode (when server does wait for graph end) which can more with regular or non regular interrupt
+
+(So a not regular backend in the general case like PortAudio one has to be used with a synchronous base server, that is using the -S parameter)
+
+Now concerning the different symptoms you are describing (Jack not being able to start, Jack not recognising the USB / Firewire device, Exceptionally poor performance...), we have to treat them one by one and platform by platform  (so underlying audio API used in the backend).
+
+So I would suggest that:
+
+ - you (Harisson/MB I guess) give me *a lot more feedback* on OSX and Windows... (how do you think I can possibly fix bugs if I don't get log report and so on...). On Linux/ALSA, I cannot really help, but hopefully others can
+
+- what we can possibly imagine is to develop test programs, like a simple executable that would only contains the backend code on each platform (Linux/ALSA, Windows/PortAudio and OSX/CoreAudio), with added profiling/debugging/instrumentation code.
+
+But this is a bit of work (again...) 
+
+Stéphane
+
+Le 28 janv. 2013 à 12:17, John Emmas a écrit :
+
+> FWIW we've recently been talking to Stephane about the growing number of customers complaining about issues with USB and Firewire audio devices.  At first we thought it might be something to do with Portaudio (Jack uses Portaudio on the Windows platform) but later, I realised that we get just as many complaints from OS-X users, where Jack doesn't use Portaudio AFAIK.  Admittedly, nobody's reported crashes but some common complaints include:-
+> 
+> 1)  Jack not being able to start
+> 2)  Jack not recognising the USB / Firewire device
+> 3)  Exceptionally poor performance (e.g. audible glitching, even with very modest sessions).
+> 
+> Axel, it sounds like your problem might be something very specific but more generally, I suspect that Jack has some pretty serious problems with USB and Firewire modules.  If there are other people here using USB or Firewire I/O modules, some more information would probably help - e.g. which combinations of hardware & software seem to be okay and which combinations seem to be troublesome?  From our experiences with Mixbus, it seems like Presonus devices give us the most problems on Windows and Focusrite are the most troublesome on OS-X.
+> 
+> John
+> 
+> On 28 Jan 2013, at 10:49, [hidden] wrote:
+> 
+>> Dear jack developers,
+>>  
+>> I have a UG802 mini computer which has a Rockchip 3066 1.2 GHz dual processor. Some people managed to put together a basic Ubuntu 12.10 based Linux called Picuntu for it which generally runs very nicely.
+>>  
+>> My plan is to use the device as a super portable guitar fx box with SuperCollider. But I've run into problems trying to get jack to run.
+>>  
+>> First I tried the precompiled versions of jackd 1 and 2 from the Debian(?) repositories, but both would crash when trying to use them with a USB audio interface with jackd1 completely freezing my system. As suggested by Robin Gareus I compiled the latest version 1.9.10 from the git source with alsa support enabled but when I start jack with
+>>  
+>> jackd -S -d alsa -d hw:H2 -r 44100 -n 3
+>>  
+>> my system locks up again after these unsuspicious messages:
+>>  
+>> creating alsa driver 
+>> configuring for 44100 Hz, period = 1024 frames (23.2 ms), buffer = 3 periods
+>> Alsa: final selected sample format for capture: 16 bit little-endian
+>> Alsa: use 3 periods for capture
+>> Alsa: final selected sample format for playback: 16bit little-endian
+>> Alsa: use 3 periods for playback
+>>  
+>> Jack seems to work when I start it with the computer's built in hdmi interface:
+>> jackd -S -d alsa -d hw:0,0 -p 512
+>>  
+>> I can't really test sound output though because I don't have a hdmi tv.
+>>  
+>> I tried with two interfaces: a Zoom H2 and an Alesis io2 both of which work fine when I just use Alsa to output sound.
+>>  
+>> Do you have any suggestions? Btw. I haven't installed a window manager. Everything is run from the command line.
+>>  
+>> thanks in advance,
+>> Axel
+>>  
+>> PS: this is my second attempt at posting this. In the first one I had attached my syslog file which to me looks a bit scrambled so I didn't really know how to extract the relevant parts. I can send it to you off list.
+>> 
+>> 
+>> ---
+>> Alle Postfächer an einem Ort. Jetzt wechseln und E-Mail-Adresse mitnehmen! Rundum glücklich mit freenetMail
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> 
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1359403139.3544_0.ltw:2,a <015E88FB-9939-41E4-9E69-1642ABE837CD at grame dot fr>
+________________________________________________________________________________
+

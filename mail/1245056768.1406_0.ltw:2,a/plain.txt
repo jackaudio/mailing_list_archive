@@ -1,0 +1,61 @@
+Date:        Mon, 15 Jun 2009 11:01:54 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Lennart Poettering <[hidden] at poettering dot net>, Nedko Arnaudov <[hidden] at arnaudov dot name>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>
+
+Subject:     Re: [LAD] jack2's dbus name
+
+Le 15 juin 09 à 01:14, Lennart Poettering a écrit :
+
+> Hmm,
+>
+> I was just thinking, when jack2 finished initialization it takes a
+> name on the session bus, right?
+
+Not sure about what you mean by " it takes name on the session bus". I  
+hope Nedko can answer better here.
+
+What is implemented right now is the acquire/release scheme based on  
+your reserver.h,c code. This is done in the ALSA backend.
+
+>
+> If that's the case then I could hack up a little module in PA that
+> will autoload the JACK connectivity modules as soon as jack becomes
+> available. That way we could make the integration between PA and JACK
+> a bit closer. Together with the device reservation logic we already
+> have in place we could then have out-of-the-box user experience that
+> would work like this:
+>
+> As soon as jack starts up and takes posession of the device, the hw
+> device will appear grayed out in pa's volume control, however a new
+> virtual device for connectivity with jack appears in the vc. Data
+> written to that device will be passed to JACK on a couple of
+> ports. It's then up to the user if he wants to make use of those ports
+> and connect them inside of jack or just leave them unconnected. (as
+> far as I understood the mere existance of a port when it is
+> unconnected has no detrimental effect on jack latency behaviour, does
+> it?). As soon as JACK terminates the virtual JACK device in PA will go
+> away again, and the hw device won't be greyed out anymore.
+>
+> That way the seperation line between PA clients and JACK clients would
+> be blurred a bit.
+>
+> One could even go a step further and reroute all existing streams from
+> the hw device to the virtual jack device, as long as it exists and
+> back afterwards. That way starting up jack would have the effect that
+> PA's own ALSA backend would simply be temporarily be replaced by
+> JACK.
+>
+> Does that make sense to you?
+>
+> Lennart
+
+Technically it "could" make sense, but I'm not sure JACK users want  
+that as the default behaviour. I would prefer if "real users" in JACK  
+and LAD communities could elaborate on that.
+
+Stephane 
+
+1245056768.1406_0.ltw:2,a <19087BBB-1F54-4590-AA8B-AE87525E5833 at grame dot fr>
+________________________________________________________________________________
+

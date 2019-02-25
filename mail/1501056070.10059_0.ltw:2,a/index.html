@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Why frame sizes are limited to the powers of 2?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Why frame sizes are limited to the powers of 2?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1501054813.8511_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1501094185.18545_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1501056070.10059_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 26 Jul 2017 10:00:55 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Filipe Coelho </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Yuri
+<a href='../1501054813.8511_0.ltw:2,a/index.html'>Re: [Jack-Devel] Why frame sizes are limited to the powers of 2? </a></td></tr>
+</table>
+<pre>
+On 26.07.2017 09:39, Yuri wrote:
+&gt; On 07/26/2017 00:35, Filipe Coelho wrote:
+&gt;&gt;
+&gt;&gt; So some of those buffer sizes work, some do not.
+&gt;&gt; GUIs usually show only power of 2 values because they're safer to use 
+&gt;&gt; (I mean, more likely to actually work).
+&gt;&gt; Also some jack applications sadly were made with the expectation that 
+&gt;&gt; power-of-2 buffer sizes will be used...
+&gt;&gt; But for such cases the application can return an error on start and 
+&gt;&gt; during the jack-buffersize-callback, to force jack to be under 
+&gt;&gt; power-of-2 sizes.
+&gt;&gt;
+&gt;&gt; Anyway, at least in latest jack2 this is not a problem.
+&gt;&gt; Not sure about jack1, but I believe the same is true. 
+&gt;
+&gt;
+&gt; I use Jack1. power of 2 check is hardcoded in the server.
+&gt;
+&gt; &gt;        if (!jack_power_of_two (nframes)) {
+&gt; &gt;                jack_error ("buffer size %" PRIu32 " not a power of 2",
+&gt; &gt;                            nframes);
+&gt; &gt;                return EINVAL;
+&gt; &gt;        }
+&gt;
+&gt; Yuri
+&gt;
+
+This seems like a leftover that nobody cared too much about just yet.
+Quickly going through the driver code I see that portaudio and coreaudio 
+drivers have this restriction when starting up jackd, but alsa has that 
+part disabled.
+See 
+https://github.com/jackaudio/jack1/blob/cb654ada4ecfd6a95b9fb648ebd33c5af462d380/drivers/alsa/alsa_driver.c#L495
+
+The OSS code does not seem to have this restriction when starting jackd 
+either.
+
+So I think we can remove this for at least ALSA and OSS drivers, 
+allowing them to change buffer size.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1501054813.8511_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1501094185.18545_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1501056070.10059_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1501056070.10059_0.ltw:2,a&nbsp;&lt;59784C37.80705 at falktx dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

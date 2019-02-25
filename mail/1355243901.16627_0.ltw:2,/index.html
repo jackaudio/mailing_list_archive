@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] speaker management</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] speaker management</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1355242695.14723_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1355249148.24939_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1355243901.16627_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 11 Dec 2012 17:35:50 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> J&#xF6;rn Nettingsmeier </span> &lt;[hidden] at stackingdwarves dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Istv&#xE1;n Kir&#xE1;ly
+<a href='../1355180167.25798_0.ltw:2,/index.html'>[Jack-Devel] speaker management </a></td></tr>
+</table>
+<pre>
+istv&#x1BAC;
+
+On 12/10/2012 11:55 PM, Istv&#x1BA0;Kir&#x1B39; wrote:
+&gt;
+&gt; Hi folks, ...
+&gt;
+&gt; I'm looking for a way to manage a club sound system, and instead of
+&gt; buying relative expensive dedicated hardware sound processors, (XTA,
+&gt; Xilica, .. etc)  thought of buying sound cards and do the processing -
+&gt; delay, FIR filters, etc, - via software. This would add me room for
+&gt; additional functionality, remote control, etc, ...
+
+that is surely feasible. but a pc based solution will always have more 
+downtime than a dedicated piece of hardware - there's so many more 
+things that can go wrong in a pc. if that's ok for the job at hand, by 
+all means go ahead, you will get a lot more capability and flexibility 
+for less money.
+careful design can alleviate this:
+underclock the box (by pinning the cpu governor to a frequency less than 
+the maximum).
+put the system on a raid 1.
+use SSDs rather than spinning disks: less heat, less power consumption, 
+waaaay faster, but also expensive. ok if you don't need massive storage 
+space, two 120GB ssds can be had for 200 &#128; these days.
+ensure good airflow, and make sure the rack it sits in isn't too hot.
+use optical i/o to avoid static discharge damage and hum loops - hum 
+isn't audible in digital copper circuits until the signal completely 
+breaks down, but it's there and it lowers your safety margin.
+strip down the linux system as much as possible.
+
+&gt; I was reading on the bruteFIR page, that it can work with Jack.
+
+yes, it does. but there are other convolvers as well. i don't know how 
+low the latency of bruteFIR can be (does it do partitioned convolution 
+at all?), and that will be important the moment you have djs who do live 
+interaction. but fons' jconvolver is a good alternative, and it does not 
+add any latency above the jack period length that you'll always have.
+
+&gt; The goal would be to have
+&gt;   deck's -&gt; up to 4 digital sound channels, possibly AES -&gt; Jack on
+&gt; linux -&gt; DA Converters -&gt; amplifiers -&gt; speakers
+&gt;
+&gt; The hardware is expensive, so please share your opinion about this.
+&gt; Can the RME HDSPe MADI work smooth with jack and linux - a PCI express
+&gt; card?
+&gt; Or am I better off with some firewire soundcard, like the MOTU 828?
+&gt; [financially for sure]
+
+i would recommend against a firewire interface for fixed installations. 
+firewire is very versatile if you want to use the hardware on different 
+computers, but it does come at a price: much more complicated tuning, 
+flimsy connectors, higher cpu load, possibly more problems with routine 
+kernel updates...
+
+the cheapest option is an ADAT capable card such as the RME HDSP series 
+with a behringer ADA 8000 for eight channels analog in (for those who 
+work with vinyl) and eight analog outs (enough for four-point surround 
+plus two subs plus two monitor wedges or extra anteroom feeds). but 
+there are cheaper adat cards out there...
+
+as to your question, older RME pcie cards work well with all features 
+supported, cutting edge ones like the MADI FX might not, but that 
+usually gets fixed pretty quickly as soon as people actually use them 
+and complain...
+
+&gt; How do I chain bruteFIR into Jack?
+
+connecting software in jack is easy - get qjackctl and use the graphical 
+patchbay while you're learning and experimenting. then, once you have 
+decided what you setup will be, use the command line tool jack_connect 
+in a script to automatically set your system up when you boot.
+
+while you're at it, you might want to try fons' zita-lrx crossover 
+between your tops and subs, it does linkwitz-riley and butterworth.
+haven't used it in production yet, but a quick test suggests it does the 
+job nicely.
+
+
+best
+
+
+j&#246;rn
+
+-- 
+J&#246;rn Nettingsmeier
+Lortzingstr. 11, 45128 Essen, Tel. +49 177 7937487
+
+Meister f&#252;r Veranstaltungstechnik (B&#252;hne/Studio)
+Tonmeister VDT
+
+http://stackingdwarves.net
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1355242695.14723_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1355249148.24939_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1355243901.16627_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1355243901.16627_0.ltw:2,&nbsp;&lt;50C760E6.2090703 at stackingdwarves dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,110 @@
+Date:        Sun, 04 Nov 2012 21:36:11 +0000
+From:        Ian Malone  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] building git / jack2 1.9.9 on Fedora (1352127689.14843_0.ltw:2,a)
+
+Subject:     [Jack-Devel] building git / jack2 1.9.9 on Fedora
+
+Hi again,
+
+I'm trying to build jack2 git on Fedora using the Fedora spec file and
+have hit a couple of issues. From what I've read current git is pretty
+close to 1.9.9, so thought I'd give this a try. It's possible there's
+extra setup that goes into making a tarball that I've missed and might
+be causing problems, but http://www.grame.fr/~letz/jack-%{version}.tgz
+is listed as the source location in the spec file and is no longer
+available (and I don't think there's an equivalent .9 for the dropbox
+linked from the download page).
+
+Firstly doxygen doesn't build, this is an error in waf that traces back to:
+  File "/home/ian/rpmbuild/BUILD/jack-1.9.9/jack-1.9.9/wscript", line
+338, in build
+    share_dir = bld.env.get_destdir() + bld.env['PREFIX'] +
+'/share/jack-audio-connection-kit'
+TypeError: 'list' object is not callable
+
+waf has changed from 1.5 to 1.6.11 between jack 1.9.8 and current git,
+so maybe this method is no longer available? I've also tried directly
+running waf configure and build with doxygen enabled and got the same
+result.
+
+I can live without doxygen for the moment, so disabled building it and
+tried again. Now the build mostly works until it hits a linker error.
+
+[237/269] cprogram: build/example-clients/alsa_in.c.30.o
+build/common/memops.c.30.o -> build/example-clients/alsa_in
+21:05:33 runner ['/usr/bin/gcc', 'example-clients/alsa_in.c.30.o',
+'common/memops.c.30.o', '-o',
+'/home/ian/rpmbuild/BUILD/jack-1.9.9/jack-1.9.9/build/example-clients/alsa_in',
+'-Wl,-Bstatic', '-Wl,-Bdynamic', '-Lcommon', '-ljack', '-lpthread',
+'-lcelt0', '-lrt', '-ldl', '-lasound', '-lsamplerate']
+/usr/bin/ld: example-clients/alsa_in.c.30.o: undefined reference to
+symbol 'floor@@GLIBC_2.2.5'
+/usr/bin/ld: note: 'floor@@GLIBC_2.2.5' is defined in DSO
+/lib64/libm.so.6 so try adding it to the linker command line
+/lib64/libm.so.6: could not read symbols: Invalid operation
+collect2: error: ld returned 1 exit status
+Waf: Leaving directory `/home/ian/rpmbuild/BUILD/jack-1.9.9/jack-1.9.9/build'
+Build failed
+ -> task in 'alsa_in' failed (exit status 1):
+        {task 11213456: cprogram alsa_in.c.30.o,memops.c.30.o -> alsa_in}
+['/usr/bin/gcc', 'example-clients/alsa_in.c.30.o',
+'common/memops.c.30.o', '-o',
+'/home/ian/rpmbuild/BUILD/jack-1.9.9/jack-1.9.9/build/example-clients/alsa_in',
+'-Wl,-Bstatic', '-Wl,-Bdynamic', '-Lcommon', '-ljack', '-lpthread',
+'-lcelt0', '-lrt', '-ldl', '-lasound', '-lsamplerate']
+error: Bad exit status from /var/tmp/rpm-tmp.0RxmUp (%build)
+
+I see the following difference in the wscripts I've got for 1.9.8 and
+git/1.9.9, it may be it's been added during tarball creation:
+@@ -222,8 +237,6 @@
+         if m != None:
+             svnrev = m.group(1)
+
+-    conf.env.append_unique('LINKFLAGS', '-lm -lstdc++')
+-
+     if Options.options.mixed == True:
+         env_variant2 = conf.env.copy()
+         conf.set_env_name('lib32', env_variant2)
+
+That doesn't work either in 1.9.9, possibly due to the change in waf
+version, as it passes '-lm -stdc++' as a single argument. Adding the
+two separately (just -lm fails with missing stdc++ symbols) seems to
+get me the rest of the way there.
+The change that introduced this is
+https://github.com/jackaudio/jack2/commit/f28523ff5415c96d681551d2b3a614ef851b9b4a
+which looks like it's meant to use a different method of specifying
+libraries, but a comment on that suggests it's incomplete wrt. alsa,
+which I think is what I'm seeing.
+
+There's one final failure, which is more a Fedora packaging problem,
+but it seems something has changed in the installed packages:
+
++ chmod 755 '/home/ian/rpmbuild/BUILDROOT/jack-audio-connection-kit-1.9.9-12.fc18.x86_64/usr/lib64/jack/*.so'
+'/home/ian/rpmbuild/BUILDROOT/jack-audio-connection-kit-1.9.9-12.fc18.x86_64/usr/lib64/libjack*.so.*.*.*'
+chmod: cannot access
+'/home/ian/rpmbuild/BUILDROOT/jack-audio-connection-kit-1.9.9-12.fc18.x86_64/usr/lib64/jack/*.so':
+No such file or directory
+chmod: cannot access
+'/home/ian/rpmbuild/BUILDROOT/jack-audio-connection-kit-1.9.9-12.fc18.x86_64/usr/lib64/libjack*.so.*.*.*':
+No such file or directory
+error: Bad exit status from /var/tmp/rpm-tmp.DObdrk (%install)
+
+All the libraries now seem to be in:
+<prefix>/lib64/
+
+Though the following are in <prefix>/usr:
+bin  include  share
+
+The odd location for lib64 makes me wonder if this is another
+waf/wscript-related problem. Suggestions about any of these issues
+welcome.
+
+Thanks for your time,
+-- 
+imalone
+http://ibmalone.blogspot.co.uk
+
+1352064979.4919_0.ltw:2,a <CAL3-7Mp=_YFmwgLB99XBqR32BajW=kF8sUkXyT+G=aKQYAFAwA at mail dot gmail dot com>
+________________________________________________________________________________
+

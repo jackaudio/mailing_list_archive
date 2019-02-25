@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack on ARM with low-latency USB</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack on ARM with low-latency USB</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1385588905.18194_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1385741194.24855_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1385706375.26050_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 28 Nov 2013 22:25:53 -0800 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Gabriel M. Beddingfield </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fabian Schlieper &lt;[hidden] at fabi dot me&gt;, [hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fabian Schlieper
+<a href='../1385053520.21667_0.ltw:2,a/index.html'>[Jack-Devel] Jack on ARM with low-latency USB </a></td></tr>
+</table>
+<pre>
+On 11/21/2013 08:17 AM, Fabian Schlieper wrote:
+&gt; Hi everyone,
+&gt;
+&gt; I'm trying to build a low-latency audio processor on ODROID-X2 with an
+&gt; external USB sound card (Behringer UCA-202).
+&gt; I can't get jack working stable with a period size of 128 samples.
+[...snip...]
+&gt;
+&gt; It's running without audio glitches, but after some time (or when other USB
+&gt; devices are heavily active) the sound gets disturbed and keeps crackling until
+&gt; jack is restarted.
+&gt;
+&gt; I know I could increase the period size, but I want to have low-latency, Is
+&gt; 128 period size even realistic with USB sound?
+
+Don't know if this relates, but...  On the OMAP4 SoC I've seen similar 
+problems with the EHCI controller with respect to audio reliability.  In 
+that set-up, the CPU has to respond to very frequent interrupts in order 
+for the controller to work properly.  This often lead to XRUNS.
+
+But at this latency, it could be *anything* causing your glitches.  Any 
+driver holding a spin lock while doing some "background" task will do 
+it.  I recommend tracing with `trace-cmd'[1] and inspecting them with 
+`kernelshark'.  If you can get a `trace-cmd' capture that includes the 
+XRUN's you'll get some clues about what is happening.
+
+-gabe
+
+[1] At the very least, do:
+     # trace-cmd record -e "sched:*" -e "irq:*"
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1385588905.18194_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1385741194.24855_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1385706375.26050_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1385706375.26050_0.ltw:2,&nbsp;&lt;52983371.1040101 at gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] [jack2] netone backend crashes at startup on x86_64 back to version 1.9.7</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] [jack2] netone backend crashes at startup on x86_64 back to version 1.9.7</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1378319941.29549_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1378328279.9412_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1378324045.4443_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 04 Sep 2013 21:47:17 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Hanspeter Portner </span> &lt;[hidden] at airpost dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+</table>
+<pre>
+I've filed an issue a while back on github about this issue, maybe it 
+was the wrong channel, so I'll try here:
+https://github.com/jackaudio/jack2/issues/38
+
+jack2 version 1.9.7 is the last one that has a working netone backend on 
+my current system, all later versions up to git HEAD crash at startup. 
+It works fine though on my other (i686 machine)
+jackd -d netone &gt;&gt; CRASH
+
+uname -a &gt;&gt; Linux melamori 3.10.10-1-ARCH #1 SMP PREEMPT Fri Aug 30 
+11:30:06 CEST 2013 x86_64 GNU/Linux
+
+gdb dump
+========
+jackdmp 1.9.10
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2013 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+[New Thread 0x7ffff3745700 (LWP 15530)]
+no message buffer overruns
+[Thread 0x7ffff3745700 (LWP 15530) exited]
+[New Thread 0x7ffff3745700 (LWP 15531)]
+no message buffer overruns
+[Thread 0x7ffff3745700 (LWP 15531) exited]
+[New Thread 0x7ffff3745700 (LWP 15532)]
+no message buffer overruns
+[Thread 0x7ffff3745700 (LWP 15532) exited]
+JACK server starting in realtime mode with priority 10
+[New Thread 0x7ffff7fbe700 (LWP 15534)]
+[New Thread 0x7ffff7f3d700 (LWP 15535)]
+[New Thread 0x7ffff7ebc700 (LWP 15536)]
+
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0x7ffff7ebc700 (LWP 15536)]
+0x00007ffff60a6bf3 in Jack::JackNetOneDriver::FreePorts() () from 
+/usr/lib/jack/jack_netone.so
+(gdb) bt
+#0 0x00007ffff60a6bf3 in Jack::JackNetOneDriver::FreePorts() () from 
+/usr/lib/jack/jack_netone.so
+#1 0x00007ffff60a6e66 in Jack::JackNetOneDriver::Initialize() () from 
+/usr/lib/jack/jack_netone.so
+#2 0x00007ffff7b99661 in 
+Jack::JackWaitThreadedDriver::JackDriverStarter::Execute() () from 
+/usr/lib/libjackserver.so.0
+#3 0x00007ffff7b895b0 in Jack::JackPosixThread::ThreadHandler(void*) () 
+from /usr/lib/libjackserver.so.0
+#4 0x00007ffff6e1bdd2 in start_thread () from /usr/lib/libpthread.so.0
+#5 0x00007ffff7115cdd in clone () from /usr/lib/libc.so.6
+(gdb)
+
+The corresponding ArchLinux bug:
+https://bugs.archlinux.org/task/36053
+
+That's how jack2 is built on ArchLinux:
+https://projects.archlinux.org/svntogit/community.git/tree/trunk/PKGBUILD?h=packages/jack2 
+
+
+There are others a part from me having this problem on ArchLinux (most 
+probably only on x86_64).
+So chances are high that it's not only my system which is to blame.
+
+I've tried to build the sources with debug symbols to get a hint from 
+gdb where the problem may be, but they were not included;-(
+Is there some additional hook needed apart from './waf configure 
+--debug'? (I'm not used to waf...)
+
+Funny enough, it starts up fine when started within valgrind.
+
+Any ideas where the problem may be or where I should look further?
+
+Hanspeter Portner
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1378319941.29549_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1378328279.9412_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1378324045.4443_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1378324045.4443_0.ltw:2,&nbsp;&lt;52278E45.6010401 at airpost dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

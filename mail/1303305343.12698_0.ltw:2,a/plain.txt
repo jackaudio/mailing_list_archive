@@ -1,0 +1,43 @@
+Date:        Wed, 20 Apr 2011 09:15:19 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Dan Muresan <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Dan Muresan Re: [Jack-Devel] non-callback API (1303301688.5149_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] non-callback API
+
+On Wed, Apr 20, 2011 at 8:14 AM, Dan Muresan <[hidden]> wrote:
+>>> But I wonder what happens if the thread doesn't call
+>>> jack_cycle_wait() "often enough". That cannot occur in
+>> It's the same as if the application takes too long in the
+>> process() function:  You will cause xruns and your
+>> application will probably be disconnected from JACK for
+>> being a zombie/deadbeat.
+>
+> OK. Actually process() taking too long would be equivalent to the code
+> between cycle_wait() and cycle_signal() taking too long, right?
+> Instead I'm asking about the other half -- the code between
+> cycle_signal() and cycle_wait() taking too long.
+>
+> But you probably meant that the effects are the same -- which seems reasonable.
+
+pretty much.
+
+the server will not be waiting on the graph until (at latest) your
+client returns from jack_cycle_wait(). the server will wakeup again
+(at the earliest) when your client calls jack_cycle_signal() (these
+limit cases are where yours is the only client).
+
+if your client continues to do work in between the last call to
+jack_cycle_signal() and jack_cycle_wait(), to the extent that it
+delays its call to jack_cycle_wait(), then you've effectively stolen
+time from that available to run the stuff between wait + signal (the
+"process callback"). if you delay for too long, its identical to a
+process callback taking too long and the effects will the same - the
+server will wakeup, discover that you're not done (i.e. your client
+has not called jack_cycle_signal()) in time and then the usual stuff
+will occur.
+
+1303305343.12698_0.ltw:2,a <BANLkTin6PfhWcuw9-o+JT_scxjV_0QJyxg at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,134 @@
+Date:        Tue, 20 May 2014 14:00:48 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Leonardo Gabrielli Re: [Jack-Devel] CPU load with top is inconsistent (1400578702.15707_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] CPU load with top is inconsistent
+
+On Tue, May 20, 2014 at 11:38:10AM +0200, Leonardo Gabrielli wrote:
+
+> 1- To conduct the CPU tests I have a bash script that starts jackd.
+> If I launch the script as user "debian", jackd gets correctly
+> scheduled with realtime prio. If I launch the script as superuser
+> with:
+>   sudo -u debian myscript
+> then jackd can't lock down memory and get the realtime priority. As
+
+RTprio (scheduler) and the corresponding memory limits are granted via
+pam_limits.
+
+You could add
+
+session    required     pam_limits.so
+
+to /etc/pam.d/sudo and see if this helps.
+
+
+> 2- when jack tells me it's got realtime prio, "top" tells jackd has
+> the same priority as any other tasks scheduled with the CFS.
+> I'm getting to think that Jack is wrong about its realtime priority:
+> in any case on the current machine it is not assigned rt priority
+> (top always says it's like any other task).
+
+There are several threads in a jack process, only few (one or two) run
+with RTprio. top most likely just shows you the main thread that indeed
+doesn't run with realtime priority.
+
+Either use htop (showing individual threads) or chrt:
+
+
+$ for i in /proc/$(pidof jackd)/task/* ; do chrt -p $(basename $i) ; done
+pid 24922's current scheduling policy: SCHED_FIFO
+pid 24922's current scheduling priority: 10
+pid 3674's current scheduling policy: SCHED_OTHER
+pid 3674's current scheduling priority: 0
+pid 3703's current scheduling policy: SCHED_OTHER
+pid 3703's current scheduling priority: 0
+pid 3705's current scheduling policy: SCHED_OTHER
+pid 3705's current scheduling priority: 0
+
+
+See, one thread with SCHED_FIFO at RTprio 10.
+
+
+[jackd CPU usage]
+> >Nonetheless, I'd like to have a qualitative comparison between
+> >different conditions. What I do is run "top" and average the
+> >values I find for jackd. Unfortunately - and this is startling -
+
+Assuming this is supposed to be scientific, manually averaging top isn't
+exactly the most reliable approach. For a start, have a look at
+
+
+   http://stackoverflow.com/questions/1420426/calculating-cpu-usage-of-a-process-in-linux
+
+
+You should also strive for a fully automated testing environment, so you
+can easily re-run your measurements when some parameters change. In the
+end, what you want is to invoke "make" which then invokes jackd (random
+server name recommended), runs your tests, terminates the whole thing
+and dumps the raw data. Ideally, "make postprocess" will later generate
+you your R or gnuplot graphs.
+
+Certainly not perfect, but here's what I used to call in my "make test"
+target:
+
+--- cut ---
+#/bin/bash
+
+set -e
+
+JACK_NAME=dummy-`echo $$`
+jackd -n ${JACK_NAME} -d dummy -P 20 -C 20 &
+JACK_DEFAULT_SERVER=${JACK_NAME} jack_wait -s ${JACK_NAME} -w -t 5
+JACK_DEFAULT_SERVER=${JACK_NAME} ./matrix-mixer &
+sleep 2;
+JACK_DEFAULT_SERVER=${JACK_NAME} ./tester 0
+JACK_DEFAULT_SERVER=${JACK_NAME} ./tester 50
+JACK_DEFAULT_SERVER=${JACK_NAME} ./tester 100
+pkill matrix-mixer
+
+MIXFILE=$(mktemp -q) && {
+    for i in {0..19} ; do
+        echo "s $i $i 0.5" >> ${MIXFILE}
+    done
+    sleep 1;
+    JACK_DEFAULT_SERVER=${JACK_NAME} ./matrix-mixer ${MIXFILE}&
+    sleep 2;
+    JACK_DEFAULT_SERVER=${JACK_NAME} ./tester 100 50
+    rm ${MIXFILE}
+}
+
+pkill -f ${JACK_NAME}
+--- cut ---
+
+
+You can basically ignore everything that says matrix-mixer or tester, I
+just left it there for inspiration. What it does: start a random dummy
+server, wait for it to be actually up, then start the application to be
+tested followed by some test runs.
+
+The MIXFILE thing is a block that creates a tmpfile, fills it with some
+data, starts the application and checks the result.
+
+For the sake of completeness (but totally unrelated to your problem), I
+used this to write an end-to-end test for a jack mixer. The tester
+program invoked with only one argument generates a signal at a certain
+volume percentage (here: 0%, 50% and 100%) and expects this signal to be
+identical at the output of the mixer. With the mixfile, I set all the
+faders to 50%, then feed a signal at 100% and expect it to be 50% at the
+outputs.
+
+Very convenient to say "make test" while developing to see if the mixer
+is still doing the right thing.
+
+
+
+HTH
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1400587265.23676_0.ltw:2,Sa <20140520120048.GE12234 at ltw dot loris dot tv>
+________________________________________________________________________________
+

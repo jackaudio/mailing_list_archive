@@ -1,0 +1,38 @@
+Date:        Mon, 10 Dec 2018 23:56:30 +0100
+From:        Kjetil Matheussen  <[hidden] at gmail dot com>
+To:          [hidden] at microfx dot de
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: [hidden] at microfx dot de Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service (1544481482.16919_0.ltw:2,)
+Follow-Up:   Kjetil Matheussen Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service (1544483708.20375_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service
+
+On Mon, Dec 10, 2018 at 11:37 PM [hidden] <[hidden]> wrote:
+>
+> that indeed looks like a solution! But I would need to know if jack_capture is recording to stop it again because I want to use a button to trigger start/stop of the recording - and I can’t think of a solution right away. Good input for the recording directory - I was asking myself how to do that since I couldn’t find that in the help file.
+>
+
+A little bit hacky, but you can use the --hook* functions to make
+jack_capture run arbitrary commands when starting and stopping:
+
+"
+[kjetil@localhost jack_capture]$ more hookstart.sh
+#!/bin/sh
+
+touch /tmp/jack_capture_is_recording
+
+[kjetil@localhost jack_capture]$ more hookstop.sh
+#!/bin/sh
+
+rm -f /tmp/jack_capture_is_recording
+"
+
+And if you run jack_capture with the arguments
+
+  --hook-close ./hookstop.sh --hook-timing ./hookstart.sh
+
+The file /tmp/jack_capture_is_recording will exist when recording.
+
+1544482630.19288_0.ltw:2, <CAC6niEKyF395Csjf+9tXEY+6+fNXFi+-q1mf78CQDtEx_yjBbQ at mail dot gmail dot com>
+________________________________________________________________________________
+

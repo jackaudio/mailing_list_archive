@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Suggestion for an example program</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Suggestion for an example program</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1472471482.21268_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1473237889.1358_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1472970510.28706_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 04 Sep 2016 07:28:10 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Peter Hoppe </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Markus Seeber
+<a href='../1473237889.1358_0.ltw:2,/index.html'>Re: [Jack-Devel] Suggestion for an example program </a></td></tr>
+</table>
+<pre>
+Hi! In reference to https://github.com/jackaudio/example-clients: I saw 
+the code as part of a question on Stackoverflow 
+(http://stackoverflow.com/q/29748082/6544953). Would it be possible to 
+include the source code below as an example?
+
+  * There's already a midi controlled synth application in that repo
+    (midisine.c). But I feel the example demonstrates in a clearer way
+    how to send audio to the sound card's stereo output, because it just
+    uses audio data, not audio data plus midi handling.
+  * There's also the simple client example (simple_client.c), but that
+    one (effectively) handles bi-directional audio data streaming. This
+    client just sends audio data which makes it clearer how to use data
+    output (and, by implication, data input).
+
+Long story in short - this example is clearer to n00bs (like me).
+
+Thank you for your consideration!
+
+
+&gt; |/** @file simple_client.c * * @brief This simple client demonstrates 
+&gt; the basic features of JACK * as they would be used by many 
+&gt; applications. 
+&gt; */#include&lt;stdio.h&gt;#include&lt;errno.h&gt;#include&lt;stdlib.h&gt;#include&lt;string.h&gt;#include&lt;math.h&gt;#include&lt;signal.h&gt;#ifndefWIN32 
+&gt; #include&lt;unistd.h&gt;#endif#include&lt;jack/jack.h&gt;jack_port_t*output_port1,*output_port2;jack_client_t*client;#ifndefM_PI 
+&gt; #defineM_PI (3.14159265)#endif#defineTABLE_SIZE 
+&gt; (200)typedefstruct{floatsine[TABLE_SIZE];intleft_phase;intright_phase;}paTestData;staticvoidsignal_handler(intsig){jack_client_close(client);fprintf(stderr,"signal 
+&gt; received, exiting ...\n");exit(0);}/** * The process callback for this 
+&gt; JACK application is called in a * special realtime thread once for 
+&gt; each audio cycle. * * This client follows a simple rule: when the JACK 
+&gt; transport is * running, copy the input port to the output. When it 
+&gt; stops, exit. 
+&gt; */intprocess(jack_nframes_tnframes,void*arg){jack_default_audio_sample_t*out1,*out2;paTestData 
+&gt; *data =(paTestData*)arg;inti;out1 
+&gt; =(jack_default_audio_sample_t*)jack_port_get_buffer(output_port1,nframes);out2 
+&gt; =(jack_default_audio_sample_t*)jack_port_get_buffer(output_port2,nframes);for(i 
+&gt; =0;i&lt;nframes;i++){out1[i]=data-&gt;sine[data-&gt;left_phase];// left 
+&gt; out2[i]=data-&gt;sine[data-&gt;right_phase];// right data-&gt;left_phase 
+&gt; +=1;if(data-&gt;left_phase &gt;=TABLE_SIZE)data-&gt;left_phase 
+&gt; -=TABLE_SIZE;data-&gt;right_phase +=10;// higher pitch so we can 
+&gt; distinguish left and right. if(data-&gt;right_phase 
+&gt; &gt;=TABLE_SIZE)data-&gt;right_phase -=TABLE_SIZE;}return0;}/** * JACK calls 
+&gt; this shutdown_callback if the server ever shuts down or * decides to 
+&gt; disconnect the client. 
+&gt; */voidjack_shutdown(void*arg){exit(1);}intmain(intargc,char*argv[]){constchar**ports;constchar*client_name;constchar*server_name 
+&gt; =NULL;jack_options_toptions 
+&gt; =JackNullOption;jack_status_tstatus;paTestData data;inti;/*if (argc &gt;= 
+&gt; 2) { // client name specified? client_name = argv[1]; if (argc &gt;= 3) { 
+&gt; // server name specified? server_name = argv[2]; int my_option = 
+&gt; JackNullOption | JackServerName; options = (jack_options_t)my_option; 
+&gt; } } else { // use basename of argv[0] client_name = strrchr(argv[0], 
+&gt; '/'); if (client_name == 0) { client_name = argv[0]; } else { 
+&gt; client_name++; } }*/client_name ="mytest";for(i 
+&gt; =0;i&lt;TABLE_SIZE;i++){data.sine[i]=0.2*(float)sin(((double)i 
+&gt; /(double)TABLE_SIZE)*M_PI *2.);}data.left_phase =data.right_phase 
+&gt; =0;// open a client connection to the JACK server client 
+&gt; =jack_client_open(client_name,options,&amp;status,server_name);if(client 
+&gt; ==NULL){fprintf(stderr,"jack_client_open() failed, ""status = 
+&gt; 0x%2.0x\n",status);if(status &amp;JackServerFailed){fprintf(stderr,"Unable 
+&gt; to connect to JACK server\n");}exit(1);}if(status 
+&gt; &amp;JackServerStarted){fprintf(stderr,"JACK server started\n");}if(status 
+&gt; &amp;JackNameNotUnique){client_name 
+&gt; =jack_get_client_name(client);fprintf(stderr,"unique name `%s' 
+&gt; assigned\n",client_name);}// tell the JACK server to call `process()' 
+&gt; whenever//there is work to be 
+&gt; done.jack_set_process_callback(client,process,&amp;data);// tell the JACK 
+&gt; server to call `jack_shutdown()' if//it ever shuts down, either 
+&gt; entirely, or if it//just decides to stop calling 
+&gt; us.jack_on_shutdown(client,jack_shutdown,0);// create two ports 
+&gt; output_port1 
+&gt; =jack_port_register(client,"output1",JACK_DEFAULT_AUDIO_TYPE,JackPortIsOutput,0);output_port2 
+&gt; =jack_port_register(client,"output2",JACK_DEFAULT_AUDIO_TYPE,JackPortIsOutput,0);if((output_port1 
+&gt; ==NULL)||(output_port2 ==NULL)){fprintf(stderr,"no more JACK ports 
+&gt; available\n");exit(1);}//Tell the JACK server that we are ready to 
+&gt; roll. Our// process() callback will start running now. 
+&gt; if(jack_activate(client)){fprintf(stderr,"cannot activate 
+&gt; client");exit(1);}// Connect the ports. You can't do this before the 
+&gt; client is// activated, because we can't make connections to clients// 
+&gt; that aren't running. Note the confusing (but necessary)// orientation 
+&gt; of the driver backend ports: playback ports are// "input" to the 
+&gt; backend, and capture ports are "output" from// it.ports 
+&gt; =jack_get_ports(client,NULL,NULL,JackPortIsPhysical|JackPortIsInput);if(ports 
+&gt; ==NULL){fprintf(stderr,"no physical playback 
+&gt; ports\n");exit(1);}if(jack_connect(client,jack_port_name(output_port1),ports[0])){fprintf(stderr,"cannot 
+&gt; connect output 
+&gt; ports\n");}if(jack_connect(client,jack_port_name(output_port2),ports[1])){fprintf(stderr,"cannot 
+&gt; connect output ports\n");}jack_free(ports);// install a signal handler 
+&gt; to properly quits jack client #ifdefWIN32 
+&gt; signal(SIGINT,signal_handler);signal(SIGABRT,signal_handler);signal(SIGTERM,signal_handler);#elsesignal(SIGQUIT,signal_handler);signal(SIGTERM,signal_handler);signal(SIGHUP,signal_handler);signal(SIGINT,signal_handler);#endif// 
+&gt; keep running until the Ctrl+C while(1){#ifdefWIN32 
+&gt; Sleep(1000);#elsesleep(1);#endif}jack_client_close(client);exit(0);}|
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1472471482.21268_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1473237889.1358_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1472970510.28706_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1472970510.28706_0.ltw:2,a&nbsp;&lt;c11f8f36-7323-ffaa-08b2-97d96ab351e2 at gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

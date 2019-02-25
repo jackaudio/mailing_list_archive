@@ -1,0 +1,49 @@
+Date:        Tue, 29 Nov 2011 07:29:06 -0800
+From:        Rob Frohne  <[hidden] at wallawalla dot edu>
+To:          [hidden] at lists dot jackaudio dot org
+
+Subject:     [Jack-Devel] Is Using Pipes in Jack Callback a Bad Idea?
+
+Hi All,
+
+I am adding Jack support to a networked software defined radio server 
+<https://github.com/alexlee188/ghpsdr3-alex>, which has several 
+threads.  I possibly foolishly connected the audio data coming from the 
+network to the Jack callback process with pipes (not named pipes) 
+instead of making my own circular queue.  Now I'm having trouble with 
+pipe over runs and under runs.  I have previously had no problemusing 
+named pipes to send data from capture ports to other programs 
+<http://old.nabble.com/Sample-Client-to-Allow-Jack-to-Pipe-to--dev-dsp-How-do-I-contribute-it--td28810959.html>, 
+but now sending data coming in over the network (UDP) to the playback 
+ports isn't working well.  The application seems to work well with 
+blocking calls pulse audio, so at least with enough buffering, it should 
+work with Jack.  I have several questions:
+
+1)  Was pipes a bad idea?  (Are they significantly slower than a 
+circular queue?)
+2)  What is the best way to check how much time a pipe read/write is 
+taking, or how much jitter I have in the data coming in over the 
+network?  Things I'm considering:
+
+    a) Using calls to the system time function and storing them in an
+    array to be dumped to a file after some time testing
+    b) using gprof
+    c) using bprof
+
+Any advice?
+
+Thanks,
+
+Rob
+
+-- 
+Rob Frohne, Ph.D., P.E.
+E.F. Cross School of Engineering
+Walla Walla University
+100 SW 4th Street
+College Place, WA 99324
+(509) 527-2075			http://people.wallawalla.edu/~rob.frohne
+
+1322580681.28335_0.ltw:2,a <4ED4FA42.1090509 at wallawalla dot edu>
+________________________________________________________________________________
+

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] ALSA PCM substreams</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] ALSA PCM substreams</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1385900273.4376_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1386085031.11834_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1386083270.7275_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 03 Dec 2013 07:07:28 -0800 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Gabriel M. Beddingfield </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Clemens Ladisch
+<a href='../1386085031.11834_0.ltw:2,/index.html'>Re: [Jack-Devel] ALSA PCM substreams </a></td></tr>
+</table>
+<pre>
+When opening a PCM, would it make sense for JACK to open all the 
+substreams on that PCM?
+
+I was helping a user on IRC with the Audio 4 DJ, a 4-in/4-out USB sound 
+card.  The card uses the `caiaq' driver in ALSA.  It didn't "just work" 
+because the 4 channels are split up into stereo substreams.  So, when 
+jack opens "hw:1,0", it opens "hw:1,0,0" (2 channels) and ignores 
+"hw:1,0,1" (2 more channels).[1]
+
+I spoke with the developers of the `caiaq' driver, and they said it 
+would make sense for JACK to go ahead and open all the substreams. 
+Substreams are intended to be a clock-synchronized concept.[2]
+
+Looking at the ALSA driver within JACK, this seems feasible.  The 
+solution also makes sense to me.  This type of situation *could* be in 
+the `caiaq' driver[3] or even with card-specific asoundrc stuff... it 
+makes the most sense to me that jack open all the substreams.
+
+-gabe
+
+[1] The issue was resolved by creating a virtual PCM in ~/.asoundrc
+     That makes the two substreams look like a single substream.
+[2] I can't find that principle written anywhere, but it can be
+     verified using snd_pcm_info_get_sync() to see that the two
+     substreams return the same ID (clock).
+[3] Let substream 0 support up to 4 channels.  substream 1 returns
+     EBUSY or EAGAIN if substrem 0 is using the channels.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1385900273.4376_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1386085031.11834_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1386083270.7275_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1386083270.7275_0.ltw:2,&nbsp;&lt;529DF3B0.8000006 at gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

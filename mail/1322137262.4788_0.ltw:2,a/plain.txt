@@ -1,0 +1,114 @@
+Date:        Thu, 24 Nov 2011 12:19:30 +0000
+From:        Roger James  <[hidden] at beardandsandals dot co dot uk>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Roger James Re: [Jack-Devel] How do I replicate the -P parameter when using dbus (1322052625.22113_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] How do I replicate the -P parameter when using dbus
+
+On 23/11/11 12:48, Roger James wrote:
+> On 22/11/11 20:36, Paul Davis wrote:
+>> On Tue, Nov 22, 2011 at 3:30 PM, Roger James
+>> <[hidden]>  wrote:
+>>
+>>> I guess if I want to use qjackctl I will have to go back to figuring 
+>>> why the
+>>> server hangs when capture ports are specified on my system that has a
+>>> standard onboard nVidia HDA chipset. But that is for another day.
+>> this is a common problem. it typically (not always) means that have
+>> not set the capture source (in the h/w mixer) correctly. the device
+>> refuses to start in duplex mode when this is the case. ALSA drivers
+>> get this wrong, probably through lack of information but it could also
+>> be a straight bug. use alsamixer or something equivalent to select a
+>> valid capture source.
+> Some final words on replicating the -P behaviour. The absolute minimum 
+> config that I could get to work was as follows:
+>
+> <driver name="alsa">
+> <option name="capture">0</option>
+> <option name="duplex">false</option>
+> </driver>
+>
+> All the other driver parameters can be left to default their "unset" 
+> values. Note that setting the capture parameter to its unset default 
+> value of "none" (i.e. str:set:none:none) does not work, it must show 
+> in dp as str:set:none:0.
+>
+> Paul, I suspected that the capture source settings must be the problem 
+> and I played with alsamixer to try to fix it. I could not find a 
+> combination of settings that fixed it.
+>
+> The card is an nVidia onboard HDA chipset
+>
+> 00:07.0 Audio device: nVidia Corporation MCP72XE/MCP72P/MCP78U/MCP78S 
+> High Definition Audio (rev a1)
+>
+> I have tried front and rear mic capture sources and the switches on 
+> the two capture volume controls off and on. No joy.
+>
+>
+PROBLEM SOLVED.
+
+Final final words I hope.
+
+Please ignore what I said before about setting capture to zero. That was 
+working because zero is an invalid alsa name which is ignored by the 
+real alsa driver, and because the driver IGNORES the value of the duplex 
+parameter and always sets its internal capture and playback parameters 
+to TRUE if the parameter is present (set).
+
+So here is the full story of the jack alsa drivers handling of the 
+capture (-C), playback (-P), device(-d), and duplex (-D) parameters.
+
+The following internal values are used to initialise the real alsa 
+interface. Before the parameters are read they are initialised as follows.
+
+capture FALSE
+capture_pcm_name "hw:0"
+playback FALSE
+playback_pcm_name "hw:0"
+
+The parameters are processed in the order they are encountered as follows.
+, de
+capture(-C) - set capture TRUE and if the value associated with the 
+parameter is not "none" set capture_pcm_name to that value.
+
+playback(-P) - set playback TRUE and if the value associated with the 
+parameter is not "none" set playback_pcm_name to that value.
+
+device(-d) - set capture_pcm_name and playback_pcm_name to the value 
+associated with the parameter.
+
+duplex(-D) - set capture TRUE and playback TRUE. Any value associated 
+with the parameter is ignored.
+
+Once all parameter processing has finished if both capture and playback 
+are FALSE then set them both to TRUE.
+
+The dbus version of jack enforces the parameter order capture, playback, 
+device, duplex. I am not sure what the command line jackd does.In any 
+case it is important to ensure that configuration does not specify a 
+duplex parameter if you want only capture ports or only playback ports. 
+So my new minimal playback only config for dbus is
+
+<driver name="alsa">
+<option name="playback">hw:0</option>
+</driver>
+
+A thing that caught me out once or twice in these tests is that 
+jack_control cannot remove parameters so if you end up with  duplex 
+parameter "set" then it will stay that way until the jackdbus process is 
+stopped and.config/jack/conf.xml is removed. Setting the duplex 
+parameter value to FALSE has no affect as the driver only checks if the 
+parameter is set and ignores its value.
+
+Going back to to my original reason for starting this thread it appears 
+that qjackctl is somewhat broken in this respect.
+
+My apologies if this duplicates information that is readily available 
+elsewhere, I could not find any!
+
+Roger
+
+1322137262.4788_0.ltw:2,a <4ECE3652.1050901 at beardandsandals dot co dot uk>
+________________________________________________________________________________
+

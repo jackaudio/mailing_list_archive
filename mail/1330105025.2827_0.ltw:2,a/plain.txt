@@ -1,0 +1,165 @@
+Date:        Fri, 24 Feb 2012 18:36:48 +0100
+From:        [hidden] at linutronix dot de <[hidden] at linutronix dot de
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] jack1 version jack2 public headers comparison (1330101711.29556_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] jack1 version jack2 public headers comparison (1330106139.4689_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack1 version jack2 public headers comparison
+
+On Fri, Feb 24, 2012 at 11:41:33AM -0500, Paul Davis wrote:
+> We're starting the merge of the header files used by all
+> implementations of JACK, following setting up several git repositories
+> that make this possible.
+> 
+> This is a review of the differences between the header files, initally
+> done by Stephane, with new comments by me ...
+> 
+> 
+> > control.h  :
+> >
+> > New :
+> > =====
+> >
+> > /** Driver types */
+> > typedef enum
+> > {
+> >    JackMaster = 1,     /**< @brief master driver */
+> >    JackSlave               /**< @brief slave driver */
+> > } jackctl_driver_type_t;
+> >
+> > jackctl_driver_type_t
+> > jackctl_driver_get_type(
+> >        jackctl_driver_t * driver);
+> 
+> Seems like a reasonable addition, especially since its specifically
+> only for the control API.
+
+yup. fine with me.
+
+> 
+> > Reworked :
+> > ==========
+> >
+> > /jackctl_sigmask_t *
+> > jackctl_setup_signals(
+> >    unsigned int flags);
+> >
+> > void
+> > jackctl_wait_signals(
+> >    jackctl_sigmask_t * signals);
+> 
+> can you or nedko explain the need for this change? again, since its
+> for the control API the issue is not that significant but i recall
+> that this part of the API attracted some significant criticism from
+> torben.
+
+This stuff is not necessary.
+the signal handling is an implementation detail, and should be hidden
+below the control api.
+
+jack1 controlapi.c is doing it correctly. 
+please switch jack2 to doing the same thing.
+
+
+> 
+> >
+> > Reworked :
+> > ==========
+> >
+> > jackctl_server_start/jackctl_server_close reworked in a jackctl_server_open/jackctl_server_start/jackctl_server_stop/jackctl_server_close
+> 
+> seems reasonable, though what's the justification?
+> 
+> > New :
+> > =====
+> >
+> > int
+> > jackctl_driver_params_parse(
+> >    jackctl_driver_t * driver,
+> >    int argc,
+> >    char* argv[]);
+> 
+> seems reasonable and sensible.
+
+why is that sensible ?
+what does jack dbus need commandline parsing for, to configure a driver
+?
+
+commandline parsing is special to jackd implementation, and doesnt
+belong here.
+
+big NAK from me.
+
+
+> 
+> > =========================================================================================
+> >
+> > jack.h :
+> >
+> > New :
+> > =====
+> >
+> > void
+> > jack_get_version(
+> >    int *major_ptr,
+> >    int *minor_ptr,
+> >    int *micro_ptr,
+> >    int *proto_ptr) JACK_OPTIONAL_WEAK_EXPORT;
+> >
+> >
+> > const char *
+> > jack_get_version_string() JACK_OPTIONAL_WEAK_EXPORT;
+> >
+> > ==> not really used? Should they be removed?
+> 
+> i am opposed to any such API in JACK. providing version information
+> like this encourages bad/stupid/unnecessary behaviour by developers.
+> as the docs for automake describe, if you're interested in whether or
+> not a particular feature exists in something you want to use, test for
+> the *feature* not some arbitrary version number.
+> 
+> > int jack_get_client_pid (const char *name) JACK_OPTIONAL_WEAK_EXPORT;
+> 
+> needed for?
+
+needed for ladish used by jackdbus.
+we should add it to jack1. 
+
+however, this should really have jack_client_t as parameter too.
+or jackctl_server_t 
+in jack1 we need access to engine struct, to implement it.
+
+
+
+
+> 
+> > jack_port_type_id_t jack_port_type_id (const jack_port_t *port) JACK_OPTIONAL_WEAK_EXPORT;
+> 
+> needed for?
+
+i dont remember. 
+there should only be one canonical port type representation.
+i dont like it.
+
+
+
+-- 
+Mit freundlichen Grüßen
+Torben Hohn
+
+Linutronix GmbH
+
+Standort: Bremen
+
+Phone: +49 421 166 73 41 ; Fax.: +49 7556 919 886
+mailto: [hidden]
+Firmensitz / Registered Office: D-88690 Uhldingen, Auf dem Berg 3
+Registergericht / Local District Court: Freiburg i. Br., HRB Nr. / Trade
+register no.: 700 806;
+
+Geschäftsführer / Managing Directors: Heinz Egger, Thomas Gleixner
+
+1330105025.2827_0.ltw:2,a <20120224173648.GA17176 at lxhb dot hb dot de>
+________________________________________________________________________________
+

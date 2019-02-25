@@ -1,0 +1,91 @@
+Date:        Tue, 17 Jul 2012 21:09:21 +0200
+From:        Jan Kohnert  <[hidden] at jankoh dot dyndns dot org>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Jamie Heilman Re: [Jack-Devel] Connecting alsa-loopback to jack (1342554371.28498_0.ltw:2,a)
+Follow-Up:   aCOSwt Re: [Jack-Devel] Connecting alsa-loopback to jack (1342597751.14534_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Connecting alsa-loopback to jack
+
+Hi,
+
+since http://alsa.opensrc.org/Jack_and_Loopback_device_as_Alsa-to-Jack_bridge 
+seemsdead and gone, I'm asking here, as I believe there are quite a lot of 
+experts reading the list.
+
+After I finally got jack workingusing jack1 I want to connect the alsa 
+loopback device with my recording/playback interface to be able to use both 
+devices with jack.
+
+Jack is just working fine. But trying to playback with the loop device gives 
+no sound.
+
+I'm sure, this is just aconfiguration problem, but I'm not able to figure out 
+the correct config.
+
+This is what I got so far:
+
+jankoh@kohni ~ $ cat .asoundrc
+# playback PCM device: using loopback subdevice 0,0
+pcm.amix {
+        type dmix
+        ipc_key 219345
+        slave.pcm "hw:Loopback,0,0"
+}
+
+# capture PCM device: using loopback subdevice 0,1
+pcm.asnoop {
+        type dsnoop
+        ipc_key 219346
+        slave.pcm "hw:Loopback,0,1"
+}
+
+# duplex device combining above PCM devices
+pcm.aduplex {
+        type asym
+        playback.pcm "amix"
+        capture.pcm "asnoop"
+}
+
+pcm.merge {
+    type multi;
+    slaves.a.pcm hw:Blackjack
+    slaves.a.channels 2;
+    slaves.b.pcm hw:Loopback
+    slaves.b.channels 2;
+    bindings.0.slave a;
+    bindings.0.channel 0;
+    bindings.1.slave b;
+    bindings.1.channel 0;
+    bindings.2.slave a;
+    bindings.2.channel 1;
+    bindings.3.slave b;
+    bindings.3.channel 1;
+}
+
+ctl.merge {
+    type hw
+    card 2
+}
+jankoh@kohni ~ $ cat /proc/asound/cards 
+ 0 [SB             ]: HDA-Intel - HDA ATI SB
+                      HDA ATI SB at 0xfdff4000 irq 16
+ 1 [NVidia         ]: HDA-Intel - HDA NVidia
+                      HDA NVidia at 0xfbffc000 irq 19
+ 2 [Blackjack      ]: USB-Audio - Onyx Blackjack
+                      Loud Technologies Inc. Onyx Blackjack at 
+usb-0000:00:13.0-5, full speed
+ 3 [Loopback       ]: Loopback - Loopback
+                      Loopback 1
+jankoh@kohni ~ $ 
+
+Can you point me to related documentation or give me a hint, where the error 
+could be?
+
+Thanks!
+
+-- 
+MfG Jan
+
+1342552172.26513_0.ltw:2,a <2921283.0ZrPQXCpVn at kohni>
+________________________________________________________________________________
+

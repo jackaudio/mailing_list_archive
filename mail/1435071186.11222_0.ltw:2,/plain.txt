@@ -1,0 +1,123 @@
+Date:        Tue, 23 Jun 2015 10:52:55 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Tobias Hoffmann <[hidden] at thax dot hardliners dot org>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Tobias Hoffmann [Jack-Devel] jack alsa midi segfault (1435070556.10855_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] jack alsa midi segfault
+
+This is fixed in jack1 git. I really should get a release out there.
+
+On the other hand, with that version of JACK, there's no excuse for using
+-X seq anyway. It is terrible.
+
+On Tue, Jun 23, 2015 at 10:42 AM, Tobias Hoffmann <
+[hidden]> wrote:
+
+> Hi,
+>
+> I using debian's
+>   jackd version 0.124.1  tmpdir /dev/shm protocol 25
+>
+> started via
+>   jackd -t1500 -dalsa -dhw:2 -r44100 -p128 -n4 -s -Xseq
+> (or "jackd -Xalsa_midi ...")
+>
+> Then jackd segfaults shortly after
+>   creating alsa_midi driver ...
+> - every time, e.g:
+>   jackd[25175]: segfault at 0 ip           (null) sp 00000000ffb828ac
+> error 14 in jackd[8048000+5000]
+>
+> It does not segfault when -Xseq (-Xalsa_midi) is removed from the argument
+> list.
+> The very same invocation (same jackd version!) used to work until now, but
+> I did update quite a few packages (e.g. libc, ...) in the mean time.
+> I did try a reinstall of the jackd1-package, but it did not help.
+> But I have not restarted the computer yet...
+>
+> Analysis:
+> Starting jackd in gdb yields:
+>
+> Program received signal SIGSEGV, Segmentation fault.
+> 0x00000000 in ?? ()
+>
+> without any backtrace left.
+> But with some single-stepping I managed to get to this point:
+>
+> #0  0xf7f960d7 in jack_client_handle_latency_callback () from
+> /usr/lib/i386-linux-gnu/libjackserver.so.0
+> #1  0xf7f89466 in jack_deliver_event () from
+> /usr/lib/i386-linux-gnu/libjackserver.so.0
+> #2  0xf7f8b5ca in ?? () from /usr/lib/i386-linux-gnu/libjackserver.so.0
+> #3  0xf7f8bec1 in jack_sort_graph () from
+> /usr/lib/i386-linux-gnu/libjackserver.so.0
+> #4  0xf7f8f792 in jack_client_activate () from
+> /usr/lib/i386-linux-gnu/libjackserver.so.0
+> #5  0xf7f8d662 in ?? () from /usr/lib/i386-linux-gnu/libjackserver.so.0
+> #6  0xf7f8e50a in internal_client_request () from
+> /usr/lib/i386-linux-gnu/libjackserver.so.0
+> #7  0xf7f9563e in jack_client_deliver_request () from
+> /usr/lib/i386-linux-gnu/libjackserver.so.0
+> #8  0xf7f9868b in jack_activate () from
+> /usr/lib/i386-linux-gnu/libjackserver.so.0
+> #9  0xf6b47456 in ?? () from /usr/lib/i386-linux-gnu/jack/jack_alsa_midi.so
+> #10 0xf7f88faa in jack_add_slave_driver () from
+> /usr/lib/i386-linux-gnu/libjackserver.so.0
+> #11 0xf7f89097 in jack_engine_load_slave_driver () from
+> /usr/lib/i386-linux-gnu/libjackserver.so.0
+> #12 0x0804a6d4 in ?? ()
+> #13 0xf7bc8a63 in __libc_start_main
+>
+> The very next instruction crashes:
+>   0xf7f960db <jack_client_handle_latency_callback+459>    call
+>  *0x10f4(%eax)
+> because *(eax+0x10f4)==0
+>
+> Starting jackd in valgrind:
+> [...]
+> ALSA: use 4 periods for playback
+> creating alsa_midi driver ...
+> ==25829== Conditional jump or move depends on uninitialised value(s)
+> ==25829==    at 0x406EFAC: jack_client_handle_latency_callback (in
+> /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+> ==25829==    by 0x4062465: jack_deliver_event (in
+> /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+> ==25829==    by 0x40645C9: ??? (in
+> /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+> ==25829==    by 0x4064EC0: jack_sort_graph (in
+> /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+> ==25829==    by 0x4068791: jack_client_activate (in
+> /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+> ==25829==    by 0x4066661: ??? (in
+> /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+> ==25829==    by 0x1: ???
+> ==25829==
+> ==25829== Conditional jump or move depends on uninitialised value(s)
+> ==25829==    at 0x406EFAC: jack_client_handle_latency_callback (in
+> /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+> ==25829==    by 0x4062465: jack_deliver_event (in
+> /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+> ==25829==    by 0x4064629: ??? (in
+> /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+> ==25829==    by 0x4064EC0: jack_sort_graph (in
+> /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+> ==25829==    by 0x4068791: jack_client_activate (in
+> /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+> ==25829==    by 0x4066661: ??? (in
+> /usr/lib/i386-linux-gnu/libjackserver.so.0.0.28)
+> ==25829==    by 0x1: ???
+> ==25829==
+>
+> Does this make sense to anyone?
+>
+>   Tobias
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+
+1435071186.11222_0.ltw:2, <CAFa_cKnLbfCeUt49UYOiekCGkmDH=jj66Nqf6+uQXisTRK+6xg at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,84 @@
+Date:        Wed, 21 Dec 2011 01:36:23 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] How to get mplayer and firefox/flash to play (1324422416.11759_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] How to get mplayer and firefox/flash to play
+
+Ciao Fons,
+
+On 12/21/2011 12:06 AM, Fons Adriaensen wrote:
+> On Tue, Dec 20, 2011 at 11:03:57PM +0100, Robin Gareus wrote:
+> 
+>>> Which still leaves the question why things don't just work
+>>> with the alsa->jack plugin. 
+>>
+>> Do you really think that this is interesting and important?
+> 
+> Yes. _Why_ can't we just have something that looks like an
+> ALSA hw device on one end (so apps can see it and use it),
+> and a Jack client at the other end ?
+
+Isn't that a whole different thing? The b0rked alsa-jack plugin is a
+alsa-lib plugin, not a "virtual hardware" device in /dev/...
+which would be listed in `aplay -l` and cat /proc/asound/devices
+
+I was thinking along the same lines when looking into re-sampling and
+latency issues with the snd-aloop module. It'd need to be modified to
+accept sth. like a word-clock on one of its I/O, so that it can be
+properly synced to jack.
+
+Fixing the existing alsa-plugin or providing this as alsa-plugin is not
+an option: it'll never work for all situations and it's messy to begin
+with.
+
+A kernel-module however, can't be directly connected to JACK.
+
+>> Why don't you have a look?
+> 
+> If I would charge the hours spent 'having a look' and you would
+> be so good as to pay that bill,
+
+I was not interested to get this fixed in the first place. As I said:
+I'm happy with the loopback solution.
+
+> then probably your next action
+> would have to be go looking for a nice bridge to sleep under :-)
+
+At least there are some really nice bridges around here (-;
+But you do scare me, you sound like you speak from experience.
+Is that Takashi under the Pont d'Alsace-Jacques? :)
+
+
+[..]
+> Returning to my question above, there is no logical problem
+> with such a thing. 
+[..]
+logical: no; but reality bites.
+
+> So an ALSA *device* (as opposed to a plugin) that takes its
+> timing from Jack's process callback instead of from a sound
+> card interrupt should just be possible. It would amount to
+> 1/2 aloop + a Jack client + something. 
+
+1+
+
+OTOH. Spending time on implementing this vs. spending time to jackify an
+ALSA-only app. The latter is IMO much more appropriate (fi. the app will
+inherit RT capabilities from jack, it's [at least] one layer less in in
+between and potentially even zero-copy, it'll make jack more valuable,..).
+
+The main use-case of a generic alsa<>jack virtual hardware interface is
+web audio[/video] and 99.9% of those certainly can't get any worse by a
+bit of resampling and do not need to be sample-accurate either. YMMV.
+
+> It could even be 100% userspace. 
+
+Are you sure about that? How?
+
+robin
+
+1324427805.15991_0.ltw:2,a <4EF12A07.2030801 at gareus dot org>
+________________________________________________________________________________
+

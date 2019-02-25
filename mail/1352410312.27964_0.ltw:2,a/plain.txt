@@ -1,0 +1,89 @@
+Date:        Thu, 08 Nov 2012 22:31:43 +0100
+From:        rev8  <[hidden] at wp dot pl>
+To:          jack-devel <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] jack_lsp show sessions uuids (1352463219.16853_0.ltw:2,a)
+
+Subject:     [Jack-Devel] jack_lsp show sessions uuids
+
+Hi,
+
+You can find below patch for jack_lsp to show session uuids (when available) in place of client name. I'll probably use this to wait for port while restoring session vi my simple-script-based session manager, but I think it can be also useful for debug sessions.
+
+I also thinking about add "-w TIMEOUT" to jack_connect. Then it can wait until ports appear. What do you think about such idea ?
+
+Best Regards
+Pawel
+
+--- lsp.c	2012-11-08 21:43:11.500435421 +0100
++++ lsp.c.org	2012-11-08 21:41:39.307978264 +0100
+@@ -33,7 +33,6 @@
+ 	fprintf (stderr, "        -p, --properties      Display port properties. Output may include:\n"
+ 			 "                              input|output, can-monitor, physical, terminal\n\n");
+ 	fprintf (stderr, "        -t, --type            Display port type\n");
+-	fprintf (stderr, "        -u, --uuid            Display uuid instead of client name (if available)\n");
+ 	fprintf (stderr, "        -h, --help            Display this help message\n");
+ 	fprintf (stderr, "        --version             Output version information and exit\n\n");
+ 	fprintf (stderr, "For more information see http://jackaudio.org/\n");
+@@ -54,7 +53,6 @@
+ 	int show_total_latency = 0;
+ 	int show_properties = 0;
+ 	int show_type = 0;
+-	int show_uuid = 0;
+ 	int c;
+ 	int option_index;
+ 	char* aliases[2];
+@@ -69,7 +67,6 @@
+ 		{ "total-latency", 0, 0, 'L' },
+ 		{ "properties", 0, 0, 'p' },
+ 		{ "type", 0, 0, 't' },
+-		{ "uuid", 0, 0, 'u' },
+ 		{ "help", 0, 0, 'h' },
+ 		{ "version", 0, 0, 'v' },
+ 		{ 0, 0, 0, 0 }
+@@ -82,7 +79,7 @@
+ 		my_name ++;
+ 	}
+ 
+-	while ((c = getopt_long (argc, argv, "s:AclLphvtu", long_options, &option_index)) >= 0) {
++	while ((c = getopt_long (argc, argv, "s:AclLphvt", long_options, &option_index)) >= 0) {
+ 		switch (c) {
+ 		case 's':
+             server_name = (char *) malloc (sizeof (char) * strlen(optarg));
+@@ -109,9 +106,6 @@
+ 		case 't':
+ 			show_type = 1;
+ 			break;
+-		case 'u':
+-			show_uuid = 1;
+-			break;
+ 		case 'h':
+ 			show_usage ();
+ 			return 1;
+@@ -153,22 +147,7 @@
+ 		}
+ 		if(skip_port) continue;
+ 
+-		if (show_uuid) {
+-			char *cname = strdup( ports[i] );
+-			char *pname = strchr(cname,':') + 1;
+-			strchr(cname,':')[0] = '\0';
+-			char *uuid = jack_get_uuid_for_client_name(client, cname);
+-
+-			if (uuid != NULL && strcmp(uuid, "-1")) {
+-				printf ("%s:%s\n", uuid, pname);
+-			} else {
+-				printf ("%s\n", ports[i]);
+-			}
+-			if(uuid != NULL) jack_free(uuid);
+-			free(cname);
+-		} else {
+-			printf ("%s\n", ports[i]);
+-		}
++		printf ("%s\n", ports[i]);
+ 
+ 		jack_port_t *port = jack_port_by_name (client, ports[i]);
+ 
+
+1352410312.27964_0.ltw:2,a <509c24bf4baef4.57481535 at wp dot pl>
+________________________________________________________________________________
+

@@ -1,0 +1,74 @@
+Date:        Sat, 30 Apr 2011 10:45:36 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] RFC: fix for missing port registration notifications when switching master (1304061392.13677_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] RFC: fix for missing port registration notifications when switching master
+
+Stéphane Letz <[hidden]> writes:
+
+> Le 28 avr. 2011 à 23:30, Nedko Arnaudov a écrit :
+>
+>> Stéphane Letz <[hidden]> writes:
+>> 
+>>> Le 24 avr. 2011 à 22:38, Nedko Arnaudov a écrit :
+>>> 
+>>>> The issue was reported in #213 (second issue/patch):
+>>>> 
+>>>> jackdbus' internal graph representation is not properly kept in sync
+>>>> with the engine's graph. In particular: ports are not properly removed
+>>>> From the connection list when a client goes away; and ports
+>>>> re-appearing after a "switch-master" are not being updated (Patch
+>>>> 2/2).
+>>>> 
+>>>> I think the proposed patch is wrong because AFAIK graph reorder is only
+>>>> for ports present upon client activation. All following port
+>>>> (un)registrations must cause the port registration callback to be
+>>>> called. The proposed changeset [1] adds notification calls in the
+>>>> Attach()/Detach() methods. The changeset is commited to a dedicated
+>>>> branch [2]. The branch is (hopefully) a short living one with a signle
+>>>> commit, so it makes sense to commit it directly to svn trunk (after
+>>>> eventually rebasing it, of the svn trunk moved).
+>>>> 
+>>>> Robin, I'd be glad if you can test & report whether my fix works for
+>>>> you.
+>>>> 
+>>>> [1] http://repo.or.cz/w/jack2.git/commitdiff/55557d1f74b6d0ca80981bad9cd646d69c896e0e
+>>>> [2] http://repo.or.cz/w/jack2.git/shortlog/refs/heads/switch-master-port-registration-notifications
+>>>> 
+>>>> -- 
+>>>> Nedko Arnaudov <GnuPG KeyID: 7862B9E45D1B58ED>
+>>> 
+>>> 
+>>> http://repo.or.cz/w/jack2.git/commitdiff/07d2c64f39634454cb61f26316bdb07d77cf0cfb
+>>> 
+>>> Should be a bit cleaner.
+>>> 
+>>> Can you test?
+>> 
+>> It fails to compile:
+>> 
+>> [114/257] cxx: linux/alsa/JackAlsaDriver.cpp -> build/default/linux/alsa/JackAlsaDriver_2.o
+>> ../linux/alsa/JackAlsaDriver.cpp: In member function 'virtual int Jack::JackAlsaDriver::Attach()':
+>> ../linux/alsa/JackAlsaDriver.cpp:119: error: expected '(' before 'if'
+>> ../linux/alsa/JackAlsaDriver.cpp:134: error: invalid conversion from 'int*' to 'jack_port_id_t*'
+>> ../linux/alsa/JackAlsaDriver.cpp:134: error:   initializing argument 6 of 'int Jack::JackLockedEngine::PortRegister(int, const char*, const char*, unsigned int, unsigned int, jack_port_id_t*)'
+>> ../linux/alsa/JackAlsaDriver.cpp:147: error: invalid conversion from 'int*' to 'jack_port_id_t*'
+>> ../linux/alsa/JackAlsaDriver.cpp:147: error:   initializing argument 6 of 'int Jack::JackLockedEngine::PortRegister(int, const char*, const char*, unsigned int, unsigned int, jack_port_id_t*)'
+>> 
+> Should be fixed.
+
+Almost :) I've made another compilation fix:
+
+http://repo.or.cz/w/jack2.git/commit/bd2d168dc87f01e02567327ac373350be05ce0e3
+
+Switching of the master driver works fine on my machine after the
+AllocatePort => PortRegister changes.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 7862B9E45D1B58ED>
+
+1304150442.24829_0.ltw:2,a <87tydgkwrj.fsf at nuntu dot spacelabs dot org>
+________________________________________________________________________________
+

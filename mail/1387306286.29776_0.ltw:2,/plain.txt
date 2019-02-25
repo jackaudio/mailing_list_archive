@@ -1,0 +1,68 @@
+Date:        Tue, 17 Dec 2013 19:51:11 +0100
+From:        Lucio Crusca  <[hidden] at sulweb dot org>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Robin Gareus Re: [Jack-Devel] routing alsa through jack (1387310016.3840_0.ltw:2,)
+
+Subject:     [Jack-Devel] routing alsa through jack
+
+Hello everybody,
+
+I'm new here and I'm not a Jack developer, but I couldn't find any users 
+mailing lists and this page [1] says that «If you're doing anything with jack, 
+you need to be on this list», so I assumed users are welcome here...
+
+I use Debian 64bit and I already have Jack working with my crappy integrated 
+sound card. It samples mic input, it routes signal all around through the 
+patchbay (qjackctl) and it plays the results in my headphones. Meanwhile it 
+routes a copy to jack.record that saves all into a wav file, great.
+
+Now I'd like to make a conference call with Skype (Alsa only, I don't want to 
+add pulseaudio) and record it using my Jack toy. I need to record both mic and 
+output, obviously.
+
+After reading a few howtos, most of which seem too complicated for my needs 
+(and in fact I can't manage to get a working configuration following them), I 
+decided to roll my own solution, tailored at my needs.
+
+My solution involves snd_aloop.
+
+What I have already tried is to use snd_aloop, which gives 2 loop soundcards 
+connected to each other, make Skype use hw:Loopback,0 for both input and 
+output, then connect alsa_in and alsa_out to hw:Loopback,1 and add a few wires 
+in the patchbay between alsa_in and my jack_mixer, then connect jack_mixer and 
+alsa_out (the wire between jack_mixer and jack.record is already there).
+
+The result is plain silence on the Skype side. Since Skype is not very 
+friendly in telling users what's wrong, I decided to scrap it for the time 
+being and use aplay for a test:
+
+$ aplay -D hw:9 /usr/share/sounds/alsa/Front_Right.wav 
+Playing WAVE '/usr/share/sounds/alsa/Front_Right.wav' : Signed 16 bit Little 
+Endian, Rate 48000 Hz, Mono
+aplay: set_params:1233: Sample format non available
+Available formats:
+- FLOAT_LE
+
+then
+
+$ aplay -f FLOAT_LE -D hw:9 /usr/share/sounds/alsa/Front_Right.wav 
+Warning: format is changed to S16_LE
+Playing WAVE '/usr/share/sounds/alsa/Front_Right.wav' : Signed 16 bit Little 
+Endian, Rate 48000 Hz, Mono
+aplay: set_params:1233: Sample format non available
+Available formats:
+- FLOAT_LE
+
+So now I guess Skype is having similar problems. However before we dig into 
+these problems, that might actually be off topic here, my question is: is my 
+solution reasonable at all? Is it at all possible to route Alsa through Jack 
+that way?
+
+Thanks in advance fot any help.
+Lucio.
+
+[1] http://jackaudio.org/email
+
+1387306286.29776_0.ltw:2, <2051731.ZIBsSLb7dx at fx>
+________________________________________________________________________________
+

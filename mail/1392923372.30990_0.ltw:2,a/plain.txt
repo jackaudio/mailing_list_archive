@@ -1,0 +1,69 @@
+Date:        Fri, 21 Feb 2014 06:11:12 +1100
+From:        Patrick Shirkey  <[hidden] at boosthardware dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Holger Marzen [Jack-Devel] JACK output via Bluetooth (1392757170.13446_0.ltw:2,a)
+Follow-Up:   Holger Marzen Re: [Jack-Devel] JACK output via Bluetooth (1393266055.10382_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK output via Bluetooth
+
+On Wed, February 19, 2014 7:59 am, Holger Marzen wrote:
+> I use JACK-based programs for making music, like Rosegarden and Qtractor.
+>
+> It would be nice to couple my notebook via Bluetooth to an HiFi amp to
+> do some work that doesn't need low latencies and best audio quality,
+> like arranging and recording MIDI-tracks.
+>
+> So I bought a Philips Bluetooth adapter and connected it to my HiFi amp.
+>
+> ALSA-clients can successfully output their audio to the device
+> btphilips. My .asoundrc looks like:
+>
+> pcm.btphilips {
+>     type plug
+>     slave {
+>         pcm {
+>             type bluetooth
+>             device "00:1D:DF:E4:59:B6"
+>             profile "auto"
+>             }
+>           }
+>      hint {
+>           show on
+>           description "Philips Bluetooth Adapter"
+>           }
+> }
+>
+> To use it with JACK I tried
+>
+> 1.) alsa_out
+>     There is some recognizable signal but it's totally distorted. Maybe
+>     a conversion from float to 16 bit integer ist needed.
+>
+
+Have you tried running in playback only and softmode with different period
+sizes and sample rates:
+
+jackd -d alsa -d btphilips -P -p1024 -r44100 -n 2 -s
+jackd -d alsa -d btphilips -P -p1024 -r44100 -n 3 -s
+
+jackd -d alsa -d btphilips -P -p1024 -r48000 -n 2 -s
+jackd -d alsa -d btphilips -P -p1024 -r48000 -n 3 -s
+
+
+- Also do you get any useful output from
+
+cat /proc/asound/...
+
+
+
+
+
+
+
+--
+Patrick Shirkey
+Boost Hardware Ltd
+
+1392923372.30990_0.ltw:2,a <62920.86.105.95.182.1392923472.squirrel at boosthardware dot com>
+________________________________________________________________________________
+

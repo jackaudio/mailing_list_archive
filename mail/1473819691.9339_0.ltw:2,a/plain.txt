@@ -1,0 +1,163 @@
+Date:        Wed, 14 Sep 2016 02:20:54 +0000
+From:        Josh Junon  <[hidden] at gmail dot com>
+To:          Stéphane Letz <[hidden] at grame dot fr>, Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] JACK1's Future? (1473776618.18268_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] JACK1's Future?
+
+Hi; creator of Captain Jack here.
+
+The problem with the new AudioServerPlugin model is that, as Stéphane quite
+accurately pointed out, all of the plugins are run in the system bootstrap
+within the coreaudiod process. Because of this, things like UNIX pipes,
+FIFOs, and most other forms of IPC are blocked off. However, there is a
+blanket permission on network functionality, which is what I'm using to do
+all of the IPC between the plugin (coreaudiod) and the launchctl daemon.
+
+There were two other problems that were faced: XPC, Apple's "we can do it
+better" IPC framework, requires a main loop to plug into to handle the
+events since it's asynchronous. Whereas XPC would allow us direct
+communication with the daemon, there's nowhere to put the main loop;
+sticking it just anywhere causes coreaudiod to freeze since the implemented
+functionality in an AudioServerPlugin is via callback functions - there is
+no 'main' entry point.
+
+Lastly, the reason why the AudioServerPlugin doesn't use libjack directly
+is because whatever form of IPC libjack requires doesn't work within the
+system bootstrap context. I'm sure there's a way to use JACK's networking
+functionality (I haven't dived too far into that) but I believe it would
+require configuration of the AudioServerPlugin itself - something I wanted
+to avoid for experience concerns.
+
+Hence why captain jack looks like the following:
+
+        AudioServerPlugin <==TCP/loopback==> LaunchDaemon <=> JACK
+
+Believe me, it's not ideal.
+
+However, this achieves two things: first, a loopback audio device isn't
+incredibly helpful since we have to handle both input and output. Plus,
+it's easily misconfigured to cause feedback loops. Secondly, Apple did
+something right in that you get a PID of whatever program has a handle to
+the audio device, included when they connect, disconnect, and exchange
+audio buffers. Pass that PID to the daemon, get the process information,
+and hand those off to JACK as individual ports. From there you could route
+audio from just about any application to any other application, not just
+the "master" in/out channels.
+
+Hopefully I've redeemed myself just a little on Captain Jack's design.
+Would love to see JACK working on OS/X so I can finish the project.
+
+- Josh (Qix-)
+
+On Tue, Sep 13, 2016 at 7:23 AM Stéphane Letz <[hidden]> wrote:
+
+> A note about JackRouter : this week-end I tried to better understand how
+> the new AudioServerPlugIn model is working (this replaces the old
+> AudioHardwarePlugIn model that was used for JackRouter). It happens that
+> all AudioServerPlugIn plugins now run in the context of the « coreaudiod »
+> OS X audio server (AudioHardwarePlugIn were running in the context of the
+> loading CoreAudio application) . AudioServerPlugIn then appears as audio
+> devices to be used by CoreAudio application.
+>
+> Using this model, the guys at Rogue Amoeba where able to develop the
+> LoopBack application/Plugin that somewhat allows Audio IAC in a way similar
+> to JACK (but without a central server AFAICS)
+>
+> https://rogueamoeba.com/loopback/
+>
+> So I was wondering if the JACK server itself could be loaded in coreaudiod
+> process with this AudioServerPlugIn model, then be accessible by CoreAudio
+> applications with a redesigned JackRouter plugin. A question that is not
+> clear yet is how the JACK/AudioServerPlugIn would access the real audio
+> hardware from coreaudiod context. The AudioServerPlugIn documentation says
+> that the is not possible, since the regular CoreAudio API is not usable
+> from there... but obviously Apple is able to do that for their own purpose
+> (since  coreaudiod is actually the connection between the CoreAudio
+> applications *and* the hardware), and the Rogue AmoebaLoopBack stuff do a
+> similar thing.
+>
+> Technically JACK2 server code was designed to be loadable in this kind of
+> use case with the libjackserver library… Could be tried at least, and could
+> possibly be a better design compared to Captain Jack as far as I
+> understand  Captain Jack model...
+>
+> Stéphane
+>
+>
+>
+>
+> > Le 13 sept. 2016 à 15:55, Paul Davis <[hidden]> a
+> écrit :
+> >
+> > Once I get my current burst effort on Ardour's (broken) MIDI looping
+> done, I'll make it a priority to do my final JACK release and hand over to
+> Filipe.
+> >
+> > The background on Captain Jack's design sounds horrendous (thanks,
+> Apple).
+> >
+> > On Thu, Sep 8, 2016 at 2:30 PM, Josh de Kock <[hidden]> wrote:
+> > Hi,
+> >
+> > Back in January/February at the start of this year, Paul announced that
+> he would be stepping down, and he requested that someone would stand for
+> being the new maintainer.
+> >
+> > As far as I know, this didn't happen, up until Filipe Coelho(?) offered
+> to maintain JACK1. After speaking with Paul around March, he said that once
+> Ardour 5.0 was released he would do the final release of JACK1 and then
+> hand over maintainership.
+> >
+> > There are a few pull requests on the GitHub, some of which are critical
+> to the core functionality of JACK1, like the patch for OSX which begins to
+> modernise JACK1's usages of the CoreAudio APIs (while still maintaining
+> backward compatibility).
+> >
+> > I'd like to help the JACK community in getting OSX support
+> up-to-scratch. There is a promising project called CaptainJack (
+> https://github.com/Qix-/CaptainJack) which aims to be a modern
+> replacement for JackOSX, which is a vital part of the JACK ecosystem within
+> OSX. While it is just a start, it shows there is at least some interest.
+> >
+> > My question to the community is: Should an effort be put in to revive
+> JACK1?
+> >
+> > And to Paul; I know it's only been a little over a month since 5.0 was
+> released, but is it possible you could do this 'final release' of JACK1
+> soon so we can get the ball rolling again, or at least give some sort of
+> time-frame on when this can be achieved.
+> >
+> > I personally think there should be an effort, the main issue at this
+> time is how the clients are sorted, and there is a patch for this. I would
+> be willing to step forward to fix all the issues related to OSX, and
+> reattempt integration of Fons' topological sort patch. In addition to this,
+> JACK1 is a good code-base, albeit slightly outdated, which makes a great
+> reference implementation for JACK3.
+> >
+> > --
+> >
+> > Josh
+> > 
+> > Jack-Devel mailing list
+> > [hidden]
+> > http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> >
+> > 
+> > Jack-Devel mailing list
+> > [hidden]
+> > http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+-- 
+PGP signature: 03A0 B7D0 432E 1514
+You may send me encrypted email using my key: https://keybase.io/qix/key.asc
+
+1473819691.9339_0.ltw:2,a <CADYt08aJPzNNGQOqFhKzUQO4CmBrUq2G3vBXoojEp++YXSkVkQ at mail dot gmail dot com>
+________________________________________________________________________________
+

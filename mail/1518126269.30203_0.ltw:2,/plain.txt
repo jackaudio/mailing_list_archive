@@ -1,0 +1,44 @@
+Date:        Thu, 08 Feb 2018 15:43:57 -0600
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: lowkeyoutlaw Re: [Jack-Devel] Midi out no longer showing up in patch bay (1518124134.27416_0.ltw:2,)
+Follow-Up:   lowkeyoutlaw Re: [Jack-Devel] Midi out no longer showing up in patch bay (1519263294.2888_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Midi out no longer showing up in patch bay
+
+On Thu, February 8, 2018 3:08 pm, lowkeyoutlaw wrote:
+> I got it to work. I put  -x winme at the beginning of the Jack Port Audio
+> shortcut properties (instead of the end)
+
+Likely  you changed slightly the order you put the command line arguments
+into the shortcut compared to your old installation.
+It is a little more obvious if you look through the documentation a few
+times, but essentially the way that jackd starts up involves parsing the
+command line arguments into arguments for jackd, and sub-arguments that
+modify the top level arguments.
+So for example -X winmme means use the Windows MME driver for MIDI, -d
+portaudio means use the portaudio library as the driver interface, but
+arguments after "-d portaudio" usually mean more specific driver settings,
+so this:
+jackd -X winmme -d portaudio
+means use winmme MIDI driver, use portaudio for the audio driver interface
+but this:
+jackd -d portaudio -X winmme
+could be interpreted as use portaudio for the audio driver interface, pass
+"-X winmme" to the portaudio driver as additional settings.
+
+If you had started jackd from a command shell and looked at the messages
+printed it would likely have printed something like "no -X parameter
+recognized, portaudio driver ignoring" or something along those lines.
+It isn't a very intuitive way to do things on Windows, but on linux and OS
+X where jack was originally developed after the -d portion is where you
+would put the specific settings for the audio driver, like whether it
+should use 44100 or 48000 as the sample rate, how many channels to use if
+you hardware supports more than two channels, etc.
+
+-- 
+Chris Caudle
+
+1518126269.30203_0.ltw:2, <388e8631b70304bbaae6c2d2d08c8ec6.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

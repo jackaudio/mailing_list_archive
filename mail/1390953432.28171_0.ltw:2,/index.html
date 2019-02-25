@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: howto: jackdbus && jack_control</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: howto: jackdbus && jack_control</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1390951943.27361_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1390953875.28502_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1390953432.28171_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 28 Jan 2014 17:57:02 -0600 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> franklyn berry </span> &lt;[hidden] at mindspring dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Adi Knoth &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+</table>
+<pre>
+-----Original Message-----
+&gt;From: Adrian Knoth &lt;[hidden]&gt;
+&gt;On Tue, Jan 28, 2014 at 11:30:41AM -0600, franklyn berry wrote:
+&gt;
+&gt;&gt; &lt;powerpc: ubuntu 12.04; opus-1.1; jack-1.9.9.5; ffado-2.1&gt;
+&gt;
+&gt;I assume it's a hand-rolled jackd. If so, I remember a Debian bug report
+&gt;claiming the same alignment issue on ppc32 as seen on ARM:
+&gt;
+&gt;     http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=728710
+
+Thanks, Adrian. I'll try and track that change. In the meantime, I've
+made some minor progress. 
+
+I've verified the DBUS registration of server, jack_control client, and its
+exec'd child. All have ID's and report methods in the dbus logs.
+
+I've tracked it &lt;the lack of 'server started' signal BACK to dbus; and subsequent
+error timeout&gt; down to this snippet from common/JackControlAPI.cpp:
+
+SERVER_EXPORT bool
+jackctl_server_open(
+    jackctl_server *server_ptr,
+    jackctl_driver *driver_ptr)
+{
+    JSList * paramlist = NULL;
+...
+        server_ptr-&gt;engine = new JackServer(
+            server_ptr-&gt;sync.b,
+            server_ptr-&gt;temporary.b,
+            server_ptr-&gt;client_timeout.i,
+            server_ptr-&gt;realtime.b,
+            server_ptr-&gt;realtime_priority.i,
+            server_ptr-&gt;port_max.ui,
+            server_ptr-&gt;verbose.b,
+            (jack_timer_type_t)server_ptr-&gt;clock_source.ui,
+            server_ptr-&gt;name.str)
+... 
+seems to execute.
+&lt;I just sprinkled some "jack_info()" outputs to jackdbus.log to see where it blew up.&gt;
+ 
+But when "coerced" into this ?function pointer?
+
+        rc = server_ptr-&gt;engine-&gt;Open(driver_ptr-&gt;desc_ptr, paramlist);
+
+a bus error dumps core before the calling function can complete, and return.
+
+I'm not a programmer, but I'm guessing that the '-&gt;Open' might need to be
+re-typed? The trouble &lt;for my skill level&gt; is that I cannot find the original
+function prototype to see how its defined. 
+
+--frankb
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1390951943.27361_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1390953875.28502_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1390953432.28171_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1390953432.28171_0.ltw:2,&nbsp;&lt;29170403.1390953423217.JavaMail.root at elwamui-karabash dot atl dot sa dot earthlink dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

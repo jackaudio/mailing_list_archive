@@ -1,0 +1,43 @@
+Date:        Mon, 02 May 2011 07:23:14 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Tim Blechmann <[hidden] at klingt dot org>
+Cc:          [hidden] at jackaudio dot org
+In-Reply-To: Tim Blechmann Re: [Jack-Devel] jack threads (1304335047.19259_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack threads
+
+On Mon, May 2, 2011 at 7:16 AM, Tim Blechmann <[hidden]> wrote:
+
+> atm i am doing it manually:
+> if (jack_client_thread_id(self->client) == pthread_self())
+>   do_something();
+
+then i would keep on doing it manually :)
+
+>> i think this would be a mistake too, because it would mean
+>> that if thread semantics changed in the future, your code would likely
+>> break (imagine a future in which libjack initiates N "realtime"
+>> threads and not just 1, for example).
+>
+> well, if you change any part of the API, code will break, if it relies on the
+> old semantic ...
+
+my point is that the thread semantics have never been specified (which
+is a mistake) but that as a result of the variety of schemes that
+exist or can now be imagined, trying to tell clients "this is thread
+FOO" has the effect of locking down the thread model in a way that we
+currently do not. most (all) JACK clients function with both the jack1
+and jack2 thread models. what precisely is the identity of the thread
+in jack1 that calls the process callback? it also calls the port
+registration callback ... in fact, even jack_client_thread_id() is
+wrong and hopelessly jack1-centric:
+
+"    the pthread ID of the thread running the JACK client side code. "
+
+*what* client side code?
+
+--p
+
+1304335408.19547_0.ltw:2,a <BANLkTiknMOMrgj9qZvCP2b5Yob_FvekJ_Q at mail dot gmail dot com>
+________________________________________________________________________________
+

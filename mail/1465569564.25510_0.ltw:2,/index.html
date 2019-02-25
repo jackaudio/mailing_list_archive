@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] shm registry full errors</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] shm registry full errors</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1465566399.20492_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1465571599.27444_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1465569564.25510_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 10 Jun 2016 10:39:15 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"[hidden] at saepia dot net" &lt;[hidden] at saepia dot net&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>[hidden] at saepia dot net
+<a href='../1465566399.20492_0.ltw:2,a/index.html'>Re: [Jack-Devel] shm registry full errors </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Marcin Lewandowski
+<a href='../1465571599.27444_0.ltw:2,a/index.html'>Re: [Jack-Devel] shm registry full errors </a></td></tr>
+</table>
+<pre>
+client limits: i will leave the developer(s) of jack2 to comment on the
+specifics. jack2 hard-codes more values than jack1.
+
+the shared memory registry: you can't make its configuration a run-time
+thing, because you'd have to ensure that the library and the server are
+both given the same value.
+
+MAX_SHM_ID is an operating system constant.
+
+you are hitting the limit almost certainly because you are running far more
+clients than JACK was designed to support.
+
+every client with a process callback implies at least 1 extra context
+switch during the process cycle. this does not and cannot scale with
+contemporary operating systems and processors. context switches are cheap
+but not free. doing hundreds of them per process cycle steals significant
+amounts of time from what is available for actual signal processing.
+
+On Fri, Jun 10, 2016 at 9:46 AM, [hidden] &lt;[hidden]&gt;
+wrote:
+
+&gt; Well I understand but what I observe is that JACK has unpredictable amount
+&gt; of total clients which is an issue, regardless if it's closer to 10 than
+&gt; 1000.
+&gt;
+&gt; I have found out at least 3 conditions that affect this:
+&gt;
+&gt; - compilation flags, which by the way may cause jack to segfault if they
+&gt; are set too high
+&gt;
+&gt; - parameter to jackd
+&gt;
+&gt; - MAX_SHM_ID
+&gt;
+&gt; I suggest integrating this into one runtime command line parameter.
+&gt;
+&gt; M.
+&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1465566399.20492_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1465571599.27444_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1465569564.25510_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1465569564.25510_0.ltw:2,&nbsp;&lt;CAFa_cKner0mAWqWXcXmDvwyzW9YPWp=VT11htbxHAhkUKzm90Q at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

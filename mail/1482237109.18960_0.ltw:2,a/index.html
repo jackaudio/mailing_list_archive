@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack midi event reserve vs. write</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack midi event reserve vs. write</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1482237060.18915_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1482256460.6054_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1482237109.18960_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 20 Dec 2016 12:31:31 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Harry van Haaren </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>ROBERT WOLF &lt;[hidden] at hercsmusicsystems dot com dot au&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>ROBERT WOLF
+<a href='../1482232160.13733_0.ltw:2,a/index.html'>[Jack-Devel] jack midi event reserve vs. write </a></td></tr>
+</table>
+<pre>
+On Tue, Dec 20, 2016 at 11:09 AM, ROBERT WOLF &lt;
+[hidden]&gt; wrote:
+
+&gt; Dear All,
+&gt;
+
+Hi Robert,
+
+
+&gt; What exactly is the difference between *jack_midi_event_reserve* and
+&gt; *jack_midi_event_write* ?
+&gt;
+
+From my understanding:
+- event_reserve() takes "size" number of bytes from JACKs internal MIDI
+buffers for a particular port, and returns the address to that buffer. Your
+application can now write to that pointer, and once the RT callback is
+done, JACK will transmit the data.
+
+- event_write() takes a pointer from your application, and copies the data
+pointed to into the JACK internal midi buffer. Your application can re-use
+or delete the buffer you passed to the event_write() function now, as JACK
+has a copy of the data.
+
+
+&gt; In particular, if I call *jack_midi_event_write*, does it actually copy
+&gt; the data from the buffer, which I provide?
+&gt; Or does it use that same buffer.
+&gt;
+
+See above.
+
+
+&gt; Another question is how can I send midi events generated from GUI, (which
+&gt; does not run in the audio callback)?
+&gt; My guess is to cache them somewhere and transmit them inside the callback?
+&gt; Am I guessing correctly?
+&gt; &lt;http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org&gt;
+&gt;
+
+In short: Yes. You need to transfer the MIDI data to be sent between two
+threads - this can be trivial with mutexs/semaphors/locking systems, but
+keep in mind that your real-time thread must *never* block. Personally, I
+am a big proponent of message passing, instead of locking based systems.
+
+To answer your question, I would use a ringbuffer (jack has a ringbuffer t)
+to move a message (struct with some metadata) to transfer an event (midi
+note one) between the GUI to JACK thread.
+
+Hope that helps, -Harry
+
+-- 
+
+http://www.openavproductions.com
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1482237060.18915_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1482256460.6054_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1482237109.18960_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1482237109.18960_0.ltw:2,a&nbsp;&lt;CAKudYbO7oN9JCksF19z=-9cMh8m=hDFOQsNzbfx3fp3rmKOvKQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1517568080.2817_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1517586391.26401_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1517577544.15291_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 02 Feb 2018 14:18:23 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Christian Affolter </span> &lt;[hidden] at purplehaze dot ch&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Thomas Brand
+<a href='../1517430228.12361_0.ltw:2,/index.html'>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device </a></td></tr>
+</table>
+<pre>
+On 31.01.2018 21:22, Thomas Brand wrote:
+&gt; On Wed, January 31, 2018 15:55, Christian Affolter wrote:
+&gt;&gt; On 31.01.2018 15:20, Kjetil Matheussen wrote:
+&gt;&gt;&gt; Maybe jack will work if you give it the same parameters that arecord
+&gt;&gt;&gt; uses. I.e. compare the content of
+&gt;&gt;&gt; &#xA0;/proc/asound/card0/pcm0p/sub0/hw_params (or a similarly
+&gt;&gt;&gt; named file) when running arecord and when running jack.
+&gt;&gt;&gt;
+&gt;&gt;&gt; Also, maybe it works to record in jack if you change audio from
+&gt;&gt;&gt; "duplex"
+&gt;&gt;&gt; to "capture only".
+&gt;&gt;
+&gt;&gt; BINGO and thank you so much for this pointer!
+&gt; 
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; # hw_params during jackd -d alsa -d hw:0
+&gt;&gt; # jackd -d alsa
+&gt;&gt; cat /proc/asound/card0/pcm0c/sub0/hw_params
+&gt;&gt;
+&gt;&gt; access: MMAP_INTERLEAVED
+&gt;&gt; format: S32_LE
+&gt;&gt; subformat: STD
+&gt;&gt; channels: 8
+&gt;&gt; rate: 48000 (48000/1)
+&gt;&gt; period_size: 1024
+&gt;&gt; buffer_size: 2048
+&gt;&gt;
+&gt; 
+&gt; What i wonder is did you see 8 JACK system:capture ports with the above
+&gt; configuration? 
+
+yes, there are 8 ports available:
+
+jack_lsp -c -t
+
+system:capture_1
+	32 bit float mono audio
+[...]
+system:capture_8
+	32 bit float mono audio
+system:playback_1
+	32 bit float mono audio
+[...]
+system:playback_8
+	32 bit float mono audio
+
+
+
+&gt; It's still confusing that JACK would attach the device
+&gt; differently. The factor 4 can probably be explained by 8 / 2 channels (?)
+&gt; or has it do with duplex?.
+&gt; It could be that the record just took every 4th sample. But why?
+
+I guess it has something to do with the fact, that I only have the first
+Livewire+ Destination on the Axia-ALSA driver configured (which equals
+to the first two system capture ports in jackd) to actually receive RTP
+streams from the Livewire+ network. The other 3 stereo Livewire
+Destinations (6 system capture channels) are not configured. However,
+this is just a speculation and I would have to verify that, by
+configuring more than one Livewire destinations.
+
+But anyway, it's a pretty unexpected recording behaviour. Either the
+driver shouldn't block (or whatever it's doing) or jackd would need a
+way to detect that only two of the ports are actually working, which is
+most likely outside of jackd's responsibility.
+
+
+&gt; For future reference, this could be issued on github with these detailed
+&gt; debug informations. It's possible that JACK can't do anything about it if
+&gt; it's driver related. So.. up to you.
+
+I can do this, if anyone thinks that this issue might be of any help
+and/or someone is willing to spend more time to actually debug this
+within the jackd source code. On the other hand, it's kind of documented
+on the mailing list archive by now for others to find.
+
+
+&gt;&gt; # hw_params during jackd -d alsa -d hw:0 -C -i 2
+&gt;&gt; cat /proc/asound/card0/pcm0c/sub0/hw_params
+&gt;&gt;
+&gt;&gt; access: MMAP_INTERLEAVED
+&gt;&gt; format: S32_LE
+&gt;&gt; subformat: STD
+&gt;&gt; channels: 2
+&gt;&gt; rate: 48000 (48000/1)
+&gt;&gt; period_size: 1024
+&gt;&gt; buffer_size: 2048
+
+Thanks again for your help
+Chris
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1517568080.2817_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1517586391.26401_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1517577544.15291_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1517577544.15291_0.ltw:2,&nbsp;&lt;da4cd374-fee7-94fc-7eab-21d0bcbad159 at purplehaze dot ch&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

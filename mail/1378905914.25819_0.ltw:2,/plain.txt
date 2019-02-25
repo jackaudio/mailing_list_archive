@@ -1,0 +1,108 @@
+Date:        Wed, 11 Sep 2013 09:25:06 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Wolfgang Lorenz <[hidden] at gmx dot de>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Wolfgang Lorenz Re: [Jack-Devel] Using the callback free API with self-created RT-threads (1378902559.23297_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Using the callback free API with self-created RT-threads
+
+JACK provides a thread primarily in the interest of a uniform
+cross-platform model. if you try this on OS X or windows, you will find
+that the APIs there also provide a thread in which your callback will run.
+
+what you're doing is adding another layer of buffering between your own RT
+thread(s) and JACK - this is contrary to the entire purpose and intent of a
+pull-mode audio API. it adds to your latency and increases the complexity
+of your code design.
+
+realtime audio is always implemented, ultimately, around a pull model (the
+hardware defines when transfer takes place). if you want to ignore that and
+somehow imagine that you can do your own scheduling, then you just need to
+add a ringbuffer between your other threads and the one that runs the
+callback. the only cases i know where this is important is when running
+FFT's or other similar algorithms which have significant internal latency
+due to their window-based model of accumulating a certain amount of data
+before being able to process. you can always wrap a pull model as a push
+model simply by adding buffering, but the normal case for doing this is
+where the audio generation code is running in a non-RT context and needs to
+be "isolated" from the demands of RT processing. it doesn't appear that
+your program fits into this category.
+
+
+
+On Wed, Sep 11, 2013 at 8:29 AM, Wolfgang Lorenz <[hidden]> wrote:
+
+> Thanks Stéphane and Paul for your replies.
+>
+> Am Tue, 10 Sep 2013 16:49:24 +0200
+> schrieb Stéphane Letz <[hidden]>:
+>
+> > AFAIR the jack_cycle_wait function is supposed to fail (and so properly
+> > quit the thread) if the server is shutdown. On which OS are you
+> > testing?
+>
+> I'm on Linux (mainly Fedora) with the current stable version of JACK,
+> built from the sources. (JACK 1.9.9.5, that is.)
+> http://www.jackaudio.org/downloads/jack-1.9.9.5.tar.bz2
+>
+> > Can you send me tour jack_cycle_wait/jack_cycle_signal based code?
+>
+> I've attached an example file, with a setup similar to the project, I'm
+> working on. But not quite: For simplicity I only create one thread, as
+> the synchronization with other threads is not my problem ;-). Also, in
+> this example I don't require RT threads. As I am currently operating
+> only in user space (for testing purposes), I don't have the permissions
+> anyway: The same applies to the JACK server.
+>
+> The program simply sets up one thread, in which a loop is run, that
+> uses jack_cycle_wait() and jack_cycle_signal(), to synchronize the
+> reading and writing of audio data.
+>
+> > Thanks.
+> >
+> > Stéphane
+>
+> Am Tue, 10 Sep 2013 10:54:57 -0400
+> schrieb Paul Davis <[hidden]>:
+>
+> > On Tue, Sep 10, 2013 at 10:35 AM, Wolfgang Lorenz <[hidden]>
+> wrote:
+> >
+> > >
+> > > But what I wanted to know is: Is this really the way the callback-free
+> > > API is supposed to work? Does anybody else see this as a problem or bug
+> > > that should be fixed?
+> > >
+> >
+> > (1) for reference, ardour has used the "callback free API" for years
+> > without issues (including server shutdown)
+>
+> I had a look at the sources: Ardour is using the JACK-provided thread.
+> That's what I wanted to avoid, as I could simply have used the callback
+> API. I've tried to start it to see how it behaves, but the current
+> git-version crashes instantly SIGSEGVs at startup. I currently don't
+> have the time to investigate much further, but thank you for the hint.
+>
+> > (2) your use of JACK sounds odd. whether you use the callback API or the
+> > callback-free one, audio processing
+> >        needs to be driven by the audio interface, not your code. the way
+> > you have described doesn't make it
+> >       clear to me that this is the case.
+>
+> Please, have a look at the attached file, for an example, of how I
+> wanted to use it.
+>
+>
+> Greetings,
+>   Wolfgang
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+>
+
+1378905914.25819_0.ltw:2, <CAFa_cKnQ0zutjUBDweiPwF56jyFfa7NErXheYBaLji3xvNmx5w at mail dot gmail dot com>
+________________________________________________________________________________
+

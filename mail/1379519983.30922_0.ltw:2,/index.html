@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Testing JACK and PA latency</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Testing JACK and PA latency</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1379518192.27958_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1379572490.19746_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1379519983.30922_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 18 Sep 2013 11:59:35 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Patrick Shirkey &lt;[hidden] at boosthardware dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Patrick Shirkey
+<a href='../1379518192.27958_0.ltw:2,/index.html'>Re: [Jack-Devel] Testing JACK and PA latency </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Patrick Shirkey
+<a href='../1379572490.19746_0.ltw:2,/index.html'>Re: [Jack-Devel] Testing JACK and PA latency </a></td></tr>
+</table>
+<pre>
+you're trying to measure the time between A and B where you have access to
+A (or specifically, a way to carry out measurements there) but no access to
+B.
+
+i don't see how this can work. it is a bit like asking "how long does it
+take to get from paris to brussels" but when you are unable to cross the
+border between france and belgium, and cannot talk to anyone in brussels.
+
+
+On Wed, Sep 18, 2013 at 11:29 AM, Patrick Shirkey &lt;
+[hidden]&gt; wrote:
+
+&gt;
+&gt; On Wed, September 18, 2013 11:36 pm, Paul Davis wrote:
+&gt; &gt; there isn't any way to separately compute the "outbound" and "inbound"
+&gt; &gt; latency. in fact, jack_iodelay's message about the value to use for -I
+&gt; and
+&gt; &gt; -O is based on the not-entirely-defensible but somewhat reasonable
+&gt; &gt; assumption that the outbound and inbound latencies are symmetric.
+&gt; &gt;
+&gt; &gt; put differently, i don't think there is any way to do what you want.
+&gt; &gt; someone may prove me wrong.
+&gt; &gt;
+&gt;
+&gt; It's a new one for me too so I'm not expecting a pre-existing solution.
+&gt;
+&gt; This is part of a wider test procedure so I am trying to get a method that
+&gt; can be considered robust and literal. I'm sure it is viable to calculate
+&gt; the latency for each step in the process based on configuration settings
+&gt; but in this case it will be *very* useful (and potentially lucrative for
+&gt; everyone) to present a definitive result and test procedure.
+&gt;
+&gt; Any ideas for how to go about it are welcome.
+&gt;
+&gt; To recap I am seeking to define the i/o latency at any period size/sample
+&gt; rate when an application that is dependant on PA is sending/receiving data
+&gt; via JACK.
+&gt;
+&gt; If anyone has thoughts on a method for tweaking the configuration settings
+&gt; for both PA and JACK while running (automated) latency tests that would
+&gt; also be very useful. Piece of cake right?
+&gt;
+&gt;
+&gt;
+&gt; &gt;
+&gt; &gt; On Wed, Sep 18, 2013 at 6:55 AM, Patrick Shirkey
+&gt; &gt; &lt;[hidden]
+&gt; &gt;&gt; wrote:
+&gt; &gt;
+&gt; &gt;&gt;
+&gt; &gt;&gt; On Wed, September 18, 2013 4:49 pm, Patrick Shirkey wrote:
+&gt; &gt;&gt; &gt; Hi,
+&gt; &gt;&gt; &gt;
+&gt; &gt;&gt; &gt; Can anyone recommend a rigorous procedure for verifying round trip
+&gt; &gt;&gt; latency
+&gt; &gt;&gt; &gt; between i/o using a combination of both JACK and PA?
+&gt; &gt;&gt; &gt;
+&gt; &gt;&gt; &gt;
+&gt; &gt;&gt;
+&gt; &gt;&gt; I have the following setup:
+&gt; &gt;&gt;
+&gt; &gt;&gt; jack running in duplex mode (1024/48000/2)
+&gt; &gt;&gt; pa connected to jack with sink/source plugins
+&gt; &gt;&gt; skype* running via pa
+&gt; &gt;&gt; jack_iodelay
+&gt; &gt;&gt;
+&gt; &gt;&gt; I have the following connections
+&gt; &gt;&gt;
+&gt; &gt;&gt;      jack_delay (out) -&gt; pa jack source (1)
+&gt; &gt;&gt;      system_in (1) -&gt; jack_delay (in)
+&gt; &gt;&gt;      system_in (1) -&gt; pa jack source (1)
+&gt; &gt;&gt;      pa jack sink -&gt; system_out (1)
+&gt; &gt;&gt;
+&gt; &gt;&gt; I can hear the output signal from jack_delay in the skype call test
+&gt; &gt;&gt; service.
+&gt; &gt;&gt; I can hear the mic input in skype call test service
+&gt; &gt;&gt; I can hear skype output in my speakers via jack system output
+&gt; &gt;&gt;
+&gt; &gt;&gt; I see the following info in jack_delay console messages:
+&gt; &gt;&gt;
+&gt; &gt;&gt;  22120.239 frames    460.838 ms total roundtrip latency
+&gt; &gt;&gt;         extra loopback latency: 21096 frames
+&gt; &gt;&gt;         use 10548 for the backend arguments -I and -O ??
+&gt; &gt;&gt;
+&gt; &gt;&gt;
+&gt; &gt;&gt; However I don't think this setup is calculating latency details that I
+&gt; &gt;&gt; am
+&gt; &gt;&gt; looking for.
+&gt; &gt;&gt;
+&gt; &gt;&gt; I would like to retrieve the following info:
+&gt; &gt;&gt;
+&gt; &gt;&gt; 1: latency from jack system in -&gt; pa_source -&gt; skype in -&gt; skype network
+&gt; &gt;&gt; output (before the data is transmitted to the external receiver)
+&gt; &gt;&gt;
+&gt; &gt;&gt; 2: latency from skype network input (immediately data that is received
+&gt; &gt;&gt; from external provider) -&gt; pa_sink -&gt; jack_system out
+&gt; &gt;&gt;
+&gt; &gt;&gt;
+&gt; &gt;&gt; * skype is used for testing i/o via PA. Any other duplex app could also
+&gt; &gt;&gt; be
+&gt; &gt;&gt; used.
+&gt; &gt;&gt;
+&gt; &gt;&gt;
+&gt; &gt;&gt;
+&gt; &gt;&gt;
+&gt; &gt;&gt;
+&gt; &gt;&gt; --
+&gt; &gt;&gt; Patrick Shirkey
+&gt; &gt;&gt; Boost Hardware Ltd
+&gt; &gt;&gt; 
+&gt; &gt;&gt; Jack-Devel mailing list
+&gt; &gt;&gt; [hidden]
+&gt; &gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt; &gt;&gt;
+&gt; &gt;
+&gt;
+&gt;
+&gt; --
+&gt; Patrick Shirkey
+&gt; Boost Hardware Ltd
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1379518192.27958_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1379572490.19746_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1379519983.30922_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1379519983.30922_0.ltw:2,&nbsp;&lt;CAFa_cKmKgNZwD8PKuxnYCwqmjq11zyf16BBmYfw0QuaMbXdooQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

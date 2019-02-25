@@ -1,0 +1,67 @@
+Date:        Tue, 02 Jul 2013 01:41:38 +0930
+From:        Ron  <[hidden] at debian dot org>
+To:          Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>, [hidden] at bugs dot debian dot org
+Cc:          Robin Gareus <[hidden] at gareus dot org>, [hidden] at jackaudio dot org, Debian Multimedia Maintainers <[hidden] at lists dot alioth dot debian dot org>
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] Bug#686777: netjack2 + opus custom modes + debian (1372689632.2294_0.ltw:2,a)
+
+Subject:     Bug#686777: netjack2 + opus custom modes + debian
+
+On Mon, Jul 01, 2013 at 04:40:19PM +0200, Adrian Knoth wrote:
+> On 06/30/2013 03:11 AM, Ron wrote:
+> 
+> Hi!
+> 
+> I'll limit my response to the aspect of symbols, since Robin has already
+> answered the other questions.
+> 
+> 
+> >> Just sketching now:
+> >>
+> >> libopus0 will provide /usr/lib/libopus.so.0 (business as usual)
+> >> libopus-custom-0 will provide /usr/lib/libopus-custom.so.0
+> > 
+> > The big problem with this is that both of those will provide all of
+> > the functions that libopus.so.0 does, only some of the symbols with
+> > the same names will have different implementations in the -custom one.
+> > 
+> > Which means that when jack links to -custom, and jill links to -vanilla,
+> > and then some high level audio app or desktop environment or whatever
+> > links to both jack and jill ...   hilarity is likely to ensue.
+> 
+> I've seen colliding symbols with ardour via indirect linking, and it's
+> really a PITA to diagnose.
+> 
+> But here it seems to be very unlikely: only the jack server links
+> against libopus(-custom), and this server is a standalone binary that's
+> not linking or linked to anything else.
+> 
+> All the clients link against libjack, and even if they do link against
+> libopus, they're not interfering with the server's libopus-custom, since
+> client-server communication is done via /dev/shm.
+> 
+> So I think we can ignore the symbol aspect for all practical cases.
+> (Correct me if I'm wrong).
+
+Where does libjacknet.so.0.1.0 fit into all of that?
+
+I don't think we can guarantee that for the forever future something
+using the custom modified symbols would be compatible with the normal
+builds.  Optimisation work is really only just beginning, and there
+are quite a few places where the normal code might diverge in newly
+incompatible ways from what is possible when custom is enabled, and
+where a symbol collision could be even worse than it is at present.
+
+This could turn into a snowball of ugly pretty easily I fear ...
+
+Which is why I'm really keen to be sure we're not going down this
+path for something so tiny that nobody will ever be able to hear it.
+
+  Cheers,
+  Ron
+
+-- 
+To unsubscribe, send mail to [hidden].
+
+1372695317.6565_0.ltw:2,a <20130701161138.GN14785 at audi dot shelbyville dot oz>
+________________________________________________________________________________
+

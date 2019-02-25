@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1493675927.19352_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1493739077.4099_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1493730703.23332_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 02 May 2017 15:11:02 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Frodo Jedi </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Chris Caudle &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Chris Caudle
+<a href='../1493675927.19352_0.ltw:2,a/index.html'>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Chris Caudle
+<a href='../1493739077.4099_0.ltw:2,a/index.html'>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2 </a></td></tr>
+</table>
+<pre>
+Dear Chris,
+many thanks for all your info and suggestions. For the moment I want to
+test netjack2, I will definitively try the zita bridge asap.
+
+Regarding your questions, I have never truncated the commands outputs.
+
+
+Firstly, the -Cno -Pyes commands remove the warning "Default input and
+output devices are not the same !!", while having only -P does not.
+I have specified the parameters for coreaudio. I did various trials, I
+report the outputs below.
+
+
+TRIAL 1 ----------------------------------------------------
+On the master (Mac computer)
+
+sh-3.2# jackd -P 70 -p96 -t 2000 -dcoreaudio  -s -r48000 -p128 -n2 -Cno
+-Pyes
+jackdmp 1.9.11
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2016 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in realtime mode with priority 70
+self-connect-mode is "Don't restrict self connect requests"
+Separated input = 'Built-in Microphone'
+Separated output = 'Built-in Output'
+Clock drift compensation was asked but is not needed (devices use the same
+clock domain)
+Ignore incorrect channel mapping value = 2
+Input channel = 0 ==&gt; JACK input port = 0
+Input channel = 1 ==&gt; JACK input port = 1
+JACK output port = 0 ==&gt; output channel = 0
+JACK output port = 1 ==&gt; output channel = 1
+DeviceNotificationCallback kAudioDeviceProcessorOverload
+CoreAudio driver is running...
+Starting Jack NetManager
+Listening on '225.3.19.154:19000'
+Takes physical 2 audio output(s) for slave
+Takes physical 0 MIDI input(s) for slave
+Takes physical 0 MIDI output(s) for slave
+Sending parameters to ...
+Floating point exception: 8
+
+
+
+On the slave (the linux odroid board):
+
+
+&gt; jackd -R -d net
+jackdmp 1.9.11
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2015 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+no message buffer overruns
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 10
+self-connect-mode is "Don't restrict self connect requests"
+NetDriver started in async mode without Master's transport sync.
+Waiting for a master...
+Initializing connection with ucas-MacBook-Pro-9.local...
+Maximum number of input ports is reached for application ref = 0
+driver: cannot register port for system:midi_playback_769
+Can't allocate ports.
+Initing net driver fails...
+
+
+
+
+
+
+
+
+
+TRIAL 2 ----------------------------------------------------
+
+On the master (Mac computer)
+
+
+sh-3.2# jackd -P 70 -p96 -t 2000 -dcoreaudio  -s -r48000 -p128 -n2 -Cno
+-Pyes
+jackdmp 1.9.11
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2016 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in realtime mode with priority 70
+self-connect-mode is "Don't restrict self connect requests"
+Separated input = 'Built-in Microphone'
+Separated output = 'Built-in Output'
+Clock drift compensation was asked but is not needed (devices use the same
+clock domain)
+Ignore incorrect channel mapping value = 2
+Input channel = 0 ==&gt; JACK input port = 0
+Input channel = 1 ==&gt; JACK input port = 1
+JACK output port = 0 ==&gt; output channel = 0
+JACK output port = 1 ==&gt; output channel = 1
+DeviceNotificationCallback kAudioDeviceProcessorOverload
+CoreAudio driver is running...
+Starting Jack NetManager
+Listening on '225.3.19.154:19000'
+Sending parameters to ...
+Can't set net buffer sizes : Invalid argument
+SetParams error...
+Can't init new NetMaster...
+Waiting for a slave...
+
+
+On the slave (the linux odroid board):
+
+
+&gt; jackd -R -d net -a 225.3.19.154 -p 19000 -C 0 -P 2 -i 0 -o 0
+jackdmp 1.9.11
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2015 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+no message buffer overruns
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 10
+self-connect-mode is "Don't restrict self connect requests"
+NetDriver started in async mode without Master's transport sync.
+Waiting for a master...
+Initializing connection with ucas-MacBook-Pro-9.local...
+Maximum number of input ports is reached for application ref = 0
+driver: cannot register port for system:midi_playback_767
+Can't allocate ports.
+Initing net driver fails...
+
+
+
+
+
+TRIAL 3----------------------------------------------------
+
+On the master (Mac computer)
+
+jack_load netmanager -i "-h" gives:
+
+Internal client parameters:
+-a, --multicast-ip Multicast address (default: 225.3.19.154)
+-p, --udp-net-port UDP port (default: 19000)
+-c, --auto-connect Auto connect netmaster to system ports (default: false)
+-s, --auto-save Save/restore netmaster connection state when restarted
+(default: false)
+
+
+Therefore I typed: jack_load netmanager -i "-c true"
+netmanager is running.
+client name = netmanager
+
+The result does not change....
+
+
+sh-3.2# jackd -P 70 -p96 -t 2000 -dcoreaudio  -s -r48000 -p128 -n2 -Cno
+-Pyes
+jackdmp 1.9.11
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2016 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in realtime mode with priority 70
+self-connect-mode is "Don't restrict self connect requests"
+Separated input = 'Built-in Microphone'
+Separated output = 'Built-in Output'
+Clock drift compensation was asked but is not needed (devices use the same
+clock domain)
+Ignore incorrect channel mapping value = 2
+Input channel = 0 ==&gt; JACK input port = 0
+Input channel = 1 ==&gt; JACK input port = 1
+JACK output port = 0 ==&gt; output channel = 0
+JACK output port = 1 ==&gt; output channel = 1
+CoreAudio driver is running...
+Starting Jack NetManager
+Listening on '225.3.19.154:19000'
+Sending parameters to ...
+Can't set net buffer sizes : Invalid argument
+SetParams error...
+Can't init new NetMaster...
+Waiting for a slave...
+
+
+
+
+
+
+On the slave (the linux odroid board):
+
+
+&gt; jackd -R -d net -a 225.3.19.154 -p 19000 -C 0 -P 2 -i 0 -o 0
+jackdmp 1.9.11
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2015 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+no message buffer overruns
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 10
+self-connect-mode is "Don't restrict self connect requests"
+NetDriver started in async mode without Master's transport sync.
+Waiting for a master...
+Initializing connection with ucas-MacBook-Pro-9.local...
+Maximum number of input ports is reached for application ref = 0
+driver: cannot register port for system:midi_playback_767
+Can't allocate ports.
+Initing net driver fails...
+
+
+
+
+TRIAL 4 ----------------------------------------------------
+
+
+I used a different buffer size 1024 and with or without specifying the
+maximum number of port of jackd
+
+jackd -P 70  -t 2000 -dcoreaudio  -s -r48000 -p1024 -n2 -Cno -Pyes
+
+jackd -P 70  -p96  -t 2000 -dcoreaudio  -s -r48000 -p1024 -n2 -Cno -Pyes
+
+
+The result are the same of before.,...
+
+
+
+
+
+TRIAL 5 ----------------------------------------------------
+
+Notably if I just us:  jackd -R -d net  or  jackd -R -d net -a 225.3.19.154
+-p 19000 or
+
+the crashing error "Floating point exception: 8" arises, while it does not
+specifying jackd -R -d net -a 225.3.19.154 -p 19000 -C 0 -P 2  (see TRIAL
+6) :
+
+
+
+
+
+On the master (Mac computer)
+
+sh-3.2# jackd -P 70 -p96 -t 2000 -dcoreaudio  -s -r48000 -p128 -n2 -Cno
+-Pyes
+jackdmp 1.9.11
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2016 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in realtime mode with priority 70
+self-connect-mode is "Don't restrict self connect requests"
+Separated input = 'Built-in Microphone'
+Separated output = 'Built-in Output'
+Clock drift compensation was asked but is not needed (devices use the same
+clock domain)
+Ignore incorrect channel mapping value = 2
+Input channel = 0 ==&gt; JACK input port = 0
+Input channel = 1 ==&gt; JACK input port = 1
+JACK output port = 0 ==&gt; output channel = 0
+JACK output port = 1 ==&gt; output channel = 1
+DeviceNotificationCallback kAudioDeviceProcessorOverload
+CoreAudio driver is running...
+Starting Jack NetManager
+Listening on '225.3.19.154:19000'
+Takes physical 2 audio output(s) for slave
+Takes physical 0 MIDI input(s) for slave
+Takes physical 0 MIDI output(s) for slave
+Sending parameters to ...
+Floating point exception: 8
+
+
+
+On the slave (the linux odroid board):
+
+
+&gt; jackd -R -d net
+jackdmp 1.9.11
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2015 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+no message buffer overruns
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 10
+self-connect-mode is "Don't restrict self connect requests"
+NetDriver started in async mode without Master's transport sync.
+Waiting for a master...
+Initializing connection with ucas-MacBook-Pro-9.local...
+Maximum number of input ports is reached for application ref = 0
+driver: cannot register port for system:midi_playback_769
+Can't allocate ports.
+Initing net driver fails...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TRIAL 6 ----------------------------------------------------
+
+
+
+On the master (Mac computer)
+
+sh-3.2# jackd -P 70 -p96 -t 2000 -dcoreaudio  -s -r48000 -p128 -n2 -Cno
+-Pyes
+jackdmp 1.9.11
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2016 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in realtime mode with priority 70
+self-connect-mode is "Don't restrict self connect requests"
+Separated input = 'Built-in Microphone'
+Separated output = 'Built-in Output'
+Clock drift compensation was asked but is not needed (devices use the same
+clock domain)
+Ignore incorrect channel mapping value = 2
+Input channel = 0 ==&gt; JACK input port = 0
+Input channel = 1 ==&gt; JACK input port = 1
+JACK output port = 0 ==&gt; output channel = 0
+JACK output port = 1 ==&gt; output channel = 1
+CoreAudio driver is running...
+Starting Jack NetManager
+Listening on '225.3.19.154:19000'
+Takes physical 0 MIDI output(s) for slave
+Sending parameters to ...
+Can't set net buffer sizes : Invalid argument
+SetParams error...
+Can't init new NetMaster...
+Waiting for a slave...
+
+
+
+
+On the slave (the linux odroid board):
+
+
+&gt; jackd -R -d net -a 225.3.19.154 -p 19000 -C 0 -P 2
+jackdmp 1.9.11
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2015 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+no message buffer overruns
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 10
+self-connect-mode is "Don't restrict self connect requests"
+NetDriver started in async mode without Master's transport sync.
+Waiting for a master...
+Initializing connection with ucas-MacBook-Pro-9.local...
+Maximum number of input ports is reached for application ref = 0
+driver: cannot register port for system:midi_playback_767
+Can't allocate ports.
+Initing net driver fails...
+
+
+
+
+
+
+
+
+
+Still the problems persists. I can't proceed... Any further suggestion to
+make work the two jackified units?
+
+
+
+Cheers
+
+
+
+On Mon, May 1, 2017 at 6:00 PM, Chris Caudle &lt;[hidden]&gt; wrote:
+
+&gt; I had some firewall configuration problems preventing successful multicast
+&gt; packet exchange between my test machines, but I got that sorted out by
+&gt; temporarily just disabling the firewall on one machine.
+&gt;
+&gt; This is the output I see from each machine.
+&gt;
+&gt; On machine with USB interface attached (jackd master):
+&gt;
+&gt; ]$ /usr/bin/jackd -P70 -t2000 -dalsa -dhw:Lambda -r48000 -p1024 -n3 -Xseq
+&gt; -zt -I376 -O376
+&gt; jackdmp 1.9.10
+&gt; Copyright 2001-2005 Paul Davis and others.
+&gt; Copyright 2004-2014 Grame.
+&gt; jackdmp comes with ABSOLUTELY NO WARRANTY
+&gt; This is free software, and you are welcome to redistribute it
+&gt; under certain conditions; see the file COPYING for details
+&gt; no message buffer overruns
+&gt; no message buffer overruns
+&gt; no message buffer overruns
+&gt; JACK server starting in realtime mode with priority 70
+&gt; self-connect-mode is "Don't restrict self connect requests"
+&gt; audio_reservation_init
+&gt; Acquire audio card Audio0
+&gt; creating alsa driver ...
+&gt; hw:Lambda|hw:Lambda|1024|3|48000|0|0|nomon|swmeter|-|32bit
+&gt; configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 3 periods
+&gt; ALSA: final selected sample format for capture: 24bit little-endian
+&gt; ALSA: use 3 periods for capture
+&gt; ALSA: final selected sample format for playback: 24bit little-endian
+&gt; ALSA: use 3 periods for playback
+&gt; Using port names patch v0.1 (07.04.2010)
+&gt; Trying to load portnames from /home/chris/.config/jack/cards/Lexicon
+&gt; Lambda.ss.ports.in
+&gt; Trying to load portnames from /home/chris/.config/jack/cards/Lexicon
+&gt; Lambda.ports.in
+&gt; Trying to load portnames from /etc/jack/cards/Lexicon Lambda.ss.ports.in
+&gt; Trying to load portnames from /etc/jack/cards/Lexicon Lambda.ports.in
+&gt; Trying to load portnames from /home/chris/.config/jack/cards/Lexicon
+&gt; Lambda.ss.ports.out
+&gt; Trying to load portnames from /home/chris/.config/jack/cards/Lexicon
+&gt; Lambda.ports.out
+&gt; Trying to load portnames from /etc/jack/cards/Lexicon Lambda.ss.ports.out
+&gt; Trying to load portnames from /etc/jack/cards/Lexicon Lambda.ports.out
+&gt; port created: Midi-Through:midi/playback_1
+&gt; port created: Midi-Through:midi/capture_1
+&gt; port created: Lexicon-Lambda:midi/playback_1
+&gt; port created: Lexicon-Lambda:midi/capture_1
+&gt;
+&gt; --------------------
+&gt; in separate console loaded netmanager at this point.
+&gt; output from netmanager load:
+&gt; $ jack_load netmanager
+&gt; netmanager is running.
+&gt; client name = netmanager
+&gt; --------------------
+&gt;
+&gt; Starting Jack NetManager
+&gt; Listening on '225.3.19.154:19000'
+&gt;
+&gt; ---------------------
+&gt; slave machine jackd started at this point
+&gt; This is still output from master side, just making a timing notation
+&gt; ---------------------
+&gt;
+&gt; Takes physical 2 audio input(s) for slave
+&gt; Takes physical 2 audio output(s) for slave
+&gt; Takes physical 2 MIDI input(s) for slave
+&gt; Takes physical 2 MIDI output(s) for slave
+&gt; Sending parameters to oldchubb...
+&gt; New NetMaster started
+&gt; **************** Network parameters ****************
+&gt; Name : oldchubb
+&gt; Protocol revision : 8
+&gt; MTU : 1500
+&gt; Master name : chubb.cc-net
+&gt; Slave name : oldchubb
+&gt; ID : 1
+&gt; Transport Sync : no
+&gt; Send channels (audio - midi) : 2 - 2
+&gt; Return channels (audio - midi) : 2 - 2
+&gt; Sample rate : 48000 frames per second
+&gt; Period size : 1024 frames per period
+&gt; Network latency : 5 cycles
+&gt; SampleEncoder : Float
+&gt; Slave mode : async
+&gt; ****************************************************
+&gt; Waiting for a slave...
+&gt; Synching with latency = 0
+&gt; Synching with latency = 1
+&gt; Synching with latency = 2
+&gt; Synching with latency = 3
+&gt; Synching with latency = 4
+&gt;
+&gt;
+&gt; Output from slave side:
+&gt;
+&gt; $ /usr/bin/jackd -dnet
+&gt; jackdmp 1.9.10
+&gt; Copyright 2001-2005 Paul Davis and others.
+&gt; Copyright 2004-2014 Grame.
+&gt; jackdmp comes with ABSOLUTELY NO WARRANTY
+&gt; This is free software, and you are welcome to redistribute it
+&gt; under certain conditions; see the file COPYING for details
+&gt; no message buffer overruns
+&gt; no message buffer overruns
+&gt; no message buffer overruns
+&gt; JACK server starting in realtime mode with priority 20
+&gt; self-connect-mode is "Don't restrict self connect requests"
+&gt; NetDriver started in async mode without Master's transport sync.
+&gt; Waiting for a master...
+&gt; Initializing connection with chubb.cc-net...
+&gt; **************** Network parameters ****************
+&gt; Name : oldchubb
+&gt; Protocol revision : 8
+&gt; MTU : 1500
+&gt; Master name : chubb.cc-net
+&gt; Slave name : oldchubb
+&gt; ID : 1
+&gt; Transport Sync : no
+&gt; Send channels (audio - midi) : 2 - 2
+&gt; Return channels (audio - midi) : 2 - 2
+&gt; Sample rate : 48000 frames per second
+&gt; Period size : 1024 frames per period
+&gt; Network latency : 5 cycles
+&gt; SampleEncoder : Float
+&gt; Slave mode : async
+&gt; ****************************************************
+&gt;
+&gt;
+&gt; So it seems that contrary to the documentation netjack2 will create MIDI
+&gt; channels by default, and at least on my system (where the interface does
+&gt; support duplex mode) I can start netjack with no arguments and the default
+&gt; behavior will successfully create a connection.
+&gt;
+&gt; So I think at this point my guess is that the last output shown by the
+&gt; original poster indicates some kind of mismatch between the jack ALSA
+&gt; parameters and the allowed netjack parameters:
+&gt; &gt;&gt; Can't set net buffer sizes : Invalid argument
+&gt; &gt;&gt; SetParams error...
+&gt; &gt;&gt; Can't init new NetMaster...
+&gt;
+&gt; I thought maybe the buffer size was too large, but the original post was
+&gt; using -p128 -n2, and at least on my machine I use -p1024 -n3 and that did
+&gt; not have a problem.
+&gt;
+&gt; But again, the last message from the original post did not show the
+&gt; "configuring for..." output line from jackd, so either the jackd output
+&gt; was truncated in the posting, removing information necessary to help
+&gt; debug, or the ALSA backend did not actually start correctly.
+&gt;
+&gt; --
+&gt; Chris
+&gt;
+&gt;
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1493675927.19352_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1493739077.4099_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1493730703.23332_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1493730703.23332_0.ltw:2,a&nbsp;&lt;CAGkY2uoyMMMqxr3DKA8NQdaSC7xtHNDP1kwWi-tz86qZnJWb6w at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

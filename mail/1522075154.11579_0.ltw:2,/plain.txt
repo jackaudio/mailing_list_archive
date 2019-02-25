@@ -1,0 +1,130 @@
+Date:        Mon, 26 Mar 2018 15:38:44 +0100
+From:        Christopher Obbard  <[hidden] at 64studio dot com>
+To:          [hidden] at chriscaudle dot org
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Chris Caudle Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes (1522071652.7308_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes
+
+Hi Chris,
+
+>> This is on an ARM embedded system, with a single core 1MHz processor.
+>
+> Is that a typo or are you really running on a 1MHz processor?  If so that
+> would be a really slow clock.  That would be two orders of magnitude
+> slower than most M class microcontrollers.
+
+Big typo! I am running on a TI 1GHz AM3358 processor.
+
+
+>> I have a custom compiled 4.14 kernel with omap2plus_defconfig with the
+>> following config settings:
+>>> CONFIG_PREEMPT_VOLUNTARY=y
+>
+> I would not consider CONFIG_PREEMPT_VOLUNTARY appropriate for low latency
+> use, and especially if you are really running a 1MHz processor.  Using the
+> full RT patch set would be recommended, or at the very least
+> CONFIG_PREEMPT.
+
+I've been using CONFIG_PREEMPT also in other places, I have been
+wondering whether the full RT patch will cause less throughput for the
+jack process.
+
+Both jack and my application are requesting SCHED_FIFO, I am not sure
+of the priority of the application but I am thinking of setting them
+both to 70-80.
+
+What about HZ, I currently have this set to HZ_100. Would HZ_1000 be any better?
+Currently I have CONFIG_NO_HZ_IDLE set. Would CONFIG_HZ_PERIODIC be
+any better? I doubt it, as my processor is never idle :-).
+Can you suggest any other options that may improve things?
+
+
+> What audio hardware are you running?
+> Are you using an ALSA driver from the current kernel tree?
+
+It's an 6-channel in, 6-channel out card with a simple ALSA driver
+written by me. The driver just binds the codecs to the CPU, nothing
+latent in there. All of the FIFO stuff is taken care of by the TI
+McASP driver.
+Currently the driver reads & writes to 8 channels but two of the out
+channels are unused, I can possibly try to gain some performance here.
+
+
+>> $ jackd -R -P95 -dalsa -dhw:0 -r48000 -p64 -n2
+>>> JackPosixProcessSync::LockedTimedWait error usec = 5000000 err =
+>>> Connection timed out
+>>> Driver is not running
+>>> Cannot create new client
+>>> CheckSize error size = 32 Size() = 12
+>>> CheckRead error
+>>> CheckSize error size = -1 Size() = 4
+>>> CheckRead error
+>>> CheckSize error size = 0 Size() = 12
+>>> CheckRead error
+>
+>If those messages all came right at
+> startup from jack it would seem that the parameters don't match something,
+> but jack usually gives better error messages than that.  There were never
+> any messages indicating that the requested sample rate was actually used,
+> word length used, etc?
+
+Sorry, I missed out the first part of the log. The LockedTimedWait
+error came when my client tried to connect. I think it's to do with
+the Kernel scheduling.
+
+
+> Missing those messages could perhaps indicate that jackd was not able to
+> open the ALSA device at all.
+
+It manages to open and all performs fine at 128 frames.
+
+
+>> Also, with higher buffer sizes sometimes I get xruns.
+>
+> You are running PREEMPT_VOLUNTARY on a 1MHz processor, a more typical
+> configuration for low latency use is running PREEMPT or PREEMPT_RT on an
+> 1800MHz to 3000MHz processor, so it is a little bit hard to know where to
+> start.
+> If you are really running a 1MHz processor, there is  only time for 667
+> instructions for each 32 sample buffer at 48kHz rate.  That is not very
+> much for a general purpose OS.
+
+Sorry, typo'd again here!
+
+
+>> After enabling alsa debugging, the error is:
+>>> ALSA: PCM: [Q] Lost interrupts?: (stream=0, delta=221,
+>>> new_hw_ptr=181343, old_hw_ptr=181122)
+>
+> I would start with a better scheduler, PREEMPT or preferably PREEMPT_RT.
+> The usual advice these days is that you don't really need PREEMPT_RT, but
+> that is usually for someone running a multi GHz processor and running at a
+> period size 256 samples or larger.  For 64 or 32 sample period size on a
+> slow processor you are going to have to get aggressive with optimizing.
+
+Thanks.  This is a good starting point.
+
+Really I need to choose whether I run PREEMPT or PREEMPT_RT, I will
+probably just go for PREEMPT_RT.
+I've not had much luck with PREEMPT_RT in the past, I don't think I've
+set the priorities of interrupts properly.
+
+I think I need to chrt the soundcard IRQ highest, then JACK, then my
+application....
+AFAIK, jack already does this with the -R argument & sets the
+scheduler priority to SCHED_FIFO.
+
+
+Have you got any links to information, books etc on RT patch? I've
+read a few and most just seem to discuss how to patch the kernel,
+without any real-life examples!
+
+
+Thanks again for the very useful comments,
+
+Chris
+
+1522075154.11579_0.ltw:2, <CAP03Xeo1L1=LAh0rBbzUKvAV+8ozuWX+0PaFnQ6mCKn2Cn2Y=w at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Graph callback and client state</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Graph callback and client state</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1365550636.25428_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1365590789.16079_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1365553529.26972_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 10 Apr 2013 02:25:21 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Pawel </span> &lt;[hidden] at wp dot pl&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+Dnia &#x160;roda, 10 Kwietnia 2013 01:37 Paul Davis &lt;[hidden]&gt; napisa&#xB3;(a)
+&gt; 
+&gt; On Tue, Apr 9, 2013 at 7:07 PM, Pawel &lt;[hidden]&gt; wrote:
+&gt; &gt;  - port is inactive - ?? Client suppose that port exits - and it exists, so it's "broken" ... but because jack server KNOW this before serve it to client  - it should at least try to avoid problems.
+&gt; &gt;  
+&gt; &gt;  What I want to say - we can't fix this ultimately - but jack server should at least TRY to protect client from evil
+&gt; you can't protect them from *all* "evil", so the question is : which types of "evil" will we attempt to avoid.
+&gt;
+That's what I said - we can't protect from all error. Client should always check return of each API call , but jack server should return consistent state at the moment, IMO.
+   
+&gt; &gt; - and in this case he definitely can. So , once again - jack_get_ports shouldn't return broken ports if he know they are useless for client.
+&gt; mostly agreed.
+&gt;  
+&gt; &gt;  I also can't find a problem in jack_is_port_active. Example:
+&gt; &gt;  jack_get_ports(....)
+&gt; &gt;  &lt;--- obviously some time here - and things can change ..
+&gt; &gt;  jack_port_t* port = jack_get_port_by_name ( ...)
+&gt; &gt;  &lt;-- still things can change - but if we got port == NULL we fail here and remove port from patchbay graph.
+&gt; &gt;  jack_port_is_active ( client, port); 
+&gt; &gt; # return 0 on success i.e. port still exists and is active. Otherwise we can return some codes like "1 - not active, 2 - not exists .. etc, but for me (as patch manager maintainer) it's clear that in this short time window port is broken. I just mark it as "unusable" .. and wait for another event.
+&gt; so for now, you know that the port is active ... so what? you can't do anything useful with this information. 
+&gt;  
+
+I just know that in this short time window port is valid. You a little bit reverse my thought. I mean that (inactive port == useless == not exists for regular apps). It can exists internally in jack, but it's useless for app. I don't even try to prove that this resolve all problems. It just made things better. That's all.
+
+&gt; every time you use jack_get_ports(), you get, as you noted above, a "snapshot" of things. there is no way to prolong the life of the information in the snapshot. when you come to use the information, you *must* be ready for some or all of it to be invalid or out of date.
+&gt;  
+&gt; i think this is a somewhat separate question to whether or not we should return ports that *at the time of jack_get_ports()* are known to be inactive. logic and cleanliness would suggest that we should not. however, the comparison with other kinds of potential "invalidation" of port information says "it doesn't really matter".
+
+Try to my POV (as patchbay manager). Or we have two state port exists (== useful), not exists ... or we have three state - exists, inactive, not exists. For me it's doesn't matter which approach YOU choose. If jack server provide API to ask "is port is OK" - then I call this. If this call will be too late - and port just disappear - then I remove it from my screen. I just don't want to "show" broken ports for user.
+
+If user try connect that doesn't exists - it got error - and port will disappear from patchbay. What can I say to user when port exists but I can't connect them ?
+
+Fact that we can't resolve all problems shouldn't stop us from try to improve current situation. That's all.
+
+BTW. after all I think that Harry's idea is most flexible - it doesn't ruin anything. Maybe there is a race - but you can also got error while trying jack_port_flags, or jack_get_port_by_name .. problem is that - we don't know how long port will be inactive - so for *now* we just mark port as "inactive" .. and we see in next iteration. That's all. If shit happen meantime - then we try to adapt ;-)
+
+Xj.
+
+&gt;  
+&gt; --p
+&gt; 
+&gt; 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1365550636.25428_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1365590789.16079_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1365553529.26972_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1365553529.26972_0.ltw:2,a&nbsp;&lt;5164b17156eb78.28544679 at wp dot pl&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

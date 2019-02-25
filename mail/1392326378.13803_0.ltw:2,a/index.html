@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] [PATCH 11/16] Switched to the unified time handling in iio_driver.C Started compiling iio_driver_dummy.C in G++ to ensure nothing strange is happening there to cause xruns when executing the client experienced on the ARM when using iio_driver.C.</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] [PATCH 11/16] Switched to the unified time handling in iio_driver.C Started compiling iio_driver_dummy.C in G++ to ensure nothing strange is happening there to cause xruns when executing the client experienced on the ARM when using iio_driver.C.</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1392326369.13781_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1392326381.13805_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1392326378.13803_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 14 Feb 2014 08:18:36 +1100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Matt Flax </span> &lt;[hidden] at flatmax dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Matt Flax
+<a href='../1392326340.13728_0.ltw:2,Sa/index.html'>[Jack-Devel] [PATCH 00/16] IIO driver for jack1 </a></td></tr>
+</table>
+<pre>
+---
+ configure.ac                    |   2 +-
+ drivers/iio/Makefile.am         |   5 +-
+ drivers/iio/iio_driver.C        |  85 ++++----
+ drivers/iio/iio_driver.h        |   3 +
+ drivers/iio/iio_driver_dummy.C  | 442 ++++++++++++++++++++++++++++++++++++++++
+ drivers/iio/iio_driver_dummy.c  | 442 ----------------------------------------
+ drivers/iio/unified_jack_time.h |   2 +
+ 7 files changed, 491 insertions(+), 490 deletions(-)
+ create mode 100644 drivers/iio/iio_driver_dummy.C
+ delete mode 100644 drivers/iio/iio_driver_dummy.c
+
+diff --git a/configure.ac b/configure.ac
+index 95efda4..7813fcb 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -45,7 +45,7 @@ if test $not_overwriting -gt 0 ; then
+     echo "INSTALL. Please contact the distribution packager for JACK and"
+     echo "ask them to fix their packaging."
+     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+-   exit 1
++#   exit 1
+ fi
+ 
+ AC_CONFIG_AUX_DIR(config)
+diff --git a/drivers/iio/Makefile.am b/drivers/iio/Makefile.am
+index bfe2c16..b7e6683 100644
+--- a/drivers/iio/Makefile.am
++++ b/drivers/iio/Makefile.am
+@@ -1,7 +1,7 @@
+ MAINTAINCLEANFILES = Makefile.in
+ 
+ AM_CFLAGS = $(JACK_CFLAGS)
+-#AM_CXXFLAGS = $(JACK_CFLAGS) $(GTKIOSTREAM_CFLAGS) $(EIGEN_CFLAGS) -fpermissive
++AM_CXXFLAGS = $(JACK_CFLAGS) $(GTKIOSTREAM_CFLAGS) $(EIGEN_CFLAGS) -fpermissive
+ 
+ plugindir = $(ADDON_DIR)
+ 
+@@ -9,9 +9,8 @@ plugin_LTLIBRARIES = jack_iio.la
+ 
+ jack_iio_la_LDFLAGS = -module -avoid-version
+ #jack_iio_la_SOURCES = iio_driver.C
+-jack_iio_la_SOURCES = iio_driver_dummy.c # this is used to test the framework.
++jack_iio_la_SOURCES = iio_driver_dummy.C # this is used to test the framework.
+ jack_iio_la_LIBADD = $(top_builddir)/jackd/libjackserver.la #$(GTKIOSTREAM_LIBS) $(EIGEN_LIBS)
+-#jack_portaudio_la_LIBADD = $(PA_LIBS)
+ 
+ noinst_HEADERS = iio_driver.h
+ 
+diff --git a/drivers/iio/iio_driver.C b/drivers/iio/iio_driver.C
+index b3ba562..3d0fbb8 100644
+--- a/drivers/iio/iio_driver.C
++++ b/drivers/iio/iio_driver.C
+@@ -28,12 +28,10 @@ Date: 2014.01.13
+ #define DEBUG_LOCAL_OUTPUT
+ //#define DEBUG_OUTPUT
+ 
+-#include &lt;values.h&gt;
+-
+-#include &lt;iostream&gt;
+ #include &lt;IIO/IIOMMap.H&gt;
+-#include &lt;inttypes.h&gt;
++
+ #define __STDC_FORMAT_MACROS
++#include &lt;values.h&gt;
+ 
+ extern "C" {
+ #include "iio_driver.h"
+@@ -166,11 +164,7 @@ static int iio_driver_start (iio_driver_t *driver) {
+         return ret;
+     }
+ 
+-#ifdef HAVE_CLOCK_GETTIME
+-    driver-&gt;next_wakeup.tv_sec = 0;
+-#else
+-    driver-&gt;next_time = 0;
+-#endif
++	zeroTime(&amp;NEXT_TIME); // driver-&gt;next_wakeup.tv_sec = 0; which is the same as driver-&gt;next_time = 0;
+     return 0;
+ }
+ 
+@@ -198,9 +192,6 @@ static int iio_driver_read(iio_driver_t *driver, jack_nframes_t nframes) {
+         int ret=iio-&gt;read(nframes, *data);
+         if (ret!=NO_ERROR)
+             return -1;
+-//        for (jack_nframes_t i=0; i&lt;nframes; i++){
+-//            cout&lt;&lt;(float)(*data)(i,0)&lt;&lt;endl;
+-//        cout&lt;&lt;endl;
+ 
+         // write to the connected capture ports ...
+         JSList *node = (JSList *)driver-&gt;capture_ports;
+@@ -211,8 +202,8 @@ static int iio_driver_read(iio_driver_t *driver, jack_nframes_t nframes) {
+             if (!jack_port_connected (port)) /* no-copy optimization */
+                 continue;
+ 
+-            int col=chn/devChCnt;
+-            int rowOffset=chn%devChCnt;
++//            int col=chn/devChCnt;
++//            int rowOffset=chn%devChCnt;
+ 
+             jack_default_audio_sample_t *buf = static_cast&lt;jack_default_audio_sample_t *&gt;(jack_port_get_buffer (port, nframes));
+             for (jack_nframes_t i=0; i&lt;nframes; i++){
+@@ -255,48 +246,54 @@ static int iio_driver_null_cycle (iio_driver_t *driver, jack_nframes_t nframes)
+ }
+ 
+ /** The driver_wait function to work out if we have used more time then available to process one cycle.
++    This is written once for either timespec (HAVE_CLOCK_GETTIME) or jack_time_t, see the unified_jack_time.h file.
++
++    This function manages the time now and the next expected time to return. The return happens once per block of time (period_size).
++
++    The general idea of *_driver_wait is to do the following :
++    a] Mark the time now if this is the first time through or if an overrun previously happened.
++    b] If an overrun is detected (we have exceeded the maximum time held in our audio buffers) then indicate.
++    c] If we are late but not dangerously, then keep going.
++    d] If we are early then sleep a little to allow clients enough time to process.
++
++    The effect of 'c]' and 'd]' is to create time pumping. Theoretically we will always be either a little over or under time, and it will be difficult to match audio block
++    time exactly. This doesn't matter if the time pumping is a small fraction of our block time. This means that the clients will have slightly more or less then audio block
++    time to process.
+ */
+ static jack_nframes_t iio_driver_wait(iio_driver_t *driver, int extra_fd, int *status, float *delayed_usecs) {
+-    Debugger&lt;&lt;"iio_driver_wait\n";
+-    ELAPSED_TIME(&amp;(driver-&gt;debug_last_time), driver-&gt;engine-&gt;get_microseconds())
+-    //float maxDelayTime=(IIO_SAFETY_FACTOR*driver-&gt;maxDelayUSecs); // this driver can handle this much delay between reads.
+-    float maxDelayTime=driver-&gt;maxDelayUSecs; // this driver can handle this much delay between reads.
+-    //Debugger&lt;&lt;"maxDelayTime "&lt;&lt;maxDelayTime&lt;&lt;endl;
++	jack_nframes_t nframes = driver-&gt;period_size;
++    //Debugger&lt;&lt;"iio_driver_wait\n";
++    *delayed_usecs = 0;
+     *status = 0;
+ 
+-    jack_time_t now = driver-&gt;engine-&gt;get_microseconds();
++    timeType now; getNow(&amp;now); // the time right now
+ 
+-    bool xrun=false;
+-    if (driver-&gt;next_time &lt; now) {
+-        //DebuggerLocal&lt;&lt;"iio_driver_wait NOT good\n";
+-        if (driver-&gt;next_time == 0) { /* first time through */
++	if (compareTimesLt(NEXT_TIME, now)) { // NEXT_TIME &lt; now  ... this is a problem as the next time should be &gt;= now
++        //printf("iio_driver_wait NOT good\n");
++        if (compareTimeZero(NEXT_TIME)) { /* first time through */
+             //DebuggerLocal&lt;&lt;"iio_driver_first time - OK\n";
+-            driver-&gt;next_time = now + driver-&gt;wait_time;
+-            driver-&gt;last_xrun_time=now;
+-        } else if ((now - driver-&gt;last_wait_ust) &gt; maxDelayTime) { /* xrun */
+-            ////Debugger&lt;&lt;"driver-&gt;last_wait_ust "&lt;&lt;driver-&gt;last_wait_ust&lt;&lt;" now "&lt;&lt;now&lt;&lt;endl;
+-            jack_error("**** iio: xrun of %ju usec", (uintmax_t)now - driver-&gt;next_time);
+-            //cout&lt;&lt;"**** iio: xrun of "&lt;&lt;((uintmax_t)now - driver-&gt;next_time)&lt;&lt;"u usec last xrun was "&lt;&lt;now-driver-&gt;last_xrun_time&lt;&lt;"us ago."&lt;&lt;endl;
+-            driver-&gt;last_xrun_time=now;
+-            driver-&gt;next_time = now + driver-&gt;wait_time;
+-            *status=0; // xruns are fatal - but switching to non-fatal during development
+-            xrun=true;
++            //printf("first time through\n\n\n");
++			getNow(&amp;NEXT_TIME); // reset the next time to now, will be incremented later
++        } else if (timeDiffUsComp(now, driver-&gt;next_wakeup, driver-&gt;maxDelayUSecs)) { /* xrun = (now - NEXT_TIME) &gt; maxDelayTime */
++            ////Debugger&lt;&lt;"NEXT_TIME "&lt;&lt;NEXT_TIME&lt;&lt;" now "&lt;&lt;now&lt;&lt;endl;
++            jack_error("**** iio: xrun of %ju usec", timeDiffUs(now, NEXT_TIME));
++            nframes=0; // indicated the xrun
++            zeroTime(&amp;NEXT_TIME);  // reset the next time to zero because of the overrun, we don't know when to start again.
+             //*status=-1; // xruns are fatal
+         } else /* late, but handled by our "buffer" */
+-            driver-&gt;next_time += driver-&gt;wait_time;
+-    } else {
+-        //Debugger&lt;&lt;"iio_driver_wait all good\n";
+-        driver-&gt;next_time += driver-&gt;wait_time;
++            ;
++	} else { // now sleep to ensure we give the clients enough time to process
++        *status = nanoSleep(NEXT_TIME, delayed_usecs);
++        //printf("iio_driver_wait all good\n");
+     }
+ 
+-    driver-&gt;last_wait_ust = driver-&gt;engine-&gt;get_microseconds(); // remember the time now
+-    driver-&gt;engine-&gt;transport_cycle_start (driver-&gt;engine, driver-&gt;last_wait_ust);
++    if (nframes!=0) // if there is no xrun, then indicate the next expected time to land in this funciton.
++        NEXT_TIME=addTimes(NEXT_TIME, driver-&gt;wait_time);
+ 
+-    ////Debugger&lt;&lt;"difference = "&lt;&lt;driver-&gt;last_wait_ust-now&lt;&lt;"\n";
++	driver-&gt;last_wait_ust = driver-&gt;engine-&gt;get_microseconds ();
++	driver-&gt;engine-&gt;transport_cycle_start (driver-&gt;engine, driver-&gt;last_wait_ust);
+ 
+-    *delayed_usecs = 0;
+-    if (xrun) return 0;
+-    return driver-&gt;period_size;
++	return nframes;
+ }
+ 
+ static int iio_driver_run_cycle (iio_driver_t *driver) {
+diff --git a/drivers/iio/iio_driver.h b/drivers/iio/iio_driver.h
+index 9e5bf2b..420af89 100644
+--- a/drivers/iio/iio_driver.h
++++ b/drivers/iio/iio_driver.h
+@@ -24,6 +24,7 @@
+ #ifndef __JACK_IIO_DRIVER_H__
+ #define __JACK_IIO_DRIVER_H__
+ 
++#define __STDC_FORMAT_MACROS
+ #include &lt;jack/types.h&gt;
+ #include &lt;jack/jack.h&gt;
+ 
+@@ -55,6 +56,8 @@ typedef struct _iio_driver {
+     unsigned long   wait_time; ///&lt; The time to wait between calls.
+     timeType NEXT_TIME_NAME; ///&lt; The time type, either timespec or jack_time_t
+ 
++    jack_time_t debug_last_time; ///&lt; Used for marking time passing during debugging
++
+     void *IIO_devices; ///&lt; The IIO C++ class maintaining all devices with a particular chip name.
+     float maxDelayUSecs; ///&lt; The maximum number of micro seconds the buffer can hold
+     void *data; ///&lt; The data read in from the IIO devices is stored here.
+diff --git a/drivers/iio/iio_driver_dummy.C b/drivers/iio/iio_driver_dummy.C
+new file mode 100644
+index 0000000..320a57c
+--- /dev/null
++++ b/drivers/iio/iio_driver_dummy.C
+@@ -0,0 +1,442 @@
++/*
++
++	IIO driver for Jack
++	Copyright (C) 2013 Matt Flax &lt;[hidden]&gt;
++
++	This program is free software; you can redistribute it and/or modify
++	it under the terms of the GNU General Public License as published by
++	the Free Software Foundation; either version 2 of the License, or
++	(at your option) any later version.
++
++	This program is distributed in the hope that it will be useful,
++	but WITHOUT ANY WARRANTY; without even the implied warranty of
++	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++	GNU General Public License for more details.
++
++	You should have received a copy of the GNU General Public License
++	along with this program; if not, write to the Free Software
++	Foundation, Inc., 59 Temple Place, Suite 330, Boston,
++	MA  02111-1307  USA
++
++*/
++
++/*
++Author: Matt Flax &lt;[hidden]&gt;
++Date: 2014.01.13
++*/
++
++#define DEBUG_LOCAL_OUTPUT
++//#define DEBUG_OUTPUT
++
++#include &lt;values.h&gt;
++
++#include &lt;stdbool.h&gt;
++#include &lt;string.h&gt;
++#include &lt;errno.h&gt;
++#include &lt;math.h&gt;
++#include &lt;stdio.h&gt;
++
++extern "C" {
++#include "iio_driver.h"
++#include "engine.h"
++}
++
++
++#define IIO_DEFAULT_CHIP "AD7476A" ///&lt; The default IIO recording chip to look for.
++//#define IIO_DEFAULT_READ_FS 1.e6 ///&lt; The default IIO sample rate for the default chip.
++#define IIO_DEFAULT_READ_FS 48.e3 ///&lt; The default IIO sample rate for the default chip.
++#define IIO_DEFAULT_PERIOD_SIZE 2048 ///&lt; The default period size is in the ms range
++#define IIO_DEFAULT_PERIOD_COUNT 2 ///&lt; The default number of periods
++#define IIO_DEFAULT_CAPUTURE_PORT_COUNT MAXINT ///&lt; The default number of capture ports is exceedingly big, trimmed down to a realistic size in driver_initialize
++//#define IIO_SAFETY_FACTOR 2./3. ///&lt; The default safety factor, allow consumption of this fraction of the available DMA buffer before we don't allow the driver to continue.
++#define IIO_SAFETY_FACTOR 1. ///&lt; The default safety factor, allow consumption of this fraction of the available DMA buffer before we don't allow the driver to continue.
++
++static int iio_driver_attach (iio_driver_t *driver, jack_engine_t *engine) {
++    printf("iio_driver_attach\n");
++
++    // create ports
++    jack_port_t * port;
++    char buf[32];
++    unsigned int chn;
++    int port_flags;
++
++    if (driver-&gt;engine-&gt;set_buffer_size (driver-&gt;engine, driver-&gt;period_size)) {
++        jack_error ("iio: cannot set engine buffer size to %d", driver-&gt;period_size);
++        return -1;
++    }
++    driver-&gt;engine-&gt;set_sample_rate (driver-&gt;engine, driver-&gt;sample_rate);
++
++    port_flags = JackPortIsOutput|JackPortIsPhysical|JackPortIsTerminal;
++
++    for (chn = 0; chn &lt; driver-&gt;capture_channels; chn++) {
++        snprintf (buf, sizeof(buf) - 1, "capture_%u", chn+1);
++
++        port = jack_port_register (driver-&gt;client, buf, JACK_DEFAULT_AUDIO_TYPE, port_flags, 0);
++        if (!port) {
++            jack_error ("iio: cannot register port for %s", buf);
++            break;
++        }
++        //cout&lt;&lt;"Registered port "&lt;&lt;buf&lt;&lt;endl;
++
++        jack_latency_range_t range;
++        range.min = range.max = 1024;
++        //cout&lt;&lt;"fix latencies, range currently set to "&lt;&lt;range.min&lt;&lt;", "&lt;&lt;range.max&lt;&lt;endl;
++        jack_port_set_latency_range (port, JackCaptureLatency, &amp;range);
++
++        driver-&gt;capture_ports = jack_slist_append (driver-&gt;capture_ports, port);
++    }
++
++    port_flags = JackPortIsInput|JackPortIsPhysical|JackPortIsTerminal;
++
++    for (chn = 0; chn &lt; driver-&gt;playback_channels; chn++) {
++        snprintf (buf, sizeof(buf) - 1, "playback_%u", chn+1);
++
++        port = jack_port_register (driver-&gt;client, buf, JACK_DEFAULT_AUDIO_TYPE, port_flags, 0);
++        if (!port) {
++            jack_error ("iio: cannot register port for %s", buf);
++            break;
++        }
++        //cout&lt;&lt;"Registered port "&lt;&lt;buf&lt;&lt;endl;
++
++        jack_latency_range_t range;
++        range.min = range.max = 1024;
++        //cout&lt;&lt;"fix latencies, range currently set to "&lt;&lt;range.min&lt;&lt;", "&lt;&lt;range.max&lt;&lt;endl;
++        jack_port_set_latency_range (port, JackCaptureLatency, &amp;range);
++
++        driver-&gt;playback_ports = jack_slist_append (driver-&gt;playback_ports, port);
++    }
++    return jack_activate (driver-&gt;client);
++}
++
++static int iio_driver_detach (iio_driver_t *driver, jack_engine_t *engine) {
++    JSList *node;
++    printf("iio_driver_detach\n");
++    if (driver-&gt;engine == 0)
++        return -1;
++
++    // unregister all ports
++    for (node = driver-&gt;capture_ports; node; node = jack_slist_next(node)) {
++        jack_port_unregister(driver-&gt;client, ((jack_port_t *) node-&gt;data));
++    }
++
++    jack_slist_free(driver-&gt;capture_ports);
++    driver-&gt;capture_ports = 0;
++
++    for (node = driver-&gt;playback_ports; node; node = jack_slist_next(node)) {
++        jack_port_unregister(driver-&gt;client, ((jack_port_t *) node-&gt;data));
++    }
++
++    jack_slist_free(driver-&gt;playback_ports);
++    driver-&gt;playback_ports = 0;
++
++    driver-&gt;engine = 0;
++    return 0;
++}
++
++static int iio_driver_start (iio_driver_t *driver) {
++    printf("iio_driver_start::   enabling IIO : enable(true)\n");
++
++    zeroTime(&amp;NEXT_TIME); // driver-&gt;next_wakeup.tv_sec = 0; which is the same as driver-&gt;next_time = 0;
++
++    return 0;
++}
++
++static int iio_driver_stop (iio_driver_t *driver) {
++    printf("iio_driver_start:: disabling IIO : enable(false)\n");
++
++    return 0;
++}
++
++static int iio_driver_read(iio_driver_t *driver, jack_nframes_t nframes) {
++    JSList *node;
++    channel_t chn;
++    jack_nframes_t i;
++
++    //Debugger&lt;&lt;"iio_driver_read\n";
++
++    if (nframes &gt; 0) {
++        ////Debugger&lt;&lt;"iio_driver_read nframes = "&lt;&lt;nframes&lt;&lt;"\n";
++//        for (jack_nframes_t i=0; i&lt;nframes; i++){
++//            cout&lt;&lt;(float)(*data)(i,0)&lt;&lt;endl;
++//        cout&lt;&lt;endl;
++
++        // write to the connected capture ports ...
++        node = (JSList *)driver-&gt;capture_ports;
++        for (chn = 0; node; node = (JSList *)jack_slist_next(node), chn++) {
++
++            //jack_port_t *port = static_cast&lt;jack_port_t *&gt;(node-&gt;data);
++            jack_port_t *port = (jack_port_t*)(node-&gt;data);
++
++            if (!jack_port_connected (port)) /* no-copy optimization */
++                continue;
++
++            //jack_default_audio_sample_t *buf = static_cast&lt;jack_default_audio_sample_t *&gt;(jack_port_get_buffer (port, nframes));
++            jack_default_audio_sample_t *buf = (jack_default_audio_sample_t *)(jack_port_get_buffer (port, nframes));
++            for (i=0; i&lt;nframes; i++) {
++                //cout&lt;&lt;"row = "&lt;&lt;i*devChCnt+rowOffset&lt;&lt;" col = "&lt;&lt;col&lt;&lt;endl;
++                //buf[i]=(*data)(i*devChCnt+rowOffset, col)*100.;
++                buf[i]=(float)i/(float)nframes;
++                //cout&lt;&lt;(*data)(i*devChCnt+rowOffset, col)&lt;&lt;'\t'&lt;&lt;buf[i]&lt;&lt;'\n';
++            }
++        }
++        //Debugger&lt;&lt;" spent "&lt;&lt; (driver-&gt;engine-&gt;get_microseconds()-driver-&gt;debug_last_time)&lt;&lt;" us waiting for lock and copying data over\n";
++    }
++    return 0;
++}
++
++static int iio_driver_write (iio_driver_t *driver, jack_nframes_t nframes) {
++    //Debugger&lt;&lt;"iio_driver_write nframes = "&lt;&lt;nframes&lt;&lt;"\n";
++//    if (nframes&gt;0){
++//        //Debugger&lt;&lt;"iio_driver_write nframes = "&lt;&lt;nframes&lt;&lt;"\n";
++//    }
++    return 0;
++}
++
++static int iio_driver_null_cycle (iio_driver_t *driver, jack_nframes_t nframes) {
++    //Debugger&lt;&lt;"iio_driver_null_cycle\n";
++
++    return 0;
++}
++
++/** The driver_wait function to work out if we have used more time then available to process one cycle.
++    This is written once for either timespec (HAVE_CLOCK_GETTIME) or jack_time_t, see the unified_jack_time.h file.
++
++    This function manages the time now and the next expected time to return. The return happens once per block of time (period_size).
++
++    The general idea of *_driver_wait is to do the following :
++    a] Mark the time now if this is the first time through or if an overrun previously happened.
++    b] If an overrun is detected (we have exceeded the maximum time held in our audio buffers) then indicate.
++    c] If we are late but not dangerously, then keep going.
++    d] If we are early then sleep a little to allow clients enough time to process.
++
++    The effect of 'c]' and 'd]' is to create time pumping. Theoretically we will always be either a little over or under time, and it will be difficult to match audio block
++    time exactly. This doesn't matter if the time pumping is a small fraction of our block time. This means that the clients will have slightly more or less then audio block
++    time to process.
++*/
++static jack_nframes_t iio_driver_wait(iio_driver_t *driver, int extra_fd, int *status, float *delayed_usecs) {
++	jack_nframes_t nframes = driver-&gt;period_size;
++    //Debugger&lt;&lt;"iio_driver_wait\n";
++    *delayed_usecs = 0;
++    *status = 0;
++
++    timeType now; getNow(&amp;now); // the time right now
++
++	if (compareTimesLt(NEXT_TIME, now)) { // NEXT_TIME &lt; now  ... this is a problem as the next time should be &gt;= now
++        //printf("iio_driver_wait NOT good\n");
++        if (compareTimeZero(NEXT_TIME)) { /* first time through */
++            //DebuggerLocal&lt;&lt;"iio_driver_first time - OK\n";
++            //printf("first time through\n\n\n");
++			getNow(&amp;NEXT_TIME); // reset the next time to now, will be incremented later
++        } else if (timeDiffUsComp(now, driver-&gt;next_wakeup, driver-&gt;maxDelayUSecs)) { /* xrun = (now - NEXT_TIME) &gt; maxDelayTime */
++            ////Debugger&lt;&lt;"NEXT_TIME "&lt;&lt;NEXT_TIME&lt;&lt;" now "&lt;&lt;now&lt;&lt;endl;
++            jack_error("**** iio: xrun of %ju usec", timeDiffUs(now, NEXT_TIME));
++            nframes=0; // indicated the xrun
++            zeroTime(&amp;NEXT_TIME);  // reset the next time to zero because of the overrun, we don't know when to start again.
++            //*status=-1; // xruns are fatal
++        } else /* late, but handled by our "buffer" */
++            ;
++	} else { // now sleep to ensure we give the clients enough time to process
++        *status = nanoSleep(NEXT_TIME, delayed_usecs);
++        //printf("iio_driver_wait all good\n");
++    }
++
++    if (nframes!=0) // if there is no xrun, then indicate the next expected time to land in this funciton.
++        NEXT_TIME=addTimes(NEXT_TIME, driver-&gt;wait_time);
++
++	driver-&gt;last_wait_ust = driver-&gt;engine-&gt;get_microseconds ();
++	driver-&gt;engine-&gt;transport_cycle_start (driver-&gt;engine, driver-&gt;last_wait_ust);
++
++	return nframes;
++}
++
++static int iio_driver_run_cycle (iio_driver_t *driver) {
++    //Debugger&lt;&lt;"iio_driver_run_cycle\n";
++
++    int wait_status;
++    float delayed_usecs;
++
++    jack_nframes_t nframes = iio_driver_wait(driver, -1, &amp;wait_status, &amp;delayed_usecs);
++    if (nframes == 0) {
++        /* we detected an xrun and restarted: notify clients about the delay. */
++        //DebuggerLocal&lt;&lt;"iio_driver_run_cycle :: xrun detected, delaying\n";
++        driver-&gt;engine-&gt;delay(driver-&gt;engine, delayed_usecs);
++        return 0;
++    }
++
++    if (wait_status == 0) {
++        //Debugger&lt;&lt;"iio_driver_run_cycle :: calling engine-&gt;run_cycle, nframes="&lt;&lt;nframes&lt;&lt;" delayed_usecs="&lt;&lt;delayed_usecs&lt;&lt;"\n";
++        return driver-&gt;engine-&gt;run_cycle(driver-&gt;engine, nframes, delayed_usecs);
++    }
++
++    if (wait_status &lt; 0)
++        return -1;
++    else
++        return 0;
++}
++
++/** Given the number of samples and the sample rate, find the number of microseconds.
++\param nframes The number of frames.
++\param fs The sample rate.
++\return The number of microseconds represented by nframes.
++*/
++jack_time_t getUSecs(jack_nframes_t nframes, jack_nframes_t fs) {
++    //Debugger&lt;&lt;"getUSecs nframes="&lt;&lt;nframes&lt;&lt;" fs="&lt;&lt;fs&lt;&lt;'\n';
++    return (jack_time_t) floor((((float) nframes) / fs) * 1000000.0f);
++}
++
++/**
++*/
++static int iio_driver_bufsize (iio_driver_t *driver, jack_nframes_t nframes) {
++    printf("iio_driver_bufsize\n");
++
++    jack_nframes_t period_sizeOrig=driver-&gt;period_size;
++    jack_time_t period_usecsOrig = driver-&gt;period_usecs;
++    unsigned long wait_timeOrig = driver-&gt;wait_time;
++    double maxDelayUSecsOrig=driver-&gt;maxDelayUSecs;
++
++    driver-&gt;period_size = nframes;
++    driver-&gt;period_usecs = driver-&gt;wait_time = getUSecs(nframes, driver-&gt;sample_rate);
++
++    //Debugger&lt;&lt;"wait_time = "&lt;&lt;driver-&gt;wait_time&lt;&lt;endl;
++
++    /* tell the engine to change its buffer size */
++    if (driver-&gt;engine-&gt;set_buffer_size(driver-&gt;engine, nframes)) {
++        jack_error ("iio: cannot set engine buffer size to %d ", nframes);
++        driver-&gt;period_size=period_sizeOrig;
++        driver-&gt;period_usecs=period_usecsOrig;
++        driver-&gt;wait_time=wait_timeOrig;
++        driver-&gt;maxDelayUSecs=maxDelayUSecsOrig;
++        return -1;
++    }
++
++    return 0;
++}
++
++/** free all memory allocated by a driver instance
++*/
++static void iio_driver_delete(iio_driver_t * driver) {
++    printf("iio_driver_delete\n");
++
++    free(driver);
++}
++
++jack_driver_t *driver_initialize (jack_client_t *client, const JSList * params) {
++    printf("driver_initialize \n");
++
++    iio_driver_t *driver = (iio_driver_t *) calloc (1, sizeof (iio_driver_t));
++    driver-&gt;IIO_devices=NULL; // indicate that the iio class hasn't been created yet
++    if (driver) {
++        jack_driver_nt_init((jack_driver_nt_t *) driver);
++
++        driver-&gt;write         = (JackDriverReadFunction)       iio_driver_write;
++        driver-&gt;read          = (JackDriverReadFunction)       iio_driver_read;
++        driver-&gt;null_cycle    = (JackDriverNullCycleFunction)  iio_driver_null_cycle;
++        driver-&gt;nt_attach     = (JackDriverNTAttachFunction)   iio_driver_attach;
++        driver-&gt;nt_stop       = (JackDriverNTStopFunction)     iio_driver_stop;
++        driver-&gt;nt_start      = (JackDriverNTStartFunction)    iio_driver_start;
++        driver-&gt;nt_detach     = (JackDriverNTDetachFunction)   iio_driver_detach;
++        driver-&gt;nt_bufsize    = (JackDriverNTBufSizeFunction)  iio_driver_bufsize;
++        driver-&gt;nt_run_cycle  = (JackDriverNTRunCycleFunction) iio_driver_run_cycle;
++
++        driver-&gt;engine = NULL; // setup the required driver variables.
++        driver-&gt;client = client;
++        driver-&gt;last_wait_ust = 0;
++
++        driver-&gt;sample_rate = IIO_DEFAULT_READ_FS; // IIO sample rate is fixed.
++        driver-&gt;period_size = IIO_DEFAULT_PERIOD_SIZE;
++        driver-&gt;nperiods    = IIO_DEFAULT_PERIOD_COUNT;
++
++        driver-&gt;capture_channels  = IIO_DEFAULT_CAPUTURE_PORT_COUNT; // The default number of physical input channels - a very large number, to be reduced.
++        driver-&gt;capture_ports     = NULL;
++        driver-&gt;playback_channels = 0; // currently doesn't support playback.
++        driver-&gt;playback_ports    = NULL;
++
++
++        const JSList *pnode = params; // param pointer
++        while (pnode != NULL) {
++            const jack_driver_param_t *param = (const jack_driver_param_t *) pnode-&gt;data;
++            switch (param-&gt;character) {
++
++            case 'i': // we are specifying the number of capture channels
++                driver-&gt;capture_channels = param-&gt;value.ui;
++                break;
++            case 'p':
++                driver-&gt;period_size = param-&gt;value.ui;
++                break;
++            case 'n':
++                driver-&gt;nperiods = param-&gt;value.ui;
++                break;
++
++            }
++            pnode = jack_slist_next(pnode);
++        }
++
++        driver-&gt;period_usecs = driver-&gt;wait_time = getUSecs(driver-&gt;period_size, driver-&gt;sample_rate);
++        driver-&gt;maxDelayUSecs=4000; // the mmap max delay is currently unknown
++        driver-&gt;capture_channels=4;
++        jack_info("created DUMMY iio driver ... dummy_iio|%" PRIu32 "|%" PRIu32 "|%lu|%u|%u", driver-&gt;sample_rate, driver-&gt;period_size, driver-&gt;wait_time, driver-&gt;capture_channels, driver-&gt;playback_channels);
++        return (jack_driver_t *) driver;
++
++    } else
++        jack_error("iio driver_initialise: iio_driver_t malloc() failed: %s: %s@%i", strerror(errno), __FILE__, __LINE__);
++
++    // if we get here, there was a problem.
++    iio_driver_delete((iio_driver_t *) driver);
++    return NULL;
++}
++
++jack_driver_desc_t *driver_get_descriptor () {
++    jack_driver_desc_t * desc;
++    jack_driver_param_desc_t * params;
++    unsigned int i;
++
++    desc = (jack_driver_desc_t *)calloc (1, sizeof (jack_driver_desc_t));
++    strcpy (desc-&gt;name, "iio");
++    desc-&gt;nparams = 4;
++
++    params = (jack_driver_param_desc_t *)calloc (desc-&gt;nparams, sizeof (jack_driver_param_desc_t));
++
++    i = 0;
++    strcpy (params[i].name, "chip");
++    params[i].character  = 'C';
++    params[i].type       = JackDriverParamString;
++    strcpy (params[i].value.str, IIO_DEFAULT_CHIP);
++    strcpy (params[i].short_desc, "The name of the chip to search for in the IIO devices");
++    strcpy (params[i].long_desc, params[i].short_desc);
++
++    i++;
++    strcpy (params[i].name, "capture");
++    params[i].character  = 'i';
++    params[i].type       = JackDriverParamUInt;
++    params[i].value.ui   = IIO_DEFAULT_CAPUTURE_PORT_COUNT;
++    strcpy (params[i].short_desc, "Provide capture ports.");
++    strcpy (params[i].long_desc, params[i].short_desc);
++
++    i++;
++    strcpy (params[i].name, "period");
++    params[i].character  = 'p';
++    params[i].type       = JackDriverParamUInt;
++    params[i].value.ui   = 1024U;
++    strcpy (params[i].short_desc, "Frames per period");
++    strcpy (params[i].long_desc, params[i].short_desc);
++
++    i++;
++    strcpy (params[i].name, "nperiods");
++    params[i].character  = 'n';
++    params[i].type       = JackDriverParamUInt;
++    params[i].value.ui   = 2U;
++    strcpy (params[i].short_desc, "Number of periods of playback latency");
++    strcpy (params[i].long_desc, params[i].short_desc);
++
++    desc-&gt;params = params;
++
++    return desc;
++}
++
++void driver_finish (jack_driver_t *driver) {
++    printf("driver_finish\n");
++
++    iio_driver_delete((iio_driver_t *) driver);
++}
++
++const char driver_client_name[] = "iio_pcm";
+diff --git a/drivers/iio/iio_driver_dummy.c b/drivers/iio/iio_driver_dummy.c
+deleted file mode 100644
+index 7cd4441..0000000
+--- a/drivers/iio/iio_driver_dummy.c
++++ /dev/null
+@@ -1,442 +0,0 @@
+-/*
+-
+-	IIO driver for Jack
+-	Copyright (C) 2013 Matt Flax &lt;[hidden]&gt;
+-
+-	This program is free software; you can redistribute it and/or modify
+-	it under the terms of the GNU General Public License as published by
+-	the Free Software Foundation; either version 2 of the License, or
+-	(at your option) any later version.
+-
+-	This program is distributed in the hope that it will be useful,
+-	but WITHOUT ANY WARRANTY; without even the implied warranty of
+-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-	GNU General Public License for more details.
+-
+-	You should have received a copy of the GNU General Public License
+-	along with this program; if not, write to the Free Software
+-	Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+-	MA  02111-1307  USA
+-
+-*/
+-
+-/*
+-Author: Matt Flax &lt;[hidden]&gt;
+-Date: 2014.01.13
+-*/
+-
+-#define DEBUG_LOCAL_OUTPUT
+-//#define DEBUG_OUTPUT
+-
+-#include &lt;values.h&gt;
+-
+-#include &lt;stdbool.h&gt;
+-#include &lt;string.h&gt;
+-#include &lt;errno.h&gt;
+-#include &lt;math.h&gt;
+-#include &lt;stdio.h&gt;
+-
+-//extern "C" {
+-#include "iio_driver.h"
+-#include "engine.h"
+-//}
+-
+-
+-#define IIO_DEFAULT_CHIP "AD7476A" ///&lt; The default IIO recording chip to look for.
+-//#define IIO_DEFAULT_READ_FS 1.e6 ///&lt; The default IIO sample rate for the default chip.
+-#define IIO_DEFAULT_READ_FS 48.e3 ///&lt; The default IIO sample rate for the default chip.
+-#define IIO_DEFAULT_PERIOD_SIZE 2048 ///&lt; The default period size is in the ms range
+-#define IIO_DEFAULT_PERIOD_COUNT 2 ///&lt; The default number of periods
+-#define IIO_DEFAULT_CAPUTURE_PORT_COUNT MAXINT ///&lt; The default number of capture ports is exceedingly big, trimmed down to a realistic size in driver_initialize
+-//#define IIO_SAFETY_FACTOR 2./3. ///&lt; The default safety factor, allow consumption of this fraction of the available DMA buffer before we don't allow the driver to continue.
+-#define IIO_SAFETY_FACTOR 1. ///&lt; The default safety factor, allow consumption of this fraction of the available DMA buffer before we don't allow the driver to continue.
+-
+-static int iio_driver_attach (iio_driver_t *driver, jack_engine_t *engine) {
+-    printf("iio_driver_attach\n");
+-
+-    // create ports
+-    jack_port_t * port;
+-    char buf[32];
+-    unsigned int chn;
+-    int port_flags;
+-
+-    if (driver-&gt;engine-&gt;set_buffer_size (driver-&gt;engine, driver-&gt;period_size)) {
+-        jack_error ("iio: cannot set engine buffer size to %d", driver-&gt;period_size);
+-        return -1;
+-    }
+-    driver-&gt;engine-&gt;set_sample_rate (driver-&gt;engine, driver-&gt;sample_rate);
+-
+-    port_flags = JackPortIsOutput|JackPortIsPhysical|JackPortIsTerminal;
+-
+-    for (chn = 0; chn &lt; driver-&gt;capture_channels; chn++) {
+-        snprintf (buf, sizeof(buf) - 1, "capture_%u", chn+1);
+-
+-        port = jack_port_register (driver-&gt;client, buf, JACK_DEFAULT_AUDIO_TYPE, port_flags, 0);
+-        if (!port) {
+-            jack_error ("iio: cannot register port for %s", buf);
+-            break;
+-        }
+-        //cout&lt;&lt;"Registered port "&lt;&lt;buf&lt;&lt;endl;
+-
+-        jack_latency_range_t range;
+-        range.min = range.max = 1024;
+-        //cout&lt;&lt;"fix latencies, range currently set to "&lt;&lt;range.min&lt;&lt;", "&lt;&lt;range.max&lt;&lt;endl;
+-        jack_port_set_latency_range (port, JackCaptureLatency, &amp;range);
+-
+-        driver-&gt;capture_ports = jack_slist_append (driver-&gt;capture_ports, port);
+-    }
+-
+-    port_flags = JackPortIsInput|JackPortIsPhysical|JackPortIsTerminal;
+-
+-    for (chn = 0; chn &lt; driver-&gt;playback_channels; chn++) {
+-        snprintf (buf, sizeof(buf) - 1, "playback_%u", chn+1);
+-
+-        port = jack_port_register (driver-&gt;client, buf, JACK_DEFAULT_AUDIO_TYPE, port_flags, 0);
+-        if (!port) {
+-            jack_error ("iio: cannot register port for %s", buf);
+-            break;
+-        }
+-        //cout&lt;&lt;"Registered port "&lt;&lt;buf&lt;&lt;endl;
+-
+-        jack_latency_range_t range;
+-        range.min = range.max = 1024;
+-        //cout&lt;&lt;"fix latencies, range currently set to "&lt;&lt;range.min&lt;&lt;", "&lt;&lt;range.max&lt;&lt;endl;
+-        jack_port_set_latency_range (port, JackCaptureLatency, &amp;range);
+-
+-        driver-&gt;playback_ports = jack_slist_append (driver-&gt;playback_ports, port);
+-    }
+-    return jack_activate (driver-&gt;client);
+-}
+-
+-static int iio_driver_detach (iio_driver_t *driver, jack_engine_t *engine) {
+-    JSList *node;
+-    printf("iio_driver_detach\n");
+-    if (driver-&gt;engine == 0)
+-        return -1;
+-
+-    // unregister all ports
+-    for (node = driver-&gt;capture_ports; node; node = jack_slist_next(node)) {
+-        jack_port_unregister(driver-&gt;client, ((jack_port_t *) node-&gt;data));
+-    }
+-
+-    jack_slist_free(driver-&gt;capture_ports);
+-    driver-&gt;capture_ports = 0;
+-
+-    for (node = driver-&gt;playback_ports; node; node = jack_slist_next(node)) {
+-        jack_port_unregister(driver-&gt;client, ((jack_port_t *) node-&gt;data));
+-    }
+-
+-    jack_slist_free(driver-&gt;playback_ports);
+-    driver-&gt;playback_ports = 0;
+-
+-    driver-&gt;engine = 0;
+-    return 0;
+-}
+-
+-static int iio_driver_start (iio_driver_t *driver) {
+-    printf("iio_driver_start::   enabling IIO : enable(true)\n");
+-
+-    zeroTime(&amp;NEXT_TIME); // driver-&gt;next_wakeup.tv_sec = 0; which is the same as driver-&gt;next_time = 0;
+-
+-    return 0;
+-}
+-
+-static int iio_driver_stop (iio_driver_t *driver) {
+-    printf("iio_driver_start:: disabling IIO : enable(false)\n");
+-
+-    return 0;
+-}
+-
+-static int iio_driver_read(iio_driver_t *driver, jack_nframes_t nframes) {
+-    JSList *node;
+-    channel_t chn;
+-    jack_nframes_t i;
+-
+-    //Debugger&lt;&lt;"iio_driver_read\n";
+-
+-    if (nframes &gt; 0) {
+-        ////Debugger&lt;&lt;"iio_driver_read nframes = "&lt;&lt;nframes&lt;&lt;"\n";
+-//        for (jack_nframes_t i=0; i&lt;nframes; i++){
+-//            cout&lt;&lt;(float)(*data)(i,0)&lt;&lt;endl;
+-//        cout&lt;&lt;endl;
+-
+-        // write to the connected capture ports ...
+-        node = (JSList *)driver-&gt;capture_ports;
+-        for (chn = 0; node; node = (JSList *)jack_slist_next(node), chn++) {
+-
+-            //jack_port_t *port = static_cast&lt;jack_port_t *&gt;(node-&gt;data);
+-            jack_port_t *port = (jack_port_t*)(node-&gt;data);
+-
+-            if (!jack_port_connected (port)) /* no-copy optimization */
+-                continue;
+-
+-            //jack_default_audio_sample_t *buf = static_cast&lt;jack_default_audio_sample_t *&gt;(jack_port_get_buffer (port, nframes));
+-            jack_default_audio_sample_t *buf = (jack_default_audio_sample_t *)(jack_port_get_buffer (port, nframes));
+-            for (i=0; i&lt;nframes; i++) {
+-                //cout&lt;&lt;"row = "&lt;&lt;i*devChCnt+rowOffset&lt;&lt;" col = "&lt;&lt;col&lt;&lt;endl;
+-                //buf[i]=(*data)(i*devChCnt+rowOffset, col)*100.;
+-                buf[i]=(float)i/(float)nframes;
+-                //cout&lt;&lt;(*data)(i*devChCnt+rowOffset, col)&lt;&lt;'\t'&lt;&lt;buf[i]&lt;&lt;'\n';
+-            }
+-        }
+-        //Debugger&lt;&lt;" spent "&lt;&lt; (driver-&gt;engine-&gt;get_microseconds()-driver-&gt;debug_last_time)&lt;&lt;" us waiting for lock and copying data over\n";
+-    }
+-    return 0;
+-}
+-
+-static int iio_driver_write (iio_driver_t *driver, jack_nframes_t nframes) {
+-    //Debugger&lt;&lt;"iio_driver_write nframes = "&lt;&lt;nframes&lt;&lt;"\n";
+-//    if (nframes&gt;0){
+-//        //Debugger&lt;&lt;"iio_driver_write nframes = "&lt;&lt;nframes&lt;&lt;"\n";
+-//    }
+-    return 0;
+-}
+-
+-static int iio_driver_null_cycle (iio_driver_t *driver, jack_nframes_t nframes) {
+-    //Debugger&lt;&lt;"iio_driver_null_cycle\n";
+-
+-    return 0;
+-}
+-
+-/** The driver_wait function to work out if we have used more time then available to process one cycle.
+-    This is written once for either timespec (HAVE_CLOCK_GETTIME) or jack_time_t, see the unified_jack_time.h file.
+-
+-    This function manages the time now and the next expected time to return. The return happens once per block of time (period_size).
+-
+-    The general idea of *_driver_wait is to do the following :
+-    a] Mark the time now if this is the first time through or if an overrun previously happened.
+-    b] If an overrun is detected (we have exceeded the maximum time held in our audio buffers) then indicate.
+-    c] If we are late but not dangerously, then keep going.
+-    d] If we are early then sleep a little to allow clients enough time to process.
+-
+-    The effect of 'c]' and 'd]' is to create time pumping. Theoretically we will always be either a little over or under time, and it will be difficult to match audio block
+-    time exactly. This doesn't matter if the time pumping is a small fraction of our block time. This means that the clients will have slightly more or less then audio block
+-    time to process.
+-*/
+-static jack_nframes_t iio_driver_wait(iio_driver_t *driver, int extra_fd, int *status, float *delayed_usecs) {
+-	jack_nframes_t nframes = driver-&gt;period_size;
+-    //Debugger&lt;&lt;"iio_driver_wait\n";
+-    *delayed_usecs = 0;
+-    *status = 0;
+-
+-    timeType now; getNow(&amp;now); // the time right now
+-
+-	if (compareTimesLt(NEXT_TIME, now)) { // NEXT_TIME &lt; now  ... this is a problem as the next time should be &gt;= now
+-        //printf("iio_driver_wait NOT good\n");
+-        if (compareTimeZero(NEXT_TIME)) { /* first time through */
+-            //DebuggerLocal&lt;&lt;"iio_driver_first time - OK\n";
+-            //printf("first time through\n\n\n");
+-			getNow(&amp;NEXT_TIME); // reset the next time to now, will be incremented later
+-        } else if (timeDiffUsComp(now, driver-&gt;next_wakeup, driver-&gt;maxDelayUSecs)) { /* xrun = (now - NEXT_TIME) &gt; maxDelayTime */
+-            ////Debugger&lt;&lt;"NEXT_TIME "&lt;&lt;NEXT_TIME&lt;&lt;" now "&lt;&lt;now&lt;&lt;endl;
+-            jack_error("**** iio: xrun of %ju usec", timeDiffUs(now, NEXT_TIME));
+-            nframes=0; // indicated the xrun
+-            zeroTime(&amp;NEXT_TIME);  // reset the next time to zero because of the overrun, we don't know when to start again.
+-            //*status=-1; // xruns are fatal
+-        } else /* late, but handled by our "buffer" */
+-            ;
+-	} else { // now sleep to ensure we give the clients enough time to process
+-        *status = nanoSleep(NEXT_TIME, delayed_usecs);
+-        //printf("iio_driver_wait all good\n");
+-    }
+-
+-    if (nframes!=0) // if there is no xrun, then indicate the next expected time to land in this funciton.
+-        NEXT_TIME=addTimes(NEXT_TIME, driver-&gt;wait_time);
+-
+-	driver-&gt;last_wait_ust = driver-&gt;engine-&gt;get_microseconds ();
+-	driver-&gt;engine-&gt;transport_cycle_start (driver-&gt;engine, driver-&gt;last_wait_ust);
+-
+-	return nframes;
+-}
+-
+-static int iio_driver_run_cycle (iio_driver_t *driver) {
+-    //Debugger&lt;&lt;"iio_driver_run_cycle\n";
+-
+-    int wait_status;
+-    float delayed_usecs;
+-
+-    jack_nframes_t nframes = iio_driver_wait(driver, -1, &amp;wait_status, &amp;delayed_usecs);
+-    if (nframes == 0) {
+-        /* we detected an xrun and restarted: notify clients about the delay. */
+-        //DebuggerLocal&lt;&lt;"iio_driver_run_cycle :: xrun detected, delaying\n";
+-        driver-&gt;engine-&gt;delay(driver-&gt;engine, delayed_usecs);
+-        return 0;
+-    }
+-
+-    if (wait_status == 0) {
+-        //Debugger&lt;&lt;"iio_driver_run_cycle :: calling engine-&gt;run_cycle, nframes="&lt;&lt;nframes&lt;&lt;" delayed_usecs="&lt;&lt;delayed_usecs&lt;&lt;"\n";
+-        return driver-&gt;engine-&gt;run_cycle(driver-&gt;engine, nframes, delayed_usecs);
+-    }
+-
+-    if (wait_status &lt; 0)
+-        return -1;
+-    else
+-        return 0;
+-}
+-
+-/** Given the number of samples and the sample rate, find the number of microseconds.
+-\param nframes The number of frames.
+-\param fs The sample rate.
+-\return The number of microseconds represented by nframes.
+-*/
+-jack_time_t getUSecs(jack_nframes_t nframes, jack_nframes_t fs) {
+-    //Debugger&lt;&lt;"getUSecs nframes="&lt;&lt;nframes&lt;&lt;" fs="&lt;&lt;fs&lt;&lt;'\n';
+-    return (jack_time_t) floor((((float) nframes) / fs) * 1000000.0f);
+-}
+-
+-/**
+-*/
+-static int iio_driver_bufsize (iio_driver_t *driver, jack_nframes_t nframes) {
+-    printf("iio_driver_bufsize\n");
+-
+-    jack_nframes_t period_sizeOrig=driver-&gt;period_size;
+-    jack_time_t period_usecsOrig = driver-&gt;period_usecs;
+-    unsigned long wait_timeOrig = driver-&gt;wait_time;
+-    double maxDelayUSecsOrig=driver-&gt;maxDelayUSecs;
+-
+-    driver-&gt;period_size = nframes;
+-    driver-&gt;period_usecs = driver-&gt;wait_time = getUSecs(nframes, driver-&gt;sample_rate);
+-
+-    //Debugger&lt;&lt;"wait_time = "&lt;&lt;driver-&gt;wait_time&lt;&lt;endl;
+-
+-    /* tell the engine to change its buffer size */
+-    if (driver-&gt;engine-&gt;set_buffer_size(driver-&gt;engine, nframes)) {
+-        jack_error ("iio: cannot set engine buffer size to %d ", nframes);
+-        driver-&gt;period_size=period_sizeOrig;
+-        driver-&gt;period_usecs=period_usecsOrig;
+-        driver-&gt;wait_time=wait_timeOrig;
+-        driver-&gt;maxDelayUSecs=maxDelayUSecsOrig;
+-        return -1;
+-    }
+-
+-    return 0;
+-}
+-
+-/** free all memory allocated by a driver instance
+-*/
+-static void iio_driver_delete(iio_driver_t * driver) {
+-    printf("iio_driver_delete\n");
+-
+-    free(driver);
+-}
+-
+-jack_driver_t *driver_initialize (jack_client_t *client, const JSList * params) {
+-    printf("driver_initialize \n");
+-
+-    iio_driver_t *driver = (iio_driver_t *) calloc (1, sizeof (iio_driver_t));
+-    driver-&gt;IIO_devices=NULL; // indicate that the iio class hasn't been created yet
+-    if (driver) {
+-        jack_driver_nt_init((jack_driver_nt_t *) driver);
+-
+-        driver-&gt;write         = (JackDriverReadFunction)       iio_driver_write;
+-        driver-&gt;read          = (JackDriverReadFunction)       iio_driver_read;
+-        driver-&gt;null_cycle    = (JackDriverNullCycleFunction)  iio_driver_null_cycle;
+-        driver-&gt;nt_attach     = (JackDriverNTAttachFunction)   iio_driver_attach;
+-        driver-&gt;nt_stop       = (JackDriverNTStopFunction)     iio_driver_stop;
+-        driver-&gt;nt_start      = (JackDriverNTStartFunction)    iio_driver_start;
+-        driver-&gt;nt_detach     = (JackDriverNTDetachFunction)   iio_driver_detach;
+-        driver-&gt;nt_bufsize    = (JackDriverNTBufSizeFunction)  iio_driver_bufsize;
+-        driver-&gt;nt_run_cycle  = (JackDriverNTRunCycleFunction) iio_driver_run_cycle;
+-
+-        driver-&gt;engine = NULL; // setup the required driver variables.
+-        driver-&gt;client = client;
+-        driver-&gt;last_wait_ust = 0;
+-
+-        driver-&gt;sample_rate = IIO_DEFAULT_READ_FS; // IIO sample rate is fixed.
+-        driver-&gt;period_size = IIO_DEFAULT_PERIOD_SIZE;
+-        driver-&gt;nperiods    = IIO_DEFAULT_PERIOD_COUNT;
+-
+-        driver-&gt;capture_channels  = IIO_DEFAULT_CAPUTURE_PORT_COUNT; // The default number of physical input channels - a very large number, to be reduced.
+-        driver-&gt;capture_ports     = NULL;
+-        driver-&gt;playback_channels = 0; // currently doesn't support playback.
+-        driver-&gt;playback_ports    = NULL;
+-
+-
+-        const JSList *pnode = params; // param pointer
+-        while (pnode != NULL) {
+-            const jack_driver_param_t *param = (const jack_driver_param_t *) pnode-&gt;data;
+-            switch (param-&gt;character) {
+-
+-            case 'i': // we are specifying the number of capture channels
+-                driver-&gt;capture_channels = param-&gt;value.ui;
+-                break;
+-            case 'p':
+-                driver-&gt;period_size = param-&gt;value.ui;
+-                break;
+-            case 'n':
+-                driver-&gt;nperiods = param-&gt;value.ui;
+-                break;
+-
+-            }
+-            pnode = jack_slist_next(pnode);
+-        }
+-
+-        driver-&gt;period_usecs = driver-&gt;wait_time = getUSecs(driver-&gt;period_size, driver-&gt;sample_rate);
+-        driver-&gt;maxDelayUSecs=4000; // the mmap max delay is currently unknown
+-        driver-&gt;capture_channels=4;
+-        jack_info("created DUMMY iio driver ... dummy_iio|%" PRIu32 "|%" PRIu32 "|%lu|%u|%u", driver-&gt;sample_rate, driver-&gt;period_size, driver-&gt;wait_time, driver-&gt;capture_channels, driver-&gt;playback_channels);
+-        return (jack_driver_t *) driver;
+-
+-    } else
+-        jack_error("iio driver_initialise: iio_driver_t malloc() failed: %s: %s@%i", strerror(errno), __FILE__, __LINE__);
+-
+-    // if we get here, there was a problem.
+-    iio_driver_delete((iio_driver_t *) driver);
+-    return NULL;
+-}
+-
+-jack_driver_desc_t *driver_get_descriptor () {
+-    jack_driver_desc_t * desc;
+-    jack_driver_param_desc_t * params;
+-    unsigned int i;
+-
+-    desc = (jack_driver_desc_t *)calloc (1, sizeof (jack_driver_desc_t));
+-    strcpy (desc-&gt;name, "iio");
+-    desc-&gt;nparams = 4;
+-
+-    params = (jack_driver_param_desc_t *)calloc (desc-&gt;nparams, sizeof (jack_driver_param_desc_t));
+-
+-    i = 0;
+-    strcpy (params[i].name, "chip");
+-    params[i].character  = 'C';
+-    params[i].type       = JackDriverParamString;
+-    strcpy (params[i].value.str, IIO_DEFAULT_CHIP);
+-    strcpy (params[i].short_desc, "The name of the chip to search for in the IIO devices");
+-    strcpy (params[i].long_desc, params[i].short_desc);
+-
+-    i++;
+-    strcpy (params[i].name, "capture");
+-    params[i].character  = 'i';
+-    params[i].type       = JackDriverParamUInt;
+-    params[i].value.ui   = IIO_DEFAULT_CAPUTURE_PORT_COUNT;
+-    strcpy (params[i].short_desc, "Provide capture ports.");
+-    strcpy (params[i].long_desc, params[i].short_desc);
+-
+-    i++;
+-    strcpy (params[i].name, "period");
+-    params[i].character  = 'p';
+-    params[i].type       = JackDriverParamUInt;
+-    params[i].value.ui   = 1024U;
+-    strcpy (params[i].short_desc, "Frames per period");
+-    strcpy (params[i].long_desc, params[i].short_desc);
+-
+-    i++;
+-    strcpy (params[i].name, "nperiods");
+-    params[i].character  = 'n';
+-    params[i].type       = JackDriverParamUInt;
+-    params[i].value.ui   = 2U;
+-    strcpy (params[i].short_desc, "Number of periods of playback latency");
+-    strcpy (params[i].long_desc, params[i].short_desc);
+-
+-    desc-&gt;params = params;
+-
+-    return desc;
+-}
+-
+-void driver_finish (jack_driver_t *driver) {
+-    printf("driver_finish\n");
+-
+-    iio_driver_delete((iio_driver_t *) driver);
+-}
+-
+-const char driver_client_name[] = "iio_pcm";
+diff --git a/drivers/iio/unified_jack_time.h b/drivers/iio/unified_jack_time.h
+index 451cd23..317cb00 100644
+--- a/drivers/iio/unified_jack_time.h
++++ b/drivers/iio/unified_jack_time.h
+@@ -91,6 +91,7 @@ inline void zeroTime(timeType *ts1){
+ }
+ 
+ inline int nanoSleep(timeType nextTime, float *delayed_usecs){
++        //cout&lt;&lt;"nanoSleep timespec"&lt;&lt;endl;
+ 		if(clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &amp;nextTime, NULL)) {
+ 			jack_error("error while sleeping");
+ 			return -1;
+@@ -131,6 +132,7 @@ inline void zeroTime(timeType *t1){
+ }
+ 
+ inline void nanoSleep(timeType nextTime, float *delayed_usecs, int *status){
++        //cout&lt;&lt;"nanoSleep jack_time_t"&lt;&lt;endl;
+         timeType now; getNow(&amp;now);
+ 		jack_time_t wait = nextTime - now;
+ 		struct timespec ts = { .tv_sec = wait / 1000000, .tv_nsec = (wait % 1000000) * 1000 };
+-- 
+1.8.3.2
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1392326369.13781_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1392326381.13805_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1392326378.13803_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1392326378.13803_0.ltw:2,a&nbsp;&lt;1392326321-3699-12-git-send-email-flatmax at flatmax dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

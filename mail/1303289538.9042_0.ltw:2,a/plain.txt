@@ -1,0 +1,42 @@
+Date:        Wed, 20 Apr 2011 10:51:49 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          torbenh <[hidden] at gmx dot de>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: torbenh Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3 (1303244946.18626_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3
+
+Le 19 avr. 2011 à 22:28, torbenh a écrit :
+
+> On Tue, Apr 19, 2011 at 07:52:03AM -0400, Paul Davis wrote:
+>> On Tue, Apr 19, 2011 at 6:57 AM, Stéphane Letz <[hidden]> wrote:
+>> 
+>>> So is this fix considered "official" ?  (before I report it again on jack2)
+>> 
+>> from chatting with torben yesterday, i think we're not quite done yet.
+> 
+> well... we probably need to write zeros instead of empty buffers.
+> but if Stéphane has that code already, it should be fine.
+> 
+> i am wondering what you mean by official ?
+> the old behaviour was clearly wrong. it was just that nobody really
+> cared before. (i have still no real explanation of why things worked,
+> but i know that i fixed a bug in the null cycle, and that bug might have
+> been "fixing" the offsets, during the client kick.
+> 
+> or we had real xruns all the time anyways.
+> 
+
+Some weeks ago we had these bug reports about "incorrect" behaviour of JACK2 on ARM7  (but not with JACK1) and it appeared that JACK2 interaction with ALSA backend was a bit different compared to JACK1. So I switched to a model of "do not call backend write"  in case of error, just to follow JACK1 model, which appear to be incorrect anyway...
+
+So should I switch back to the previous model?
+
+I have to say that the way a given backend (ALSA , CoreAudio, PortAudio...) interacts with the engine is somewhat unspecified: for instance CoreAudio send a kAudioDeviceProcessorOverload notification form another thread (than the RT one) and reset the driver, ALSA detect the XRun in the RT callback (and restart the driver), as well as PortAudio...
+
+Would it make sense to try to make that part clearer?
+
+Stéphane 
+
+1303289538.9042_0.ltw:2,a <5B4D6409-F541-46E0-A2E7-F1897B2A651B at grame dot fr>
+________________________________________________________________________________
+

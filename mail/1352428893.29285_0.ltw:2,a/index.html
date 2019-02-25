@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How to run multiple jackdbus</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How to run multiple jackdbus</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1352411321.29515_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1352459037.10221_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1352428893.29285_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 09 Nov 2012 04:41:24 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Athanasios Silis </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Nedko Arnaudov &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Developers JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Nedko Arnaudov
+<a href='../1352296379.24934_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to run multiple jackdbus </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1352459037.10221_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to run multiple jackdbus </a></td></tr>
+</table>
+<pre>
+Hey there,
+i am sorry to hijack this thread.
+I read that it is possible to run more than one jack sessions (from the
+same or different user)? And can each session be outputting to a different
+soundcard????
+
+If this is indeed the case, could you provide some info on how to go about
+that?
+
+Also what does jackd use the dbus for?
+(meanwhile i'll go check out what the dbus does exactly)
+
+Thanks!
+
+
+
+On Wed, Nov 7, 2012 at 3:49 PM, Nedko Arnaudov &lt;[hidden]&gt; wrote:
+
+&gt; Thomas DEBESSE &lt;[hidden]&gt; writes:
+&gt;
+&gt; &gt; I'm trying to run multiple jackdbus&#x2026;
+&gt;
+&gt; You are entering terra incognita... :)
+&gt;
+&gt; &gt; I'm writing an app and I want to use jackd with another server name
+&gt; &gt; than "default" to let the user to have is own jackd!
+&gt; &gt; The idea is to launch a jackd and do some connections between elements
+&gt; &gt; without polluting the user's jackd nor his patchbay, and perhaps
+&gt; &gt; provide a virtual interface between the two jackd.
+&gt; &gt;
+&gt; &gt; I can rename jackd easily with cli jackd and jackdbus, I know how to
+&gt; &gt; run multiple legacy jackd, but I don't know how to run multiple
+&gt; &gt; jackdbus.
+&gt; &gt; I'm writing an app and I like how it's cool to configure and manage
+&gt; &gt; jackd using jack dbus interfaces, but if I start and configure jackd
+&gt; &gt; using dbus and renaming it to "other" (instead of "default"), I'm not
+&gt; &gt; running another dbus, I'm renaming the default jackd ! This is not I
+&gt; &gt; want. If the user try to run jackdbus, he will use my jackd!
+&gt; &gt;
+&gt; &gt; Any Idea ?
+&gt;
+&gt; The current jackdbus D-Bus presentation was designed for single server
+&gt; scenario. For multiserver scenario, the plan was to have one D-Bus
+&gt; object per server controller and eventually an object+interface for
+&gt; managing these objects (add new server, remove it, rename it). How
+&gt; people are actually using multiserver scenario was never clear to
+&gt; me. Multiple cards? Multiple users? Testing setups?
+&gt;
+&gt; There are several problematic areas:
+&gt;  * one jackdbus instance per session bus
+&gt;  * per-user jack server settings that are autosaved
+&gt;  * session vs user
+&gt;
+&gt; "session vs user" is actually issue at dbus level. AFAIK it is not yet
+&gt; solved. I clearly see different use of per-user bus daemon and
+&gt; per-session bus daemon. Right now they are merged. If you treat it as
+&gt; session bus, you want to access it from different sessions. If you treat
+&gt; it as user bus then you may want multiple services per user (multiple
+&gt; cards, test setups).
+&gt;
+&gt; "per-user jack server settings that are autosaved" is issue only if you
+&gt; want to use multiple jack server intances per user. It is clear that each
+&gt; server must have its own settings persisted in ~/.config/jack/. It is
+&gt; not clear whether all jack servers must run within same jackdbus process,
+&gt; or there must be one jackdbus process per server, or something in
+&gt; between.
+&gt;
+&gt; "one jackdbus instance per session bus" is problem only if you treat
+&gt; session bus as user bus. It should be possible to run multiple session
+&gt; bus daemons for same user with each jackdbus daemon attaching to
+&gt; different dbus session bus. I can imagine only one functionality that
+&gt; could cause problem - the X11 server storage for session bus address. If
+&gt; it indeed is a problem, I think you can build dbus without this
+&gt; functionality (but your "desktop/login" setup could break, depends on
+&gt; how it is made).
+&gt;
+&gt; A related issue is that server name in jackdbus engine settings is
+&gt; useless and some users get into trap to set it. In context of
+&gt; multiserver setups, the server name is actually key/id for settings of
+&gt; that server. In context of single user setups, the server name only
+&gt; causes confusion. So this engine setting should be removed from the
+&gt; D-Bus presentation of the engine settings and maybe even from the
+&gt; control API.
+&gt;
+&gt; --
+&gt; Nedko Arnaudov &lt;GnuPG KeyID: 5D1B58ED&gt;
+&gt;
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1352411321.29515_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1352459037.10221_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1352428893.29285_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1352428893.29285_0.ltw:2,a&nbsp;&lt;CADgchntiy0-sJJuV_zqOn+H_2LijM7JQ0hjL+yrdn3EXV9WXTQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

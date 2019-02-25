@@ -1,0 +1,36 @@
+Date:        Mon, 07 Jan 2013 21:58:57 +0000
+From:        John Emmas  <[hidden] at tiscali dot co dot uk>
+To:          JACK List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Chris Caudle Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357589471.31159_0.ltw:2,a)
+Follow-Up:   John Emmas Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357596748.7224_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357597795.8865_0.ltw:2,a)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357602068.15335_0.ltw:2,Sa)
+
+Subject:     Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)
+
+On 7 Jan 2013, at 20:10, Chris Caudle wrote:
+
+> On Mon, January 7, 2013 12:53 pm, John Emmas wrote:
+>> course, that's theoretically do-able - but it seems unlikely that the ARM
+>> compiler could make sense of this complicated, variable packing
+>> arrangement whilst at the same time, failing to understand 1-byte packing.
+> 
+> The compiler understands, the programmer is confused.
+> 
+> My understanding of the ARM processor architecture is that the compiler
+> will pack things in whatever manner you request (possibly generating
+> warnings), and then it is up to the programmer to make sure that no data
+> elements will be place on byte boundaries which do not match the native
+> data size alignment.
+> 
+
+And after all that manual adjustment, what happens if the same code needs to run on a different CPU with some other native alignment?  Chris, this is just a roundabout way of saying that the ARM compiler doesn't understand packing.
+
+Historically (as Paul described earlier) struct packing was a way of telling the compiler "Look, this might not seem right but I know what I'm doing because I understand the target CPU".  Back then, understanding the target architecture was usually essential for efficient programming and modifying the packing was often a way of gaining performance benefits.  But nowadays it's an extreme rarity for programs to be coded with a specific CPU in mind and packing strategies have had to evolve to accommodate that.  Nowadays (far from gaining performance benefits) there's almost always a performance penalty in changing a compiler's default packing alignment.  This is because when data is taken from RAM and presented to the CPU, the compiler must adjust the alignment as needed and do the reverse again on the way back to RAM.  It would seem that the gcc/ARM compiler isn't yet able to do that (or maybe it can do it - but only in certain cases).  To me, this suggests that if JACK_ALIGN i
+ s working on that particular compiler, it's most likely a happy accident.
+
+John
+
+1357595948.6019_0.ltw:2,a <7F4D7A99-0F71-48DC-AA5F-FD0E71C49D5A at tiscali dot co dot uk>
+________________________________________________________________________________
+

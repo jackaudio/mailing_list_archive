@@ -1,0 +1,58 @@
+Date:        Sat, 02 Jun 2012 11:54:39 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Robin Gareus <[hidden] at gareus dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Robin Gareus Re: [Jack-Devel] [LAU] jack2 turned verbose (1338621426.3051_0.ltw:2,a)
+Follow-Up:   Robin Gareus Re: [Jack-Devel] [LAU] jack2 turned verbose (1338643018.14568_0.ltw:2,a)
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] [LAU] jack2 turned verbose (1338653382.19934_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [LAU] jack2 turned verbose
+
+On Sat, Jun 02, 2012 at 09:16:57AM +0200, Robin Gareus wrote:
+ 
+> Well, depending what the compiler does, maybe add some explicit
+> type-casts:  X.b == false  vs.  ((bool) X.b) == false.
+
+That doesn't make much sense, X.b  *is*  already a bool.
+
+Here is a third version:
+
+    for (i = 0; i < 5; i++)
+    {
+        X.i = i;
+        if      ((int) X.b == 1)  puts ("true");
+        else if ((int) X.b == 0)  puts ("false");
+        else                      puts ("Neither true or false");
+    }
+
+which produces the same output as the two others.
+
+So  (int) X.b  is *not* the same as  X.i. 
+
+What this tells me is that one should test booleans against
+boolean constants, and ints against int constants, and *not*
+mix them up. Which I guess the libdbus code is doing.
+
+ 
+> Is this Arch-Linux, gcc/g++-4.7.0, with "-O2" ?
+
+4.7.0 with -O3. 
+
+> The flags to produce the problem with: g++ 4.7.0 are
+> CXXFLAGS="-march=i686 -mtune=generic -O2 -pipe -fstack-protector
+> --param=ssp-buffer-size=4 -D_FORTIFY_SOURCE=2"
+
+Tried this, same result for all three tests.
+
+Ciao,
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+
+1338638086.11899_0.ltw:2,a <20120602115439.GA18406 at linuxaudio dot org>
+________________________________________________________________________________
+

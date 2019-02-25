@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [LAD] [Jack-Devel] jackd/jackdbus : D-Bus or not D-Bus...</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [LAD] [Jack-Devel] jackd/jackdbus : D-Bus or not D-Bus...</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1242725381.6845_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1242725803.7496_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1242725416.6922_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 19 May 2009 10:29:49 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Rui Nuno Capela </span> &lt;[hidden] at rncbc dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt;, Linux Audio Developers &lt;[hidden] at lists dot linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1242722546.1923_0.ltw:2,a/index.html'>[LAD] jackd/jackdbus : D-Bus or not D-Bus... </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1242725803.7496_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] jackd/jackdbus : D-Bus or not D-Bus... </a></td></tr>
+</table>
+<pre>
+On Tue, May 19, 2009 09:38, St&#xE9;phane Letz wrote:
+&gt; Hi All,
+&gt;
+&gt;
+&gt; After hours of discussion on #jack IRC, it seems that we are in a
+&gt; completely blocked situation:
+&gt;
+&gt; 1) we currently have 2 "incarnations" of the jack server named "jackd"
+&gt; and "jackdbus". "jackd" is the legacy  "classic" version of the server that
+&gt; interact with the ~/jackdrc setting file. This setting file may be written
+&gt; by Qjackctl or Ardour. "jackdbus" is the new D-Bus aware version of the
+&gt; server, it use a completely new setting management system using a
+&gt; "conf.xml" file. Il may use a multi-setting system in
+&gt; the future.
+&gt;
+&gt; 2) the *heart" of the problem Fons initially told about is in the way
+&gt; applications "auto-start" the server. This launching strategy is part of
+&gt; libjack and depends of the incarnation of the server (jackd of jackdbus)
+&gt; that is supposed to be used. Right now this strategy is chosen at *compile
+&gt; time*, so that in "classic" mode the "jackd" server will be launched using
+&gt; a fork-exec strategy, or in D-Bus mode the "jackdbus" server will be
+&gt; launched by issuing a D-Bus call.
+&gt;
+&gt; 3) Since the "auto-start" strategy is chosen at compile time and thus
+&gt; is coded in libjack, users will typically encounter all sort of problems as
+&gt; soon as the used applications interact with a "D-Bus based strategy"
+&gt; libjack (that will launch "jackdbus" incarnation) and users still use
+&gt; Qjackctl that interact with the "jackd" incarnation.
+&gt;
+&gt;
+&gt; 4) Different ideas have been proposed  to merge the 2 "jackd" and
+&gt; "jackdbus" incarnations in a unique extended "jackd" exe, but nothing
+&gt; really clear emerged.
+&gt;
+&gt; 4) A possible proposed solution was to define 2 completely separated
+&gt; packages for jack2 : the "classic" one would package the "jackd"
+&gt; incarnation and allow Qjackctl and legacy control applications to be used
+&gt; with it. The "D-Bus" one would package the "jackdbus" incarnation, and
+&gt; provide D-Bus bas control applications (patchage, ladi tools....). The
+&gt; problem of this strategy is that..., it is a kind of complete failure
+&gt; regarding the way jack is supposed to be distributed. It may even get
+&gt; worse if a new "jackosc" incarnation (a one that would allow to control
+&gt; the server using OSC) appears a some point in the future...
+&gt;
+&gt; 5) Another idea would be improve the "choice of auto-start strategy"
+&gt; by providing a runtime choice for that:  a way for the user to select
+&gt; between the "classic", "D-Bus", "OSC", strategy once globally for a given
+&gt; working session...
+&gt;
+&gt; 5) Another idea would be be to completely drops the "auto-start"
+&gt; strategy...This way we don't have multiple strategy anymore, and solve
+&gt; most of the problems... but loose a feature.
+&gt;
+&gt; Comments?
+&gt;
+
+(there are two 5)'s above but i'll refer to the first one)
+
+i vote for the 5) auto-start strategy. user selects which one he/she
+prefers. the default should be "classic" and i would add fallback to
+"d-bus" and/or "osc" whatever. i still fail to see the problem of honoring
+.jackdrc if it exists on your home directory. ie. if .jackdrc exists then
+do the "classic" auto-start; if not, check d-bus service; etc.
+
+byee
+-- 
+rncbc aka Rui Nuno Capela
+[hidden]
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1242725381.6845_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1242725803.7496_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1242725416.6922_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1242725416.6922_0.ltw:2,a&nbsp;&lt;59153.213.58.131.130.1242725389.squirrel at www dot rncbc dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] [LAU] jack2 turned verbose</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] [LAU] jack2 turned verbose</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1338560578.7500_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1338569373.16379_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338561053.7996_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 01 Jun 2012 16:30:43 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> David Adler </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot linuxaudio dot org </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>David Adler
+<a href='../1338558541.4298_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+</table>
+<pre>
+On Fri, Jun 1, 2012 at 3:48 PM, David Adler wrote:
+&gt; On Fri, Jun 1, 2012 at 2:52 PM, Robin Gareus wrote:
+&gt;&gt;
+
+&gt; DEBUG verbose: on
+&gt;
+&gt;&gt; add a line just after common/JackServer.cpp line 66
+&gt;&gt; &#xA0;printf("DEBUG verbose2: %s\n",(JackGlobals::fVerbose)?"on":"off");
+&gt;&gt; ...
+&gt;
+&gt; above, your line number didn't match exactly, so we seem to have
+&gt; different versions (1.9.7 here). Thus, I wasn't exactly sure where to
+&gt; add the prinf() and did the following:
+&gt;
+&gt; ...
+&gt; &#xA0; &#xA0;JackServerGlobals::fUserCount = 1; &#xA0; &#xA0; // One user
+&gt; &#xA0; &#xA0;printf("DEBUG verbose2: %s\n",(JackGlobals::fVerbose)?"on":"off");
+&gt; &#xA0; &#xA0;JackGlobals::fVerbose = verbose;
+&gt; &#xA0; &#xA0;printf("DEBUG verbose3: %s\n",(JackGlobals::fVerbose)?"on":"off");
+&gt; }
+&gt;
+&gt; which prints:
+&gt; DEBUG verbose2: off
+&gt; DEBUG verbose3: on
+&gt;
+&gt;&gt; A crude test for the union() hunch would be to change
+&gt;&gt; common/JackControlAPI.h line 53:
+&gt;&gt; &#xA0;replace
+&gt;&gt; &#xA0;"union jackctl_parameter_value"
+&gt;&gt; with
+&gt;&gt; &#xA0;"struct jackctl_parameter_value"
+&gt;&gt; and compile with '-fpermissive' like this:
+&gt;&gt;
+&gt;&gt; &#xA0;CXXFLAGS="-fpermissive" ./waf &#xA0;configure
+&gt;&gt; &#xA0;./waf
+&gt;&gt;
+&gt;
+&gt; Again, mismatching line numbers. I assume you meant the line:
+&gt; union jackctl_parameter_value verbose;
+&gt;
+&gt; Changing that to struct fixes both issues I reported,
+&gt; the verbose output and exit on last client close.
+
+Oops, I read caressly and did a change to .cpp, not the header file.
+
+So what I did before (which somehow fixed the issues/suppressed
+symptoms), was changing
+"union" to "struct" in line 75 in JackControlAPI.cpp
+
+Reverted that and did the change Robin suggested, the result is the
+same, issues disappeared.
+
+
+best,
+d
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1338560578.7500_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1338569373.16379_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338561053.7996_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1338561053.7996_0.ltw:2,a&nbsp;&lt;CAHsfu2usX23n_mrJvH65PebZm85PXbMcrYebdjaq_u8rhDFS7w at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

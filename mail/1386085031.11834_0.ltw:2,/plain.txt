@@ -1,0 +1,42 @@
+Date:        Tue, 03 Dec 2013 16:37:02 +0100
+From:        Clemens Ladisch  <[hidden] at ladisch dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Gabriel M. Beddingfield [Jack-Devel] ALSA PCM substreams (1386083270.7275_0.ltw:2,)
+Follow-Up:   Gabriel M. Beddingfield Re: [Jack-Devel] ALSA PCM substreams (1386094133.716_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] ALSA PCM substreams
+
+Gabriel M. Beddingfield wrote:
+> When opening a PCM, would it make sense for JACK to open all the
+> substreams on that PCM?
+
+No.  PCM devices with multiple substreams typically use them for
+hardware mixing.  (When opening a device without an explicitly
+specified substream number, ALSA chooses the first free substream.)
+
+> I was helping a user on IRC with the Audio 4 DJ, a 4-in/4-out USB
+> sound card.  The card uses the `caiaq' driver in ALSA.  It didn't
+> "just work" because the 4 channels are split up into stereo
+> substreams.  So, when jack opens "hw:1,0", it opens "hw:1,0,0"
+> (2 channels) and ignores "hw:1,0,1" (2 more channels).[1]
+
+The driver should have used two devices instead of two substreams.
+(But automatically opening multiple devices would not necessarily be
+a good idea either.)
+
+> I spoke with the developers of the `caiaq' driver, and they said it
+> would make sense for JACK to go ahead and open all the substreams.
+
+Only for this particular device.
+
+
+A useful feature would be the ability to specify multiple device names,
+and Jack automatically constructing a "multi" device for them.
+
+
+Regards,
+Clemens
+
+1386085031.11834_0.ltw:2, <529DFA9E.9060509 at ladisch dot de>
+________________________________________________________________________________
+

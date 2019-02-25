@@ -1,0 +1,61 @@
+Date:        Tue, 10 Sep 2013 16:35:02 +0200
+From:        Wolfgang Lorenz  <[hidden] at gmx dot de>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Stéphane Letz [Jack-Devel] FAIR (1378824592.8919_0.ltw:2,)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Using the callback free API with self-created RT-threads (1378824903.9537_0.ltw:2,)
+
+Subject:     [Jack-Devel] Using the callback free API with self-created RT-threads
+
+Hello,
+
+I'm currently trying to create a JACK-based backend for an already
+existing audio processing software. The software creates multiple
+RT-threads and at the end of each cycle hands the control to the audio
+driver, which does the communication to whatever interface is chosen.
+So far, nothing new... Using the callback free API, the communication
+to the jack server went well, until the point where I shut down the
+jack server and the jack client blocked unrecoverably in the
+jack_cycle_wait() call.
+
+Some studies of the jack2-sources showed, that jack_cycle_wait() is
+waiting 0x7FFFFFFF microseconds (about 2147.4836 seconds) for the
+signal to wake up, and afterwards kills the thread, if the signal
+didn't arrive. I guess that it is expected, that jack_cycle_wait() is
+solely called from the callback function provided by
+jack_set_process_thread(). I'm guilty, because this is, what I am not
+doing. Since I am already operating in a RT thread, I just call
+jack_client_wait() from the thread my method is called on. Using the
+JACK-provided thread would only mean to introduce yet another
+synchronization point -- which by the way would be the same as in the
+callback API.
+
+Thinking about it, I don't really understand why the thread has to be
+killed, after the time out. Even if jack_cycle_wait() was called from
+the callback function, a return value of 0 should suffice to signal the
+jack client, to please return from the function -- the thread would
+close down automatically afterwards.
+
+Also, the maximum time out duration is somewhat impractical, especially
+in audio processing terms, as it leaves the system hanging with no
+possibility to correctly handling any anomalies. I think the best way
+here would be to leave it to the user, what time is adequate.
+
+As a conclusion, I can't use this API, though it looked very promising,
+and I will have to implement the callback way with some means of
+synchronization. (Even if this was "fixed" in any way now, I need to
+stay compatible with some older versions.)
+
+But what I wanted to know is: Is this really the way the callback-free
+API is supposed to work? Does anybody else see this as a problem or bug
+that should be fixed?
+
+
+Sincerely,
+  Wolfgang Lorenz
+
+
+PS: Is this the same as http://trac.jackaudio.org/ticket/27 ?
+
+1378823732.7519_0.ltw:2, <20130910163502.3bb854de at mike>
+________________________________________________________________________________
+

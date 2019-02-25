@@ -1,0 +1,67 @@
+Date:        Sat, 23 Apr 2011 11:11:56 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Eric [Jack-Devel] [jackosx] MIDI timing and Jack (not OS-X-specific) (1303542029.12233_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [jackosx] MIDI timing and Jack (not OS-X-specific)
+
+On Sat, Apr 23, 2011 at 01:13:25AM -0000, Eric wrote:
+
+> I started thinking about the way the jack process callback works, wrt midi, and I'm becoming convinced that using Jack isn't the best approach, unless I misunderstand the way it works. 
+> 
+> At the beginning of the process callback, a jack_midi_get_event_count() call is made. Then, as I walk through the frames of the buffer, I compare where I am in the buffer to the next available midi event, and if I'm on the right sample I process the midi. 
+> 
+> But I think this HAS to mean that the actual midi event happened at least one buffer's worth of data ago, right? I can't get a count of midi events at the beginning of the process callback if they haven't happened yet... 
+> 
+> I looked at the source to a2jmidid (ALSA to Jack MIDI bridge for linux) and I noticed it doesn't even bother with the timestamps (I think I've got the most recent source). So ... do people just tend to not worry about a 512 (default I think) sample delay (or the sort of jitter that a2jmidid is causing) in midi processing? 
+> 
+> This leads me to think I will use CoreMIDI to get the midi events and handle the audio the jack way.
+> 
+> Please correct me if I'm wrong,
+
+You are both right and wrong. Right because indeed there will be one period of
+latency. Wrong in assuming that you can have no latency and no jitter at the
+same time. That is just the consequence of processing audio in blocks of one
+period instead of doing it sample by sample and waiting a sample time between
+each call.
+
+Processing a period typically takes much less time than the period, if the
+processing is not too complex it happens 'instantly' compared to the period
+time. Also it doesn't have to happen at the start of a period - there could
+be another audio process taking e.g. half the period time before it's your
+turn. But things are OK as long as all processing is finished before the end
+of the period.
+
+All this means that the exact time at which the audio process is run is
+a) unknown, and b) irrelevant, and that any attempt to deliver MIDI to
+the audio process 'at the right time' is futile - it even doens't run most
+of the time ! Any input to it must be buffered until it runs. The only way
+to keep two or more buffered data streams synchronised is have time stamps
+on all data. For audio these are implicit - the time between two samples is
+fixed and you just have to count them. For MIDI or any message based data
+explicit timestamps are required.
+
+Since each process callback has to process one period's worth of whatever
+inputs it gets and can't look into the future, this must be the data from
+the previous period. And whatever it produces must be output from the
+start of the next period. There's no way around that, and using CoreMIDI
+isn't going to change that.
+
+Most MIDI users will agree that having a fixed latency is much better than
+having jitter in the same range (or more).
+
+Decent soundcards should work well with periods much smaller than 512.
+
+I can't comment an a2jmidi. If it doesn't calculate the timestamps 
+that is obviously not correct. Don't know what the current status
+is for Jack's own MIDI backends, but there is in principle no reason
+why they shouldn't just work.
+
+Ciao,
+
+-- 
+FA
+
+1303557131.11256_0.ltw:2,a <20110423111156.GA31099 at linuxaudio dot org>
+________________________________________________________________________________
+

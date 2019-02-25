@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] extra latency compensation</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] extra latency compensation</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303185014.20833_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303186870.23834_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303186514.23108_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 18 Apr 2011 23:14:42 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1303146624.11113_0.ltw:2,a/index.html'>Re: [Jack-Devel] extra latency compensation was Re: is this latency coming from ALSA, jack, or ardour? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1303186870.23834_0.ltw:2,a/index.html'>Re: [Jack-Devel] extra latency compensation </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Clemens Ladisch
+<a href='../1303193061.30998_0.ltw:2,a/index.html'>Re: [Jack-Devel] extra latency compensation </a></td></tr>
+</table>
+<pre>
+On Mon, April 18, 2011 12:10 pm, Paul Davis wrote:
+&gt; i've already mentioned that there are bugs with this in all released
+&gt; ardour versions.
+
+Yes, but the corrected instructions from Fons seem to make my PCI
+interface behave as expected.  After recording the click to track 1 via
+analog loop back, I could not distinguish between the generated click
+track, and the recording of the click playing back from track 1. I bounced
+the recorded track to track 2, bounced track 2 to track 3, etc. via analog
+loop back until I had 10 tracks, and I could unmute any of the 10 tracks
+while track 1 or the generated click track was playing, and not hear an
+offset.  As far as I can tell, with my PCI card, the compensation is
+effectively perfect now.
+
+&gt; you will not get a3 doing the right thing UNLESS you disconnect a
+&gt; "source" track from all other JACK ports when re-recording it to a new
+&gt; track.
+
+OK, if you say so, but it seems to work for me.  The input of each track
+was connected to the card physical input ports, and the output of each
+track went to the master bus.
+
+&gt; ardour will do the "right" thing if you switch the new track
+&gt;  alignment to "capture time".
+
+That made the alignment much worse when I tried it.
+
+The disturbing part, after getting the latency compensation working
+effectively perfectly for my PCI card, is that my USB interface is
+inconsistent in a way that I think jack cannot be involved.  I used the
+same process as for my PCI card, but with my USB interface, and the first
+5 tracks aligned perfectly, then the 6th and subsequent tracks diverged by
+about 1ms per track (audio for later tracks being aligned earlier in time
+than the first tracks).  I tried exactly the same process again on a new
+session, and that time the 1st track was ahead of the click by about
+0.75ms, the second track was ahead of the first by about 0.25ms.  The 10th
+track ended up ahead of the generated click by about 8 ms.
+
+I created a third session and did the same things again, but this time
+each track had the alignment set to align with capture time, and each
+track was delayed 77ms relative to the previous track.  The 10th track
+ended up 775 ms after the nominal beat/generated click, or about 700 ms
+delayed relative to the first recorded track.  That definitely wasn't what
+I wanted.
+
+The difference in results between the PCI card and the USB interface, and
+the fact that the USB interface wasn't consistent from session to session,
+or even track to track within a session, makes me think that there is just
+something off in the USB stack.  I only have the one USB interface, I
+suppose my hardware could just be broken in some weird way that only
+affects latency, or a bug in the device firmware.  I would want to compare
+results with someone who has different USB hardware first, I guess.
+
+So to come all the way back to the way my original question was posed, I
+think the answer (to where is the extra uncompensated latency coming from)
+is:
+
+I did not understand the way latency is communicated, I thought ALSA would
+provide a latency number for an interface, but you actually have to
+measure it yourself.
+
+The way you measure that latency is with the tool jack_iodelay (which is
+not currently mentioned anywhere on the jack web site).
+
+After you measure the latency with jack_iodelay, you have to massage the
+returned data in a way that does not match the current man page to get
+accurate results.  Additionally, you have to keep in mind the additional
+period of latency added by jack2 asynchronous mode.
+
+And on top of all that, USB still seems screwy, at least with my hardware.
+ I would be interested to hear results from others with USB hardware,
+especially if they can get good results.
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303185014.20833_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303186870.23834_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303186514.23108_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1303186514.23108_0.ltw:2,a&nbsp;&lt;631424e5aebb4690d80dfb5e1fdaf6fb.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

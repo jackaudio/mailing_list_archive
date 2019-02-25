@@ -1,0 +1,100 @@
+Date:        Thu, 27 Jun 2013 15:49:27 +0200
+From:        [hidden] at trellis dot ch <[hidden] at trellis dot ch
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Clemens Ladisch Re: [Jack-Devel] jackdmp 1.9.10 stops running after some hours on BBB (1372343428.6189_0.ltw:2,a)
+
+Subject:     [Jack-Devel] jackdmp 1.9.10 stops running after some hours on BBB
+
+Hello,
+
+i have a problem with jack, and i don't know how to fix (it might be
+unrelated to jack).
+
+Jack and jack applications run fine, but after some hours the applications
+are gone and only jack remains there as a process in a strange state.
+
+Jack is starded like this:
+$ jackd -R --timeout 5000 -v -d alsa -r44100 -n3 -p1024 -d hw:1,0 >
+~/log/jackd.log 2>&1 &
+
+jackdmp 1.9.10
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2013 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in realtime mode with priority 10
+Jack: JackPosixThread::StartImp : create non RT thread
+Jack: JackPosixThread::ThreadHandler : start
+Jack: playback device hw:1,0
+Jack: capture device hw:1,0
+Jack: apparent rate = 44100
+Jack: frames per period = 1024
+....
+
+
+after some hours (roughly 6 hours), the log file is filled up (100s of MB)
+with these lines (it keeps filling until jack killed):
+
+Jack: **** alsa_pcm: xrun of at least 0.117 msecs
+Jack: ALSA XRun wait_status = 0
+Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 8
+Jack: JackRequest::Notification
+Jack: JackEngine::ClientNotify: no callback for notification = 3
+Jack: JackEngine::ClientNotify: no callback for notification = 3
+Jack: **** alsa_pcm: xrun of at least 0.122 msecs
+Jack: ALSA XRun wait_status = 0
+Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 8
+Jack: JackRequest::Notification
+Jack: JackEngine::ClientNotify: no callback for notification = 3
+Jack: JackEngine::ClientNotify: no callback for notification = 3
+Jack: **** alsa_pcm: xrun of at least 0.118 msecs
+Jack: ALSA XRun wait_status = 0
+Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 8
+Jack: JackRequest::Notification
+Jack: JackEngine::ClientNotify: no callback for notification = 3
+Jack: JackEngine::ClientNotify: no callback for notification = 3
+Jack: **** alsa_pcm: xrun of at least 0.123 msecs
+Jack: ALSA XRun wait_status = 0
+Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 8
+Jack: JackRequest::Notification
+Jack: JackEngine::ClientNotify: no callback for notification = 3
+Jack: JackEngine::ClientNotify: no callback for notification = 3
+Jack: **** alsa_pcm: xrun of at least 0.166 msecs
+Jack: ALSA XRun wait_status = 0
+Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 8
+Jack: JackRequest::Notification
+Jack: JackEngine::ClientNotify: no callback for notification = 3
+Jack: JackEngine::ClientNotify: no callback for notification = 3
+...
+
+When the system is in that state, it can be operated (for instance tail
+the log) etc. but i need to restart jack and start all audio apps again. I
+have tried with different apps (once with jacktrip, once with darkice) and
+got multiple times the same result after over-night run.
+
+$ uname -a
+Linux ubuntu-armhf 3.8.13-bone20 #1 SMP Wed May 29 06:14:59 UTC 2013
+armv7l armv7l armv7l GNU/Linux
+
+$ aplay -l
+**** List of PLAYBACK Hardware Devices ****
+card 0: Black [TI BeagleBone Black], device 0: HDMI nxp-hdmi-hifi-0 []
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 1: iO4 [iO4], device 0: USB Audio [USB Audio]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+
+
+An observation is that the load is quite high when it runs as expected,
+but CPU seems not to be at limit, /dev/shm has space left, iotop looks
+good.
+
+Thanks for any suggestions,
+
+Thomas
+
+1372340980.3582_0.ltw:2,a <8bb5eb1b1e2b76a1e9f2dd90773cb558.squirrel at ips73 dot ips dot ch>
+________________________________________________________________________________
+

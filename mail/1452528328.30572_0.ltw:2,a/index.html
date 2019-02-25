@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] dumping MIDI events to a logfile</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] dumping MIDI events to a logfile</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1452525101.26579_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1452528926.32246_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1452528328.30572_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 11 Jan 2016 17:05:17 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Hanspeter Portner </span> &lt;[hidden] at airpost dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Benjamin Henrion
+<a href='../1452525101.26579_0.ltw:2,a/index.html'>Re: [Jack-Devel] dumping MIDI events to a logfile </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Benjamin Henrion
+<a href='../1452528926.32246_0.ltw:2,a/index.html'>Re: [Jack-Devel] dumping MIDI events to a logfile </a></td></tr>
+</table>
+<pre>
+On 11.01.2016 16:11, Benjamin Henrion wrote:
+&gt; On Mon, Jan 11, 2016 at 3:56 PM, Paul Davis &lt;[hidden]&gt; wrote:
+&gt;&gt; You have to connect jack_midi_dump to the relevant MIDI port(s). You can
+&gt;&gt; start JACK using qjackctl or cadence, and then use their connection dialogs.
+&gt;&gt; You could use jack_connect. There are other ways too.
+&gt;&gt;
+&gt;&gt; You could also use gmidimon :)
+&gt; 
+&gt; I also tried to hook an FTDI in 5V on the MIDI out connector in
+&gt; 31250bps, I could only see the FE or FC (depending if I would add a
+&gt; resistor) MIDI messages, and the keyboard would behave differently as
+&gt; plugged in with the USB:
+&gt; 
+&gt; https://pastee.org/27xc8
+&gt; 
+&gt; I thought sniffing midi was easier...
+
+If you just want to sniff the raw MIDI transferred via USB, why not simply use amidi [1]?
+There's no need to fiddle with/route via JACK here, imho.
+
+Get the alsa MIDI hardware name for 'UMONE'
+	export HW=$(amidi -l | grep UMONE | head -n 1 | gawk '{print $2}')
+
+Dump to console:
+	amidi -p ${HW} -d
+
+Dump to file:
+	amidi -p ${HW} -r my_dump.rawmidi
+
+[1] http://alsa.opensrc.org/Amidi
+
+If you want to sniff USB MIDI in terms of the raw USB packets,
+I'd recommend wireshark [2]. You'll need support for usbmon [3] in the kernel and
+the module being loaded (sudo modprobe usbmon).
+
+[2] https://www.wireshark.org/
+[3] https://www.kernel.org/doc/Documentation/usb/usbmon.txt
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1452525101.26579_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1452528926.32246_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1452528328.30572_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1452528328.30572_0.ltw:2,a&nbsp;&lt;5693D2BD.7040804 at airpost dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

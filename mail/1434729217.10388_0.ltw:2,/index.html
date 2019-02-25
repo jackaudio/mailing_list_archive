@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] About cross-compilation of jack2 in MXE and libportaudio</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] About cross-compilation of jack2 in MXE and libportaudio</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1434671700.15480_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1435070556.10855_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1434729217.10388_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 19 Jun 2015 18:42:16 +0300 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Harry Nakos </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Tim Mayberry &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Tim Mayberry
+<a href='../1434671700.15480_0.ltw:2,/index.html'>Re: [Jack-Devel] About cross-compilation of jack2 in MXE and libportaudio </a></td></tr>
+</table>
+<pre>
+Tim, you rock!
+
+Thank you for the explanation and the links! In a cross-compilation
+environment like MXE such behaviour breaks the installation of portaudio.
+If that could be avoided, it would be great. I may investigate it a bit
+more.
+
+Cheers!
+Harry
+
+On Fri, Jun 19, 2015 at 2:54 AM, Tim Mayberry &lt;[hidden]&gt; wrote:
+
+&gt; Hi Harry,
+&gt;
+&gt; On Fri, Jun 19, 2015 at 12:16 AM, Harry Nakos &lt;[hidden]&gt; wrote:
+&gt;
+&gt;&gt; Hi, guys!
+&gt;&gt;
+&gt;&gt; I recently committed the entry for jack2 to the MXE cross-compiler,
+&gt;&gt; specifically version 1.9.10. One notable thing was needed and that was
+&gt;&gt; linking to flac, vorbis, vorbisenc, and ogg, dependencies that libsndfile
+&gt;&gt; had (needed for static linking). Timothy Gu of MXE suggested that a recent
+&gt;&gt; commit in jack2 utilised pkg-config for libsndfile and that would eliminate
+&gt;&gt; the need of my not-so-pretty hack. Anyway, this is not the main reason for
+&gt;&gt; this message. But any general points about cross-compilation of jack2 and
+&gt;&gt; required/suggested libraries would be nice. The main reason is portaudio.
+&gt;&gt;
+&gt;&gt; After building jack2 in MXE, I saw this in my log:
+&gt;&gt;
+&gt;&gt; + install
+&gt;&gt; /home/xnakos/Projects/mxe/usr/i686-w64-mingw32.shared/lib/libportaudio.dll.a
+&gt;&gt; (from build/windows/libportaudio.dll.a)
+&gt;&gt;
+&gt;
+&gt; I believe this is the import library for the jack_portaudio.dll which are
+&gt; not necessary as these are internal jack modules. The target names in the
+&gt; wscript files should probably be changed(prefixed or something) to avoid
+&gt; this situation but I'm not sure what other issues that would introduce atm,
+&gt; possibly none.
+&gt;
+&gt;
+&gt;&gt; This resulted in portaudio library, which was already built in MXE as a
+&gt;&gt; requirement for jack2, to be overwritten. I am not quite sure I understand
+&gt;&gt; the reasons for this. So I would really enjoy an explanation! In practice,
+&gt;&gt; when trying to cross-compile Hydrogen drum machine, this overwrite would
+&gt;&gt; result in linking errors such as:
+&gt;&gt;
+&gt;&gt; CMakeFiles/hydrogen-core-0.9.7.dir/objects.a(portaudio_driver.cpp.obj):
+&gt;&gt; In function `ZN6H2Core15PortAudioDriver10disconnectEv':
+&gt;&gt; portaudio_driver.cpp:107: undefined reference to `Pa_StopStream'
+&gt;&gt; portaudio_driver.cpp:114: undefined reference to `Pa_CloseStream'
+&gt;&gt; portaudio_driver.cpp:121: undefined reference to `Pa_Terminate'
+&gt;&gt; portaudio_driver.cpp:111: undefined reference to `Pa_GetErrorText'
+&gt;&gt; portaudio_driver.cpp:118: undefined reference to `Pa_GetErrorText'
+&gt;&gt; CMakeFiles/hydrogen-core-0.9.7.dir/objects.a(portaudio_driver.cpp.obj):
+&gt;&gt; In function `ZN6H2Core15PortAudioDriver7connectEv':
+&gt;&gt; portaudio_driver.cpp:71: undefined reference to `Pa_Initialize'
+&gt;&gt; portaudio_driver.cpp:75: undefined reference to `Pa_GetErrorText'
+&gt;&gt; portaudio_driver.cpp:87: undefined reference to `Pa_OpenDefaultStream'
+&gt;&gt; portaudio_driver.cpp:91: undefined reference to `Pa_GetErrorText'
+&gt;&gt; portaudio_driver.cpp:95: undefined reference to `Pa_StartStream'
+&gt;&gt; portaudio_driver.cpp:99: undefined reference to `Pa_GetErrorText'
+&gt;&gt;
+&gt;&gt; These errors are not present when linking to the original portaudio
+&gt;&gt; library. Any information would be great, because I am definitely missing a
+&gt;&gt; lot.
+&gt;&gt;
+&gt;
+&gt; I just remove that file from the package so there is no conflict, for
+&gt; example:
+&gt;
+&gt;
+&gt; https://github.com/mojofunk/MINGW-packages/blob/newpkgs/mingw-w64-jack/PKGBUILD
+&gt; or
+&gt;
+&gt; https://github.com/mojofunk/fedora-mingw-ardour/blob/master/SPECS/mingw-jack-audio-connection-kit.spec
+&gt;
+&gt; At least I hope I'm on the right track and that solves your problem.
+&gt;
+&gt; Tim
+&gt;
+&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1434671700.15480_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1435070556.10855_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1434729217.10388_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1434729217.10388_0.ltw:2,&nbsp;&lt;CAAHsbnNfQaKPqVcuUMKqtcRdWVKS5=b=FgAgiPzbuJa-oQx9Jg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,75 @@
+Date:        Tue, 06 Sep 2011 15:56:36 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Dan Swain Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1314577369.15178_0.ltw:2,RSa)
+Follow-Up:   Dan Swain Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1344210381.10004_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea
+
+On 08/29/11 02:22, Dan Swain wrote:
+
+> This is where I need the advice of those who are experienced with the inner
+> workings of netJACK:
+
+Disclaimer: I'm not, but since nobody has answered your question, I took
+a brief look at the code.
+
+> If JACK sends uncompressed audio, is it in a particular format (WAV or raw
+> PCM)?
+
+WAV is a file header and obviously not a valid answer. PCM sounds a lot
+better. ;)
+
+If you check netjack_packet.c, there's render_jack_ports_to_payload().
+Depending on the required bitdepth, it either encodes audio data as
+8bit, 16bit or float. In the float case, those are either native floats
+(depending on the host CPU) or treated as int32 and then converted to
+network byte order.
+
+Given that you're creating a locally attached soundcard, aim for
+float32le. "le" is little endian, most of your target CPUs will use them.
+
+MIDI is encoded as uint32_t in network byte order (see
+encode_midi_buffer).
+
+
+> Assuming that both the master and slave are connected to each other and no
+> further identification needs to be made, what data does JACK send along with
+> that audio data?
+
+MIDI data and, if run in autoconfig mode, a first packet that configures
+the system. This is probably something neat that you might want to use
+if your box is going to be the jackd master.
+
+> At more of an opinion level, if I were to use this for our 8-channel
+> system, would each channel be dealt with in separate packets (series
+> processing), or should one packet send data from all eight channels
+> (parallel processing)?
+
+That's actually not the question you want to ask. What you want to know
+is how to distribute the samples in the stream. netjack sends a given
+amount (nframes) of the first channel, then followed by the same amount
+of frames for the second channel and so on.
+
+If the payload is too large for a single packet, another one will be
+created.
+
+So there's clearly no "a single packet per channel" concept. Better
+think of a continous bitstream that's split into arbitrary chunks called
+packets.
+
+> Again, if I have missed the scope of anything hear, please let me know, and
+> I'll do some more relevant research - this is still very new to me, as you
+> can probably tell :-)
+
+How is it going? It seems you're new to C and new to VHDL. Frankly,
+that's not exactly the best starting point for a hardware project. Do
+you have somebody to ask in case of trouble? Like a supervisor?
+
+
+
+Cheers
+
+1315317438.15864_0.ltw:2,a <4E662694.1070004 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

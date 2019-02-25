@@ -1,0 +1,49 @@
+Date:        Tue, 28 Feb 2012 16:55:03 +0200
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] jack1 version jack2 public headers comparison (1330439967.891_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack1 version jack2 public headers comparison
+
+Paul Davis <[hidden]> writes:
+
+> On Tue, Feb 28, 2012 at 9:26 AM, Nedko Arnaudov <[hidden]> wrote:
+>
+>> jack_get_version_string() is also required for reporting jack server
+>> version over dbus. I want this information to be present somewhere in
+>> gladish (the GUI frontend bundled in the ladish tarball).
+>
+> this just defers the question: what is the purpose of presenting
+> anyone with this version number?
+
+Diagnostics. Why its reported to stdout early in jackd code? Its the
+same.
+
+>>>> jack_port_type_id_t jack_port_type_id (const jack_port_t *port) JACK_OPTIONAL_WEAK_EXPORT;
+>>>
+>>> needed for?
+>>>
+>>>> typedef uint32_t jack_port_type_id_t;
+>>>
+>>> use?
+>>
+>> jackdbus uses it to report [integer] port types over dbus.
+>
+> why integer and not string as within the JACK API itself?
+
+I cant recall why we decided like this with iuso back then. I can guess
+that one reason could be that comparing integers is faster. Also its
+more bandwidth efficient. There are jackdbus users that work with huge
+number of ports. And it has to stay like this in dbus patchbay interface
+for compatibility reasons. If we are going to remove integer port types
+From the C API, then jackdbus will have to either do string compares on
+each port creation event or we should guarantee that jack_port_type()
+returns unique string pointers that can be compared as integers.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1330441030.3140_0.ltw:2,a <874nubdn3s.fsf at arnaudov dot name>
+________________________________________________________________________________
+

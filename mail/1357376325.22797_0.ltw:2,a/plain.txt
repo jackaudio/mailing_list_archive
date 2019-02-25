@@ -1,0 +1,75 @@
+Date:        Sat, 05 Jan 2013 19:28:24 +1030
+From:        Jonathan Woithe  <[hidden] at just42 dot net>
+To:          "Tim H." <[hidden] at pghcomp dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Tim H. [Jack-Devel] Merge Firewire Device (1357372174.16265_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Merge Firewire Device
+
+Hi Tim
+
+On Sat, Jan 05, 2013 at 02:49:31AM -0500, Tim H. wrote:
+> I found the below documentation which explains how to "aggregate"
+> multiple Audio devices:
+> 
+> http://jackaudio.org/multiple_devices
+> 
+> My question is if anyone has an experience with this and my specific
+> device.  I have two Presonus Firebox's which have essentially 4
+> inputs and 6 outputs each.  I'm looking to merge two of these
+> firewire devices for a recording project I have coming up ...
+
+Since the two devices you're looking at are both firewire interfaces they
+will both be managed by the "firewire" jack backend (not ALSA).  This uses
+FFADO (www.ffado.org) to interact with the device.  Theoretically, if there
+are multiple supported firewire devices found by FFADO, FFADO will aggregate
+them automatically.  The inputs and outputs from each respective device will
+be available for use via jack and you should be able to accomplish your
+task.  There shouldn't be a need to utilise the information at the link you
+provided since the aggregation is taken care of at the FFADO level.
+
+There are a few significant caveats.  The first is that the code which
+manages the multiple devices hasn't seen a huge amount of testing.  It has
+been successfully used by a few people, but due to differences between
+interfaces these past experiences can't be taken to mean that it will work
+with two Fireboxes.  As far as I am aware, no one has tried FFADO with more
+than one Firebox before, so the best thing to do would be to test it and see
+what happens.
+
+Secondly, the reports we (FFADO) have received indicate that while FFADO can
+theoretically cater for unsynchronised devices, the resulting system is more
+stable overall if the two devices are clocked synchronously.  This can be
+accomplished on many interfaces by linking work clocks together.  However,
+from memory the Firebox doesn't have word clock I/O.  One trick you can use
+in this case is to connect the SPDIF output from one device to the SPDIF
+input of the other and arrange for the second Firebox to sync to SPDIF. 
+This should effectively lock both devices to the same clock.
+
+> Any advice, or tips you can provide would be helpful.  I plan on
+> hooking these up Monday for some initial testing.
+
+The best advice I can give is to try it and see.
+
+It should be noted that if trouble is encountered, it is probably more
+applicable to post your findings to the ffado-devel list because it will
+more than likely be the FFADO code which needs to be fixed.  Details about
+ffado-devel can be found on the FFADO website (www.ffado.org).
+
+> Side question:  The device has 2 firewire ports on the back.  I know
+> Presonus doesn't auto-support daisy chaining on this device.  But,
+> would the other port act as a Firewire "through".  Else, I'll have
+> to hook up a second firewire PCI card.
+
+It would be interesting to know why Presonus don't support the daisy
+chaining.  Again, try it and see if it works.  FFADO itself won't care. 
+Since two Fireboxes won't go close to consuming all of the available
+Firewire bus bandwidth, the only issue I can see is if there is something in
+the Firebox hardware or firmware which precludes this configuration from
+working.
+
+Regards
+  jonathan
+
+1357376325.22797_0.ltw:2,a <20130105085824.GA11445 at marvin dot atrad dot com dot au>
+________________________________________________________________________________
+

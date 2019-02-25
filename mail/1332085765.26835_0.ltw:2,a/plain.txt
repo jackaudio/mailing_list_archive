@@ -1,0 +1,83 @@
+Date:        Sun, 18 Mar 2012 16:49:12 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Dénes Almási <[hidden] at rudanium dot org>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Dénes Almási Re: [Jack-Devel] Interpreting 'Clients end date' gnuplot diagram (1332085054.26405_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Interpreting 'Clients end date' gnuplot diagram
+
+The audio card interrupt is not regular, so in this case the "synchronous" mode is mandatory.
+
+Then this spike in scheduling timing is rather odd. What is is "shielding script which checks running, processes every 20 seconds for my client and puts it on two exclusive, cores with jack."? Why in the first place?
+
+Client duration spike here (http://denes.rudanium.org/shots/perform-2-clientsduration.png) at 20000 is also strange. Any explanation in your audio process for that? 
+
+Stéphane
+
+Le 18 mars 2012 à 16:37, Dénes Almási a écrit :
+
+> I did new tests in both synchronous and asynchronous modes.
+> I uploaded all the results:
+> 
+>  [Asynchonous]
+> Audio driver timing:
+> http://denes.rudanium.org/shots/perform-2-audiodrivertiming.png
+> 
+> Clients duration:
+> http://denes.rudanium.org/shots/perform-2-clientsduration.png
+> 
+> Clients end date:
+> http://denes.rudanium.org/shots/perform-2-clientsenddate.png
+> 
+> Driver end date:
+> http://denes.rudanium.org/shots/perform-2-driverenddate.png
+> 
+> Scheduling latency:
+> http://denes.rudanium.org/shots/perform-2-schedulinglatency.png
+> 
+>  [Synchronous]
+> Audio driver timing:
+> http://denes.rudanium.org/shots/perform-3S-audiodrivertiming.png
+> 
+> Clients duration:
+> http://denes.rudanium.org/shots/perform-3S-clientsduration.png
+> 
+> Clients end date:
+> http://denes.rudanium.org/shots/perform-3S-clientsenddate.png
+> 
+> Driver end date:
+> http://denes.rudanium.org/shots/perform-3S-driverenddate.png
+> 
+> Scheduling latency:
+> http://denes.rudanium.org/shots/perform-3S-schedulinglatency.png
+> 
+> In synchrnous mode, it works nicely without xruns. But the audio
+> driver timing looks really ugly and that can't be good in general.
+> It is an onboard soundcard, I don't expect wonders to happen but
+> if you have any hints on improving the situation, I would be very
+> glad to hear them.
+> 
+> Also, there is an interesting spike at around the 20000th cycle
+> in asynchrnous clients duration and scheduling latency. A possible
+> cause is my automatic process shielding script which checks running
+> processes every 20 seconds for my client and puts it on two exclusive
+> cores with jack. I could imagine that this "switch" can cause a spike
+> in scheduling.
+> 
+> Thank you for your help,
+> Dennis
+> 
+> On 2012-03-18 16:00, Stéphane Letz wrote:
+>> The audio interrupt indeed seems suspicious.  Can you put other
+>> diagrams on your site?
+>> 
+>> You can also try jackd in "synchronous" mode like:
+>> 
+>> jackd -S -P83 -dalsa -dhw:0 -r48000 -p64 -n3 -Xraw
+>> 
+>> Stéphane
+>> 
+
+1332085765.26835_0.ltw:2,a <2DEF933C-3151-4372-9FD5-33A565D3F3E8 at grame dot fr>
+________________________________________________________________________________
+

@@ -1,0 +1,36 @@
+Date:        Sat, 05 Dec 2015 09:04:00 -0800
+From:        Sean Bolton  <[hidden] at smbolton dot com>
+To:          Xavier Mendez <[hidden] at jmendeth dot com>, JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Xavier Mendez [Jack-Devel] Volatile vs memory fences (1449314320.25128_0.ltw:2,)
+Follow-Up:   Xavier Mendez Re: [Jack-Devel] Volatile vs memory fences (1449336552.12868_0.ltw:2,)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Volatile vs memory fences (1449446154.23996_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Volatile vs memory fences
+
+Hi Xavier,
+
+On Sat Dec  5 2015, Xavier Mendez wrote:
+> I was reviewing the code for `jack_ringbuffer` and I saw it uses 
+> `volatile` for the pointers. This confused me, since my teachers have 
+> long insisted that `volatile` isn't for use on multithreaded code.
+> 
+> Take i.e. `jack_ringbuffer_write`: the hardware could reorder the
+> writes so that the pointer is updated before the buffer has been
+> written. Wouldn't a memory fence be required?
+
+You're quite right--memory barriers are required for safe operation of
+the ringbuffer on systems with weak memory ordering. IIRC, this is
+at least the third time this has come up on the list (see [1] for one
+previous discussion), but it's never been fixed. The number of people
+running jack on affected hardware is very small, and it is difficult to
+convince people that the current code could fail on those systems. Take
+a look at the PortAudio ringbuffer if you'd like to see it done right.
+
+-Sean
+
+[1] jack-devel mailing list, 22 Oct 2008, "Re: latest svn commit: 64/32
+support". http://comments.gmane.org/gmane.comp.audio.jackit/17887
+
+1449334867.11321_0.ltw:2, <20151205090400.03674a63 at shams dot smbolton dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,49 @@
+Date:        Tue, 24 Jan 2012 16:49:51 +0100
+From:        Tobias Hoffmann  <[hidden] at thax dot hardliners dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] jack - audio group - package install (1327416827.23402_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] jack - audio group - package install (1327420349.29407_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack - audio group - package install
+
+Paul Davis wrote:
+> the issue you're raising is important but because of the way linux
+> "works" its a question for each distribution to solve in its own way.
+>   
+IMHO the whole realtime-group stuff is based on the 'wrong solution' to 
+the problem, i.e.
+
+Problem: Certain processes have special realtime requirements, which 
+have to be granted by the kernel. The kernel only trusts 'root'  [not 
+exactly, but good enough for now].
+
+Current solution: Use the mechanisms already in place, user/group based 
+access control. A trusted (root) process then creates a appropriately 
+limited environment for for that user (on login).
+
+Actually needed solution: There are certain processes (jackd) that 
+I/administrator/distros would like to give certain extended rights. 
+There are others (e.g. some buggy audio-software that happens to request 
+realtime priority) that should not have them. Even more, certain rights 
+(e.g. access to audio devices) might depend on changing factors (e.g. 
+fast-user-switching).
+The usual way to deal with this on unix is to have a (e.g. audio) daemon 
+run as root. Due to the way jack works, this is not an option.
+ConsoleKit has recognized that: We can't do all the work as a root, but 
+at least do the minimum thing, permission granting, in a 'clean' way.
+
+So what I'm proposing is to rethink the way jackd acquires realtime 
+abilities.
+Why not use some sort of realtime-granting daemon? Sure, adding another 
+layer of indirection seems overkill, but we're currently facing the same 
+issues again and again.
+
+Another thing: Security ("I can trick the granting-damon into thinking I 
+am jackd, so I can become realtime") should not be our primary concern 
+here; nevertheless I think practical solutions to that can be found.
+
+  Tobias
+
+1327420212.29155_0.ltw:2,a <4F1ED31F.1060400 at thax dot hardliners dot org>
+________________________________________________________________________________
+

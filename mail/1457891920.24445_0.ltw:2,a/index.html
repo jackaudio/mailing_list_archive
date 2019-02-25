@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Cannot access portbuffer memory from C++</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Cannot access portbuffer memory from C++</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1457884683.14679_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1458292659.22524_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1457891920.24445_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 13 Mar 2016 18:58:31 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Frank Sch&#xE4;fer
+<a href='../1457884683.14679_0.ltw:2,a/index.html'>[Jack-Devel] Cannot access portbuffer memory from C++ </a></td></tr>
+</table>
+<pre>
+On 03/13/2016 04:57 PM, Frank Sch&#xE4;fer wrote:
+
+&gt; My program started to produce output the moment when ``jack_activate( client );'' is called.
+&gt; Isn't this a bit waste of CPU due to the fact that the process_audio callback copies plenty of data to a port which is not used yet?
+
+memcpy is really cheap on modern machines (SSE), besides internally jack
+uses zero-copy whenever possible: jack clients get a pointer to the
+actual input/output buffer(s).
+
+The process callback always runs for a couple of reasons: in your case
+the oscillator's phase should advance sample-accurately regardless if
+the output is connected or not.
+
+But more importantly, for DSP one prefers consistent CPU usage.  Ideally
+the process callback will always cause exactly the same CPU load, every
+cycle, for all cycles.  Otherwise there's the potential: "It works
+unless I connect things -&gt; CPU spikes -&gt; x-runs...")
+
+ciao,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1457884683.14679_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1458292659.22524_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1457891920.24445_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1457891920.24445_0.ltw:2,a&nbsp;&lt;56E5AA47.70209 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

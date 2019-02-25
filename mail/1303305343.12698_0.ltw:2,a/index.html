@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] non-callback API</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] non-callback API</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303304733.11391_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303306811.15827_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303305343.12698_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 20 Apr 2011 09:15:19 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Dan Muresan &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Dan Muresan
+<a href='../1303301688.5149_0.ltw:2,a/index.html'>Re: [Jack-Devel] non-callback API </a></td></tr>
+</table>
+<pre>
+On Wed, Apr 20, 2011 at 8:14 AM, Dan Muresan &lt;[hidden]&gt; wrote:
+&gt;&gt;&gt; But I wonder what happens if the thread doesn't call
+&gt;&gt;&gt; jack_cycle_wait() "often enough". That cannot occur in
+&gt;&gt; It's the same as if the application takes too long in the
+&gt;&gt; process() function: &#xA0;You will cause xruns and your
+&gt;&gt; application will probably be disconnected from JACK for
+&gt;&gt; being a zombie/deadbeat.
+&gt;
+&gt; OK. Actually process() taking too long would be equivalent to the code
+&gt; between cycle_wait() and cycle_signal() taking too long, right?
+&gt; Instead I'm asking about the other half -- the code between
+&gt; cycle_signal() and cycle_wait() taking too long.
+&gt;
+&gt; But you probably meant that the effects are the same -- which seems reasonable.
+
+pretty much.
+
+the server will not be waiting on the graph until (at latest) your
+client returns from jack_cycle_wait(). the server will wakeup again
+(at the earliest) when your client calls jack_cycle_signal() (these
+limit cases are where yours is the only client).
+
+if your client continues to do work in between the last call to
+jack_cycle_signal() and jack_cycle_wait(), to the extent that it
+delays its call to jack_cycle_wait(), then you've effectively stolen
+time from that available to run the stuff between wait + signal (the
+"process callback"). if you delay for too long, its identical to a
+process callback taking too long and the effects will the same - the
+server will wakeup, discover that you're not done (i.e. your client
+has not called jack_cycle_signal()) in time and then the usual stuff
+will occur.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303304733.11391_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303306811.15827_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303305343.12698_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1303305343.12698_0.ltw:2,a&nbsp;&lt;BANLkTin6PfhWcuw9-o+JT_scxjV_0QJyxg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

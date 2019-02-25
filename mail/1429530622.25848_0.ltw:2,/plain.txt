@@ -1,0 +1,76 @@
+Date:        Mon, 20 Apr 2015 13:41:47 +0200
+From:        Jörn Nettingsmeier  <[hidden] at stackingdwarves dot net>
+To:          Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>, Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] jack1 git FTBFS (1429526923.21086_0.ltw:2,)
+
+Subject:     [SOLVED] Re: [Jack-Devel] jack1 git FTBFS
+
+On 04/20/2015 12:48 PM, Adrian Knoth wrote:
+> On 04/20/15 12:26, Jörn Nettingsmeier wrote:
+>
+>> metadata.c:202:15: error: 'DB' has no member named 'exists'
+>>           if (db->exists (db, NULL, &d_key, 0) == DB_NOTFOUND) {
+>>                 ^
+>
+> Weird. Should be there. Did you check db.h (the system-wide file)? Mine
+> clearly has it.
+>
+>> metadata.c:322:29: error: 'DBC' has no member named 'get'
+>>           while ((ret = cursor->get(cursor, &key, &data, DB_NEXT)) ==
+>> 0) {
+>>                               ^
+>
+> Same here:
+>
+> struct __dbc {
+> [..]
+>          /* DBC PUBLIC HANDLE LIST BEGIN */
+>          int (*close) __P((DBC *));
+> }
+>
+> It's clearly there.
+>
+> So either your include file is broken or it's not taken into
+> consideration.
+>
+> You can pass -E to the gcc call (manually) and redirect the output to a
+> file, so you get the preprocessor out. Maybe as simple as this:
+>
+> /* foo.c */
+> #include <db.h>
+>
+>
+> gcc - E foo.c
+>
+> And there, you should see all the expanded struct __db{,c,t} things.
+>
+>
+> Good luck with hunting this down. ;)
+
+
+Thanks, that was the critical piece of information. Turns out I had two 
+versions of the Berkeley database installed (4.5 and 4.8), but only 4.5 
+had the developer package. Manually adding 4.8-devel fixed things, and 
+of course such a situation would fool all auto* magic and lead to weird 
+stuff down the road...
+
+
+All best,
+
+
+Jörn
+
+
+
+-- 
+Jörn Nettingsmeier
+Lortzingstr. 11, 45128 Essen, Tel. +49 177 7937487
+
+Meister für Veranstaltungstechnik (Bühne/Studio)
+Tonmeister VDT
+
+http://stackingdwarves.net
+
+1429530622.25848_0.ltw:2, <5534E5FB.1040700 at stackingdwarves dot net>
+________________________________________________________________________________
+

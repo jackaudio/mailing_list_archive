@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] jack2 ASIO & autostart</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] jack2 ASIO & autostart</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1412430717.16001_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1412513433.9791_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1412459364.10498_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 04 Oct 2014 23:48:56 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK Mailing List &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1412513433.9791_0.ltw:2,/index.html'>Re: [Jack-Devel] jack2 ASIO &amp; autostart </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1412609837.30778_0.ltw:2,/index.html'>Re: [Jack-Devel] jack2 ASIO &amp; autostart </a></td></tr>
+</table>
+<pre>
+Hi Stephane. Hi jack2-devs.
+
+In a recent foray into the windows-world, I noticed that that when
+installing jack2, it registers JackRouter.dll ASIO dll. So far so good.
+
+When starting some ASIO application that scans for available devices and
+if jackd is not running, JackRouter.dll tries to launch jackd during
+ASIO device scan. Not good.
+
+jackd's auto-start timeout is about 1 min which makes this rather
+unusable. See http://pastebin.com/Jug8HqdF for a complete log.
+It takes twice that time if ASIO4all is installed which probes
+JackRouter again.
+
+Here, jackd auto-start fails because jackd on win7 64bit installs itself
+to C:\Program Files (x86)\Jack\jackd.exe (note the x86) -- but even if
+jackd autostart is made to work, jackd blocks the device which one may
+want to use directly with ASIO and causes further issues...
+
+Current workaround: start jackd with the dummy backend before launching
+an ASIO app, or uninstall jack.
+
+Proposed solution: use JackNoStartServer in JackRouter (patch attached).
+
+ciao,
+robin
+
+<a href='files/jack2_asio_noautostart.diff' target='_blank'>* Attachment: 'jack2_asio_noautostart.diff'</a>
+content-type: text/x-patch
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1412430717.16001_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1412513433.9791_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1412459364.10498_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1412459364.10498_0.ltw:2,&nbsp;&lt;54306B48.1050902 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

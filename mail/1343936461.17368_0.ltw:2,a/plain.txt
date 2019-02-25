@@ -1,0 +1,62 @@
+Date:        Thu, 02 Aug 2012 12:40:52 -0700
+From:        Devin Anderson  <[hidden] at gmail dot com>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          [hidden] at lists dot jackaudio dot org, [hidden] at yahoogroups dot com
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] OS X jack midi message issues between jack and core midi (1342422097.27526_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] OS X jack midi message issues between jack and core midi (1343940887.24252_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] OS X jack midi message issues between jack and core midi
+
+On Mon, Jul 16, 2012 at 12:00 AM, Stéphane Letz <[hidden]> wrote:
+
+> JackOSX indeed uses jack2, but building the whole stuff is a bit of
+> pain... I'll try to do that and prepare a new package this week.
+
+I got around to looking at the JACK 2 code on github.com/jackaudio,
+and I don't see the fix applied for duplicate messages that I sent
+over.  I think the fix should be applied.
+
+As far as dropped messages go, I noticed that the ProcessRead() and
+ProcessWrite() calls in JackCoreMidiDriver now have TryLock() calls:
+
+    int
+    JackCoreMidiDriver::ProcessRead()
+    {
+        int res;
+        if (Trylock()) {
+            res = (fEngineControl->fSyncMode) ? ProcessReadSync() :
+ProcessReadAsync();
+            Unlock();
+        } else {
+            res = -1;
+        }
+        return res;
+    }
+
+    int
+    JackCoreMidiDriver::ProcessWrite()
+    {
+        int res;
+        if (Trylock()) {
+            res = (fEngineControl->fSyncMode) ? ProcessWriteSync() :
+ProcessWriteAsync();
+            Unlock();
+        } else {
+            res = -1;
+        }
+        return res;
+    }
+
+Could this be the reason for the dropped messages?
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+psinsights - http://psinsights.googlecode.com/
+synthclone - http://synthclone.googlecode.com/
+
+1343936461.17368_0.ltw:2,a <CAG7zqTrKAhypNsNPdZEv5QP9Y-_5wu+N1fx05CzJnzJs67vyKw at mail dot gmail dot com>
+________________________________________________________________________________
+

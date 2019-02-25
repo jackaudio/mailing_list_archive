@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Noisy Signal - Fragmented Data</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Noisy Signal - Fragmented Data</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1460550935.3023_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1460899722.26400_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1460575755.32680_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 13 Apr 2016 14:28:41 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Kenneth Fields &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Kenneth Fields
+<a href='../1460530900.22740_0.ltw:2,/index.html'>Re: [Jack-Devel] Noisy Signal - Fragmented Data </a></td></tr>
+</table>
+<pre>
+On Wed, April 13, 2016 2:01 am, Kenneth Fields wrote:
+&gt; We are on CERNET2 and Internet2 - good IPV6 networks.
+&gt; Jacktrip in the common 8-channel case would then always
+&gt; send Jumbo frames, right?
+
+Independent things, a "good IPv6 network" does not necessarily imply jumbo
+frame support. The network stack would still need to determine path MTU
+before using large frames.
+I did however find a reference on the Internet2 web page that said the
+intention was to configure for 9kB frame support everywhere on Internet2.
+There are lots of places a link could be misconfigured, though.
+
+This link explains some of path MTU determination.  It mentions some
+differences with IPv6 but does not discuss:
+http://packetlife.net/blog/2008/aug/18/path-mtu-discovery/
+
+There are some references there and in comments left about how to discover
+MTU in a path and determine where MTU changes.
+
+The IPv6 specification section 4.5 has this note:
+(Note: unlike IPv4, fragmentation in IPv6 is performed only by source
+nodes, not by routers along a packet's delivery path -- see section 5.)
+
+Section 5 is titled "Packet Size Issues" and has this note:
+
+It is strongly recommended that IPv6 nodes implement Path MTU
+   Discovery [RFC-1981], in order to discover and take advantage of path
+   MTUs greater than 1280 octets.  However, a minimal IPv6
+   implementation (e.g., in a boot ROM) may simply restrict itself to
+   sending packets no larger than 1280 octets, and omit implementation
+   of Path MTU Discovery.
+
+To me that sounds like the platform IPv6 layer should handle MTU
+discovery, but I'm not sure if application level software has to
+participate in that or not.  I don't have any experience with the low
+level details of programming network software in C or C++, in higher level
+languages the libraries take care of a lot of that stuff behind the
+scenes, and for software that only runs on a LAN I just assume that 1500
+byte packets are supported and plan for that.
+
+&gt; 8 channels x 2 bytes (16bit)  x 128 buffer size = 2048
+
+The page for jacktrip has this description:
+"It supports any number of channels (as many as the computer/network can
+handle) of bidirectional, high quality, uncompressed audio signal
+steaming."
+
+So in a case of 32 channels of 24 bit audio, that would be by your
+calculation:
+32 x 3 x 128 = 12288 bytes
+12288 bytes is the largest MTU I have seen used on switches, but that is
+raw Ethernet packet size, not including Ethernet headers, IP headers, and
+UDP headers.   That means that 32 channels would not fit into a single
+frame of any equipment I have seen, much less the more typical case of
+1518 byte Ethernet MTU, so it is unlikely that jacktrip would require that
+the entire audio frame fit into one Ethernet packet. I suppose it is
+possible, the documentation I found doesn't really say what is meant by
+"as many as the computerer/network can handle."  My assumption would be
+that is payload bandwidth limited, not packet size limited. You might have
+to dig into the source to check.  My first assumption would be that
+jacktrip has been around long enough it would have come up before now if
+packet size was really a problem.
+
+&gt; I wonder how we did this before without problems?
+&gt; Is it the different treatment of MTU on ipv6?
+
+Did you actually use the exact same configuration before?  Same end point
+locations, same network route?  If you switched from IPv4 to IPv6 then the
+addresses in the header went from 32 bit addresses to 128 bit addresses.
+IPv4 headers are 20 bytes and IPv6 headers are 40 bytes, so you lose 20
+bytes of payload if you switch from IPv4 to IPv6 and keep the same
+Ethernet MTU.
+
+Even if you were using IPv6 on your comparison, something could have
+changed in the path.  You would need to compare traceroute results from
+previous connections and current connections to see if the routing is the
+same or has changed.  The route could  have changed, or even on the same
+route equipment could have changed, or even just a configuration mistake
+of the same equipment on the same route.
+
+And of course packet fragmentation could be unrelated to the problems you
+have, presumably you didn't analyze the transmission with wireshark when
+everything was working properly, so you don't know if the audio data to
+packet distribution is the same or different.
+You could compare to a working connection and see if the behavior is
+really different.
+
+If for some reason the jacktrip application is handing down large packets
+when the path does not support packets of that size, it would be
+considered bad design practice.  I think (not sure) that the IP layer may
+fragment for you, but RFC 5405 says you should not do that:
+"Due to these issues, an application SHOULD NOT send UDP datagrams
+   that result in IP packets that exceed the MTU of the path to the
+   destination.  Consequently, an application SHOULD either use the path
+   MTU information provided by the IP layer or implement path MTU
+   discovery itself [RFC1191][RFC1981][RFC4821] to determine whether the
+   path to a destination will support its desired message size without
+   fragmentation."
+
+Are you sure the problem isn't just plain old dropped packets? Does
+jacktrip give an indication if a sequence number is missed?  Presumably
+only the receiving side would know since UDP does not send ACK packets.
+
+The only design document I could find was here:
+https://ccrma.stanford.edu/groups/soundwire/publications/papers/2009-caceres_chafe-ICMC-jacktrip.pdf
+
+That document explicitly says that clocks are not synchronized, which
+means you should EXPECT to hear glitches regularly:
+"...and deals with clock drifts and late
+or un-recoverable packets by using a lower-level strategies
+in ring buffers that can, e.g., sound like a wavetable synthesizer,
+thus extending the musical sonority of the moment.
+Clock drift between remote WAN machines is still an unsolved
+issue and there are presumably new techniques to be
+tried in the future, like adaptive re-sampling, packet crossfading,
+and others."
+
+Sounds like jacktrip is a basically broken design for network audio, and
+you are going to get a continuous stream of glitches by design.
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1460550935.3023_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1460899722.26400_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1460575755.32680_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1460575755.32680_0.ltw:2,&nbsp;&lt;2eb12be01f138e55aaa2b88daccae61d.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

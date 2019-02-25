@@ -1,0 +1,67 @@
+Date:        Tue, 01 Jan 2013 23:09:09 +0100
+From:        Jeremy Jongepier  <[hidden] at autostatic dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jeremy Jongepier Re: [Jack-Devel] jack2 on ARM - patch (1357071985.18375_0.ltw:2,Sa)
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] jack2 on ARM - patch (1357127368.13372_0.ltw:2,Sa)
+
+Subject:     Re: [Jack-Devel] jack2 on ARM - patch
+
+On 01/01/2013 09:26 PM, Jeremy Jongepier wrote:
+> On 01/01/2013 06:29 PM, Robin Gareus wrote:
+>> Hi,
+>>
+>> jackd-1.9.10 (recent git) still crashes on ARM with a "Bus error". After
+>> brief discussion on #jack, Nedko pointed out that packed structures are
+>> still an issue. Attached patch resolves the issue. Tested working on
+>> armv7, cortex-A8 and A10 platform.
+>>
+>> Cheers!
+>> robin
+>
+> Now you guys rock! I'll see if I can get it running on my RPi. Would be
+> awesome, then I can finally use it for something useful.
+>
+> Regards,
+>
+> Jeremy
+
+Applied patch to the source package of jackd2 available for raspbian, 
+rebuild, remounted /dev/shm and modified /etc/dbus-1/system.conf and 
+guess what? JACK with my UA-25 on my Rpi! Great, thanks again!
+
+Here's the recipe:
+
+wget 
+http://jack-audio.10948.n7.nabble.com/attachment/15962/0/jack2_armel.diff
+apt-get source jackd2
+cd jackd2-1.9.8~dfsg.4+20120529git007cdc37
+patch -p1 -i ../jack2_armel.diff
+dpkg-source --commit
+dpkg-buildpackage -rfakeroot -uc -b
+cd ..
+sudo dpkg -i 
+libjack-jackd2-0_1.9.8~dfsg.4+20120529git007cdc37-5_armhf.deb 
+jackd2_1.9.8~dfsg.4+20120529git007cdc37-5_armhf.deb
+
+Now add the following lines to /etc/dbus-1/system.conf:
+   <policy user="pi">
+        <allow own="org.freedesktop.ReserveDevice1.Audio1"/>
+   </policy>
+
+This depends on the sound device you're using, it could be different. 
+Now remount /dev/shm:
+sudo mount -o remount,size=128M /dev/shm
+
+And if you're on a headless RPi:
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
+
+Now you can fire up JACK but not in full-duplex, only capture or 
+playback, so use -C or -P. This is probably because the ethernet adapter 
+is also on the same usb bus. Maybe disabling it allows JACK to run in 
+duplex mode, haven't tried it yet.
+
+Jeremy
+
+1357078158.27713_0.ltw:2,Sa <50E35E85.6050204 at autostatic dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,55 @@
+Date:        Mon, 06 May 2013 11:34:48 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          "MONTANARO Luciano (MM)" <[hidden] at magnetimarelli dot com>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: MONTANARO Luciano (MM) [Jack-Devel] R: Jack thread cancellation (1367832267.29304_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack thread cancellation
+
+Le 6 mai 2013 à 11:24, "MONTANARO Luciano (MM)" <[hidden]> a écrit :
+
+> Da: Paul Davis [mailto:[hidden]]
+> Inviato: venerdì 3 maggio 2013 18:04
+> A: Stéphane Letz
+> Cc: MONTANARO Luciano (MM); [hidden]
+> Oggetto: Re: [Jack-Devel] Jack thread cancellation
+> 
+>> Quitting from inside a thread is one thing.
+>> Cancelling a thread from outside using pthread mechanisms is unreliable. It may never hit a cancellation point.
+> 
+> Well, that is why I suppose the ASYNCHRONOUS flag was used. For the processing threads, the chance is it will never call a cancellation point.
+> However, both the MessageBuffer thread and the SocketClient threads will happyly log messages, and if a cancellation happens at that point, a crash is the likely result.
+> 
+
+Have you tried to start JackMessageBuffer thread in PTHREAD_CANCEL_DEFERRED mode? Like with the following code in JackMessageBuffer.cpp:
+
+JackMessageBuffer::JackMessageBuffer()
+   :fInit(NULL),
+   fInitArg(NULL),
+   fThread(this, PTHREAD_CANCEL_DEFERRED),
+   fGuard(),
+   fInBuffer(0),
+   fOutBuffer(0),
+   fOverruns(0),
+   fRunning(false)
+{}
+
+> When we noticed the problem in JackMessageBuffer, we tried to wrap the body of the Execute()  in pthread_setcancelstate(PTHREAD_CANCEL_DISABLE/ENABLE) (Actually, an RAII pattern), but the same problem is now happening elsewhere.
+
+Where?
+
+> 
+>> Killing a thread is different, though somewhat platform dependent.
+> 
+> Well, thanks for the clarification.
+> 
+> Luciano
+> 
+
+I need to understand better the reason why your application see those problems in the first place. IRC Freenode #jack would be easier.
+
+Stéphane 
+
+1367832894.30383_0.ltw:2,a <36E2B99A-7948-413D-A954-6452A5B62AEE at grame dot fr>
+________________________________________________________________________________
+

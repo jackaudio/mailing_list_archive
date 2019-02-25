@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Mixing midi streams</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Mixing midi streams</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1332439977.19943_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1332442291.25197_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1332440805.22016_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 22 Mar 2012 14:26:25 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>D&#xE9;nes Alm&#xE1;si &lt;[hidden] at rudanium dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>D&#xE9;nes Alm&#xE1;si
+<a href='../1332439977.19943_0.ltw:2,/index.html'>[Jack-Devel] Mixing midi streams </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>D&#xE9;nes Alm&#xE1;si
+<a href='../1332442291.25197_0.ltw:2,/index.html'>Re: [Jack-Devel] Mixing midi streams </a></td></tr>
+</table>
+<pre>
+On Thu, Mar 22, 2012 at 2:12 PM, D&#xE9;nes Alm&#xE1;si &lt;[hidden]&gt; wrote:
+&gt; Hi!
+&gt;
+&gt; I would like to ask, what is the convenient way for mixing two midi streams?
+&gt; Or more generally, what is the way mixing two streams where trivial methods
+&gt; like adding the two signals don't work? (I will have to do this not only
+&gt; with
+&gt; midi but some other custom protocols.)
+&gt;
+&gt; My best guess would be having the streams in a fixed order and for each
+&gt; period
+&gt; the first stream would be simply copied to an output buffer while for any
+&gt; additional streams if a current position is already occupied in the output,
+&gt; the
+&gt; closest empty places 'in the future' would be filled with the new data. But
+&gt; this
+&gt; seems to be a bit harsh...
+
+you have to do a merge-sort operation on both input sources. in pseudo-code:
+
+src1 = read midi event from first source
+src2 = read midi event from second source
+
+while (1) {
+      if (!src1 &amp;&amp; !src2) {
+              break;
+      }
+	
+      if (!src2 || src1-&gt;when &lt; src2-&gt;when) {
+             write src1 to new output buffer
+             src1 = read next midi event from first source
+             continue;
+      }
+
+      if (!src1 || src2-&gt; when &lt;= src1-&gt;when) {
+            write src2 to new output buffer
+            src2 = read next midi event from second source
+      }
+}
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1332439977.19943_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1332442291.25197_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1332440805.22016_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1332440805.22016_0.ltw:2,&nbsp;&lt;CAFa_cKmGNga5qGURmDVeFizCSnGgcmUrrkkZZUdSJPvnvKDaPA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

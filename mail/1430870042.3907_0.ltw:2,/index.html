@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Haiku JACK</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Haiku JACK</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1430869722.3410_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1430871026.5721_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1430870042.3907_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 05 May 2015 19:53:56 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Dan MacDonald &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Dan MacDonald
+<a href='../1430869722.3410_0.ltw:2,/index.html'>[Jack-Devel] Haiku JACK </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Dan MacDonald
+<a href='../1430871026.5721_0.ltw:2,/index.html'>Re: [Jack-Devel] Haiku JACK </a></td></tr>
+</table>
+<pre>
+The error is in a system header:
+
+/boot/system/develop/headers/posix/signal.h:351:39: fatal error:
+arch/1/signal.h: No such file or directory
+
+nothing to do with JACK.
+
+On Tue, May 5, 2015 at 7:48 PM, Dan MacDonald &lt;[hidden]&gt; wrote:
+
+&gt; ~/src/jack-audio-connection-kit-0.124.1&gt; make
+&gt; make  all-recursive
+&gt; make[1]: Entering directory
+&gt; `/boot/home/src/jack-audio-connection-kit-0.124.1'
+&gt; Making all in libjack
+&gt; make[2]: Entering directory
+&gt; `/boot/home/src/jack-audio-connection-kit-0.124.1/libjack'
+&gt; /bin/sh ../libtool  --tag=CC   --mode=compile gcc -DHAVE_CONFIG_H -I. -I..
+&gt;    -I../config -I.. -I.. -I../include -D_REENTRANT
+&gt; -D_POSIX_PTHREAD_SEMANTICS -Wall  -g -DJACK_LOCATION=\"/usr/local/bin\"
+&gt; -I../config -I.. -I.. -I../include -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS
+&gt; -Wall  -g -MT libjack_la-client.lo -MD -MP -MF .deps/libjack_la-client.Tpo
+&gt; -c -o libjack_la-client.lo `test -f 'client.c' || echo './'`client.c
+&gt; libtool: compile:  gcc -DHAVE_CONFIG_H -I. -I.. -I../config -I.. -I..
+&gt; -I../include -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS -Wall -g
+&gt; -DJACK_LOCATION=\"/usr/local/bin\" -I../config -I.. -I.. -I../include
+&gt; -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS -Wall -g -MT libjack_la-client.lo
+&gt; -MD -MP -MF .deps/libjack_la-client.Tpo -c client.c -o libjack_la-client.o
+&gt; In file included from /boot/system/develop/headers/bsd/signal.h:9:0,
+&gt;                  from /boot/system/develop/headers/posix/sys/wait.h:10,
+&gt;                  from /boot/system/develop/headers/bsd/sys/wait.h:9,
+&gt;                  from /boot/system/develop/headers/posix/stdlib.h:14,
+&gt;                  from /boot/system/develop/headers/bsd/stdlib.h:9,
+&gt;                  from ../jack/jslist.h:27,
+&gt;                  from client.c:41:
+&gt; /boot/system/develop/headers/posix/signal.h:351:39: fatal error:
+&gt; arch/1/signal.h: No such file or directory
+&gt;  #include __HAIKU_ARCH_HEADER(signal.h)
+&gt;                                        ^
+&gt; compilation terminated.
+&gt; make[2]: *** [libjack_la-client.lo] Error 1
+&gt; make[2]: Leaving directory
+&gt; `/boot/home/src/jack-audio-connection-kit-0.124.1/libjack'
+&gt; make[1]: *** [all-recursive] Error 1
+&gt; make[1]: Leaving directory
+&gt; `/boot/home/src/jack-audio-connection-kit-0.124.1'
+&gt; make: *** [all] Error 2
+&gt;
+&gt; ~/src/jack-audio-connection-kit-0.124.1&gt; locate signal.h
+&gt; /boot/home/src/haiku/headers/compatibility/bsd/signal.h
+&gt; /boot/home/src/haiku/headers/posix/arch/arm/signal.h
+&gt; /boot/home/src/haiku/headers/posix/arch/m68k/signal.h
+&gt; /boot/home/src/haiku/headers/posix/arch/mipsel/signal.h
+&gt; /boot/home/src/haiku/headers/posix/arch/ppc/signal.h
+&gt; /boot/home/src/haiku/headers/posix/arch/x86_64/signal.h
+&gt; /boot/home/src/haiku/headers/posix/arch/x86/signal.h
+&gt; /boot/home/src/haiku/headers/posix/signal.h
+&gt; /boot/home/src/haiku/headers/private/kernel/ksignal.h
+&gt;
+&gt; /boot/home/src/haiku/src/add-ons/kernel/network/protocols/l2cap/l2cap_signal.h
+&gt; /boot/system/data/gtk-doc/html/gobject/chapter-signal.html
+&gt; /boot/system/data/gtk-doc/html/gobject/signal.html
+&gt; /boot/system/develop/headers/bsd/signal.h
+&gt; /boot/system/develop/headers/posix/arch/arm/signal.h
+&gt; /boot/system/develop/headers/posix/arch/m68k/signal.h
+&gt; /boot/system/develop/headers/posix/arch/mipsel/signal.h
+&gt; /boot/system/develop/headers/posix/arch/ppc/signal.h
+&gt; /boot/system/develop/headers/posix/arch/x86_64/signal.h
+&gt; /boot/system/develop/headers/posix/arch/x86/signal.h
+&gt; /boot/system/develop/headers/posix/signal.h
+&gt; /boot/system/develop/headers/private/kernel/ksignal.h
+&gt; /boot/system/develop/headers/x86/glib-2.0/gobject/gsignal.h
+&gt; /boot/system/develop/headers/x86/Qt/q3signal.h
+&gt; /boot/system/develop/headers/x86/Qt3Support/q3signal.h
+&gt;
+&gt;
+&gt; Thanks JACK devs!
+&gt;
+&gt;
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1430869722.3410_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1430871026.5721_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1430870042.3907_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1430870042.3907_0.ltw:2,&nbsp;&lt;CAFa_cKnjXNu1BN46hDfh2h8mbzH-V3rbqQ+2qXBKaUqUp6pMRg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

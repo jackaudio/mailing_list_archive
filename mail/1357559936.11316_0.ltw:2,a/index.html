@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357558918.10074_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357561954.12537_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357559936.11316_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 07 Jan 2013 06:58:45 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>John Emmas &lt;[hidden] at tiscali dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK Mailing List &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>John Emmas
+<a href='../1357558249.9018_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Emmas
+<a href='../1357561954.12537_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) </a></td></tr>
+</table>
+<pre>
+On Mon, Jan 7, 2013 at 6:30 AM, John Emmas &lt;[hidden]&gt; wrote:
+
+&gt;
+&gt; On 7 Jan 2013, at 10:06, St&#xE9;phane Letz wrote:
+&gt;
+&gt; &gt;
+&gt; &gt; AFAICS, the point is *not* 1-byte packing, but the resulting alignment
+&gt; of the given field...
+&gt; &gt;
+&gt;
+&gt; No Stephane - 1-byte packing is essential if there's a possibility that
+&gt; the server and its clients might get built using different compilers.
+&gt;
+
+I repeat my belief that attempting to support this goal is not sensible
+when at least two of the "target" compilers (a) handle alignment quite
+differently (b) have different target processors available (c) have
+different conceptions of "standards". On the other hand, I understand the
+goal and think that it is correct too - telling users that client A cannot
+work with Jack-built-with-foo because A was built with compiler bar is
+pretty horrendous. The conflict between these two things is ugly.
+
+I think that you (John) are missing the issue with alignment. It is not
+that gcc on ARM cannot implement single-byte packing. The problem is that
+the processor will raise an exception when attempting to load or store
+values when this alignment violates the rules for the processor. whether an
+exception is raised depends on the load/store instructions which in turn
+depends on the data types. It is not a compiler error but a programmer
+error to request/force byte-aligned packing of data types that cannot be
+byte aligned. Pointer aliasing and/or union-based access in C requires the
+compiler to assume that the developer knows what they are doing (modern gcc
+can warn about the issues in some cases). The same issue was true on the
+DEC Alpha in the early 1990s, and caused exactly the same kinds of
+development problems. I remember many entirely legal C/C++ programs that
+would crash and burn on the alpha because they failed to heed alignment
+requirements (often by forcing the compiler to ignore them).
+__attribute__((packed)) means, in part, "i know what i am doing".
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357558918.10074_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357561954.12537_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357559936.11316_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1357559936.11316_0.ltw:2,a&nbsp;&lt;CAFa_cKkSdo9WyqsOWwjEzBdh854dQb4bxkkEa5-6Jg867r0ZrQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,104 @@
+Date:        Fri, 04 Mar 2011 16:58:48 -0600
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Duncan Gray Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2 (1299726957.15847_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2
+
+On Fri, March 4, Duncan Gray wrote:
+> "It gets confusing now that both the PC and the audio
+> equipment have network interfaces. " says it upside--down. The
+> difficulty is when the PC and the Network both have audio
+> interfaces. AVB puts Audio into Ethernet, which is to say that
+> there is a virtual audio card at the other end of the Ethernet wire.
+> This means that two word clocks need either SRC on their streams,
+> or one needs to PLL to the other.
+
+That is just a case of two sound devices, same as two sound cards.  Always
+the case that if you have two sound cards, they need to have their
+conversion clocks synchronized. That doesn't change whether the transport
+is Ethernet, AES3, AES10, whatever.  I think everyone understands that if
+you are going to use two devices, then both have to be synchronized.
+
+The point that Torben and I have been making is that clocking requirements
+for devices which are bulk data transport only should be different than
+devices which convert data to or from analog.  And obviously it can be,
+because there are multiple protocols which have specialized hardware on
+the audio equipment end, and virtual sound card software on a PC.  Dante
+has it, Lightwire.  Even the Ravenna web page talked about a virtual sound
+card driver.  I know that Lightwire and Dante don't require special NIC's
+in the PC's running the virtual sound card driver. The Ravenna page did
+not say, but you seem to be contending that anything participating in AVB
+transport of audio is going to need hardware time stamping in the NIC.  I
+hope that is not the case.
+
+
+> Did you know that AVB is mostly specified, at the low level, by IEEE 1722?
+
+No, I did not. I wasn't familiar with that in-progress spec, hence the
+confusion.  Thank you for the reference, I've been reading some of the
+presentations this afternoon.  Another draft standard which I cannot get
+to.  Hopefully will get published soon so I can read the whole thing.
+
+[Chris C wrote:]
+>> Absolute frequency accuracy and jitter are independent
+>> concepts.  There is no reason that the long term average
+>> frequency could not approach trivially close to 0 error if you
+>> are locked to a stratum 1 source such as GPS.
+
+> Phase is the integral of frequency, they are everything but independent.
+
+OK, that totally ignored the point.  Yes, phase is the integral of
+frequency.  That doesn't really get to the point that the >long term<
+frequency difference of two devices can be made arbitrarily close, but
+that may not be what is relevant if the short term jitter affects what you
+are trying to do.
+
+What you wrote was:
+> > Absolute frequency is not AVB's strength. The local clock
+> > on the motherboard, servoed to NTP will be good enough.
+> > What application might demand such low jitter RTC?
+
+Jitter is traditionally used to mean integrated phase noise, where
+depending on integration time it may even be instantaneous time interval
+error.  You can have a large positive error one cycle, a large negative
+error the next, and have very high short term jitter because of that, but
+the long term average of the frequency can be very accurate.  That was my
+point, that the question of what application might demand such an accurate
+RTC and what application might demand such a low jitter RTC are two
+separate questions and should be understood as such.
+
+> I was actually trying to prevent any soft-only PTP
+> or AVB implementation, which seemed to be on the way
+> here at Jack.
+
+That I don't get at all.  Why would you want to prevent a software AVB
+implementation?
+
+> IEEE 1722 (I apologize for getting the number wrong perviously)
+> specifies the PTP that is a subset for AVB. It most definitely
+> does not have epoch in it and is not traceable to Greenwich.
+> Don't try to use PTP as a replacement for NTP. Even
+> IEEE1588 for instruments doesn't require epoch.
+>
+> Now we're way far afield of Jack.
+
+Actually I don't think we are are, at least not far.  This started out
+with a proposal to create an AVB backend for Jack, and understanding the
+clocking requirements and what existing kernel timing infrastructure can
+be reused and what needs to be created from scratch is very much on topic.
+
+And I think you are saying that it isn't really possible to create a
+software only implementation that fulfills the AVB requirements, primarily
+due to the 802.1AS synchronization requirements.  In that case then
+discussion of the specific requirements is definitely on topic before
+someone goes off and spends a few months working on it only to realize
+that there really isn't any chance of reliable inter-operation with
+compliant AVB equipment.
+
+-- 
+Chris Caudle
+
+1299601879.17588_0.ltw:2,a <8246fd8d50ab8925621c32d38e98c1b0.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

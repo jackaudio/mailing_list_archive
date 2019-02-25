@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1242662316.8253_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1242663379.10495_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1242663064.9693_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 18 May 2009 12:10:45 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Rui Nuno Capela &lt;[hidden] at rncbc dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Nedko Arnaudov &lt;[hidden] at arnaudov dot name&gt;, Linux Audio Developers &lt;[hidden] at lists dot linuxaudio dot org&gt;, JACK Developers &lt;[hidden] at jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Rui Nuno Capela
+<a href='../1242662259.8170_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1242663804.11661_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1242665040.14959_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>[hidden] at gmx dot de
+<a href='../1242738248.27652_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments </a></td></tr>
+</table>
+<pre>
+On Mon, May 18, 2009 at 11:57 AM, Rui Nuno Capela &lt;[hidden]&gt; wrote:
+&gt;
+&gt; from where i stand, qjackctl does not need jackdbus support whatsoever.
+&gt; it's kind of the other way around, if i may say. and the way around is not
+&gt; about qjackctl per se, but to plain old good command-line jackd.
+
+i'd like to clarify (again) based on ongoing conversations in #jack.
+
+the issue that qjackctl could consider is not jackdbus, or dbus in
+general. its the JACK control API that was discussed at LAC 2008.
+right now, qjackctl simply claims to know how to start the JACK
+server, offers a dialog to let the user pick settings, and then
+constructs a set of command line arguments for jackd.
+
+this will continue to work forever, but it is less flexible than we
+would like (consider what happens every time JACK gets a new option
+added (or taken away). the control API allows a control application to
+query the jack server (actually, its really querying the library that
+contains the implementation of the jack server that the control app is
+linked with), and discover what the available parameters are etc. etc.
+
+the dbus stuff is really mostly orthogonal to this (i stress the
+"mostly")  - its just another example of a control app/system. there's
+no reason why qjackctl would or should want to interact with it.
+
+however, the one area where these things overlap is "auto-start". this
+is because what it means to "auto-start" a JACK server differs in the
+following two scenarios:
+
+    * vanilla JACK install - there is no "jack control" system in
+place or in use
+    * with jackdbus - there is a daemon in place listening for
+requests to start/stop/reconfigure the server
+
+in the first scenario, the ~/.jackdrc file (if it exists) takes care
+of auto-start. but if jackdbus is in use, then auto-start means
+something really quite different.
+
+we are are discussing ways to reconcile these differences on IRC.
+
+for those who don't understand why the second scenario is worth
+considering, i would point to the questions that (relatively)
+frequently come from users about changing a running JACK system to use
+another h/w interface, or to start/stop JACK temporarily for some
+reason. there is one school of opinion that would say that "stop jackd
+and restart it with the correct parameters" is the correct approach to
+this question. i think that at LAC2008 it was felt that we could do
+better.
+
+--p
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1242662316.8253_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1242663379.10495_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1242663064.9693_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1242663064.9693_0.ltw:2,a&nbsp;&lt;eb4b5e1d0905180910yd82044fk8ae1cdaffda82ec5 at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

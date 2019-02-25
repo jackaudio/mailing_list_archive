@@ -1,0 +1,30 @@
+Date:        Thu, 05 Jun 2014 09:45:28 +0200
+From:        Leonardo Gabrielli  <[hidden] at univpm dot it>
+To:          [hidden] at lists dot jackaudio dot org
+
+Subject:     Re: [Jack-Devel] Place for bug reporting
+
+> I do not believe that it's clock drift. I have two master clock sides. I
+> just send UDP buffers to ethernet on sender side. On receiver side I
+> just check availability of data with zero timeout (and read to buffer if
+> present) and copy data to out from jitter buffer, also I check for
+> jitter buffer overflow, so, as I understand, clock drift is not key for
+> my situation. Yes, I currently make sound worse (if my jitter underflow
+> or overflow), but I will fix it for next step using voice detector and
+> expanding jitter-buffer functions.
+If I may add something to Adrian's answer, you could verify that the 
+system goes crazy (you said it takes all CPU and it does not respond) 
+exactly when your "jitter buffer" goes overrun or underrun. You said you 
+check for overflow, check also for underflow and in that case report it 
+by adding some debug cout/printf. If your system goes crazy right after 
+that point it means you probably don't manage gracefully the 
+overflow/underflow condition. And probably your system does not respond 
+because of a domino effect (lots of XRUN print on console, etc.). An ARM 
+@720MHz can handle Jack and audio processes but when something bad 
+happens youmay risk these domino effects.
+
+L
+
+1401954340.1588_0.ltw:2,a <53902018.9050602 at univpm dot it>
+________________________________________________________________________________
+

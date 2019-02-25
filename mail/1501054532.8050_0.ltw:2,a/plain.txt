@@ -1,0 +1,61 @@
+Date:        Wed, 26 Jul 2017 09:35:11 +0200
+From:        Filipe Coelho  <[hidden] at gmail dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Yuri [Jack-Devel] Why frame sizes are limited to the powers of 2? (1501052326.5179_0.ltw:2,a)
+Follow-Up:   Yuri Re: [Jack-Devel] Why frame sizes are limited to the powers of 2? (1501054813.8511_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Why frame sizes are limited to the powers of 2?
+
+On 26.07.2017 08:58, Yuri wrote:
+> jack_set_buffer_size limits frame size to the powers of 2.
+>
+> The Opus codec (http://opus-codec.org/) doesn't like such frame sizes. 
+> It defines frame sizes in milliseconds, and allows 5 ms, 10 ms, 20 ms, 
+> 25 ms, ... which in case of 48,000 sample rate are never a power of two.
+>
+> It seems like Jack shouldn't be so strict in limiting frame rates to 
+> the powers of 2.
+>
+>
+> How to solve this problem?
+
+Hi.
+
+Which exact version of jack are you using?
+
+afaik this depends on the driver and soundcard used.
+I just tried here with latest jack2 using alsa hdmi output, I can use 
+1024 buffer size as usual, but also a few non-power-of-2 values as well.
+
+falktx@falkTX-PC:~$ jack_bufsize
+buffer size = 1024  sample rate = 48000
+
+falktx@falkTX-PC:~$ jack_bufsize 1000
+jack_set_buffer_size(): Unknown error -1
+
+falktx@falkTX-PC:~$ jack_bufsize 800
+
+falktx@falkTX-PC:~$ jack_bufsize 802
+jack_set_buffer_size(): Unknown error -1
+
+falktx@falkTX-PC:~$ jack_bufsize 870
+jack_set_buffer_size(): Unknown error -1
+
+falktx@falkTX-PC:~$ jack_bufsize 880
+
+
+So some of those buffer sizes work, some do not.
+GUIs usually show only power of 2 values because they're safer to use (I 
+mean, more likely to actually work).
+Also some jack applications sadly were made with the expectation that 
+power-of-2 buffer sizes will be used...
+But for such cases the application can return an error on start and 
+during the jack-buffersize-callback, to force jack to be under 
+power-of-2 sizes.
+
+Anyway, at least in latest jack2 this is not a problem.
+Not sure about jack1, but I believe the same is true.
+
+1501054532.8050_0.ltw:2,a <5978462F.2090003 at falktx dot com>
+________________________________________________________________________________
+

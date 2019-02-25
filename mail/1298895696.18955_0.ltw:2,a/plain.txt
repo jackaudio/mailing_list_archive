@@ -1,0 +1,39 @@
+Date:        Mon, 28 Feb 2011 07:21:13 -0500
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] jconvolver and OSX (1298895405.18561_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] jconvolver and OSX (1298895979.19185_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jconvolver and OSX
+
+On Mon, Feb 28, 2011 at 7:16 AM, Fons Adriaensen <[hidden]> wrote:
+
+> But if sem_init() does nothing you can't reset an existing one.
+> Except by reading the value and then in a loop calling sem_post()
+> or sem_wait()... Yuk.
+
+we never use sem_init() for that in actual use. sem_init() is used
+exclusively to create/initialize a semaphore, followed by sem_wait and
+sem_post. at least by our code.
+
+>> we use these semaphores in ardour3 for multi-threaded graph
+>> synchronization. to be fair, however, we have not really tested them
+>> much on OS X at this point (though we have verified that they work as
+>> expected).
+>
+> How does A3 distribute processing task over multiple threads ?
+
+data flow graph, involving N threads, one of which functions as the
+master (but the precise thread may vary from process cycle to process
+cycle). the granularity is an Ardour "route" (basically a bus or a
+track). so if you have a 32 track session in which all tracks feed 1
+bus and there are no other connections, and you allow ardour to use 8
+threads, it will process 8 tracks at a time until they are all done,
+then one thread will process the bus, and on the next cycle this
+(last) thread will become the master for the next cycle. we wake
+threads with sem_post() and they sleep on sem_wait().
+
+1298895696.18955_0.ltw:2,a <AANLkTin0A6+DaWJ7V9Krp6FFQAjZyoNJdM93xZi4hnTo at mail dot gmail dot com>
+________________________________________________________________________________
+

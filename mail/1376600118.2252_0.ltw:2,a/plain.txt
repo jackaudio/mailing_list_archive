@@ -1,0 +1,35 @@
+Date:        Thu, 15 Aug 2013 22:54:59 +0200
+From:        Arnold Krille  <[hidden] at arnoldarts dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Harry van Haaren Re: [Jack-Devel] Stopping jack from callback (1376570094.14660_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Stopping jack from callback
+
+On Thu, 15 Aug 2013 13:34:48 +0100 Harry van Haaren
+<[hidden]> wrote:
+> On Thu, Aug 15, 2013 at 1:27 PM, Anders Tornvig
+> <[hidden]> wrote:
+> > I'm counting how many times I have been in the process_callback and
+> > I
+> would like to stop immediately after the, say, 100th visit.
+> Use jack_deactivate( client );   in the process() callback, when your
+> condition is met.
+> 
+> Note that you are violating threading rules by writing to a variable
+> in the JACK callback, while reading the variable in main().
+> You must use a ringbuffer / other thread-safe structure for
+> exchanging data between threads.
+
+Its not a problem if you are purely writing in one thread and purely
+reading in the other. When you increment in one thread (read+write) and
+read in the other you might get the usual problems. But if you are okay
+with a certain uncertainty, even incrementing in one thread and pure
+reading in the other thread will not be bad.
+Problems only start to arise when you want to write from more then one
+thread into a single variable...
+
+Arnold
+
+1376600118.2252_0.ltw:2,a <20130815225459.1bf38ace at xingu dot arnoldarts dot de>
+________________________________________________________________________________
+

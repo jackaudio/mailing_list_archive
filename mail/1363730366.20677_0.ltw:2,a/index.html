@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Linux to Linux jacknet ?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Linux to Linux jacknet ?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1363728088.19037_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1363755839.17249_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1363730366.20677_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 19 Mar 2013 22:58:40 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Ruslan N. Marchenko </span> &lt;[hidden] at ruff dot mobi&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Tommaso Cucinotta &lt;[hidden] at sssup dot it&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Tommaso Cucinotta
+<a href='../1363721930.14801_0.ltw:2,a/index.html'>Re: [Jack-Devel] Linux to Linux jacknet ? </a></td></tr>
+</table>
+<pre>
+Hi Tom,
+
+On Tue, Mar 19, 2013 at 04:15:36PM +0000, Tommaso Cucinotta wrote:
+&gt; On 03/03/13 15:40, St&#xE9;phane Letz wrote:
+&gt; &gt; 3)  So on master side :
+&gt; &gt; 
+&gt; &gt; jackd -d alsa &#x2026;.
+&gt; &gt; 
+&gt; &gt; jack_load netmanager
+&gt; 
+&gt; Hi Stephane,
+&gt; 
+&gt; I have one more question: in my network set-up, the master has multiple (either real or virtual) interfaces, and the IP it binds to (as from the qjackctl log window) doesn't seem really the right one I want. Is there a way I can specify/force, when I load netmanager, which network interface it should be listening to, for slaves to connect ?
+&gt; 
+If you want to use unicast then providing IP to netmanager unambiguously binds to that IP, whichever interface it is assigned to.
+There's a trcik here though - if you're using secondary IPs - UDP packet might (or actually will) still leave the system from system default IP. 
+Simply because outgoing socket is recreated once probe is received, and when it is recreated it's not bound anymore, just an ephemeral port.
+You can force system IP (default outgoing IP to use by the system) by creating a route with source IP
+# ip ro add &lt;destination&gt; &lt;gateway&gt; src &lt;secondary ip&gt;
+i.e.
+ip ro add 2.2.2.2 via 1.1.1.1 dev eth1 src 1.1.1.10 
+now whenever connection will be initiated towards that host system will chose that source address unless asked otherwise explicitly.
+
+If you need multicast - there's another story.
+Since you're using ubuntu you can try out my proposed patched package having this feature.
+See neighbouring thread for details.
+PPA is at https://launchpad.net/~rufferson/+archive/snd
+In that version you can specifiy all, explicit or default interface to listen for multicast on.
+
+Regards,
+Ruslan
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1363728088.19037_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1363755839.17249_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1363730366.20677_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1363730366.20677_0.ltw:2,a&nbsp;&lt;20130319215840.GA13599 at ruff dot mobi&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

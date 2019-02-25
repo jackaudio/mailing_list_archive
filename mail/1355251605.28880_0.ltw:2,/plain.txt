@@ -1,0 +1,62 @@
+Date:        Tue, 11 Dec 2012 18:56:39 +0000
+From:        John Rigg  <[hidden] at jrigg dot co dot uk>
+To:          Devin Anderson <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Devin Anderson Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355249148.24939_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] ALSA PCM multi plugin and xruns
+
+On Tue, Dec 11, 2012 at 10:05:40AM -0800, Devin Anderson wrote:
+> Hi John,
+> 
+> On Tue, Dec 11, 2012 at 8:28 AM, John Rigg <[hidden]> wrote:
+> 
+> > When jackd detected no xruns it produced this message repeatedly:
+> > snd_pcm_multi_avail_update: sync issue: 1025 1024
+> >
+> > When jackd detected xruns it produced this message:
+> > snd_pcm_multi_avail_update: sync issue: 1024 0
+> > There appeared to be two of these messages for every xrun
+> > indication.
+> >
+> > Does this make sense?
+> 
+> Yes, that makes sense.
+> 
+> I'm guessing that the first device in your .asoundrc uses internal
+> sync, and the second device listed in your .asoundrc is synced to the
+> first device via word clock.  If that's the case, then I'd like you to
+> try setting the 'master' device in your multi device to the second
+> card.  You can do this using the 'master' parameter in the pcm 'multi'
+> section of your .asoundrc:
+> 
+>     pcm.some_name {
+>         [... the parameters you already have]
+>         master 1;
+>     }
+
+The second card is synced to the first via S/PDIF. My .asoundrc
+doesn't contain a master parameter, but does have
+
+ctl.capture16{
+	type hw
+	card 0
+}
+
+and a similar entry for the playback device. The ice1712 chip has 12
+inputs and 10 outputs, so separate capture and playback devices have
+to be configured. My full .asoundrc is shown here:
+http://www.jrigg.co.uk/linuxaudio/ice1712multi.html
+
+I just tried changing the ctl parameters to use card 1 and the messages
+from pcm_multi are the same as before. BTW on my main system with
+3 x ice1712 cards there's a common clock supplying all three cards
+simultaneously. It also shows the same xrun messages from jackd when
+using pcm_multi. It would be interesting to see what the extra fprintfs
+in pcm_multi.c would show on that system.
+
+John
+
+1355251605.28880_0.ltw:2, <20121211185639.GA3301 at localhost0 dot localdomain>
+________________________________________________________________________________
+

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jackd2 bus error on openwrt</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jackd2 bus error on openwrt</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1439683222.15094_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1439883121.20767_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1439723452.4828_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 16 Aug 2015 13:10:41 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Adrian Knoth </span> &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Matt Flax &lt;[hidden] at flatmax dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Matt Flax
+<a href='../1439682030.13865_0.ltw:2,/index.html'>[Jack-Devel] jackd2 bus error on openwrt </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Matt Flax
+<a href='../1439883121.20767_0.ltw:2,/index.html'>Re: [Jack-Devel] jackd2 bus error on openwrt </a></td></tr>
+</table>
+<pre>
+On Sun, Aug 16, 2015 at 09:40:18AM +1000, Matt Flax wrote:
+
+Hi!
+
+&gt; I am revisiting running jackd2 on openwrt using another ARM
+&gt; architecture. It is compiled from git commit
+&gt; cd59d67847afb57393a1db6d39badd94a4973f6e
+&gt; 
+&gt; When jack starts I still get bus error :
+&gt; root@OpenWrt:/# jackd -v -d alsa
+&gt; jackdmp 1.9.11
+&gt; Bus error
+&gt; 
+&gt; Not sure what to do next to debug, beyond hacking console outputs
+&gt; into the command line.
+
+You are most likely dealing with unaligned memory access here, usually
+mis-aligned structs. I'm somewhat surprised that it didn't surface on
+other ARM platforms before, but then again, there are many variations of
+"ARM".
+
+Further reading:
+
+   https://www.kernel.org/doc/Documentation/arm/mem_alignment
+
+specifically:
+
+   echo 1 &gt; /proc/sys/debug/alignment
+
+and then check the syslog.
+
+If this confirms that it's unaligned access, you know what to look for.
+
+A good and comprehensive read:
+
+   http://www.catb.org/esr/structure-packing/
+
+Maybe "pahole" in the tools section can be of further help, but let's
+not jump to conclusions.
+
+I've only skimmed the following link, but it also seems like a good
+introduction to memory alignment:
+
+   https://lwn.net/Articles/259732/
+
+In other words: set aside half a day for hunting this down.
+
+Last not least: ARM behaviour may be different depending on the compiler
+flags. I vaguely recall different CPU targets behaving differently. I
+assume you used the correct flags that match your platform, endianess
+etc.
+
+
+
+Cheers
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1439683222.15094_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1439883121.20767_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1439723452.4828_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1439723452.4828_0.ltw:2,&nbsp;&lt;20150816111040.GG25041 at ltw dot loris dot tv&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

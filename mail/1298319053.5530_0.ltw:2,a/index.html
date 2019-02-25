@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] backend switching - another way</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] backend switching - another way</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298315882.31761_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298319106.5765_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298319053.5530_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 21 Feb 2011 21:10:24 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>torbenh
+<a href='../1298315882.31761_0.ltw:2,a/index.html'>Re: [Jack-Devel] backend switching - another way </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1298326046.16479_0.ltw:2,a/index.html'>Re: [Jack-Devel] backend switching - another way </a></td></tr>
+</table>
+<pre>
+On 02/21/2011 08:17 PM, torbenh wrote:
+&gt; On Mon, Feb 21, 2011 at 06:53:03PM +0000, Fons Adriaensen wrote:
+&gt;&gt; Hello all,
+&gt;&gt;
+&gt;&gt; I've been musing for a long time over the idea 'what if Jack ports
+&gt;&gt; were persistent' ? In other words, if they could exists irrespective
+&gt;&gt; of the application that uses them is running or not.
+&gt;&gt;
+&gt;&gt; This has some far-reaching consequences of course, but there is 
+&gt;&gt; subset of this idea that is not as mad as it seems (IMHO).
+&gt;&gt;
+&gt;&gt; ** What if physical ports were persistent ? **
+&gt;&gt;
+&gt;&gt; More in detail:
+&gt;&gt;
+&gt;&gt; * The number of physical ports and their names are configured
+&gt;&gt;   by the user. Names are chosen according to the function a
+&gt;&gt;   port has in the user's setup, e.g. stereo-monitor-L or R.
+&gt;&gt;
+&gt;&gt; * When a backend is started, the inputs and outputs it provides
+&gt;&gt;   are mapped to the existing persistent ports, again as configured
+&gt;&gt;   by the user for any particular hardware.
+&gt;&gt;
+&gt;&gt; * These configurations are stored of course, no need to repeat
+&gt;&gt;   this work if nothing changes.
+
+A very cool and tempting concept.
+
+This is some something i've wanted to have since years.. :-)
+
+&gt; we need to add code to parse/write/change the port mapping.
+&gt; all drivers need to be changed (its not deep, but the change would be
+&gt; pretty big. 
+&gt; 
+&gt; pretty similar behaviour can be obtained with a session handler.
+&gt; if i understand paul correctly, he does not like to have this complexity
+&gt; in jackd.
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; This would allow:
+&gt;&gt;
+&gt;&gt; * To switch backends without any app being aware of it.
+&gt;&gt;
+&gt;&gt; * A backend to go away (USB or firewire being unplugged)
+&gt;&gt;   without fatal consequences. Just replug it or replace 
+&gt;&gt;   it by another one. No need to restart or rewire anything
+&gt;&gt;   else.
+&gt;&gt;
+&gt;&gt; * To have sessions that are *really* portable, depending only
+&gt;&gt;   on the availability of some common set of persistent ports.
+&gt;&gt;   E.g. Ardour's master and/or auditioner would connect to the
+&gt;&gt;   right ports no matter what they are.
+&gt;&gt;
+&gt;&gt; Comments / flames invited.
+&gt;&gt;
+&gt;&gt; Ciao,
+
+Pondering possible implementations: this will open pandora's box (again).
+
+Conceptually it seems somewhat backwards but realistically I'm with
+Torben: it's not JACK's job and a session-manager could do the trick
+(emulate persistent ports). The downside: session-manager fragmentation.
+To avoid that, a common session-manager would need to be included with
+all implementations of jackd..
+
+
+Another implementation would introduce a middle-layer for mapping
+physical ports between the engine and the back-ends:
+To outline the idea:
+	On the jack-client side: physical-ports are always persistent (they're
+actually virtual-ports).
+	On the server-side: jackd transparently maps these
+persistent-(virtual)ports to real physical I/O in the backend. Clients
+can neither see nor access the real physical "ports".
+	This variant would not require any changes to the backend(s), nor
+introduce a new port-type. AFAIK It could even be implemented as a
+in-process client without requiring any changes to JACK. However the
+complexity of parsing configuration, and mapping ports is still an issue.
+
+prepared for more flames\wenlightenment.
+Cheers!
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298315882.31761_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298319106.5765_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298319053.5530_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1298319053.5530_0.ltw:2,a&nbsp;&lt;4D62C6B0.1030905 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

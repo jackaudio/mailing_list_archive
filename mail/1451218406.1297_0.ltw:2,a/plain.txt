@@ -1,0 +1,71 @@
+Date:        Sun, 27 Dec 2015 13:13:16 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          John Emmas <[hidden] at tiscali dot co dot uk>, JACK devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: John Emmas Re: [Jack-Devel] jack dsp load calculation (1451212476.28653_0.ltw:2,a)
+Follow-Up:   John Emmas Re: [Jack-Devel] jack dsp load calculation (1451222035.4534_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack dsp load calculation
+
+On 12/27/2015 11:34 AM, John Emmas wrote:
+> On 26 Dec 2015, at 23:05, Robin Gareus wrote:
+> 
+>> On 12/26/2015 10:56 PM, Joakim Hernberg wrote:
+>> [..]
+>>
+>>> IME the dsp load is a relatively useless measure as it's not really
+>>> related to the max value (which is where an xrun occurs)..  You could
+>>> very well have a system with a very low dsp load xrunning all the
+>>> time...
+>>
+>> exactly.
+>>
+> 
+> No, not quite... you can have a system "displaying" a very low DSP
+> load even though it's xrunning all the time. 
+
+How can one have buffer under/over-runs if there is sufficient time left
+to process the buffers?
+
+
+
+> The averaging strategy was added to JackEngineControl::CalcCPULoad() 
+> to address a very specific problem - which it does address, very 
+> successfully. 
+
+What is that? low readout for marketing? :-)
+
+Some facts would be nice and an explanation of thoughts and that lead to
+the current implementation. Why keep 32 cycles history? Why not a
+rolling-average? Why add a first order low-pass filter after averaging
+with a fixed time-constant of 0.5 ? Why 0.5 ?
+
+
+> Furthermore (read this bit carefully) it does NOT 
+> cause JackEngineControl::CalcCPULoad() to return a low reading when 
+> an xrun occurs.  If a client app is giving that impression, the 
+> problem lies within the client app.  And that's where it should be 
+> getting fixed. To prove this point (assuming Ben Loftis agrees) I'd
+> be quite happy to
+> add such a fix to Mixbus. And if Mixbus still displays low readings when
+> an xrun occurs, maybe then we should consider modifying Jack.
+> 
+
+Why do you keep bringing up Mixbus all the time? This is about JACK or
+more specifically libjack.
+
+Control Applications (like qjackctl, Ardour, Cadence, Mixbus, ...) and
+other clients which display the load are all users of the jack-api and
+currently limited to a single convoluted value, for which I have not
+heard a good argument for.
+
+Would you mind commenting on or answering the questions from other emails?
+
+eg.  What is lost - in your case for Mixbus - if jack were to report
+both average and max?
+
+best,
+robin
+
+1451218406.1297_0.ltw:2,a <567FD5DC.2040002 at gareus dot org>
+________________________________________________________________________________
+

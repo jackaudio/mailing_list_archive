@@ -1,0 +1,58 @@
+Date:        Sun, 27 Dec 2015 00:05:28 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Joakim Hernberg Re: [Jack-Devel] jack dsp load calculation (1451167386.13765_0.ltw:2,a)
+Follow-Up:   John Emmas Re: [Jack-Devel] jack dsp load calculation (1451212476.28653_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack dsp load calculation
+
+On 12/26/2015 10:56 PM, Joakim Hernberg wrote:
+[..]
+
+> IME the dsp load is a relatively useless measure as it's not really
+> related to the max value (which is where an xrun occurs)..  You could
+> very well have a system with a very low dsp load xrunning all the
+> time...
+
+exactly.
+
+But if we add a new API, I would not mind if it also included a proper
+statistical average (and maybe min,..) since there seems to be interest.
+
+We might as well leave the old jack_cpu_load() code untouched, but I
+think it should be changed to report the max.
+
+> Maybe a nice idea would be similar to a mixer meter showing rms and
+> peak values, like that everyone could have their cake and eat it too ;)
+
+heh.
+
+> Apart from that there is the xrun callback that indicates that an xrun
+> did indeed occur.  If we only had Jack2 to worry about, I'd suggest
+> leveraging jack2's excellent profiling code, which can give a very good
+> analysis of how the system performs.
+
+JackEngineControl::CalcCPULoad() already uses that API to calculate the
+cycle duration.
+
+My criticism is with the built-in pre-processing in that function.
+
+@John: If libjack were to expose both RMS and peak, the client
+application - in your case Mixbus - can do the same thing as jack
+currently does: Display the max if some conditions are met and the
+average otherwise and also filter the value ad lib, so nothing is lost.
+It could even be some user-preference..
+
+Do you see some issues with this approach?
+
+
+@Joakim: Thanks for the reminder about Timing PDF. This shows that at
+least on POSIX systems the measurement error is small and that there can
+be spikes nearly twice as large of the average value.
+
+Cheers!
+robin
+
+1451171138.17453_0.ltw:2,a <567F1D38.7070202 at gareus dot org>
+________________________________________________________________________________
+

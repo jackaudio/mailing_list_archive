@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] is this latency coming from ALSA, jack, or ardour?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] is this latency coming from ALSA, jack, or ardour?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302893904.26118_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302898594.2856_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302894271.26882_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 15 Apr 2011 14:04:02 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1302891755.22008_0.ltw:2,a/index.html'>Re: [Jack-Devel] is this latency coming from ALSA, jack, or ardour? </a></td></tr>
+</table>
+<pre>
+On Fri, April 15, 2011 1:22 pm, Paul Davis wrote:
+&gt; you've got a digital loopback, it appears.
+
+How so?  I have a cable connecting the stereo analog outputs of my card
+back to the stereo analog inputs of the card.
+Oh, wait a minute.  &lt;ears turn red&gt;
+In the connection panel on qjackctl, I connected jack_delay:out to
+jack_delay:in.
+That wasn't right, was it?  Obvious now that I think about it, given how
+jack presents connections.
+
+OK, so now I connected jack_delay out to the card physical output port,
+then connected the card physical input port to jack_delay in, and got
+this:
+
+4155.593 frames     94.231 ms
+
+That makes much more sense.
+
+Assuming that precision is correct, does jack take fractional frames as
+part of the argument to -I and -O?  Qjackctl does not allow fractional
+frames to be input through the dialog.
+Wait, 1 frame = 1 sample period? Never mind, who cares, I was confused
+with periods.
+
+&gt; my instructions were wrong. sorry. subtract frames/period from
+&gt; jack_iodelay's answer, then divide by 2 for the input/output numbers.
+
+OK, with your correction, and my corrected connection, that makes a lot
+more sense:
+(4155.593-3072)/2 = 541.79 frames additional latency,  in and out.
+
+&gt; note that dividing by 2 is a heuristic: if you used different devices
+&gt; for A/D and D/A, it would not necessarily be correct.
+
+Yes, that is understandable, it isn't possible to distinguish input path
+from output path effects when you have just one loopback connection.
+
+It should in principle be possible to calculate the right values if you
+happen to have a device with really thorough specs from the designer.  I
+know Prism specs the delay through the AD and DA sides of their
+converters, digital in to analog out and analog in to digital out.  The
+two sides are different by about 2x.
+
+Trying to figure this out has given me new appreciation for why the
+network audio guys wanted to time stamp everything and just line all the
+audio up via time stamp, rather than trying to figure out path latency.
+
+These measurements were on the PCI card.
+I will have to apply this now to the USB interface, and see if that
+corrects the somewhat unreasonable behavior.
+
+Thanks for the help, this is very useful.
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302893904.26118_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302898594.2856_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302894271.26882_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1302894271.26882_0.ltw:2,a&nbsp;&lt;7923c9f8ef1361af9bee81a2189ebe9d.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

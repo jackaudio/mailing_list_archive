@@ -1,0 +1,35 @@
+Date:        Wed, 29 Apr 2009 22:26:01 -0400
+From:        Lee Revell  <[hidden] at joe-job dot com>
+To:          "Kjetil S. Matheussen" <[hidden] at notam02 dot no>
+Cc:          [hidden] at lists dot linuxaudio dot org, [hidden] at lists dot jackaudio dot org
+In-Reply-To: Kjetil S. Matheussen Re: [LAD] [Jack-Devel] How is the TSC calibration accuracy on dual core 2 computers? (And what about HPET?) (1241000387.18849_0.ltw:2,a)
+Follow-Up:   Jussi Laako Re: [LAD] [Jack-Devel] How is the TSC calibration accuracy on dual core 2 computers? (And what about HPET?) (1241104217.24367_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] How is the TSC calibration accuracy on dual core 2 computers? (And what about HPET?)
+
+On Wed, Apr 29, 2009 at 6:19 AM, Kjetil S. Matheussen
+<[hidden]> wrote:
+> Hard to say. This is for testing a couple of garbage collectors, and the
+> difference between worst case and best case can be quite high.
+> Worst-case is probably around 1ms, and best case maybe around 0.1ms.
+> It also depends on buffer settings, so I can use higher buffers
+> to get higher timings.
+>
+> But calls to clock_gettime()/HPET/etc. will only happen maximum 6 times
+> per audio block, so clock_gettime()/HPET/etc. doesn't have to be extremely
+> efficient.
+
+With a modern kernel clock_gettime() should always be the best choice.
+ The kernel's timekeeping system has been completely redone since the
+days when JACK needed to use its own timers.  Linux is now very good
+at picking the cheapest working clock source.
+
+If there were no need to support old kernels, I think JACK's hardware
+timer support could be removed entirely in favor of the POSIX clock
+api.
+
+Lee
+
+1241058394.19042_0.ltw:2,a <75b66ecd0904291926t648fb112ufa5a1b98583719f9 at mail dot gmail dot com>
+________________________________________________________________________________
+

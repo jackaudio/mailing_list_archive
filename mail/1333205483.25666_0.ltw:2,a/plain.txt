@@ -1,0 +1,335 @@
+Date:        Sat, 31 Mar 2012 09:50:43 -0500
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          Ajay Garg <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Ajay Garg Re: [Jack-Devel] Portaudio "queries" on ARM (1333208155.29936_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Portaudio "queries" on ARM
+
+Don't run jackd as root.. Use a normal user account, and make sure you
+have security.conf set to allow your user group to use realtime
+scheduling.
+
+-- 
+Chris Caudle
+
+
+On Sat, March 31, 2012 9:29 am, Ajay Garg wrote:
+> audacity-src-2.0.0]$ sudo jackd -d alsa &
+>
+> [1] 1315
+>
+> [olpc@xo-c5-b9-6c audacity-src-2.0.0]$ jackdmp 1.9.8
+>
+> Copyright 2001-2005 Paul Davis and others.
+>
+> Copyright 2004-2011 Grame.
+>
+> jackdmp comes with ABSOLUTELY NO WARRANTY
+>
+> This is free software, and you are welcome to redistribute it
+>
+> under certain conditions; see the file COPYING for details
+>
+> JACK server starting in realtime mode with priority 10
+>
+> creating alsa driver ...
+hw:0|hw:0|1024|2|48000|0|0|nomon|swmeter|-|32bit
+>
+> control device hw:0
+>
+> configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 2 periods
+>
+> ALSA: final selected sample format for capture: 16bit little-endian
+>
+> ALSA: use 2 periods for capture
+>
+> ALSA: final selected sample format for playback: 16bit little-endian
+>
+> ALSA: use 2 periods for playback
+>
+>
+>
+>
+>
+> [olpc@xo-c5-b9-6c audacity-src-2.0.0]$ ps -aux | grep jack
+>
+> Warning: bad syntax, perhaps a bogus '-'? See
+> /usr/share/doc/procps-3.2.8/FAQ
+>
+> root      1315  0.0  0.3   8676  1532 pts/1    S    17:49   0:00 sudo
+jackd -d alsa
+>
+> root      1318 11.1 20.2  96052 89448 ?        SLsl 17:49   0:01 jackd
+-d
+> alsa
+>
+> olpc      1350  0.0  0.1   4196   816 pts/1    S+   17:49   0:00 grep
+--color=auto jack
+> ###############################################################################################
+>
+> Server started :-) Thanks Adrian.
+>
+>
+>
+>
+>
+>
+> b)
+> Next, I re-tested portuadio now, as follows ::
+>
+> ########################################################################################################
+[olpc@xo-c5-b9-6c bin]$ ./pa_devs
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.front
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.rear
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.center_lfe
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.side
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.surround40
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.surround41
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.surround50
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.surround51
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.surround71
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.iec958
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.iec958
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.iec958
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.hdmi
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.hdmi
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.modem
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.modem
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.phoneline
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.phoneline
+>
+> ALSA lib pcm_dmix.c:957:(snd_pcm_dmix_open) The dmix plugin supports
+only playback stream
+>
+> ALSA lib pcm_dmix.c:1018:(snd_pcm_dmix_open) unable to open slave
+>
+> Cannot connect to server socket err = No such file or directory
+>
+> Cannot connect to server socket
+>
+> jack server is not running or cannot be started
+>
+> PortAudio version number = 1899
+>
+> PortAudio version text = 'PortAudio V19-devel (built Mar 30 2012 21:41:05)'
+>
+> Number of devices = 0
+>
+> ----------------------------------------------
+>
+>
+>
+>
+> [olpc@xo-c5-b9-6c bin]$ ./paex_sine
+>
+> PortAudio Test: output sine wave. SR = 44100, BufSize = 64
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.front
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.rear
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.center_lfe
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.side
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.surround40
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.surround41
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.surround50
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.surround51
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.surround71
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.iec958
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.iec958
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.iec958
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.hdmi
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.hdmi
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.modem
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.modem
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.phoneline
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.phoneline
+>
+> ALSA lib pcm_dmix.c:957:(snd_pcm_dmix_open) The dmix plugin supports
+only playback stream
+>
+> ALSA lib pcm_dmix.c:1018:(snd_pcm_dmix_open) unable to open slave
+>
+> Cannot connect to server socket err = No such file or directory
+>
+> Cannot connect to server socket
+>
+> jack server is not running or cannot be started
+>
+> Error: No default output device.
+>
+> An error occured while using the portaudio stream
+>
+> Error number: 0
+>
+> Error message: Success
+> ########################################################################################################
+>
+> Portaudio still can't get hold of the jack server; god knows why :-(
+>
+>
+>
+>
+>
+>
+>
+> c)
+> As expected, I am stick stuck on my original problem - the same
+> startup messages, and still cannot get "Import Audio" to work :-(
+>
+>
+> #########################################################################################################
+[olpc@xo-c5-b9-6c audacity-src-2.0.0]$ ./audacity
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.front
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.rear
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.center_lfe
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.side
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.surround40
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.surround41
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.surround50
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.surround51
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.surround71
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.iec958
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.iec958
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.iec958
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.hdmi
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.hdmi
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.modem
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM cards.pcm.modem
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.phoneline
+>
+> ALSA lib pcm.c:2212:(snd_pcm_open_noupdate) Unknown PCM
+> cards.pcm.phoneline
+>
+> ALSA lib pcm_dmix.c:957:(snd_pcm_dmix_open) The dmix plugin supports
+only playback stream
+>
+> ALSA lib pcm_dmix.c:1018:(snd_pcm_dmix_open) unable to open slave
+>
+> Cannot connect to server socket err = No such file or directory
+>
+> Cannot connect to server socket
+>
+> jack server is not running or cannot be started
+> #########################################################################################################
+>
+>
+>
+>
+> Any angel who could come to the rescue?
+>
+>
+>
+> Regards,
+> Ajay
+>
+> On Sat, Mar 31, 2012 at 2:57 PM, Adrian Knoth
+<[hidden]>
+> wrote:
+>> On 03/31/2012 07:54 AM, Ajay Garg wrote:
+>>> ======= Backtrace: =========
+>>> /lib/libc.so.6(+0x6d564)[0x403e3564]
+>>> /usr/lib/libffado.so.2(_ZN11DebugModuleD0Ev+0x14)[0x40602ffc]
+>> This is, without a doubt, the ffado-termination bug.
+>>   http://subversion.ffado.org/ticket/329
+>> Either update libffado or remove it from your installation if you don't
+have a firewire audio device.
+>>> b)
+>>> I then removed "jack-audio-connection-kit"; downloaded
+>>> "jack-audio-connection-kit-0.121.3.tar.gz"; untarred, did "./waf
+configure", "./waf build", "sudo ./waf install"; and tried running
+"jackd -d alsa".
+>> Who are you trying to fool here? jackd1 (that's 0.121.3) doesn't use
+waf, it is autotools based. jackd2, however, uses waf.
+>>> However, all I got was ::
+>>>                     "Unknown driver "alsa""
+>> Instead of CC'ing half of the Internet, you should have run
+>>   ./waf --help
+>> It would have revealed that you have to pass "--alsa" to configure.
+>>> ==================
+>>> JACK 1.9.8 exported from r4653
+>> See, this is jackd2 configure output, version 1.9.8.
+>> HTH
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+
+1333205483.25666_0.ltw:2,a <25156f54582293a90d0b70fc051968ac.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash]</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash]</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1320303700.16810_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1320317666.13694_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1320315955.10418_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 03 Nov 2011 11:25:35 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>hermann &lt;[hidden] at web dot de&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>hermann
+<a href='../1320264635.26709_0.ltw:2,a/index.html'>Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>hermann
+<a href='../1320319538.17304_0.ltw:2,a/index.html'>Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] </a></td></tr>
+</table>
+<pre>
+Le 2 nov. 2011 &#xE0; 21:09, hermann a &#xE9;crit :
+
+&gt; Am Mittwoch, den 02.11.2011, 20:48 +0100 schrieb St&#xE9;phane Letz:
+&gt;&gt; Le 2 nov. 2011 &#xE0; 20:33, Paul Davis a &#xE9;crit :
+&gt;&gt; 
+&gt;&gt;&gt; On Wed, Nov 2, 2011 at 3:14 PM, hermann &lt;[hidden]&gt; wrote:
+&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; To make the mess complete, the weak linking doesn't work as
+&gt;&gt;&gt;&gt; advertised by the jackd developers. At least my understanding and
+&gt;&gt;&gt;&gt; that of the ubuntu / debian packagers seems to be:
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; 1) you can compile and link with either package (works)
+&gt;&gt;&gt;&gt; 2) when the function is not in the shared library used at
+&gt;&gt;&gt;&gt;    runtime, the function address will be 0. Does NOT work.
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; 2) only works when the shared lib used at runtime is the same as
+&gt;&gt;&gt;&gt; the one used when linking. The compiler / linker will set the address
+&gt;&gt;&gt;&gt; of a weak function that it does not find in the libraries supplied to
+&gt;&gt;&gt;&gt; constant 0. Even when the funktion is in the library which is used at
+&gt;&gt;&gt;&gt; runtime, there will be no runtime linking.
+&gt;&gt;&gt; 
+&gt;&gt;&gt; I have no idea what you are trying to say here.
+&gt;&gt;&gt; 
+&gt;&gt;&gt; If the function prototype was declared with weak linkage, and the
+&gt;&gt;&gt; symbol is not found at runtime, then this condition:
+&gt;&gt;&gt; 
+&gt;&gt;&gt;    if (function_name)
+&gt;&gt;&gt; 
+&gt;&gt;&gt; will evaluate to false.
+&gt;&gt;&gt; 
+&gt;&gt;&gt; ardour is doing this all the time.
+&gt;&gt;&gt; 
+&gt;&gt;&gt; its fairly clear from your test program that you have not include
+&gt;&gt;&gt; weakjack.h which is required to get weak linkage declarations.
+&gt;&gt;&gt; 
+&gt;&gt;&gt; --p
+&gt;&gt; 
+&gt;&gt; /**
+&gt;&gt; * get the assigned uuid for client.
+&gt;&gt; * safe to call from callback and all other threads.
+&gt;&gt; * memory needs to be freed.
+&gt;&gt; */
+&gt;&gt; 
+&gt;&gt; char *jack_client_get_uuid (jack_client_t *client) JACK_WEAK_EXPORT;
+&gt;&gt; 
+&gt;&gt; 
+&gt;&gt; Freed by jak_free API yes ? ==&gt; should be added in the doc 
+&gt;&gt; 
+&gt;&gt; /**
+&gt;&gt; * Get the session ID for a client name.
+&gt;&gt; * The session manager needs this to reassociate a client name to the session_id.
+&gt;&gt; */
+&gt;&gt; char *jack_get_uuid_for_client_name (jack_client_t *client,
+&gt;&gt;                                     const char    *client_name) JACK_WEAK_EXPORT;
+&gt;&gt; 
+&gt;&gt; 
+&gt;&gt; Freed by jak_free API yes ? ==&gt; should be added in the doc 
+&gt;&gt; 
+&gt;&gt; /**
+&gt;&gt; * Get the client name for a session_id.
+&gt;&gt; *
+&gt;&gt; * In order to snapshot the graph connections, the session manager needs to map
+&gt;&gt; * session_ids to client names.
+&gt;&gt; */
+&gt;&gt; char *jack_get_client_name_by_uuid (jack_client_t *client,
+&gt;&gt;                                    const char    *client_uuid ) JACK_WEAK_EXPORT;
+&gt;&gt; 
+&gt;&gt; Freed by jak_free API yes ? ==&gt; should be added in the doc 
+&gt;&gt; 
+&gt;&gt; 
+&gt;&gt; 
+&gt;&gt; jack_client_get_uuid missing in JACK2:
+&gt;&gt; 
+&gt;&gt; code from JACK1:
+&gt;&gt; 
+&gt;&gt; char *
+&gt;&gt; jack_client_get_uuid( jack_client_t *client )
+&gt;&gt; { 
+&gt;&gt; 	char retval[16];
+&gt;&gt; 
+&gt;&gt; 	snprintf( retval, sizeof(retval), "%d", client-&gt;control-&gt;uid );
+&gt;&gt; 
+&gt;&gt; 	return strdup(retval);
+&gt;&gt; }
+&gt;&gt; 
+&gt;&gt; ==&gt; Torben, I guess JACK1  client-&gt;control-&gt;uid correspond to JACK2  fSessionID field in JackClientControl yes?
+&gt;&gt; 
+&gt;&gt; Thanks.
+&gt;&gt; 
+&gt;&gt; St&#xE9;phane 
+&gt; 
+&gt; St&#xE9;phane, is there any chance that this comes in sync for both jack
+&gt; versions ?
+&gt; 
+&gt; greets
+&gt; hermann
+&gt; 
+
+jack_client_get_uuid added in JACK2 SVN : http://trac.jackaudio.org/changeset/4558
+
+Please test and report.
+
+St&#xE9;phane
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1320303700.16810_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1320317666.13694_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1320315955.10418_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1320315955.10418_0.ltw:2,a&nbsp;&lt;1F00042B-71CB-4096-BC09-D9BF6B944B52 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

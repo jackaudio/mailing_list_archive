@@ -1,0 +1,68 @@
+Date:        Thu, 07 Nov 2013 01:53:39 +0100
+From:        Uwe Koloska  <[hidden] at koloro dot de>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Uwe Koloska Re: [Jack-Devel] Flash Support (1383691072.7732_0.ltw:2,)
+
+Subject:     [Jack-Devel] Firefox HTML5 native audio and alsa jack-plugin (was Re: Flash Support)
+
+Am 05.11.2013 23:37, schrieb Uwe Koloska:
+> So I opted for the jack-plugin and found it working most of the time (or
+> better all times minus one).  The one exception is native web audio in
+> firefox 25 (chromium and opera are just fine -- BTW opera seems to have
+> native jack support!).  If I remember correctly, FF 24 has worked, too.
+>  And flash audio still works if native audio presents silence -- how
+> embarrassing!
+
+I have found a bug report for mozilla firefox:
+  812900 – No sound in html5 with jack on archlinux
+  https://bugzilla.mozilla.org/show_bug.cgi?id=812900
+
+Unfortunately all workarounds given in the thread don't work in the
+current version of firefox.
+
+The reason for the problem is missing support for FLOAT_LE in the jack
+plugin chain.  With jack-plugin slaved on default
+
+  aplay -v -c 2 -r 44100 -f FLOAT_LE /dev/zero
+
+doesnt't work -- while this does
+
+  aplay -v -c 2 -r 44100 -f S16_LE /dev/zero
+
+and what I now figured out while trying to document the behaviour for
+this list:
+
+  aplay -v -c 2 -r 48000 -f FLOAT_LE /dev/zero
+
+is working, too!
+
+So it's not the format but the rate.  The running aplay with S16_LE has
+the following conversion chain running:
+
+-----------------------------------------------------------------
+Plug PCM: Rate conversion PCM (48000, sformat=S16_LE)
+Converter: libspeex (builtin)
+
+Slave: Linear Integer <-> Linear Float conversion PCM (FLOAT_LE)
+
+Slave: ALSA <-> JACK PCM I/O Plugin
+-----------------------------------------------------------------
+
+Maybe the samplerate converter can't cope with FLOAT_LE?
+
+With jack configured for 44100 the FLOAT_LE aplay ist working but not so
+firefox HTML5 audio (flash works all the time). There now is a jack
+client but I cannot connect it (in qjackctl) and the audio has a long
+waiting time (approx. 10s) at the beginning -- and still no sound when
+it seems to play.
+
+One more experiment: With
+  defaults.pcm.rate_converter "samplerate"
+it doesn't work (both: aplay and firefox) :-(
+
+Greetings
+Uwe
+
+1383785626.706_0.ltw:2,a <527AE493.2060107 at koloro dot de>
+________________________________________________________________________________
+

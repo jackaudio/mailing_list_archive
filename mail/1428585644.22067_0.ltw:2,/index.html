@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Avoiding spinlocks in a parallel sequencer</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Avoiding spinlocks in a parallel sequencer</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1428584456.20106_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1428612205.14537_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1428585644.22067_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 09 Apr 2015 15:20:31 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1428584456.20106_0.ltw:2,/index.html'>Re: [Jack-Devel] Avoiding spinlocks in a parallel sequencer </a></td></tr>
+</table>
+<pre>
+[excuse for continuing top-posting]
+
+Mark McCurry (current zynaddsubfx maintainer) is in the process of a 
+rewrite.
+All the semaphores are gone and midi-parsing + synthesis is done 
+in-process
+(either jack-callback or LV2-run) and GUI communication is completely 
+separated via OSC.
+
+
+
+On 2015-04-09 15:00, Paul Davis wrote:
+&gt; Speaking entirely personally, I think this design is just plain nuts. 
+&gt; I
+&gt; know there are some JACK-ecosystem developers who disagree with me, 
+&gt; but I
+&gt; think that using JACK clients for this purpose is just wrong and is 
+&gt; pushing
+&gt; the design scope for JACK.
+&gt;
+&gt; What you're doing is precisely what a plugin architecture was 
+&gt; intended to
+&gt; address, and I really think you'd be better off implementing your own 
+&gt; audio
+&gt; graph with plugins. Of course, that requires a version of zyn that 
+&gt; can run
+&gt; as a plugin, which I think has been discussed but I don't think it 
+&gt; was
+&gt; every implemented fully.
+&gt;
+&gt; On Thu, Apr 9, 2015 at 2:01 AM, Johannes Lorenz 
+&gt; &lt;[hidden]
+&gt;&gt; wrote:
+&gt;
+&gt;&gt; Hi,
+&gt;&gt;
+&gt;&gt; &gt; I try to understand your plan:
+&gt;&gt; &gt;
+&gt;&gt; &gt; simple data flow example:
+&gt;&gt; &gt;
+&gt;&gt; &gt; zynaddsubfx_1_output
+&gt;&gt; &gt;
+&gt;&gt; &gt;           V
+&gt;&gt; &gt; sequencer_client_1_input
+&gt;&gt; &gt;
+&gt;&gt; &gt;           V
+&gt;&gt; &gt; sequencer_input_ringbuffer
+&gt;&gt; &gt;
+&gt;&gt; &gt;           V
+&gt;&gt; &gt; (sequencer processing stuff)
+&gt;&gt; &gt;
+&gt;&gt; &gt;           V
+&gt;&gt; &gt; sequencer_output_ringbuffer
+&gt;&gt; &gt;
+&gt;&gt; &gt;           V
+&gt;&gt; &gt; sequencer_client_output
+&gt;&gt; &gt;
+&gt;&gt; &gt;           V
+&gt;&gt; &gt; system_client_input(hardware output)
+&gt;&gt;
+&gt;&gt; Your picture is indeed correct. To add some more examples:
+&gt;&gt;
+&gt;&gt;   * Something like this is also possible
+&gt;&gt;
+&gt;&gt;         sequencer_input_ringbuffer_1     
+&gt;&gt; sequencer_input_ringbuffer_2
+&gt;&gt;                 V                                V
+&gt;&gt;         plus (i.e. addition of sound-waves)
+&gt;&gt;                 V
+&gt;&gt;         plus_effect_ringbuffer
+&gt;&gt;
+&gt;&gt;   * The part that you labeled "(sequencer processing stuff)" might 
+&gt;&gt; be
+&gt;&gt; filled with:
+&gt;&gt;
+&gt;&gt;                 V
+&gt;&gt;         peak_controller_effect        some lfo generator
+&gt;&gt;                 V (lfo)                       V (lfo)
+&gt;&gt;         zynaddsubfx_2_volume_input    
+&gt;&gt; zynaddsubfx_2_filter_freq_input
+&gt;&gt;                 V
+&gt;&gt;         (zynaddsubfx_2)
+&gt;&gt;                 V
+&gt;&gt;         zynaddsubfx_2_output
+&gt;&gt;                 V
+&gt;&gt;         sequencer_client_2_input
+&gt;&gt;                 V
+&gt;&gt;
+&gt;&gt; &gt; Maybe also what you envision to happen in which thread or which
+&gt;&gt; &gt; callback?
+&gt;&gt;
+&gt;&gt; Let's take the second example. zynaddsubfx itself is in another 
+&gt;&gt; process,
+&gt;&gt; so we don't need to run this at all. For feeding each ringbuffer 
+&gt;&gt; from zyn,
+&gt;&gt; I planned to use a separate jack client. E.g., if process() of
+&gt;&gt; sequencer_client_1_input is being called, it simply copies "nframes" 
+&gt;&gt; into
+&gt;&gt; sequencer_input_ringbuffer.
+&gt;&gt;
+&gt;&gt; Everything that now remains (e.g. lfo generator, 
+&gt;&gt; peak_controller_effect,
+&gt;&gt; sending input to zynaddsubfx_2) is done by a process() callback of
+&gt;&gt; sequencer_client_output. I call this one the master jack client.
+&gt;&gt;
+&gt;&gt; About the problem:
+&gt;&gt;
+&gt;&gt; A point where I think spinlocks can't be avoided would be, e.g., 
+&gt;&gt; reading
+&gt;&gt; from sequencer_output_ringbuffer. The sequencer's master jack client 
+&gt;&gt; would
+&gt;&gt; need to do that in process(), but it can not guess when the 
+&gt;&gt; ringbuffer
+&gt;&gt; reader from sequencer_client_2_input has even started to feed the
+&gt;&gt; ringbuffer.
+&gt;&gt;
+&gt;&gt; &gt; Do you want to do some signal processing in your sequencer or 
+&gt;&gt; would it
+&gt;&gt; &gt; be ok to delegate this to other jack clients? (may be easier)
+&gt;&gt;
+&gt;&gt; Hopefully you got it from the explenations above: the master jack 
+&gt;&gt; client
+&gt;&gt; would do this right now, as I planned. Other ideas will be fine, 
+&gt;&gt; too.
+&gt;&gt; Though, I guess, for "some lfo generator", e.g., a separate jack 
+&gt;&gt; client
+&gt;&gt; would be overkill, as this generator simply does, e.g., f(x) = 
+&gt;&gt; sin(x).
+&gt;&gt;
+&gt;&gt; 
+&gt;&gt; Jack-Devel mailing list
+&gt;&gt; [hidden]
+&gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1428584456.20106_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1428612205.14537_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1428585644.22067_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1428585644.22067_0.ltw:2,&nbsp;&lt;ea39631ae2698ac6272ab4d6d12b5319 at gareus dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

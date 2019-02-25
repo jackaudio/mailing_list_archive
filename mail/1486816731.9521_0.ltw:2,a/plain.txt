@@ -1,0 +1,59 @@
+Date:        Sat, 11 Feb 2017 13:38:46 +0100
+From:        Jörg Müller  <[hidden] at gmail dot com>
+To:          Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels (1486732521.12244_0.ltw:2,a)
+Follow-Up:   John Rigg Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels (1486828056.20145_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels (1486828890.21021_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels
+
+Thanks for your help!
+
+Is there some guide to compile jackd2 from source? Here is what I did:
+> sudo apt-get build-dep jackd jackd2
+> cd /tmp
+> apt-get source jackd jackd2
+> nano /tmp/jackd2-1.9.10+20140610git97e0e80b~dfsg/common/JackConstants.h
+
+I changed the DRIVER_PORT_NUMBER value and tried to compile it by
+> cd /tmp/jackd2-1.9.10+20140610git97e0e80b~dfsg
+> dpkg-buildpackage -rfakeroot -uc -b
+
+But I got the following error:
+http://pastebin.com/QaFsYkth
+
+
+2017-02-10 14:15 GMT+01:00 Adrian Knoth <[hidden]>:
+> On 02/08/17 18:16, Jörg Müller wrote:
+>
+>> jackd: ../linux/alsa/JackAlsaDriver.cpp:122: virtual int
+>> Jack::JackAlsaDriver::Attach(): Assertion `fCaptureChannels < 256'
+>> failed.
+>> Aborted (core dumped)
+>>
+>> The corresponding cpp-file at that line compares against a variable
+>> called "DRIVER_PORT_NUM", which is a constant defined in
+>> "common/JackConstants.h" on line 53 on the github repo. Could that be
+>> the problem?
+>
+>
+> That's absolutely the problem, but the limit is arbitrary. Feel free to
+> recompile jackd2 with changed constants in JackConstants.h.
+>
+> I guess you need to tweak a bunch of other values as well.
+>
+> PORT_NUM, PORT_NUM_MAX, DRIVER_PORT_NUM (that's per direction),
+> PORT_NUM_FOR_CLIENT
+>
+> That should be it.
+>
+> Play a bit so it matches your setup. Feel free to send a patch.
+>
+>
+>
+> HTH
+
+1486816731.9521_0.ltw:2,a <CAKw=HF1NM+xP=nBbsCQpRCp2ud8OpfkQE3rSZh3MC5WwjedURg at mail dot gmail dot com>
+________________________________________________________________________________
+

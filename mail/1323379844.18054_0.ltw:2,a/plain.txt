@@ -1,0 +1,248 @@
+Date:        Thu, 08 Dec 2011 23:30:07 +0200
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis [Jack-Devel] The Situation(s) With JACK (1323349512.4356_0.ltw:2,Sa)
+
+Subject:     Re: [Jack-Devel] The Situation(s) With JACK
+
+Hi,
+
+Paul Davis <[hidden]> writes:
+
+> It has come time to address the situation with JACK.
+
+Good news is this!
+
+> This widely-used and innovative project has stalled out and is causing
+> as many headaches for users (potential and actual) as it is helping.
+> Lets take an honest and harsh look at the problems:
+>
+> 1. there are at least 3 different implementations of JACK. This is not
+> a problem in and of itself, but in the real world, it contributes the
+> remaining problems in real ways.
+
+Non-technical issue. Lot of people (including myself) will benefit from
+solving this one. I cannot judge whether it is possible to really fix
+this problem. For sure the situation can be improved by growing
+friendlier social environment.
+
+> 2. there is no defined API version that clients can be said to depend
+> on (that is, libjack from different implementations of JACK do not
+> come with a standard soname that can be used in dependency
+> determination). In addition, JACK's attempted use of weak linkage to
+> deal with an evolving API turns out to be based on a serious
+> misconception on Linux (it does work on OS X, and sometimes on Linux
+> too).
+
+I've said this before and I'll say it again. IMO the API versioning
+should be "split" based on features. Unfortunately libjack has no
+library initialization function. jack_client_open() could be used for
+this, by defining new jack_options_t bits. Given the multiclient uses
+of jack though, it makes much more sense to introduce jack_init()
+instead.
+
+I'm talking about something like LV2 extension mechanism here.
+
+IMO dereferencing a function pointer on each libjack API function call
+will not introduce significant overhead.
+
+> 3. there is widespread confusion about the relationship between Jack1
+> and Jack2, with an overwhelming number of people believing that Jack2
+> is the newer, better version of Jack1.
+
+I agree that renaming jackmp to jack2 was idealistic attempt to unite
+the jack development. Optimistic one as well.
+
+> 4. JACK was one of the first audio APIs to provide network streaming,
+> but the existence of two incompatible implementations of netjack makes
+> network streaming more to difficult to explain than it is to actually
+> do. Both implementations have their benefits, but there is absolutely
+> no talk of any unification and some notable resistance to it. When the
+> typical question arises "Can I use JACK to stream audio from A to B?"
+> the answer is so complex that many people just give up (and probably
+> rightly so). Contrast this to, for example, using the AUNetSend and
+> AUNetReceive plugins on OS X. It just makes a mockery of netjack in
+> terms of ease of use (though latency is terrible).
+
+I'd speculate that this is same issue as (1)
+
+> 5. after seven or eight years, the API still has not reach version 1.0.0
+
+It will help if jack1 versioning is split from the jack API
+"versioning". This implies requirement for wider consensus on the
+API itself. Hopefully you are ready for this.
+
+> 6. largely as a result of (2), distributions and applications are
+> starting to create a situation where despite the fact that Jack1 and
+> Jack2 are, in fact API and ABI compatible, explicit requirements for
+> Jack1 or Jack2 are in effect. They are wrong to do so, but their
+> reasons for doing so are entirely understandable.
+
+I think that upstream should actively cooperate with packagers by giving
+advice and writting guidlines. My attempt on is probably still in the
+trac wiki.
+
+> 7. any new extensions to the JACK API (such as an upcoming metadata
+> proposal from David Robillard and myself) require duplicated effort
+> across different implementations, which is silly and not very
+> productive.
+
+LV2-like extension mechanism can be linked to a plugin system. This
+includes unified interface for drivers. I never got good reasoning why
+driver API was not unified. I proposed this at some point and my
+proposal was rejected.
+
+> 8. Dangling features such as interactions with multiple devices have
+> totally different implementations in Jack1 and Jack2, with notable
+> drawbacks in each case. Where Tschak solves them, it does so having
+> effectively dying as an unreleased private project.
+
+It will help to get consensus what is the proper way of doing it and to
+do it in all implementations. Given that there are no non-technical
+issues here.
+
+> 9. Despite the presence of JACK Session support in a number of notable
+> applications, many developers apparently feel that it is unfinished or
+> incomplete or in some other way not worth using "at present"
+
+I don't see this as problem. The problem is that nobody actually has
+motivation to work on solving the issues.
+
+> 10. The existence of LADISH continues to produce confusion for users
+> wondering how best to do some of the things that LADISH does, because
+> there are now other ways of doing them.
+
+You could explain how to do these things without ladish I guess. Its not
+clear to me either. For various reasons in ladish I implemented things
+that belong to JACK. But as we all know, the world is not perfect.
+
+> 11. Interaction with PulseAudio continues to be a nightmarish headache
+> for a large number of new JACK users.
+
+We need someone with interest in both JACK and PulseAudio to fix this
+mess. I doubt we will find volunteer for this. Maybe if some day one of
+the mainstream distributions supported by commercial companies will pay
+someone to fix this mess. A friendlier community is something that will
+help again.
+
+> 12. By adopting jackdbus, distributions have sanctioned a way of using
+> of D-Bus that was explicitly disavowed at LAC Berlin. This also isn't
+> a problem in and of itself, but it has created a situation where
+> (almost) all interaction between JACK and everything else that is
+> accessible via D-Bus is the responsibility of Nedko, with whom I now
+> have a severely antagonistic relationship and several other people
+> have a ... difficult ... relationship. I take as much blame for the
+> relationship part as anyone else, but it remains the case that JACK
+> interacting with other parts of Linux via D-Bus is a good idea that is
+> currently limited by the entire constellation of issues surrounding
+> jackdbus. Torben has already demonstrated an alternative
+> implementation (jack.py) that follows the guidelines set up at LAC
+> Berlin, but it remains a small, experimental project barely used by
+> anyone.
+
+It will help to clearly state what exacly was *disavowed*. After all
+these years it is not clear to me what is wrong, in your (Paul) opinion
+with jackdbus. The explainations changed several times so far. And then
+the jack1 upstream acted against their claims. So I'm lost and
+demotivated. Clear messages and technical level criticizms are needed
+here. This applies to "the entire constellation of issues surrounding
+jackdbus" statement too. I think i have a good telescope but it doesnt
+translate other people thoughts into written text.
+
+> 13. The only people to do work on JACK development over the last
+> couple of years confine themselves to specific versions of JACK, and
+> despite nominally friendly communication, do not really collaborate
+> with the others. (Note that I am including myself in this).
+
+Lack of friendly environment. Dictatorship instead of adoption or
+rejection with sane explainations. I'm not talking only about jackdbus
+here. There is a significant stack of jack1 (and sometimes jack2 too)
+upstream decisions that doesn't make sense to lot of users and
+developers/contributors.
+
+14. multiclient apps. jack client (autore)naming.
+
+> In summary, although Jack1 and Jack2 continue to provide useful
+> functionality to users and the overall design of the API continues to
+> have many fans and a relative elegance, the *project* as a whole is in
+> a serious condition.
+>
+> I blame myself for some important parts of this situation. When
+> Stephane originally wrote jackdmp as an experiment with
+> multi-core/parallel support and other important ideas, it was decided
+> by the JACK group meeting at LAC Berlin that jackdmp would become the
+> successor to jack1. Instead what happened was that Jack1 and Jack2
+> have continued to evolve in parallel, largely because the primary
+> maintainers/developers of Jack1 (Torben and myself), while respectful
+> of the ideas that Stephane designed in jackmp, find the actual
+> implementation to be something we don't wish to work with. At no time
+> have I, as the supposedly benign dictator of the project, put my foot
+> down and said "this has to stop", because it seems wildly
+> inappropriate. Stephane (and others) are totally free to continue
+> their work, and distros are totally free to pick whichever
+> implementation they wish. Nedko has continue to work on Jackdbus and
+> LADISH, and has seen his work widely adopted by many distributions.
+> Torben has been free to do a completely new implementation ("tschak")
+> which merges jack1 and jack2 features/design. I can't stop that, and
+> I'm not sure I want to - these efforts have been incredibly valuable
+> as research projects and providing useful functionality.
+
+jackdbus/ladish was never inteded as experiment. It was and still is
+project with clear goals. Everything would have been much easier for
+everyone if my efforts were criticized with reason and not faced with
+negative emotions.
+
+> But ... this freedom has come at quite a high cost for the user
+> (particularly the potential user) community, as detailed above. For
+> developers, its not so bad - the different implementations are, in
+> fact, API and ABI compatible, and the issues with netjack are
+> invisible to clients. The dithering around with
+> LASH/LADISH/JackSession and the core design issues that they represent
+> should have been solved years ago and weren't, which does impact
+> developers a bit, but for most its a "use it/don't use it" choice that
+> doesn't really affect them, only those users who want to use one of
+> LADISH/JackSession for some purpose.
+>
+> A few weeks ago, I had an extremely negative IRC interaction with the
+> maintainer of the JACK plugin for audacious. Some of what this person
+> said was based on ignorance and incomplete understanding, but at the
+> root of his complaints and observations were a few perfectly valid
+> criticisms of JACK as a project (rather than as a technology) And so
+> now ....
+>
+>                                     It Has To Stop.
+>
+> I do have a proposal for how this is going to stop, but before I put
+> it forward, I would like to first see if there are any other ideas
+> floating around on the mailing list that have not come up when I've
+> discussed this situation on IRC. Once any discussion about this email
+> settles down, I'll outline my proposal (whatever it ends up being at
+> that point).
+>
+> This is a decision that affects users, packagers, distributions,
+> developers and other people. Despite a radically innovative (and,
+> thanks to Stephane, cross-platform) design and unmatched
+> functionality, the project needs a change in direction in order to
+> live up to its potential. If it can live up to it, then JACK will be
+> the simple, natural, functional choice for audio and MIDI on all 3
+> major OS platforms including network streaming, and the confusion and
+> stagnated development that it embodies now will be a thing of the
+> past. If it can't, JACK will continue to be a useful tool, but will
+> likely slowly rot. Lets try to avoid that if we can.
+
+I'm waiting for your proposal too. And I hope that it will improve the
+unfortunate situation in the Linux Audio community. Make it a friendlier
+place where people who disagree can cooperate. Where people when faced
+with oposition try to adjust their views and try to create a product
+that can serve a wider community. If we want this to happen, instead of
+reducing scope and trying to control everything we should seek the path
+to cooperation. To not burn bridges but to build them.
+
+The rebel armies need home too, just like guardians need their temple.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1323379844.18054_0.ltw:2,a <87iplqhhuo.fsf at arnaudov dot name>
+________________________________________________________________________________
+

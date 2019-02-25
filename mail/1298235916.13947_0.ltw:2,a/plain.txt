@@ -1,0 +1,580 @@
+Date:        Sun, 20 Feb 2011 16:04:54 -0500
+From:        Henry W. Peters  <[hidden] at jamadots dot com>
+To:          Dragan Noveski <[hidden] at gmx dot net>, [hidden] at lists dot jackaudio dot org, Dragan Noveski <[hidden] at gmx dot net>
+In-Reply-To: Dragan Noveski Re: [Jack-Devel] Using Jack (1298227010.29092_0.ltw:2,a)
+Follow-Up:   Dragan Noveski Re: [Jack-Devel] Using Jack (1298236374.14890_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Using Jack
+
+On 02/20/2011 01:36 PM, Dragan Noveski wrote:
+> On 20.02.2011 18:29, Henry W. Peters wrote:
+>> On 02/20/2011 12:00 PM, Dragan Noveski wrote:
+>>>>>
+>>>>> ALSA: cannot set hardware
+>>>>> parameters for playback
+>>>>>
+>>>
+>>>
+>>
+>> OK Dragan, here it is:
+>>
+>> # cat /proc/asound/cards
+>>  0 [Mia            ]: Echo_Mia - Mia
+>>                       Mia rev.1 (DSP56361) at 0xfe900000 irq 17
+>>
+>>
+>>
+>>
+>>
+>>
+> ok, this tell us that you only have 1 device in which case hw:0 is right.
+> so, the problems are perhaps coming from some alsa driver stuff...
+> what could give us more info is to make a fresh reboot and than type 
+> dmesg into a terminal and look in the output about anything related to 
+> alsa / echo-mia. there might be some info about mising firmware, 
+> driver or what ever is causing your problems.
+>
+> cheers,
+> doc
+>
+
+Here is the output from the command 'dmesg,' & done with a fresh boot 
+(this is new to me, so I really do not know what it represents, exactly, 
+though I can see it is a record of connection with various of my 
+hardware... & I do not see the mia board in this, & also some errors (or 
+failures?)).
+
+
+Henry
+
+P.s., I thought of reinstalling my various alsa drivers, except I did 
+not (yet) explore the ramifications of possible dependency problems (as 
+you are probably well aware, can be a terrific nightmare). I'll be glad 
+to bring this information to the alsa list, if you think it a more 
+appropriate place (i.e., is more alsa related). I sent a message to them 
+this morning, no reply, but I only had some sketchy information, & 
+suggestions on or off list, would be heartily welcomed.
+
+  $ dmesg
+[    1.734064] sata_sis 0000:00:05.0: PCI INT A -> GSI 17 (level, low) 
+-> IRQ 17
+[    1.734071] sata_sis 0000:00:05.0: Detected SiS 180/181/964 chipset 
+in SATA mode
+[    1.740158] scsi2 : sata_sis
+[    1.742371] scsi3 : sata_sis
+[    1.743030] ata3: SATA max UDMA/133 cmd 0xd400 ctl 0xd000 bmdma 
+0xc000 irq 17
+[    1.743036] ata4: SATA max UDMA/133 cmd 0xc800 ctl 0xc400 bmdma 
+0xc008 irq 17
+[    1.876017] usb 2-3: new low speed USB device using ohci_hcd and 
+address 2
+[    2.060039] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    2.090074] usb 2-3: New USB device found, idVendor=046d, idProduct=c01a
+[    2.090078] usb 2-3: New USB device strings: Mfr=1, Product=2, 
+SerialNumber=0
+[    2.090082] usb 2-3: Product: USB-PS/2 Optical Mouse
+[    2.090085] usb 2-3: Manufacturer: Logitech
+[    2.090200] usb 2-3: configuration #1 chosen from 1 choice
+[    2.107092] ata3.00: ATA-7: ST3500630AS, 3.AAK, max UDMA/133
+[    2.107099] ata3.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 0/32)
+[    2.171447] ata3.00: configured for UDMA/133
+[    2.171579] scsi 2:0:0:0: Direct-Access     ATA      ST3500630AS      
+3.AA PQ: 0 ANSI: 5
+[    2.488044] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    2.512211] ata4.00: ATAPI: LITE-ON DVDRW LH-20A1L, BL05, max UDMA/100
+[    2.544222] ata4.00: configured for UDMA/100
+[    2.546110] scsi 3:0:0:0: CD-ROM            LITE-ON  DVDRW LH-20A1L   
+BL05 PQ: 0 ANSI: 5
+[    2.557161] sd 0:0:0:0: [sda] 78165360 512-byte logical blocks: (40.0 
+GB/37.2 GiB)
+[    2.557218] sd 0:0:0:0: [sda] Write Protect is off
+[    2.557223] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[    2.557247] sd 0:0:0:0: [sda] Write cache: enabled, read cache: 
+enabled, doesn't support DPO or FUA
+[    2.557396]  sda:
+[    2.557613] sd 2:0:0:0: [sdb] 976773168 512-byte logical blocks: (500 
+GB/465 GiB)
+[    2.557665] sd 2:0:0:0: [sdb] Write Protect is off
+[    2.557669] sd 2:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+[    2.557692] sd 2:0:0:0: [sdb] Write cache: enabled, read cache: 
+enabled, doesn't support DPO or FUA
+[    2.557818]  sdb:sr0: scsi3-mmc drive: 10x/52x writer cd/rw xa/form2 
+cdda tray
+[    2.568440] Uniform CD-ROM driver Revision: 3.20
+[    2.568952] sr 1:0:0:0: Attached scsi CD-ROM sr0
+[    2.570231] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[    2.570504] ata4: hard resetting link
+[    2.573032] usbcore: registered new interface driver hiddev
+[    2.577767]  sdb1 sdb2 <
+[    2.579572] input: Logitech USB-PS/2 Optical Mouse as 
+/devices/pci0000:00/0000:00:03.0/usb2/2-3/2-3:1.0/input/input1
+[    2.579763] generic-usb 0003:046D:C01A.0001: input,hidraw0: USB HID 
+v1.10 Mouse [Logitech USB-PS/2 Optical Mouse] on usb-0000:00:03.0-3/input0
+[    2.579804] usbcore: registered new interface driver usbhid
+[    2.580058] usbhid: v2.6:USB HID core driver
+[    2.581475]  sda1 sda2
+[    2.582159] sd 0:0:0:0: [sda] Attached SCSI disk
+[    2.599011]  sdb5 sdb6 >
+[    2.615790] sd 2:0:0:0: [sdb] Attached SCSI disk
+[    2.888048] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    2.944226] ata4.00: configured for UDMA/100
+[    2.945012] ata4: EH complete
+[    2.946216] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[    2.946487] ata4: hard resetting link
+[    3.264049] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    3.320225] ata4.00: configured for UDMA/100
+[    3.320940] ata4: EH complete
+[    3.322158] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[    3.322422] ata4: hard resetting link
+[    3.640040] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    3.696224] ata4.00: configured for UDMA/100
+[    3.696927] ata4: EH complete
+[    3.698575] sr1: scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw 
+xa/form2 cdda tray
+[    3.698715] sr 3:0:0:0: Attached scsi CD-ROM sr1
+[    3.709223] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[    3.709945] sr 1:0:0:0: Attached scsi generic sg1 type 5
+[    3.710543] sd 2:0:0:0: Attached scsi generic sg2 type 0
+[    3.710658] sr 3:0:0:0: Attached scsi generic sg3 type 5
+[    3.778340] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[    3.778613] ata4: hard resetting link
+[    4.096044] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    4.152223] ata4.00: configured for UDMA/100
+[    4.152927] ata4: EH complete
+[    4.154129] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[    4.154391] ata4: hard resetting link
+[    4.472042] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    4.528224] ata4.00: configured for UDMA/100
+[    4.528922] ata4: EH complete
+[    4.530117] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[    4.530375] ata4: hard resetting link
+[    4.848040] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    4.904222] ata4.00: configured for UDMA/100
+[    4.904920] ata4: EH complete
+[    4.907496] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[    4.907757] ata4: hard resetting link
+[    5.224043] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    5.280224] ata4.00: configured for UDMA/100
+[    5.280929] ata4: EH complete
+[    5.282132] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[    5.282392] ata4: hard resetting link
+[    5.600040] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    5.656222] ata4.00: configured for UDMA/100
+[    5.656922] ata4: EH complete
+[    5.658121] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[    5.658377] ata4: hard resetting link
+[    5.976040] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    6.032224] ata4.00: configured for UDMA/100
+[    6.032924] ata4: EH complete
+[    6.034075] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[    6.034328] ata4.00: BMDMA stat 0x5
+[    6.034466] ata4: hard resetting link
+[    6.352041] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    6.408222] ata4.00: configured for UDMA/100
+[    6.408923] ata4: EH complete
+[    6.446158] device-mapper: uevent: version 1.0.3
+[    6.446866] device-mapper: ioctl: 4.15.0-ioctl (2009-04-01) 
+initialised: [hidden]
+[    6.455742] PM: Starting manual resume from disk
+[    6.455749] PM: Resume from partition 8:22
+[    6.455752] PM: Checking hibernation image.
+[    6.456085] PM: Error -22 checking image file
+[    6.456088] PM: Resume from disk failed.
+[    6.493705] kjournald starting.  Commit interval 5 seconds
+[    6.493719] EXT3-fs: mounted filesystem with ordered data mode.
+[    8.123518] udev[312]: starting version 164
+[    8.674338] input: PC Speaker as /devices/platform/pcspkr/input/input2
+[    8.676648] pci_hotplug: PCI Hot Plug PCI Core version: 0.5
+[    8.795418] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[    8.795692] ata4: hard resetting link
+[    8.817314] shpchp: Standard Hot Plug PCI Controller Driver version: 0.4
+[    8.918553] input: Power Button as 
+/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0C0C:00/input/input3
+[    8.918766] ACPI: Power Button [PWRB]
+[    8.918911] input: Power Button as 
+/devices/LNXSYSTM:00/LNXPWRBN:00/input/input4
+[    8.918995] ACPI: Power Button [PWRF]
+[    8.936630] processor LNXCPU:00: registered as cooling_device0
+[    9.112074] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    9.168305] ata4.00: configured for UDMA/100
+[    9.169041] ata4: EH complete
+[    9.170257] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[    9.170528] ata4: hard resetting link
+[    9.461061] parport_pc 00:08: reported by Plug and Play ACPI
+[    9.461139] parport0: PC-style at 0x378 (0x778), irq 7 [PCSPP,TRISTATE]
+[    9.488669] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    9.544346] ata4.00: configured for UDMA/100
+[    9.545071] ata4: EH complete
+[    9.546380] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[    9.546732] ata4: hard resetting link
+[    9.864050] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    9.880153] Echoaudio Mia 0000:00:0a.0: PCI INT A -> GSI 17 (level, 
+low) -> IRQ 17
+[    9.880198] Echoaudio Mia 0000:00:0a.0: firmware: requesting 
+ea/mia_dsp.fw
+[    9.920251] ata4.00: configured for UDMA/100
+[    9.920970] ata4: EH complete
+[    9.922194] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[    9.922464] ata4: hard resetting link
+[    9.980039] Echoaudio Mia 0000:00:0a.0: firmware: requesting 
+ea/loader_dsp.fw
+[   10.042400] Card registered: Mia rev.1 (DSP56361) at 0xfe900000 irq 17
+[   10.240066] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   10.296298] ata4.00: configured for UDMA/100
+[   10.297051] ata4: EH complete
+[   10.298293] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   10.298565] ata4: hard resetting link
+[   10.616074] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   10.672227] ata4.00: configured for UDMA/100
+[   10.672948] ata4: EH complete
+[   10.674167] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   10.674437] ata4: hard resetting link
+[   10.992042] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   11.048224] ata4.00: configured for UDMA/100
+[   11.048924] ata4: EH complete
+[   11.069965] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   11.070240] ata4: hard resetting link
+[   11.388042] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   11.444222] ata4.00: configured for UDMA/100
+[   11.444930] ata4: EH complete
+[   11.446132] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   11.446374] ata4: hard resetting link
+[   11.764050] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   11.820223] ata4.00: configured for UDMA/100
+[   11.820935] ata4: EH complete
+[   11.822150] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   11.822414] ata4: hard resetting link
+[   12.140040] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   12.196222] ata4.00: configured for UDMA/100
+[   12.196922] ata4: EH complete
+[   12.199507] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   12.199766] ata4: hard resetting link
+[   12.516041] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   12.572234] ata4.00: configured for UDMA/100
+[   12.572951] ata4: EH complete
+[   12.574167] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   12.574432] ata4: hard resetting link
+[   12.892042] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   12.948222] ata4.00: configured for UDMA/100
+[   12.948923] ata4: EH complete
+[   12.950122] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   12.950379] ata4: hard resetting link
+[   13.268041] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   13.324224] ata4.00: configured for UDMA/100
+[   13.324925] ata4: EH complete
+[   13.326089] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   13.326341] ata4.00: BMDMA stat 0x5
+[   13.326479] ata4: hard resetting link
+[   13.644052] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   13.700224] ata4.00: configured for UDMA/100
+[   13.700946] ata4: EH complete
+[   14.117625] Adding 2915756k swap on /dev/sdb6.  Priority:-1 extents:1 
+across:2915756k
+[   14.346371] EXT3 FS on sdb5, internal journal
+[   14.481400] loop: module loaded
+[   15.172164] fuse init (API version 7.13)
+[   18.795464] NET4: DECnet for Linux: V.2.5.68s (C) 1995-2003 Linux 
+DECnet Project Team
+[   18.796161] DECnet: Routing cache hash table of 1024 buckets, 8Kbytes
+[   18.796171] NET: Registered protocol family 12
+[   19.896938] eth0: Media Link On 100mbps full-duplex
+[   26.516487] lp0: using parport0 (interrupt-driven).
+[   26.742766] ppdev: user-space parallel port driver
+[   28.572007] eth0: no IPv6 routers present
+[   29.518550] powernow-k8: Found 1 Mobile AMD Athlon(tm) XP-M Processor 
+3000+ processors (1 cpu cores) (version 2.20.00)
+[   29.518644] powernow-k8:    0 : fid 0x8 (1600 MHz), vid 0x6
+[   29.518648] powernow-k8:    1 : fid 0x0 (800 MHz), vid 0x18
+[   29.588124] Marking TSC unstable due to cpufreq changes
+[   29.588204] Switching to clocksource acpi_pm
+[   43.458816] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   43.458832] ata4: hard resetting link
+[   43.776507] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   43.832298] ata4.00: configured for UDMA/100
+[   43.833023] ata4: EH complete
+[   43.837075] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   43.837092] ata4: hard resetting link
+[   44.156095] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   44.215500] ata4.00: configured for UDMA/100
+[   44.216236] ata4: EH complete
+[   44.217465] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   44.217479] ata4: hard resetting link
+[   44.536080] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   44.592288] ata4.00: configured for UDMA/100
+[   44.593013] ata4: EH complete
+[   45.459370] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   45.459396] ata4: hard resetting link
+[   45.776089] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   45.832310] ata4.00: configured for UDMA/100
+[   45.833042] ata4: EH complete
+[   45.834285] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   45.834305] ata4: hard resetting link
+[   46.152077] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   46.208453] ata4.00: configured for UDMA/100
+[   46.209178] ata4: EH complete
+[   46.210426] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   46.210447] ata4: hard resetting link
+[   46.528115] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   46.584352] ata4.00: configured for UDMA/100
+[   46.585091] ata4: EH complete
+[   47.460519] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   47.460544] ata4: hard resetting link
+[   47.784096] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   47.840249] ata4.00: configured for UDMA/100
+[   47.840959] ata4: EH complete
+[   47.842175] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   47.842188] ata4: hard resetting link
+[   48.160075] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   48.216344] ata4.00: configured for UDMA/100
+[   48.217084] ata4: EH complete
+[   48.218537] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   48.218561] ata4: hard resetting link
+[   48.536060] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   48.592251] ata4.00: configured for UDMA/100
+[   48.592959] ata4: EH complete
+[   49.461709] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   49.461734] ata4: hard resetting link
+[   49.780056] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   49.836345] ata4.00: configured for UDMA/100
+[   49.837154] ata4: EH complete
+[   49.838418] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   49.838440] ata4: hard resetting link
+[   50.156083] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   50.212362] ata4.00: configured for UDMA/100
+[   50.213113] ata4: EH complete
+[   50.214383] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   50.214406] ata4: hard resetting link
+[   50.532075] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   50.588326] ata4.00: configured for UDMA/100
+[   50.589063] ata4: EH complete
+[   51.460395] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   51.460418] ata4: hard resetting link
+[   51.780058] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   51.836508] ata4.00: configured for UDMA/100
+[   51.837245] ata4: EH complete
+[   51.838500] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   51.838523] ata4: hard resetting link
+[   52.156131] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   52.212312] ata4.00: configured for UDMA/100
+[   52.213058] ata4: EH complete
+[   52.214330] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   52.214351] ata4: hard resetting link
+[   52.536052] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   52.592241] ata4.00: configured for UDMA/100
+[   52.592954] ata4: EH complete
+[   53.461334] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   53.461360] ata4: hard resetting link
+[   53.780104] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   53.836309] ata4.00: configured for UDMA/100
+[   53.837041] ata4: EH complete
+[   53.838291] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   53.838313] ata4: hard resetting link
+[   54.156349] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   54.212326] ata4.00: configured for UDMA/100
+[   54.213055] ata4: EH complete
+[   54.214298] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   54.214318] ata4: hard resetting link
+[   54.532071] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   54.588344] ata4.00: configured for UDMA/100
+[   54.589095] ata4: EH complete
+[   55.460536] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   55.460562] ata4: hard resetting link
+[   55.780081] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   55.836647] ata4.00: configured for UDMA/100
+[   55.837718] ata4: EH complete
+[   55.839028] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   55.839052] ata4: hard resetting link
+[   56.156196] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   56.212344] ata4.00: configured for UDMA/100
+[   56.213110] ata4: EH complete
+[   56.214418] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   56.214443] ata4: hard resetting link
+[   56.536093] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   56.592275] ata4.00: configured for UDMA/100
+[   56.593001] ata4: EH complete
+[   57.460283] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   57.460298] ata4: hard resetting link
+[   57.785189] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   57.840269] ata4.00: configured for UDMA/100
+[   57.841007] ata4: EH complete
+[   57.842321] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   57.842337] ata4: hard resetting link
+[   58.160082] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   58.216333] ata4.00: configured for UDMA/100
+[   58.217066] ata4: EH complete
+[   58.218328] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   58.218351] ata4: hard resetting link
+[   58.536140] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   58.592330] ata4.00: configured for UDMA/100
+[   58.593063] ata4: EH complete
+[   59.460824] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   59.460848] ata4: hard resetting link
+[   59.780078] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   59.836252] ata4.00: configured for UDMA/100
+[   59.837650] ata4: EH complete
+[   59.838908] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   59.838921] ata4: hard resetting link
+[   60.156081] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   60.212350] ata4.00: configured for UDMA/100
+[   60.213089] ata4: EH complete
+[   60.214361] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   60.214384] ata4: hard resetting link
+[   60.532087] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   60.588270] ata4.00: configured for UDMA/100
+[   60.588993] ata4: EH complete
+[   61.460908] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   61.460923] ata4: hard resetting link
+[   61.781121] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   61.836310] ata4.00: configured for UDMA/100
+[   61.837042] ata4: EH complete
+[   61.838295] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   61.838315] ata4: hard resetting link
+[   62.156079] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   62.212315] ata4.00: configured for UDMA/100
+[   62.213048] ata4: EH complete
+[   62.214300] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   62.214322] ata4: hard resetting link
+[   62.532092] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   62.589132] ata4.00: configured for UDMA/100
+[   62.589865] ata4: EH complete
+[   63.460677] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   63.460702] ata4: hard resetting link
+[   63.780102] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   63.836326] ata4.00: configured for UDMA/100
+[   63.837060] ata4: EH complete
+[   63.838331] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   63.838353] ata4: hard resetting link
+[   64.156117] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   64.212319] ata4.00: configured for UDMA/100
+[   64.213064] ata4: EH complete
+[   64.214345] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   64.214366] ata4: hard resetting link
+[   64.532081] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   64.588326] ata4.00: configured for UDMA/100
+[   64.589059] ata4: EH complete
+[   65.460715] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   65.460740] ata4: hard resetting link
+[   65.780107] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   65.836317] ata4.00: configured for UDMA/100
+[   65.837054] ata4: EH complete
+[   65.838327] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   65.838349] ata4: hard resetting link
+[   66.156101] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   66.212365] ata4.00: configured for UDMA/100
+[   66.213131] ata4: EH complete
+[   66.214782] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   66.214805] ata4: hard resetting link
+[   66.532086] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   66.588266] ata4.00: configured for UDMA/100
+[   66.588990] ata4: EH complete
+[   67.462894] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   67.462918] ata4: hard resetting link
+[   67.780097] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   67.836339] ata4.00: configured for UDMA/100
+[   67.837087] ata4: EH complete
+[   67.838345] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   67.838366] ata4: hard resetting link
+[   68.156089] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   68.212259] ata4.00: configured for UDMA/100
+[   68.212975] ata4: EH complete
+[   68.214197] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   68.214210] ata4: hard resetting link
+[   68.532097] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   68.588299] ata4.00: configured for UDMA/100
+[   68.589033] ata4: EH complete
+[   69.461925] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   69.461941] ata4: hard resetting link
+[   69.780089] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   69.836277] ata4.00: configured for UDMA/100
+[   69.837019] ata4: EH complete
+[   69.838627] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   69.838642] ata4: hard resetting link
+[   70.156091] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   70.212261] ata4.00: configured for UDMA/100
+[   70.212986] ata4: EH complete
+[   70.214212] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   70.214225] ata4: hard resetting link
+[   70.532081] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   70.588297] ata4.00: configured for UDMA/100
+[   70.589042] ata4: EH complete
+[   71.463339] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   71.463364] ata4: hard resetting link
+[   71.784067] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   71.840293] ata4.00: configured for UDMA/100
+[   71.841010] ata4: EH complete
+[   71.842228] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   71.842241] ata4: hard resetting link
+[   72.160099] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   72.216346] ata4.00: configured for UDMA/100
+[   72.217107] ata4: EH complete
+[   72.218394] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   72.218417] ata4: hard resetting link
+[   72.536077] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   72.592286] ata4.00: configured for UDMA/100
+[   72.593017] ata4: EH complete
+[   73.460818] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   73.460843] ata4: hard resetting link
+[   73.780071] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   73.836302] ata4.00: configured for UDMA/100
+[   73.837041] ata4: EH complete
+[   73.838295] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   73.838316] ata4: hard resetting link
+[   74.156070] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   74.212285] ata4.00: configured for UDMA/100
+[   74.213017] ata4: EH complete
+[   74.214274] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   74.214293] ata4: hard resetting link
+[   74.532071] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   74.588323] ata4.00: configured for UDMA/100
+[   74.589066] ata4: EH complete
+[   75.462872] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   75.462897] ata4: hard resetting link
+[   75.780072] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   75.836303] ata4.00: configured for UDMA/100
+[   75.837041] ata4: EH complete
+[   75.838300] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   75.838321] ata4: hard resetting link
+[   76.156072] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   76.212282] ata4.00: configured for UDMA/100
+[   76.213015] ata4: EH complete
+[   76.214273] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   76.214292] ata4: hard resetting link
+[   76.532071] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   76.588283] ata4.00: configured for UDMA/100
+[   76.589015] ata4: EH complete
+[   77.462880] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   77.462903] ata4: hard resetting link
+[   77.780067] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   77.836305] ata4.00: configured for UDMA/100
+[   77.837044] ata4: EH complete
+[   77.838301] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   77.838322] ata4: hard resetting link
+[   78.156072] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   78.212281] ata4.00: configured for UDMA/100
+[   78.213012] ata4: EH complete
+[   78.214270] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   78.214290] ata4: hard resetting link
+[   78.532087] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   78.588288] ata4.00: configured for UDMA/100
+[   78.589049] ata4: EH complete
+[   79.464165] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   79.464190] ata4: hard resetting link
+[   79.784174] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   79.840301] ata4.00: configured for UDMA/100
+[   79.841042] ata4: EH complete
+[   79.842308] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   79.842329] ata4: hard resetting link
+[   80.160073] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   80.216288] ata4.00: configured for UDMA/100
+[   80.217021] ata4: EH complete
+[   80.218282] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   80.218303] ata4: hard resetting link
+[   80.536071] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   80.592281] ata4.00: configured for UDMA/100
+[   80.593014] ata4: EH complete
+[   81.460835] ata4.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6
+[   81.460859] ata4: hard resetting link
+
+1298235916.13947_0.ltw:2,a <4D6181F6.6010201 at jamadots dot com>
+________________________________________________________________________________
+

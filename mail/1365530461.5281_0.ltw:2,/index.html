@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Graph callback and client state</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Graph callback and client state</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1365433490.7934_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1365533133.8685_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1365530461.5281_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 09 Apr 2013 11:00:48 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> J. Liles </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Pawel &lt;[hidden] at wp dot pl&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Pawel
+<a href='../1364053037.26063_0.ltw:2,a/index.html'>[Jack-Devel] Graph callback and client state </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1365533133.8685_0.ltw:2,a/index.html'>Re: [Jack-Devel] Graph callback and client state </a></td></tr>
+</table>
+<pre>
+As the author of a connection manager which may encounter this issue
+(JACKPatch), I would be happy if jack_get_ports() never listed any ports
+that jack_connect() would fail to connect for no apparent reason!
+
+On Sat, Mar 23, 2013 at 8:37 AM, Pawel &lt;[hidden]&gt; wrote:
+
+&gt; Paul, Stephane - I know you are busy, but can you just refer to my idea ?
+&gt; I can make patches for Jack[12], please only tell me - is my idea is OK ?
+&gt;
+&gt; Once again - my idea is to just "hide" ports owned by inactive clients (in
+&gt; jack_get_ports).
+&gt;
+&gt; ??
+&gt;
+&gt; --
+&gt; Pawel
+&gt;
+&gt; Dnia Czwartek, 7 Marca 2013 09:11 Pawel &lt;[hidden]&gt; napisa&#x142;(a)
+&gt; &gt; Well ? Are you see any problem / risk in approach where jack_get_ports
+&gt; will just "hide" inactive ports (.. or ports owned by inactive clients,
+&gt; whatever ;-)
+&gt; &gt;
+&gt; &gt; --
+&gt; &gt; Pawel
+&gt; &gt;
+&gt; &gt; Dnia Pi&#x105;tek, 1 Marca 2013 15:00 Pawel &lt;[hidden]&gt; napisa&#x142;(a)
+&gt; &gt; &gt; Dnia Pi&#x105;tek, 1 Marca 2013 14:26 St&#xE9;phane Letz &lt;[hidden]&gt;
+&gt; napisa&#x142;(a)
+&gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; Le 1 mars 2013 ? 14:05, Pawel &lt;[hidden]&gt; a &#xE9;crit :
+&gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; &gt; Hi,
+&gt; &gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; &gt; I made small test app for test inactive port connection issue. I
+&gt; just tested Jack2 and it is also affected by this problem.
+&gt; &gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; &gt; When you execute it , you can observe that Jack server say:
+&gt; &gt; &gt; &gt; &gt; Cannot connect ports owned by inactive clients: "TEST" is not
+&gt; active
+&gt; &gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; &gt; .. while jack_get_ports still see it. Both Jack1 and Jack2 are
+&gt; affected.
+&gt; &gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; &gt; Please found it in attachment.
+&gt; &gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; &gt; I have two ideas:
+&gt; &gt; &gt; &gt; &gt; 1) jack_connect should return some predefined king of error (like
+&gt; EEXISTS)
+&gt; &gt; &gt; &gt; &gt; ... or ..
+&gt; &gt; &gt; &gt; &gt; 2) jack_get_ports shouldn't return inactive ports (this is more
+&gt; reliable IMHO).
+&gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; This is no "inactive" ports but rather "inactive" applications.
+&gt; &gt; &gt; OFC .. this was shorthand - inactive app have inactive ports .. it
+&gt; matter how we call such ports ?
+&gt; &gt; &gt;
+&gt; &gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; &gt; Compile:
+&gt; &gt; &gt; &gt; &gt; gcc -g -o test test.c -ljack
+&gt; &gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; &gt; Regards
+&gt; &gt; &gt; &gt; &gt; Pawel
+&gt; &gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; I'm not sure we can "afford" to change this kind of behavior, since
+&gt; this may break a lot of existing clients.
+&gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; St&#xE9;phane
+&gt; &gt; &gt;
+&gt; &gt; &gt; My first suggestion was "safe way" it doesn't break anything, but
+&gt; second is IMHO more correct.
+&gt; &gt; &gt;
+&gt; &gt; &gt; There would be also "jack_client_is_active" call for connect managers
+&gt; (for mark inactive ports).
+&gt; &gt; &gt;
+&gt; &gt; &gt; Pawel
+&gt; &gt; &gt;
+&gt; &gt; &gt;
+&gt; &gt; &gt;
+&gt; &gt; &gt; 
+&gt; &gt; &gt; Jack-Devel mailing list
+&gt; &gt; &gt; [hidden]
+&gt; &gt; &gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt; &gt;
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; 
+&gt; &gt; Jack-Devel mailing list
+&gt; &gt; [hidden]
+&gt; &gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+&gt;
+&gt;
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1365433490.7934_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1365533133.8685_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1365530461.5281_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1365530461.5281_0.ltw:2,&nbsp;&lt;CAGhWSSbxdV47TF2rec4Tn4yAL4FbviC4KwZpy7_Y-oRtDHTbVw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

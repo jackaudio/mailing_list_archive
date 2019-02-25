@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] CoreMIDI driver bug fix</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] CoreMIDI driver bug fix</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1362250032.20173_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1362324780.12245_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1362252599.22469_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 02 Mar 2013 11:29:53 -0800 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Christian Schoenebeck &lt;[hidden] at crudebyte dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+Hi Christian,
+
+On Sat, Mar 2, 2013 at 11:10 AM, Christian Schoenebeck
+&lt;[hidden]&gt; wrote:
+&gt; On Saturday 02 March 2013 19:47:05 you wrote:
+&gt;
+&gt;&gt; The CoreMIDI spec seems to disallow running status.  The description
+&gt;
+&gt; I haven't checked yet whether that is actually true on OSX, however on iOS
+&gt; (which is also providing the complete CoreMIDI API of OSX), events with
+&gt; "running status" did occur, even on latest iOS 6.x. Many CoreMIDI iOS apps
+&gt; have that bug. So chances are high that this can also happen on OSX as well.
+
+That's interesting.  The iOS CoreMIDI spec says the same thing as the
+MacOSX CoreMIDI spec.  Is that MIDI coming from the hardware driver,
+or from other CoreMIDI applications?  Has a bug been filed against
+either CoreMIDI or whatever is sending the MIDI messages?
+
+&gt;&gt; However, something that I didn't notice before (was it there when I
+&gt;&gt; implemented the CoreMIDI driver?) is that a MIDIPacket can contain
+&gt;&gt; multiple MIDI messages.  I don't remember accounting for that when I
+&gt;&gt; wrote the driver.  That's a bug that will need to be fixed.
+&gt;
+&gt; I will have a look at that.
+
+Thanks. :)
+
+&gt; BTW, was there are a specific reason that you did not use
+&gt; JackMidiRawInputWriteQueue for parsing the MIDI stream in the CoreMIDI driver?
+
+The JackMidiRawInputWriteQueue parses packets, and there's some
+overhead that occurs because it uses a two-pass algorithm.  At the
+time, I thought MIDIPacket structures only contained one MIDI message
+each, with the exception of system exclusive messages; so, using the
+JackMidiRawInputWriteQueue seemed like overkill.
+
+Due to the fact that a MIDIPacket can contain multiple MIDI messages,
+it makes sense to use the JackMidiRawInputWriteQueue ... which would
+be *awesome*, as the spaghetti code that I wrote in the CoreMIDI
+driver to deal with partitioned system exclusive messages is awful,
+and should be replaced. :)
+
+If you plan on adding the JackMidiRawInputWriteQueue, then I'd like to
+make a suggestion.  The alsarawmidi driver and the FFADO driver use
+the JackMidiRawInputWriteQueue.  If you need a reference on how to use
+the driver, you can look at those drivers.  The alsarawmidi driver is
+probably more relevant because it uses the two thread scheme to handle
+MIDI messages, just like CoreMIDI.
+
+If you have any other questions regarding the MIDI queue system,
+please send me a message.  I'm happy to help. :)
+
+&gt; (I am not on the JACK dev list, so this email probably wont make it to the
+&gt; list).
+
+I'll CC this reply to the list.
+
+Thanks,
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+midisnoop - http://midisnoop.googlecode.com/
+psinsights - http://psinsights.googlecode.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1362250032.20173_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1362324780.12245_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1362252599.22469_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1362252599.22469_0.ltw:2,a&nbsp;&lt;CAG7zqTpXypWBfhwJ9xd3Q485JmGCrFLKiv-ujBccs==jgh6v-w at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

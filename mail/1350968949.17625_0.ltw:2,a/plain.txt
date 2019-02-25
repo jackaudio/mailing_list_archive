@@ -1,0 +1,108 @@
+Date:        Mon, 22 Oct 2012 22:08:56 -0700
+From:        Mark Kendrick  <[hidden] at gmail dot com>
+To:          Geoff Beasley <[hidden] at laughingboyrecords dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Geoff Beasley Re: [Jack-Devel] Audioadapter broken pipe error in Jack 1.9.8 (1350860734.2676_0.ltw:2,a)
+Follow-Up:   Geoff Beasley Re: [Jack-Devel] Audioadapter broken pipe error in Jack 1.9.8 (1351032514.28700_0.ltw:2,a)
+Follow-Up:   Geoff Beasley Re: [Jack-Devel] Audioadapter broken pipe error in Jack 1.9.8 (1351032732.28745_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Audioadapter broken pipe error in Jack 1.9.8
+
+On Sun, Oct 21, 2012 at 4:05 PM, Geoff Beasley <[hidden]
+> wrote:
+
+> On 22/10/12 04:58, Mark Kendrick wrote:
+>
+>> I'm following the guides to get a working linux-to-linux netjack setup
+>> running. I think I'm close, but I'm getting stuck with a "Broken pipe"
+>> (and broken audio) when I try to load the audioadapter.
+>>
+>> I'm running Jack2 version 1.9.8 which I start in realtime with the net
+>> backend, like so:
+>>
+>> [root@alarmpi jack2]# jackd -R -d net
+>> jackdmp 1.9.8
+>> Copyright 2001-2005 Paul Davis and others.
+>> Copyright 2004-2011 Grame.
+>> jackdmp comes with ABSOLUTELY NO WARRANTY
+>> This is free software, and you are welcome to redistribute it
+>> under certain conditions; see the file COPYING for details
+>> no message buffer overruns
+>> no message buffer overruns
+>> no message buffer overruns
+>> JACK server starting in realtime mode with priority 10
+>> NetDriver started in async mode without Master's transport sync.
+>> Waiting for a master...
+>> Initializing connection with bree...
+>> **************** Network parameters ****************
+>> Name : alarmpi
+>> Protocol revision : 5
+>> MTU : 1500
+>> Master name : bree
+>> Slave name : alarmpi
+>> ID : 2
+>> Transport Sync : no
+>> Send channels (audio - midi) : 2 - 0
+>> Return channels (audio - midi) : 2 - 0
+>> Sample rate : 48000 frames per second
+>> Period size : 2048 frames per period
+>> Network latency : 5 cycles
+>> SampleEncoder : Float
+>> Slave mode : async
+>> ******************************************************
+>>
+>>
+>>
+>> I load the audioadapter with this command in another terminal:
+>>
+>> [root@alarmpi ~]# jack_load audioadapter -i "-d hw:CODEC"
+>> audioadapter is running.
+>> client name = audioadapter
+>>
+>>
+> it looks like you've made an error in your use of Master/Slave Mark.
+>
+> On Machine 1 (master) start jack normally = jackd -dalsa ( -R no longer
+> needed - jack defaults to realtime now)
+>
+> then start   jack_load netmanager on your master machine. (you can add
+> this to the startup script uder setup>options in qjackctl if you use it)
+>
+> On Machine 2 (slave) start jack with = jackd -dnet  and watch the magic
+> happen :)
+>
+> hth
+>
+> g
+>
+>
+>
+Indeed, I did have that backwards, conceptually and practically. Thanks for
+setting me straight. I had to struggle a bit around some dbus oddities on
+the master, but once past those it was smooth sailing. That accomplishes my
+initial goal of streaming audio with low latency to the Raspberry Pi -
+yipee.
+
+The next goal is more complicated and would require code, and before I dive
+into learning the API, I should validate this is even possible and get my
+head oriented correctly around the master/server concept.
+
+I want to capture 8 channels of audio with, perhaps, an ffado-compatible
+device, and either (A) send all channels to multiple playback devices and
+let them mix it (in code) or (B) prepare a mix (in code) on the capture
+device for each playback device and then send two channels to each one. I
+prefer B so the playback device has as little to do as possible since it
+will be the weaker hardware.
+
+Are either of those scenarios doable, and if so, which is the jack master
+and which is the jack slave?
+
+Thanks.
+
+
+
+--Mark
+
+1350968949.17625_0.ltw:2,a <CALFtKw6F2BmJwdsXTAN94FHcp=6ptJMTwzLa13YD6dQ=-ZMVpw at mail dot gmail dot com>
+________________________________________________________________________________
+

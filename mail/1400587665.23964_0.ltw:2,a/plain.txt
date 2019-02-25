@@ -1,0 +1,70 @@
+Date:        Tue, 20 May 2014 14:07:30 +0200
+From:        Joakim Hernberg  <[hidden] at alchemy dot lu>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Leonardo Gabrielli [Jack-Devel] CPU load with top is inconsistent (1400576018.13105_0.ltw:2,a)
+Follow-Up:   Joakim Hernberg Re: [Jack-Devel] CPU load with top is inconsistent (1400587990.24363_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] CPU load with top is inconsistent (1400589732.26103_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] CPU load with top is inconsistent
+
+On Tue, 20 May 2014 10:53:23 +0200
+Leonardo Gabrielli <[hidden]> wrote:
+
+> I've been trying to track down how the CPU usage is affected by Jack 
+> under different conditions of sample rate and period size. Of course
+> I am aware low-level stuff such as how ALSA handles the hardware and
+> how it transfers the data is relevant, and it may also show higher 
+> performance with some specific combinations of sample rate and sample
+> size.
+
+I don't know how meaningful cpu load is in a low latency environment as
+that needed by jack..  Imo the execution latency (delay is far more
+important). There is an utility called cyclictest in the package
+rt-tests (on the AUR and in binary form in the binary
+archaudio-production repo).  This is used to test the kernel's ability
+to schedule realtime threads quickly (low latency).
+
+Run something like "cyclictest -n -m -Sp98 -i100 -d0" put the system
+under load (hackbench from rt-tests can be used for this), and note the
+max values (in micro seconds). This value represents the max time it
+would take the kernel to schedule your audio threads.  If you run it as
+root, it will disable powersaving on the cpu and might yield you better values.
+
+The "dsp load" as shown by qjackctl, is a measure of how much of the
+available time has been used by the jack clients audio processing.
+That is to say, if the latency given by samplerate and buffer size
+means that you have 2.9ms to complete the processing of all the audio
+threads, and qjackctl shows 50%, then it's taken about 1.45ms to
+complete the client's audio processing.
+
+These 2 measurements can be used to determine if a given buffersize
+and audio workload will work without causing xruns (audible dropouts).
+
+> Nonetheless, I'd like to have a qualitative comparison between
+> different conditions. What I do is run "top" and average the values I
+> find for jackd. Unfortunately - and this is startling - when
+> combining jack with other clients, such as jacktrip, the measure
+> changes a lot. An example: -r44100 -p64 with jack only: jack takes
+> 74% CPU -r44100 -p64 with jack+jacktrip: jack takes 30%, jacktrip
+> takes 33%
+
+I don't know what cpu you have, but these values sound incredibly high
+for an idling jackd, maybe it's including running audio processing?
+
+One aspect at play here might be cpu powersaving, giving you a higher
+cpu load value, because the  cpu isn't running full out, thus the audio
+processing taking up a bigger % of the available processing power (due
+to less cpu being available in powersave mode).
+
+As a reference on my i7-2600k using the onboard intel hd3000 gpu with
+the linux-rt 3.14.3-rt5 kernel, i get max scheduling delays of about
+30usecs, or 0.03ms. cpu and dsp load of jackd running with no client
+attached is negligible..
+
+-- 
+
+   Joakim
+
+1400587665.23964_0.ltw:2,a <20140520140730.1a691707 at tor dot valhalla dot alchemy dot lu>
+________________________________________________________________________________
+

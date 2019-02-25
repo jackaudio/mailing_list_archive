@@ -1,0 +1,57 @@
+Date:        Mon, 21 Feb 2011 11:03:10 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Tim Mayberry <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Tim Mayberry [Jack-Devel] Problem using Jack2 with MinGW and pthreads (1298281949.29387_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Problem using Jack2 with MinGW and pthreads
+
+Le 21 févr. 2011 à 10:52, Tim Mayberry a écrit :
+
+> I've been working on porting an existing application to windows using
+> the MinGW compiler. The application uses both pthreads via
+> (http://sourceware.org/pthreads-win32) and the jack API via jack2
+> 
+> The problem I'm having(I think) is that pthread_t is getting redefined
+> via jack/systemdeps.h
+> 
+> The relevant section:
+> 
+> #elif __MINGW32__   /* MINGW */
+>    #include <stdint.h>
+>    #include <sys/types.h>
+>    #ifndef pthread_t
+>        typedef HANDLE pthread_t;
+>    #endif
+> #else
+> 
+> So if jack.h and pthread.h are included in the same source file I get
+> this error:
+> 
+> systemdeps.h:46:24: error: conflicting declaration 'typedef void* pthread_t'
+> pthread.h:571:24: error: 'pthread_t' has a previous declaration as
+> 'typedef struct ptw32_handle_t pthread_t'
+> 
+> My first thought was to define pthread_t to what it is in pthread.h
+> before including jack.h so that there aren't conflicting declarations
+> and then undefine it again before including pthread.h so that I'm not
+> redefining pthread_t in pthread.h to something broken.
+> 
+> This seemed silly to me and probably breaks stuff so I was wondering
+> am I missing something? Is it intended to be able to use the MinGW
+> compiler to compile jack2 and use a pthreads implementation and if so
+> how?
+> 
+> Thanks,
+> 
+> Tim.
+
+The thing is that the POSIX jack implementations (Linux and OSX) use "pthread_t" type and this type appears in the public jack headers. Then the "pthread_t" type has to be defined for Windows, and the jack/systemdeps.h is supposed to define it only if not yet defined....
+
+So this seems to fail.... Have you included "pthread.h" *before* "jack.h"?
+
+Stéphane
+
+1298282615.30735_0.ltw:2,a <E51B8BD8-1462-4C2E-8F21-A679C54A9800 at grame dot fr>
+________________________________________________________________________________
+

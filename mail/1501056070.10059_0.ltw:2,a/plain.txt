@@ -1,0 +1,50 @@
+Date:        Wed, 26 Jul 2017 10:00:55 +0200
+From:        Filipe Coelho  <[hidden] at gmail dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Yuri Re: [Jack-Devel] Why frame sizes are limited to the powers of 2? (1501054813.8511_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Why frame sizes are limited to the powers of 2?
+
+On 26.07.2017 09:39, Yuri wrote:
+> On 07/26/2017 00:35, Filipe Coelho wrote:
+>>
+>> So some of those buffer sizes work, some do not.
+>> GUIs usually show only power of 2 values because they're safer to use 
+>> (I mean, more likely to actually work).
+>> Also some jack applications sadly were made with the expectation that 
+>> power-of-2 buffer sizes will be used...
+>> But for such cases the application can return an error on start and 
+>> during the jack-buffersize-callback, to force jack to be under 
+>> power-of-2 sizes.
+>>
+>> Anyway, at least in latest jack2 this is not a problem.
+>> Not sure about jack1, but I believe the same is true. 
+>
+>
+> I use Jack1. power of 2 check is hardcoded in the server.
+>
+> >        if (!jack_power_of_two (nframes)) {
+> >                jack_error ("buffer size %" PRIu32 " not a power of 2",
+> >                            nframes);
+> >                return EINVAL;
+> >        }
+>
+> Yuri
+>
+
+This seems like a leftover that nobody cared too much about just yet.
+Quickly going through the driver code I see that portaudio and coreaudio 
+drivers have this restriction when starting up jackd, but alsa has that 
+part disabled.
+See 
+https://github.com/jackaudio/jack1/blob/cb654ada4ecfd6a95b9fb648ebd33c5af462d380/drivers/alsa/alsa_driver.c#L495
+
+The OSS code does not seem to have this restriction when starting jackd 
+either.
+
+So I think we can remove this for at least ALSA and OSS drivers, 
+allowing them to change buffer size.
+
+1501056070.10059_0.ltw:2,a <59784C37.80705 at falktx dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Debugging Jack Clients</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Debugging Jack Clients</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1315333811.1763_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1315363858.4822_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1315363112.4200_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 06 Sep 2011 21:37:52 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Gabriel Beddingfield </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>ccrome &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>ccrome
+<a href='../1315333811.1763_0.ltw:2,a/index.html'>Re: [Jack-Devel] Debugging Jack Clients </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>ccrome
+<a href='../1315363858.4822_0.ltw:2,a/index.html'>Re: [Jack-Devel] Debugging Jack Clients </a></td></tr>
+</table>
+<pre>
+On 09/06/2011 01:29 PM, ccrome wrote:
+&gt; Ah, perhaps I've found the issue.  I guess when Jack try to re-start, it
+&gt; reconfigures the codec.  I'm using a custom audio card that takes some
+
+No... it shouldn't try to reconfigure the codec.
+
+&gt; time to re-configure, and it seems to enter a continuous loop where it
+&gt; tries to configure the codec, then it gets an xrun, so it tries again.
+
+If this loop is happening... it's a side-effect of the Real Problem. 
+This is OMAP3, right?
+
+&gt;         creating alsa driver ...
+&gt;         hw:0|hw:0|1024|2|48000|0|0|nomon|swmeter|-|16bit
+&gt;         control device hw:0
+&gt;         configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer
+&gt;         = 2 periods
+
+Try setting larger buffers.  E.g. -p 4096 -n 4
+
+&gt;         # gdb client
+&gt;         gdb&gt; break process
+&gt;         gdb&gt; run
+&gt;         Starting program:
+&gt;         /home/caleb/mmfx/platform/platform_beagle/puppy_driver/jack_scripts/jack_sine
+&gt;
+&gt;         [Thread debugging using libthread_db enabled]
+&gt;         [New Thread 0x40a73470 (LWP 22052)]
+&gt;         engine sample rate: 48000
+&gt;         [New Thread 0x412f6470 (LWP 22055)]
+&gt;            ^C
+&gt;         Program received signal SIGINT, Interrupt.
+&gt;         0x401e9f44 in nanosleep () from /lib/arm-linux-gnueabi/libc.so.6
+&gt;         (gdb) bad status (254) for client sine handling event (type = 8)
+&gt;         bad status (254) for client sine handling event (type = 8)
+&gt;         bad status (254) for client sine handling event (type = 8)
+&gt;         gdb&gt;
+&gt;         gdb&gt; continue
+&gt;
+&gt;
+&gt;     The callback 'process' is never called again, and the jackd_log file
+&gt;     is filled with alsa xruns.
+&gt;
+&gt;     Any thoughts?
+
+Even though you set the timeout at 50 seconds... it appears that this 
+error came because you didn't respond to an EVENT NOTIFICATION within 2 
+seconds.  (The 2secs is not configurable.)  Event type 8 is an xrun. 
+Did you perhaps set an xrun callback?  If you did, I recommend that you 
+disable it while debugging.
+
+-gabriel
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1315333811.1763_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1315363858.4822_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1315363112.4200_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1315363112.4200_0.ltw:2,a&nbsp;&lt;4E66D900.5010809 at gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

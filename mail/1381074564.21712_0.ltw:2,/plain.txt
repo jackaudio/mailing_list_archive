@@ -1,0 +1,66 @@
+Date:        Sun, 06 Oct 2013 11:49:17 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Filipe Coelho Re: [Jack-Devel] JACK1 master branch updated, new APIs, fixes (1381079300.24804_0.ltw:2,)
+
+Subject:     [Jack-Devel] JACK1 master branch updated, new APIs, fixes
+
+I have merged the UUID branch of JACK1 with master. It contains the
+following changes:
+
+* attempting to reset the ALSA driver with parameters that fail is now
+followed by
+     reverting to the last used working parameters, rather than failure
+
+* the watchdog thread has been removed. In theory this allows JACK clients
+to steal all
+     the CPU but modern Linux now prevents this itself and OS X always has.
+
+* the new metadata API has landed, which resulted in two minor changes
+     in the JACK API used for internal clients (when I say minor, I mean
+that it is
+     unlikely that any code other than JACK's own jack_load and jack_unload
+tools
+     has ever used it). See man jack_property for some details and
+metadata.h
+     for the rest.
+
+* jackd now accepts -I <name> to load internal clients on the command line
+
+* a new internal client, "alsa_midi", is provided that offers the
+functionality of
+     a2jmidid -e but that can now be started directly via jackd -I
+alsa_midi instead
+     of requiring a separate process to be started and managed. I plan to
+offer
+     two such clients soon, alsaseqmidi, which will be the new name for the
+current
+     one, and alsarawmidi which will share code with the equivalent module
+in Jack2.
+
+* the version has been bumped to 0.124.0.
+
+A large number of clients have been tested with the new version, and other
+than the changes in the internal client API mentioned above, this new
+version is ABI (binary) compatible with them (no recompilation is required
+to continue using them). These include Ardour, flash support library,
+GStreamer JACK support, xmms/audacious/beep JACK support, Hydrogen,
+Pianoteq, qjackctl, patchage and more.
+
+I have a large patch for qjackctl in preparation which will enable it to
+use the metadata API.
+
+Feedback is eagerly sought, and so I have made a tarball version of the
+current state of things for those who find git too intimidating. This is
+NOT a release at this point!
+
+   http://jackaudio.org/downloads/jack-audio-connection-kit-0.124.0.tar.gz
+
+There is some reasonable that more JACK1 development will occur in the near
+future.
+
+--p
+
+1381074564.21712_0.ltw:2, <CAFa_cK=qknxq=4JhOAkW4aWF4uWOjiwuSZRVKKV5JJ2wxapWfg at mail dot gmail dot com>
+________________________________________________________________________________
+

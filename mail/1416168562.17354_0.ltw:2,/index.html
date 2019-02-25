@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] connecting jack between a linux audio master and a windows slave</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] connecting jack between a linux audio master and a windows slave</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1416153022.24081_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1416176958.31022_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1416168562.17354_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 16 Nov 2014 14:08:11 -0600 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Athanasios Silis &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Developers JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Athanasios Silis
+<a href='../1416148135.16185_0.ltw:2,/index.html'>Re: [Jack-Devel] connecting jack between a linux audio master and a windows slave </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Athanasios Silis
+<a href='../1416176958.31022_0.ltw:2,/index.html'>Re: [Jack-Devel] connecting jack between a linux audio master and a windows slave </a></td></tr>
+</table>
+<pre>
+I'm not so familiar with netjack, but perhaps if you can clarify some
+things someone else will notice something.
+
+First, pastebin is not convenient, maybe some people have not seen your
+verbose output
+because you made it more difficult.  80 lines of text is not unreasonable
+for an email, just paste it in.  I have copied your pastebin verbose
+output to this message for convenience.
+
+    C:\Program Files (x86)\Jack&gt;jackd.exe -v -dnet  -i2 -o9 -C8 -p8
+
+Can you explain what you intended each command line argument to mean?  I
+have looked at the man page on my Fedora 20 system and I do not see a
+section for net, just netone, which is a slightly different protocol.
+
+For netone, -i2 would mean 2 capture channels, -o9 would be 9 playback
+channels, there is no -C argument shown, and -p means frames per period. 
+I don't think 8 frames per period would make sense, and also given the
+verbose output it seems like it may have been interpreted as IP port
+number:
+ Jack: JackNetDriver::JackNetDriver ip 225.3.19.154, port 8
+
+You used the exact same command line arguments on the linux slave machines
+which worked correctly?
+Maybe if you capture the verbose output from a working linux slave some
+difference might become obvious.  The port number 8 being associated with
+the address 225.3.19.154 stands out as looking suspicious to me after all
+the previous talk of port 19000, I don't think using a privileged port
+number is really what you intended.
+
+-- 
+Chris Caudle
+
+
+
+    C:\Program Files (x86)\Jack&gt;jackd.exe -v -dnet  -i2 -o9 -C8 -p8
+    jackdmp 1.9.10
+    Copyright 2001-2005 Paul Davis and others.
+    Copyright 2004-2014 Grame.
+    jackdmp comes with ABSOLUTELY NO WARRANTY
+    This is free software, and you are welcome to redistribute it
+    under certain conditions; see the file COPYING for details
+    Drivers/internals found in : C:\Windows
+    Drivers/internals found in : C:\Windows
+    JACK server starting in realtime mode with priority 10
+    self-connect-mode is "Don't restrict self connect requests"
+    Jack: JackWinThread::StartImp : create non RT thread
+    Jack: JackWinThread::ThreadHandler : start
+    Jack: JackNetDriver::JackNetDriver ip 225.3.19.154, port 8
+    Jack: JackDriver::Open capture_driver_name = from_master_
+    Jack: JackDriver::Open playback_driver_name = to_master_
+    Jack: Check protocol client = 8 server = 8
+    Jack: JackEngine::ClientInternalOpen: name = system
+    Jack: JackEngine::AllocateRefNum ref = 0
+    Jack: JackWinSemaphore::Allocate name = jack_pipe.default_system val = 0
+    Jack: JackEngine::NotifyAddClient: name = system
+    Jack: JackGraphManager::SetBufferSize size = 1024
+    Jack: JackConnectionManager::DirectConnect first: ref1 = 0 ref2 = 0
+    Jack: JackGraphManager::ConnectRefNum cur_index = 0 ref1 = 0 ref2 = 0
+    Jack: JackDriver::SetupDriverSync driver sem in flush mode
+    Jack: JackWinNamedPipeServerChannel::Open
+    Jack: JackWinNamedPipeServer::BindAux : fName
+\\.\pipe\server_jack_default_0
+    Jack: JackEngine::Open
+    Jack: JackWinNamedPipeClient::ConnectAux : fName
+\\.\pipe\server_jack_default_0
+    Jack: JackEngine::ClientInternalOpen: name = freewheel
+    Jack: JackEngine::AllocateRefNum ref = 1
+    Jack: JackWinSemaphore::Allocate name = jack_pipe.default_freewheel
+val = 0
+    Jack: JackEngine::NotifyAddClient: name = freewheel
+    Jack: JackDriver::ClientNotify ref = 1 driver = system name =
+freewheel notify =
+     0
+    Jack: JackDriver::ClientNotify ref = 0 driver = freewheel name =
+system notify =
+     0
+    Jack: JackConnectionManager::DirectConnect first: ref1 = 1 ref2 = 1
+    Jack: JackGraphManager::ConnectRefNum cur_index = 0 ref1 = 1 ref2 = 1
+    Jack: JackDriver::SetupDriverSync driver sem in flush mode
+    InitTime : multimedia timer resolution set to 1 milliseconds
+    Jack: JackServer::Start
+    Jack: JackThreadedDriver::Start
+    Jack: JackWinThread::StartImp : create non RT thread
+    Jack: JackWinThread::ThreadHandler : start
+    Jack: JackWinThread::StartImp : create non RT thread
+    Jack: JackThreadedDriver::Init real-time
+    Jack: JackWinThread::AcquireRealTimeImp priority = 10
+    MMCSS API not used...
+    Jack: JackWinThread::ThreadHandler : start
+    Jack: JackNetDriver::Initialize
+    Jack: JackNetDriver::FreePorts
+    NetDriver started in async mode without Master's transport sync.
+    Jack: JackNetSlaveInterface::Init()
+    Jack: JackNetSlaveInterface::SendAvailableToMaster try_count = 2147483647
+    Jack: JackNetSlaveInterface::SendAvailableToMaster try_count = 2147483647
+    Jack: JackWinThread::ThreadHandler : start
+    Jack: JackWinNamedPipeServerChannel::Init
+    Jack: JackWinNamedPipeServerChannel::ClientAdd size 0
+    Jack: JackWinThread::StartImp : create non RT thread
+    Jack: JackWinNamedPipeServer::BindAux : fName
+\\.\pipe\server_jack_default_0
+    Jack: JackWinThread::StartImp : create non RT thread
+    Jack: JackWinThread::ThreadHandler : start
+    Jack: JackClientPipeThread::Execute 321750
+    Jack: JackRequest::Notification
+    Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name =
+freewheel notify = 18
+    Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name =
+freewheel notify = 18
+    Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name =
+freewheel notify = 18
+    Jack: JackDriver::ClientNotify ref = 1 driver = freewheel name =
+freewheel notify = 18
+    Jack: JackEngine::ClientNotify: no callback for notification = 4
+    Jack: JackEngine::ClientNotify: no callback for notification = 4
+    Jack: JackClientPipeThread::Execute 321750
+    Jack: JackNetWinSocket::SetTimeout 1000000 usec
+    Waiting for a master...
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1416153022.24081_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1416176958.31022_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1416168562.17354_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1416168562.17354_0.ltw:2,&nbsp;&lt;dc98657e9939990b124ca1502ffc7619.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

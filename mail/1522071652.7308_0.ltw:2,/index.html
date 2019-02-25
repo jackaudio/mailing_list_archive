@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1522050375.10479_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1522075154.11579_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1522071652.7308_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 26 Mar 2018 08:40:21 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Christopher Obbard
+<a href='../1521973955.21072_0.ltw:2,/index.html'>[Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Christopher Obbard
+<a href='../1522075154.11579_0.ltw:2,/index.html'>Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes </a></td></tr>
+</table>
+<pre>
+On Sun, March 25, 2018 5:32 am, Christopher Obbard wrote:
+&gt; This is on an ARM embedded system, with a single core 1MHz processor.
+
+Is that a typo or are you really running on a 1MHz processor?  If so that
+would be a really slow clock.  That would be two orders of magnitude
+slower than most M class microcontrollers.
+
+&gt; I have a custom compiled 4.14 kernel with omap2plus_defconfig with the
+&gt; following config settings:
+&gt;&gt; CONFIG_PREEMPT_VOLUNTARY=y
+
+I would not consider CONFIG_PREEMPT_VOLUNTARY appropriate for low latency
+use, and especially if you are really running a 1MHz processor.  Using the
+full RT patch set would be recommended, or at the very least
+CONFIG_PREEMPT.
+
+&gt; $ jackd -R -P95 -dalsa -dhw:0 -r48000 -p64 -n2
+&gt;&gt; JackPosixProcessSync::LockedTimedWait error usec = 5000000 err =
+&gt;&gt; Connection timed out
+&gt;&gt; Driver is not running
+&gt;&gt; Cannot create new client
+&gt;&gt; CheckSize error size = 32 Size() = 12
+&gt;&gt; CheckRead error
+&gt;&gt; CheckSize error size = -1 Size() = 4
+&gt;&gt; CheckRead error
+&gt;&gt; CheckSize error size = 0 Size() = 12
+&gt;&gt; CheckRead error
+
+What audio hardware are you running?  If those messages all came right at
+startup from jack it would seem that the parameters don't match something,
+but jack usually gives better error messages than that.  There were never
+any messages indicating that the requested sample rate was actually used,
+word length used, etc?
+You usually should see some messages like this at the end of jackd startup:
+
+configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 3 periods
+ALSA: final selected sample format for capture: 24bit little-endian in
+3bytes format
+ALSA: use 3 periods for capture
+ALSA: final selected sample format for playback: 24bit little-endian in
+3bytes format
+ALSA: use 3 periods for playback
+
+Missing those messages could perhaps indicate that jackd was not able to
+open the ALSA device at all.
+Are you using an ALSA driver from the current kernel tree?
+
+&gt; Also, with higher buffer sizes sometimes I get xruns.
+
+You are running PREEMPT_VOLUNTARY on a 1MHz processor, a more typical
+configuration for low latency use is running PREEMPT or PREEMPT_RT on an
+1800MHz to 3000MHz processor, so it is a little bit hard to know where to
+start.
+If you are really running a 1MHz processor, there is  only time for 667
+instructions for each 32 sample buffer at 48kHz rate.  That is not very
+much for a general purpose OS.
+
+&gt; After enabling alsa debugging, the error is:
+&gt;&gt; ALSA: PCM: [Q] Lost interrupts?: (stream=0, delta=221,
+&gt;&gt; new_hw_ptr=181343, old_hw_ptr=181122)
+
+I would start with a better scheduler, PREEMPT or preferably PREEMPT_RT. 
+The usual advice these days is that you don't really need PREEMPT_RT, but
+that is usually for someone running a multi GHz processor and running at a
+period size 256 samples or larger.  For 64 or 32 sample period size on a
+slow processor you are going to have to get aggressive with optimizing.
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1522050375.10479_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1522075154.11579_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1522071652.7308_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1522071652.7308_0.ltw:2,&nbsp;&lt;3ec0fc3366a0eb0100aadb4f439c7ff8.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

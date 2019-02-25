@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] m-audio FastTrack Ultra 8R no playback with hw device</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] m-audio FastTrack Ultra 8R no playback with hw device</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1368738477.20388_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1368776808.21795_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1368748224.26223_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 17 May 2013 01:50:14 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Florian Paul Schmidt </span> &lt;[hidden] at gmx dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Niko Efthymiou
+<a href='../1367446680.22176_0.ltw:2,a/index.html'>Re: [Jack-Devel] m-audio FastTrack Ultra 8R no playback with hw device </a></td></tr>
+</table>
+<pre>
+On 02.05.2013 00:17, Niko Efthymiou wrote:
+&gt; On 01.05.2013 21:54, John Rigg wrote:
+&gt;
+&gt;&gt; I haven't used the FastTrack, but there are things you could check.
+&gt;&gt; Is hw:2 definitely the correct device?
+&gt; Yes hw:2 is the correct device and it works fine with plughw. Capture
+&gt; with hw:2 and playback oh plughw:2 works. It is just playback on hw:2
+&gt; that does not work.
+&gt;
+&gt; Niko
+
+Hi,
+
+maybe it's a routing problem. The interface looks interesting, so I did 
+a few google searches and this turned up wrt. the routing:
+
+http://linuxmusicians.com/viewtopic.php?f=27&amp;t=7673
+
+Quote (Heikki Ketoharju 
+&lt;http://linuxmusicians.com/memberlist.php?mode=viewprofile&amp;u=7298&amp;sid=1d73719ab4242a047ade802178c8fdef&gt;):
+
+"I used Gnome Alsamixer in AV Linux and alsamixer in Ubuntu. Both tools 
+work similar, so you can use what suits best to you. (Alsamixer is 
+command line software, so open your terminal, type alsamixer and press 
+enter.
+
+When you have alsamixer opened, you should first choose right soundcard. 
+This is done by pressing F6, in command line version, Gnome Alsamixer 
+has separate tabs for different soundcards. After that you should see 
+about 128 faders. Those control the internal routing.
+
+Now, if you are using Gnome Alsamixer, first thing you should do is 
+rename all the 128 faders. (At least I had to, because all faders had 
+same names in GUI) This is quite boring job to do, but once you do it, 
+Gnome Alsamixer remembers it's settings. If you decide to use alsamixer, 
+you don't have to do this.
+
+First 64 faders describe inputs, and last 64 describe outputs. Faders 
+are in the groups of eight. (In commandline version of alsamixer you 
+have to press F5 to see all 128 faders. By default it shows only input 
+faders.) Now you just have to adjust most of the faders to zero (in cli 
+alsamixer this is done by pressing end). PageDown and PageUp buttons can 
+be used to adjust fader's volume. I adjusted DIn1 - Out1 to 100 and all 
+other DIn1 outputs to zero, DIn2 - Out2 to 100 and all other DIn2 
+outputs to zero, and so on. The end result was just 8 outputs being 
+open: every software return channel was routed to one physical output. Nice!
+
+When you are ready, you should save your mixer settings so that your 
+computer remembers them after boot. I did it from the command line by 
+running
+
+Code: Select all &lt;http://linuxmusicians.com/viewtopic.php?f=27&amp;t=7673#&gt;
+    |alsactl -f /var/lib/alsa/asound.state store|
+
+as root.
+
+If you are using Ubuntu, running things as root is done via sudo. So the 
+right command for you is
+
+Code: Select all &lt;http://linuxmusicians.com/viewtopic.php?f=27&amp;t=7673#&gt;
+    |sudo alsactl -f /var/lib/alsa/asound.state store|
+
+
+
+If you don't want to save your settings as root, you can also save them 
+to your home folder like this:
+
+Code: Select all &lt;http://linuxmusicians.com/viewtopic.php?f=27&amp;t=7673#&gt;
+    |alsactl store -f ~/.asoundrc|
+
+
+And to restore your saved settings:
+
+Code: Select all &lt;http://linuxmusicians.com/viewtopic.php?f=27&amp;t=7673#&gt;
+    |alsactl restore -f ~/.asoundrc|
+
+
+
+This way I got my Fast Track Ultra to work properly. Now I can use 
+cueing function in Mixxx and start serious DJ:ing!
+
+Oh, almost forgot: I really haven't tested inputs yet, so I don't know 
+if the same method works for them also. I routed them same way: AIn1 - 
+Out1 to 100 and other AIn1 outputs to zero, and so on. I'll test it 
+someday and update how it works."
+
+Have fun,
+Flo
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1368738477.20388_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1368776808.21795_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1368748224.26223_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1368748224.26223_0.ltw:2,a&nbsp;&lt;519570B6.6090001 at gmx dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

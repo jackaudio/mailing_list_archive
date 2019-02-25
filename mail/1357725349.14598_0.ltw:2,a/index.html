@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] R: A couple of related issues in jackd on ARM</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] R: A couple of related issues in jackd on ARM</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357725261.14479_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357732928.27044_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357725349.14598_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 09 Jan 2013 10:55:41 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"MONTANARO Luciano (MM)" &lt;[hidden] at magnetimarelli dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>"[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+OK.
+
+I would recommend trying latest git (1.9.10). Some work was done between 1.9.8 and current version in this area (event if I think the solution is still not so good...)
+
+Can you try and report?
+
+Thanks.
+
+St&#xE9;phane 
+
+
+Le 9 janv. 2013 &#xE0; 09:31, MONTANARO Luciano (MM) a &#xE9;crit :
+
+&gt;&gt; -----Messaggio originale-----
+&gt;&gt; Da: St&#xE9;phane Letz [mailto:[hidden]]
+&gt;&gt; Inviato: marted&#xEC; 8 gennaio 2013 20:45
+&gt;&gt; A: MONTANARO Luciano (MM)
+&gt;&gt; Cc: [hidden]
+&gt;&gt; Oggetto: Re: [Jack-Devel] A couple of related issues in jackd on ARM
+&gt;&gt; 
+&gt;&gt; 
+&gt;&gt; Le 8 janv. 2013 &#xE0; 20:13, MONTANARO Luciano (MM) a &#xE9;crit :
+&gt;&gt; 
+&gt;&gt;&gt; Hi all again,
+&gt;&gt;&gt; I am having new problems with jackd2, after our embedded platform
+&gt;&gt; switched to the 3.1 kernel.
+&gt;&gt;&gt; Actually, I think they were present with our previous kernel as well, but
+&gt;&gt; they have become systematic while once they were sporadic.
+&gt;&gt;&gt; 
+&gt;&gt;&gt; I think I have found the problematic code, but I need some insight from
+&gt;&gt; someone that knows the code.
+&gt;&gt;&gt; The first problem I am seeing is a very high number of xrun notifications,
+&gt;&gt; tens of them a second.
+&gt;&gt;&gt; They is due to alsa_driver_wait() returning with 0 as its frame number,
+&gt;&gt; which normally means an xrun has occurred, but in this case what seems to
+&gt;&gt; be happening is that jack_wait returns "normally", but with a capture_avail of
+&gt;&gt; 0 and a playback_avail of 512 on 9 calls out of 10. The tenth call I get both
+&gt;&gt; capture_avail and playback_avail set to 512. The wait_status is set to 0, as in
+&gt;&gt; "everything normal", I guess, and so I tried to modify JackAlsaDriver to skip
+&gt;&gt; the notification in this case, and things seem to be working fine, no
+&gt;&gt; noticeable glitches in the audio playback at all.
+&gt;&gt; 
+&gt;&gt; Cannot answer here: what ALSA gurus think of the possible fix?
+&gt;&gt; 
+&gt;&gt;&gt; 
+&gt;&gt;&gt; The second problem I was referring to is that this high number of
+&gt;&gt; notifications is triggering a problem in the JackRequest code:
+&gt;&gt;&gt; The CheckRes() macro checks for errors from the Read/Write calls, but
+&gt;&gt; these calls may silently fail: they can return without writing or reading, and
+&gt;&gt; this is accounted as success, but then Read() may return uninitialized data or
+&gt;&gt; Write is not retried when it should.
+&gt;&gt;&gt; 
+&gt;&gt;&gt; There is code like this:
+&gt;&gt;&gt; 
+&gt;&gt;&gt;        CheckRes(JackRequest::Write(trans));
+&gt;&gt;&gt;        CheckRes(trans-&gt;Write(&amp;fName, sizeof(fName)));
+&gt;&gt;&gt;        CheckRes(trans-&gt;Write(&amp;fProtocol, sizeof(int)));
+&gt;&gt;&gt;        CheckRes(trans-&gt;Write(&amp;fOptions, sizeof(int)));
+&gt;&gt;&gt;        CheckRes(trans-&gt;Write(&amp;fUUID, sizeof(int)));
+&gt;&gt;&gt; 
+&gt;&gt;&gt; Where I think after each Write there is potential for a needed retry, which
+&gt;&gt; is not done at all. Am I missing something?
+&gt;&gt; 
+&gt;&gt; CheckRes was supposed to fail in case of error?
+&gt;&gt; 
+&gt; 
+&gt; Yes, but the JackClientSocket::Read/Write functions return 0 if len != returned length.
+&gt; So CheckRes is fine with them.
+&gt; 
+&gt;&gt; Any log of the problem to show?
+&gt;&gt; 
+&gt; 
+&gt; A log showing the problem is attached.
+&gt; The interesting lines are near the end, but maybe you can spot something else that is useful.
+&gt; 
+&gt; The cause of the abort is that Jack seem to receive ConnectPorts with a -1 port id, but as you can see, at line 10311, there is an
+&gt; "Unknown Request -1", and a similar one at line 10125.
+&gt; 
+&gt; Thank you,
+&gt; Luciano
+&gt; 
+&gt;&gt; St&#xE9;phane
+&gt; 
+&gt; Confidential Notice: This message - including its attachments - may contain proprietary, confidential and/or legally protected information and is intended solely for the use of the designated addressee(s) above. If you are not the intended recipient be aware that any downloading, copying, disclosure, distribution or use of the contents of the above information is strictly prohibited.
+&gt; If you have received this communication by mistake, please forward the message back to the sender at the email address above, delete the message from all mailboxes and any other electronic storage medium and destroy all copies.
+&gt; Disclaimer Notice: Internet communications cannot be guaranteed to be safe or error-free. Therefore we do not assure that this message is complete or accurate and we do not accept liability for any errors or omissions in the contents of this message.
+&gt; &lt;jack_aborting.log&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357725261.14479_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357732928.27044_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357725349.14598_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1357725349.14598_0.ltw:2,a&nbsp;&lt;9E75F57E-C258-4463-B86F-E9234705C848 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

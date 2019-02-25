@@ -1,0 +1,81 @@
+Date:        Fri, 30 Mar 2012 22:40:15 +1030
+From:        Jonathan Woithe  <[hidden] at just42 dot net>
+To:          [hidden] at jackaudio dot org
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] [PATCH] jack1 ffado_driver: adjust latencies when buffer resized (1333372803.25288_0.ltw:2,a)
+
+Subject:     [Jack-Devel] [PATCH] jack1 ffado_driver: adjust latencies when buffer resized
+
+The patch I supplied which added setbufsize to the firewire driver included
+the following comment:
+
+  // Other drivers (eg: ALSA) don't seem to adjust latencies via
+  // jack_port_set_latency_range() from the bufsize() callback, so we won't
+  // either.  Is this right?
+
+According to Adrian Knoth:
+
+> I believe we have to change this, either on higher layers (probably not
+> possible) or in each driver individually.
+
+Adrian went on to add this functionality to the jack2 firewire driver, but
+it hasn't currently been added to jack1.  This patch addresses this (I
+think).  The diff is relative to jack1 git head.
+
+Regards
+  jonathan
+diff --git a/drivers/firewire/ffado_driver.c b/drivers/firewire/ffado_driver.c
+index 6035af3..967dcf3 100644
+--- a/drivers/firewire/ffado_driver.c
++++ b/drivers/firewire/ffado_driver.c
+@@ -675,6 +675,30 @@ ffado_driver_stop (ffado_driver_t *driver)
+ 	return 0;
+ }
+ 
++static void update_port_latencies(ffado_driver_t *driver) 
++{
++	JSList *node;
++	jack_latency_range_t range;
++
++	range.min = range.max = (driver->period_size * (driver->device_options.nb_buffers - 1));
++	for (node = driver->playback_ports; node;
++	     node = jack_slist_next (node)) {
++		if (node->data != NULL) {
++			jack_port_t *port = (jack_port_t *) node->data;
++			jack_port_set_latency_range (port, JackPlaybackLatency, &range);
++		}
++	}
++
++	range.min = range.max = driver->period_size + driver->capture_frame_latency;
++	for (node = driver->capture_ports; node;
++	     node = jack_slist_next (node)) {
++		if (node->data != NULL) {
++			jack_port_t *port = (jack_port_t *) node->data;
++			jack_port_set_latency_range (port, JackCaptureLatency, &range);
++		}
++
++	}
++}
+ 
+ static int
+ ffado_driver_bufsize (ffado_driver_t* driver, jack_nframes_t nframes)
+@@ -739,9 +763,7 @@ ffado_driver_bufsize (ffado_driver_t* driver, jack_nframes_t nframes)
+ 		return -1;
+ 	}
+ 
+-	// Other drivers (eg: ALSA) don't seem to adjust latencies via
+-	// jack_port_set_latency_range() from the bufsize() callback, so we
+-	// won't either.  Is this right?
++	update_port_latencies(driver);
+ 
+         return 0;
+ }
+diff --git a/tools b/tools
+--- a/tools
++++ b/tools
+@@ -1 +1 @@
+-Subproject commit c6b4b572f543ce25588eec4d471905dffe52d196
++Subproject commit c6b4b572f543ce25588eec4d471905dffe52d196-dirty
+
+1333109444.15093_0.ltw:2, <20120330121015.GF9075 at marvin dot atrad dot com dot au>
+________________________________________________________________________________
+

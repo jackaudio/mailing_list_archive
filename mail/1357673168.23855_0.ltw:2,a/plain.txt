@@ -1,0 +1,119 @@
+Date:        Wed, 09 Jan 2013 06:25:59 +1100
+From:        Patrick Shirkey  <[hidden] at boosthardware dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: MONTANARO Luciano (MM) [Jack-Devel] A couple of related issues in jackd on ARM (1357672415.22666_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] A couple of related issues in jackd on ARM
+
+On Wed, January 9, 2013 6:13 am, MONTANARO Luciano (MM) wrote:
+> Hi all again,
+> I am having new problems with jackd2, after our embedded platform switched
+> to the 3.1 kernel.
+> Actually, I think they were present with our previous kernel as well, but
+> they have become systematic while once they were sporadic.
+>
+> I think I have found the problematic code, but I need some insight from
+> someone that knows the code.
+> The first problem I am seeing is a very high number of xrun notifications,
+> tens of them a second.
+
+You can use -s, --softmode  to disable xrun reporting
+
+
+> They is due to alsa_driver_wait() returning with 0 as its frame number,
+> which normally means an xrun has occurred, but in this case what seems to
+> be happening is that jack_wait returns "normally", but with a
+> capture_avail of 0 and a playback_avail of 512 on 9 calls out of 10. The
+> tenth call I get both capture_avail and playback_avail set to 512. The
+> wait_status is set to 0, as in "everything normal", I guess, and so I
+> tried to modify JackAlsaDriver to skip the notification in this case, and
+> things seem to be working fine, no noticeable glitches in the audio
+> playback at all.
+>
+> The second problem I was referring to is that this high number of
+> notifications is triggering a problem in the JackRequest code:
+> The CheckRes() macro checks for errors from the Read/Write calls, but
+> these calls may silently fail: they can return without writing or reading,
+> and this is accounted as success, but then Read() may return uninitialized
+> data or Write is not retried when it should.
+>
+> There is code like this:
+>
+>          CheckRes(JackRequest::Write(trans));
+>          CheckRes(trans->Write(&fName, sizeof(fName)));
+>          CheckRes(trans->Write(&fProtocol, sizeof(int)));
+>          CheckRes(trans->Write(&fOptions, sizeof(int)));
+>          CheckRes(trans->Write(&fUUID, sizeof(int)));
+>
+> Where I think after each Write there is potential for a needed retry,
+> which is not done at all. Am I missing something?
+>
+> I am using Jackd2 1.9.8, but the affected code has changed little in the
+> latest git revisions.
+>
+> Thanks in advance for your support,
+>
+> Regards,
+> Luciano Montanaro
+>
+>
+> ====
+> a38ecd0f049af3b809c5444f66186cdb25ed52fe
+>  dist/jackd2/src/linux/alsa/JackAlsaDriver.cpp |    6 ++++--
+>  1 files changed, 4 insertions(+), 2 deletions(-)
+>
+> diff --git a/dist/jackd2/src/linux/alsa/JackAlsaDriver.cpp
+> b/dist/jackd2/src/linux/alsa/JackAlsaDriver.cpp
+> index a79772f..effb8dd 100644
+> --- a/dist/jackd2/src/linux/alsa/JackAlsaDriver.cpp
+> +++ b/dist/jackd2/src/linux/alsa/JackAlsaDriver.cpp
+> @@ -387,8 +387,10 @@ retry:
+>          /* we detected an xrun and restarted: notify
+>           * clients about the delay.
+>           */
+> -        jack_log("ALSA XRun wait_status = %d", wait_status);
+> -        NotifyXRun(fBeginDateUst, fDelayedUsecs);
+> +       if (wait_status != 0) {
+> +            jack_log("ALSA XRun wait_status = %d", wait_status);
+> +            NotifyXRun(fBeginDateUst, fDelayedUsecs);
+> +       }
+>          goto retry; /* recoverable error*/
+>      }
+>
+>
+>
+> --
+> Luciano Montanaro
+> EntryNAV - Audio Software Integrator
+> Magneti Marelli Electronic Systems
+> Viale Carlo Emanuele II 150, Venaria Reale (To)
+>
+>
+> Confidential Notice: This message - including its attachments - may
+> contain proprietary, confidential and/or legally protected information and
+> is intended solely for the use of the designated addressee(s) above. If
+> you are not the intended recipient be aware that any downloading, copying,
+> disclosure, distribution or use of the contents of the above information
+> is strictly prohibited.
+> If you have received this communication by mistake, please forward the
+> message back to the sender at the email address above, delete the message
+> from all mailboxes and any other electronic storage medium and destroy all
+> copies.
+> Disclaimer Notice: Internet communications cannot be guaranteed to be safe
+> or error-free. Therefore we do not assure that this message is complete or
+> accurate and we do not accept liability for any errors or omissions in the
+> contents of this message.
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+
+
+--
+Patrick Shirkey
+Boost Hardware Ltd
+
+1357673168.23855_0.ltw:2,a <57424.188.25.63.205.1357673159.squirrel at boosthardware dot com>
+________________________________________________________________________________
+

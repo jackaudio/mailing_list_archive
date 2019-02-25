@@ -1,0 +1,41 @@
+Date:        Tue, 15 Mar 2011 13:23:14 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Sampo Savolainen Re: [Jack-Devel] Stack preallocation issues (1300190288.3020_0.ltw:2,a)
+Follow-Up:   Sampo Savolainen Re: [Jack-Devel] Stack preallocation issues (1300199060.17436_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Stack preallocation issues
+
+On Tue, Mar 15, 2011 at 01:57:41PM +0200, Sampo Savolainen wrote:
+
+> Would doing this be unsafe?
+> 
+> static void
+> jack_thread_touch_stack()
+> {
+>  char foo;
+>  memset(&foo, 0, JACK_THREAD_STACK_TOUCH);
+> }
+
+It would probably overwrite memset's return address,
+stack frame and internal variables.
+
+It could actually work on systems that keep the return
+address in a register and implement memset() using only
+registers and without its own stack frame (this would
+be possible on an ARM for example).
+
+Regarding the compiler optimising away the whole stack
+touching code, it clearly shouldn't do this if it assumes
+the code can have side effects, i.e. if the array is
+declared volatile.
+
+
+Ciao,
+
+-- 
+FA
+
+1300195408.12983_0.ltw:2,a <20110315132314.GA17058 at linuxaudio dot org>
+________________________________________________________________________________
+

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack2 fail to build the doc; configure question</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack2 fail to build the doc; configure question</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1352463219.16853_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1352480948.29122_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1352463472.17340_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 09 Nov 2012 13:17:44 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Adrian Knoth </span> &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Dominique Michel
+<a href='../1352411321.29515_0.ltw:2,a/index.html'>[Jack-Devel] jack2 fail to build the doc; configure question </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Dominique Michel
+<a href='../1352484335.32264_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack2 fail to build the doc; configure question </a></td></tr>
+</table>
+<pre>
+On 11/08/2012 11:46 PM, Dominique Michel wrote:
+
+&gt; On gentoo, when building jack2 from git, it work fine, but when I want
+&gt; the doxygen documentation, I get:
+
+For now, run doxygen in the toplevel directory. Don't pass --doxygen to
+waf, it's broken:
+
+   https://github.com/jackaudio/jack2/issues/22
+
+&gt;    --alsa --dbus --doxygen" ... CCFLAGS="-march=native -O2 -pipe -ggdb"
+
+It's CFLAGS now, no longer CCFLAGS.
+
+&gt; When running "./waf --help", I see no option to configure Opus
+&gt; netjack2. Is it enough to make jack2 to depend on celt and opus in
+&gt; order to get Opus netjack2 support? Or is it some non documented
+&gt; configure option for that?
+
+    conf.env['WITH_OPUS'] = False
+    if conf.check_cfg(package='opus', atleast_version='0.9.0' ,
+args='--cflags --libs', mandatory=False):
+        if conf.check_cc(header_name='opus/opus_custom.h', mandatory=False):
+            conf.define('HAVE_OPUS', 1)
+            conf.env['WITH_OPUS'] = True
+
+Read: if you have Opus installed, it will be detected and automatically
+built.
+
+
+HTH
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1352463219.16853_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1352480948.29122_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1352463472.17340_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1352463472.17340_0.ltw:2,a&nbsp;&lt;509CF468.9010501 at drcomp dot erfurt dot thur dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

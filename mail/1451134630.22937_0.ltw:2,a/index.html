@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack dsp load calculation</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack dsp load calculation</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1451130215.18422_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1451136811.26085_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1451134630.22937_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 26 Dec 2015 13:56:59 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>John Emmas &lt;[hidden] at tiscali dot co dot uk&gt;, JACK devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>John Emmas
+<a href='../1450902073.28946_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack dsp load calculation </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Kjetil Matheussen
+<a href='../1451136811.26085_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack dsp load calculation </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Emmas
+<a href='../1451138881.28988_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack dsp load calculation </a></td></tr>
+</table>
+<pre>
+On 12/23/2015 09:20 PM, John Emmas wrote:
+&gt; On 23 Dec 2015, at 15:35, Robin Gareus wrote:
+&gt; 
+&gt;&gt; Hi all,
+&gt;&gt;
+&gt;&gt; I'd like to propose changing the algorithm how jack calculates the DSP
+&gt;&gt; load from averaging to worst-case.
+&gt;&gt;
+&gt;&gt; The main reason for having DSP load is to know how much more processing
+&gt;&gt; one can safely add without getting x-runs. What matters in this case is
+&gt;&gt; the worst-case value.
+&gt;&gt;
+&gt; 
+&gt; Matters to whom..?  
+
+Those who want to know the peak DSP load and available headroom.
+
+The average is meaningless in the context of DSP. A system may run
+without x-runs 99% of the time but then some NMI or SMI comes along and
+ruins it all. Nobody cares if the average is below 50%.
+
+&gt; As one of the people who implemented the current scheme, let me
+&gt; explain why it was needed...
+&gt; 
+&gt; We implemented the averaging mechanism when Harrison and I ported
+&gt; their Mixbus DAW to Windows.  Windows isn't a real-time OS and one of
+&gt; its drawbacks is that concurrently running apps can have an effect on
+&gt; each other.  Not necessarily a detrimental effect - but an effect
+&gt; nonetheless.
+
+It's Mixbus that motivated me to looking into this, actually.  There are
+forum reports: "DSP load is 40% and there are x-runs".
+
+&gt; Before averaging, a concurrent (though unrelated) background app
+&gt; could have a very noticeable effect on Mixbus's DSP reading.  A nice
+&gt; reading of (say) 18% DSP could suddenly shoot up to 70% if the user
+&gt; ran some other process in the background.  70% was perfectly
+&gt; manageable - though pretty alarming for a user.
+
+and rightfully so, what do we gain by hiding this?
+
+If a user starts another application and that app steals time from
+jack's realtime callback, that's what it is.
+
+If there are regular spikes (quite common on windows), those spikes do
+interfere with processing.
+
+In your example, if the initial DSP load was 48%, it'll go over 100%
+when the user starts something in the background.
+
+This is the precise case that we're seeing currently: A user adds some
+3rd part DSP. The load stays below 50% but there are regular
+dropouts/crackles and only sometimes the DSP indicator goes "red" (&gt; 95%
+in Mixbus) with jack.
+
+Ardour's port-audio backend reports the peak and is always &gt; 90% in that
+case. So the user switched to JACK because "jack has half the DSP load",
+and the crackles are still there...
+
+
+&gt; Currently, Jack DOES report the worst case value - IF - the worst 
+&gt; case value is high enough to start causing problems (or if there's a
+&gt; sustained sequence of high values).
+
+No it does not. If that was the intent, it's an oversight or bug in the
+current implementation. Two very unlikely conditions must coincide, and
+there is always a low-pass filter at the end.
+
+&gt; But if there's only an occasional high value (which is perfectly
+&gt; manageable) then it just gets factored into the current average.
+
+How can an occasional high value be perfectly manageable?
+
+&gt; The advantage of this approach is that Mixbus's DSP reading remains unaffected by other running apps.
+
+I see this as a disadvantage. Those other apps may affect audio-i/o and
+cause spikes.
+
+&gt; The threshold we chose was 95%.  So if any value is 95% or higher, the highest value will always get reported. 
+
+What you describe does not match the current code in jack2.
+
+Still the larger issue is the report-time. The peak is only held for 32
+jack-cycles. It's worse since the final LPF ramps up and down and the
+actual value. The report-time of the peak is commonly below 100ms.  That
+is a very short time for any report to be interpreted by a human.
+
+
+&gt; There's an argument for saying that we possibly set the bar too high
+&gt; (at 95%) but I don't think there's anything else inherently wrong
+&gt; with the current strategy.
+
+
+The 95% cut is done before filtering and overrides other bins in the
+history. I understand that parts of the strategy was to work around
+issues with unreliable clocks on non-realtime OS - in particular
+windows, but I think the situation can be improved.
+
+My main criticism is that it's some homebrew statistics with no real
+meaning. I don't know how to interpret the readout, nor see it useful
+as-is, except maybe for marketing or for comparing machines against each
+other or maybe even compete with other DSP software ("ours is lower on
+average").
+
+&gt; If people are getting xruns at DSP values lower than 95%, we perhaps just need to change the threshold.
+
+How will that help?
+
+One could argue that we may want two numbers: a true average and a peak
+(maybe even user-resettable), although a slow fall-off is probably
+preferable because there is already an independent x-run counter.
+
+2c,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1451130215.18422_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1451136811.26085_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1451134630.22937_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1451134630.22937_0.ltw:2,a&nbsp;&lt;567E8E9B.8020502 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

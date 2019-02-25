@@ -1,0 +1,100 @@
+Date:        Thu, 26 Mar 2015 16:47:15 +0100
+From:        Tobias Hoffmann  <[hidden] at thax dot hardliners dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Christian Schoenebeck Re: [Jack-Devel] netjack audio routing from smart OSs (IOS and Android) (1427379183.13325_0.ltw:2,)
+Follow-Up:   Christian Schoenebeck Re: [Jack-Devel] netjack audio routing from smart OSs (IOS and Android) (1427403244.2010_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] netjack audio routing from smart OSs (IOS and Android)
+
+Hi,
+
+I think we have to distinguish between Jack (as audio router) and 
+Netjack (as protocol):
+* Porting the Jack server to iOS has been done, but due to iOS changes 
+it cannot be used any more.
+* But iOS instead now has an API for "Inter-App Audio".
+Using the (quite simple) netjack1 protocol "standalone" (e.g. by 
+reimplementing it - no licensing problems here) and providing it as 
+"Netjack audio source" could work.
+
+I'm not sure about possible clock issues; I think using the iOS device 
+as "netjack master" should work.
+When the netjack protocol handling is statically embedded to be used 
+only in a certain application, this is probably even less of a problem.
+
+Using the device as "netjack slave" (i.e. "jackd -d net") forces the 
+masters clock onto the device while e.g. the audio hardware of the iPad 
+has it's own idea of timing.
+
+* Wrt. to Android, I don't know much about this MediaRouter class....
+Still, implementing the netjack protocol inside a single application is 
+possible (and you already mentioned Jack for Android).
+
+The latency stuff becomes really noticeable when you send AND receive 
+channels at the same time; lets say you on the netjack slave you just 
+connect an input to an output. Then you will have probably a noticeable 
+and non-deterministic delay between these stream back on your device 
+(the master).
+
+In contrast, Jack for Android aims to guarantee a certain latency -- 
+which, in turn, requires low-latency scheduling from the kernel.
+
+   Tobias
+
+
+On 26/03/15 14:13, Christian Schoenebeck wrote:
+> Hi Matt,
+>
+> as far as I can see it at the moment, the situation is like this:
+>
+> iOS: Technically not a problem at all, however due to the nature of iOS and
+> its prohibition of DLLs, you will have licensing issues. The authors of
+> netjack would need to change the license so that someone could use it there as
+> part of a static lib linked into an app distributed on the App Store.
+>
+> Android: the main issue I still see on Android is that the kernel shipped with
+> all Android devices is not real-time safe/low latency capable. Which makes it
+> IMO useless for audio applications. Maybe Kim could comment whether there any
+> kinds of plans to address this on Android in near future.
+>
+> CU
+> Christian
+>
+> On Thursday 26 March 2015 12:20:22 Matt Flax wrote:
+>> Hi everyone,
+>>
+>> I think it would be handy to have a transparent netjack audio device for
+>> IOS and Android.
+>> The idea is that it would enable regular apps to stream audio to netjack
+>> servers rather then the Andoroid or IOS hardware.
+>> What do you think ?
+>>
+>> I have done some exploring for Android and also (just) asked Kim Jeong
+>> Yeon (the porter of Jack to Android) whether he knew anything - waiting
+>> for a response.
+>>
+>> Here is what I have found for Android :
+>> There is a MediaRouter class ...
+>> http://grepcode.com/file/repo1.maven.org/maven2/org.robolectric/android-all
+>> /5.0.0_r2-robolectric-0/android/media/MediaRouter.java?av=h
+>>
+>>
+>>        This flag ROUTE_TYPE_LIVE_AUDIO is relevant for searching the code.
+>>
+>> I am not sure how to use it or how to interface to it ?
+>> It is possible we can do it directly from JAVA or the C++ NDK.
+>>
+>> Does anyone know or even know anyone who knows ?
+>>
+>> Similar for IOS ... anyone know or know anyone who knows ?
+>>
+>> thanks
+>> Matt
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1427384864.19223_0.ltw:2, <55142A03.8040802 at thax dot hardliners dot org>
+________________________________________________________________________________
+

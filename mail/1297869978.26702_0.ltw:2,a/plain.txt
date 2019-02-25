@@ -1,0 +1,52 @@
+Date:        Wed, 16 Feb 2011 16:25:58 +0100
+From:        Arne Jacobs  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] buffer size callback, revisit (1297869716.26054_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] buffer size callback, revisit
+
+Ok, my bad... I was reading the jack.h header from JACK 1.9.6, it seems
+to differ from the one at jackaudio.org. Probably just a
+copy/paste-thing. After the paragraph you mentioned there is another one
+in that header file:
+
+> All "notification events" are received in a seperated non RT thread,
+> the code in the supplied function does not need to be
+> suitable for real-time execution.
+
+I will just stop reading that header :-).
+
+Cheers,
+
+Arne
+
+On 16.02.2011 16:21, Paul Davis wrote:
+> On Wed, Feb 16, 2011 at 10:12 AM, Arne Jacobs <[hidden]> wrote:
+>> On a sidenote:
+>>
+>> The JACK API documentation states for the buffer size callback, that it
+>> is called in a "separate non RT thread", i.e., not in the process
+>> thread. Which sounds to me that the process callback and the buffer size
+>> callback can run in parallel.
+> 
+> where are you reading this? the docs at jackaudio.org state:
+> 
+>    Tell JACK to call bufsize_callback whenever the size of the the
+> buffer that will be passed to the
+>    process_callback is about to change. Clients that depend on knowing
+> the buffer size must
+>    supply a bufsize_callback before activating themselves.
+> 
+>> Is this really the case? It means you'd have to allocate new buffers and
+>> then somehow send those to the process thread in a lock-free way...?
+>> What if the process callback has already been called with the new buffer
+>> size, while the other thread is still reallocating the buffers?
+> 
+> this sounds like an artifact of jack2 calling everything (?) but the
+> process callback from a 2nd non-RT client thread. if it does this,
+> then its wrong, in the sense that as you noted, its unworkable. buffer
+> size changes and the process callback MUST be synchronous, i think.
+
+1297869978.26702_0.ltw:2,a <4D5BEC86.1000101 at gmail dot com>
+________________________________________________________________________________
+

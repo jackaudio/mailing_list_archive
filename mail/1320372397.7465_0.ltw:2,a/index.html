@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] RFC: jackd portnames</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] RFC: jackd portnames</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1320363623.24026_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1320405035.8656_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1320372397.7465_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 03 Nov 2011 22:05:54 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1320358174.14818_0.ltw:2,a/index.html'>Re: [Jack-Devel] RFC: jackd portnames </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1320405035.8656_0.ltw:2,a/index.html'>[Jack-Devel] JACK "community" (Was: Re: RFC: jackd portnames) </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1320448264.13002_0.ltw:2,a/index.html'>Re: [Jack-Devel] RFC: jackd portnames </a></td></tr>
+</table>
+<pre>
+On Thu, Nov 3, 2011 at 6:08 PM, Fons Adriaensen &lt;[hidden]&gt; wrote:
+&gt; On Thu, Nov 03, 2011 at 05:41:15PM -0400, Paul Davis wrote:
+&gt;
+&gt; To make this a bit more clear, we could have had
+&gt;
+&gt;
+&gt;&gt; typedef enum &#xA0;{
+&gt;&gt; &#xA0; BufferSizeChange,
+&gt;&gt; &#xA0; SampleRateChange,
+&gt;&gt; &#xA0; AttachPortSegment,
+&gt;&gt; &#xA0; PortConnected,
+&gt;&gt; &#xA0; PortDisconnected,
+&gt;&gt; &#xA0; GraphReordered,
+&gt;&gt; &#xA0; PortRegistered,
+&gt;&gt; &#xA0; PortUnregistered,
+&gt;&gt; &#xA0; XRun,
+&gt;&gt; &#xA0; StartFreewheel,
+&gt;&gt; &#xA0; StopFreewheel,
+&gt;&gt; &#xA0; ClientRegistered,
+&gt;&gt; &#xA0; ClientUnregistered,
+&gt;&gt; &#xA0; GenericMessage &#xA0; &#xA0; &#xA0; &#xA0; &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+&gt;&gt; &#xA0; LatencyCallback
+&gt;&gt; } JackEventType
+&gt;
+&gt; with 'GenericMessage' having its own type field, and then
+&gt; defining some types to implement a session management system,
+&gt; or other useful extensions. And none of those would then
+&gt; require any changes to Jack's code.
+
+as usual recently, you sit on the sidelines bitching about what we
+have and haven't done, pontificating about what would have been
+possible and what would all have made everything so much easier. which
+of course is absolutely fucking awesome because you're just
+relentlessly brilliant, never wrong, always carrying insights that
+nobody else has, and always willing to tell other people how badly
+they've fucked up. it just cheers up my endlessly morose heart to hear
+once again how the development of JACK is so screwed up that you need
+to and are willing to fork it, and how every problem that the JACK API
+has can be solved with one wave from your magical wand that will
+impart clarity and incisive vision to all that it manages to reach.
+
+the protocol in question is a two way protocol that connects the jack
+server to jack clients. it was designed to be fast, efficient and to
+get provide the communications channel required by the server and its
+clients. it was not designed to pass arbitrary sized messages back and
+forth (which is why it uses a fixed size data structure/packet). it
+also doesn't come with any mechanism that allows anything except the
+server to send a message, which means that of necessity, sending
+something other than one of the messages enumerated above means
+changing code in at least the server, and depending on the semantics,
+in libjack also (see the way that the "SaveSession" message gets
+handled if the client hasn't bothered to register any interest in such
+messages).
+
+so yes, once again it is easy to say "oh, you should have changed it
+all so that the messages sent between the server and client had a
+fixed sized and then an optional variable size component, and you
+should have defined the semantics so that no message could be sent
+that required a response from every client". every since nedko
+informed me in no uncertain terms that the design of JACK has been
+"fucked up from the beginning" i've ignored him on IRC and almost
+completely in email. there's no justification for a person who
+believes that hanging around in the JACK community and trying to
+convince other people about their ideas. you're a lot smarter than
+nedko, and some of your insights into what JACK should do have been
+really invaluable. but this sort of "could of, should of" BS that
+glibly ignores the actual cost (personal, and development-wise) of
+subtly but distinctly modifying the implementation and semantics ...
+well, it brings me close to the same kinds of feelings.
+
+you're busy with other projects, and so am i and so is torben and so
+is stephane. things get done with JACK because someone feels motivated
+enough to do them. the way you dismiss what is there, and more
+pointedly the way you always have a mean spirited comment about how it
+could be done better but you almost never actually do the work
+accomplishes nothing except to dissuade people (me, in particular)
+from bothering to try to make changes to JACK.
+
+i could possibly find the time to do the work on port meta data.
+what's the point when it will just result in another one of your posts
+about how fucked up it all is because it didn't meet your standards,
+expectations or needs, all of which will be described in the broadest
+possible terms and only post facto. i mean, seriously, why bother?
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1320363623.24026_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1320405035.8656_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1320372397.7465_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1320372397.7465_0.ltw:2,a&nbsp;&lt;CAFa_cK=JsfrG1vEGc5UqKVZe5Us4vpXqRp-pZzrxfCed2w=gTQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

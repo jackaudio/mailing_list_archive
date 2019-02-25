@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] alsa_in/out increasing time between record and play on second card</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] alsa_in/out increasing time between record and play on second card</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1460450575.2381_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1460464205.4778_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1460463319.2031_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 12 Apr 2016 14:15:09 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> J&#xF6;rn Nettingsmeier </span> &lt;[hidden] at stackingdwarves dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>mdrslmr
+<a href='../1460450575.2381_0.ltw:2,/index.html'>[Jack-Devel] alsa_in/out increasing time between record and play on second card </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>mdrslmr
+<a href='../1460464205.4778_0.ltw:2,/index.html'>Re: [Jack-Devel] alsa_in/out increasing time between record and play on second card </a></td></tr>
+</table>
+<pre>
+On 04/12/2016 10:42 AM, mdrslmr wrote:
+&gt; Hi,
+&gt;
+&gt; we are running a system with two sound cards. The second sound card is
+&gt; attached to the jackd2 daemon using jack_load audioadapter.
+
+Just for the record, I'm not familiar with audioadapter. I'm using 
+zita-ajbridge, and it works very well.
+
+&gt; We use a script starting:
+&gt;
+&gt; aplay -q -D $channel Test-Ton.wav &amp;
+&gt; arecord -q -D $channel -f S16_LE -r 48000 -c 1 -d 8 $result/recorded.wav
+
+Why are you using alsa tools when you are otherwise working with JACK? 
+This will make the problem analysis more complicated...
+
+&gt; The resulting wav file shows that the time between the start of the
+&gt; recording
+&gt; and the start of the actual sound continuously increases.
+&gt; In the beginning (after starting the system up) the time difference is
+&gt; just about 3ms. It increases
+&gt; constantly to almost one second now
+&gt; after 8 weeks of uptime.
+
+If audioadapter works by just providing a big buffer (without any 
+resampling), the reason would be clock drift. Such a minuscule clock 
+drift between two consumer cards however would be sensationally good.
+
+&gt; This happens most significantly on the channels of the second sound card
+&gt; included by jack_load audioadapter and not noticeable on the first sound
+&gt; card.
+
+To be expected.
+
+&gt; The invocation of jackd and jack_load is shown below:
+&gt; jackd -R -P59 -p 256 -d alsa --device hw:${CARDNUM_0},0 -p 512 --nperiods 3
+&gt; jack_load -i "-i4 -o4 -q1 -C5 -p512 -n3 -r48000  -d hw:${CARDNUM_1},0"\
+&gt;                                  jackadapter audioadapter
+&gt;
+&gt; jackd2 version is: 1.9.8~dfsg.4+20120529git007cdc37-5
+&gt;
+&gt;
+&gt; I'm, not sure if we a consistent set of options for jackd and
+&gt; audioadapter.
+&gt;
+&gt; Do you have a suggestion how we can set things up to prevent the
+&gt; increase in time difference between recording and playback?
+
+First of all, consider if you can actually sync the cards. If both have 
+an SPDIF i/o, you can use that. Just connect the secondary card's SPDIF 
+in to the master's SPDIF out (no matter whether you use toslink or RCA), 
+and you can be sure your cards will be locked.
+
+Secondly, try zita-ajbridge. If you can sync the cards in hardware, 
+there is an option for zita-ajbridge to skip the resampling, which will 
+conserve cpu power.
+
+All best,
+
+
+J&#xF6;rn
+
+
+
+
+-- 
+J&#xF6;rn Nettingsmeier
+Lortzingstr. 11, 45128 Essen, Tel. +49 177 7937487
+
+Meister f&#xFC;r Veranstaltungstechnik (B&#xFC;hne/Studio)
+Tonmeister VDT
+
+http://stackingdwarves.net
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1460450575.2381_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1460464205.4778_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1460463319.2031_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1460463319.2031_0.ltw:2,&nbsp;&lt;570CE6CD.9050402 at stackingdwarves dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

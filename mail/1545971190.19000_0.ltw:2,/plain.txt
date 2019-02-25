@@ -1,0 +1,49 @@
+Date:        Thu, 27 Dec 2018 22:25:59 -0600
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: [hidden] at grossmann-venter dot com [Jack-Devel] Multiple latency across jack (1545969963.18003_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Multiple latency across jack
+
+On Thu, December 27, 2018 10:05 pm, [hidden] wrote:
+> Is it possible to have different signal sources handled differently by
+> jack ?
+
+All jack clients run at the same buffer size.
+I think you could make a client which stored multiple buffers and handled
+the appropriate translation between buffer sizes, but I am not aware if
+Pulse does this.  The pulse jack implementation has in the past been
+described as not optimal.
+
+> As an example, Mixbus uses jack directly  and runs at 44100 buffer 128/2
+
+Do you need such low latency for Mixbus?  Increasing the latency would be
+the simplest thing to check if you are having problems with under-runs.
+
+> These other applications all use pulseaudio and I dont know if
+> pulseaudio causes the overruns and resultant rickety sound.
+
+Check the default sample rate which pulseaudio uses, and the sample rate
+of the applications which connect through pulse.  PulseAudio will use
+sample rate conversion when clients and default sample rate do not match,
+that causes higher CPU usage and decrease in audio quality.
+
+> I am really not familiar how pulseaudio works with jack. At the moment
+> both pulseaudio and mixbus/jack outputs
+> sound simultaneously  to the same output device without problem
+
+The jack server requires exclusive use of an output device, so you must be
+using the jack-sink client of pulse audio to send the audio to jack for
+output to the physical device.
+
+> Or should I find a way to send all these applications directly to jack
+> for better buffer handling and somehow cut out pulseaudio ??
+
+That would be the optimal solution.
+
+-- 
+Chris Caudle
+
+1545971190.19000_0.ltw:2, <81793ce3375c9ac1ec4ba3b77db25ff6.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

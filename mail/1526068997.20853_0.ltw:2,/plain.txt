@@ -1,0 +1,84 @@
+Date:        Fri, 11 May 2018 22:02:30 +0200
+From:        Ruslan N. Marchenko  <[hidden] at ruff dot mobi>
+To:          Christophe Lohr <[hidden] at cegetel dot net>, [hidden] at lists dot jackaudio dot org
+In-Reply-To: Christophe Lohr Re: [Jack-Devel] How to use jackd as a 'system-wide' server? (1525960273.9511_0.ltw:2,)
+Follow-Up:   Christophe Lohr Re: [Jack-Devel] How to use jackd as a 'system-wide' server? (1526071630.24020_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] How to use jackd as a 'system-wide' server?
+
+Am Donnerstag, den 10.05.2018, 15:50 +0200 schrieb Christophe Lohr:
+> 
+> Unfortunately I still have errors when I place a call to this
+> asterisk
+> channel:
+>     ../..
+>     -- Executing [6000@default:5] JACK("SIP/6007-00000003", "") in
+> new stack
+> [May 10 13:34:25] NOTICE[2899][C-00000003]: app_jack.c:192
+> log_jack_status: Client Open Status: Failure, Server Error
+>   == Spawn extension (default, 6000, 5) exited non-zero on
+> 'SIP/6007-00000003'
+>   ../..
+> 
+> How can I get more log messages from the jackd server?
+> 
+Long time ago I was using Jack2 as a system-wide service on HTPC
+running Ubuntu using following upstart script
+////
+start on runlevel [2345] or local-filesystems
+stop on runlevel [!2345]
+emits audio-bus
+
+console log
+
+env HOME=/root
+
+pre-start script
+if [ ! -f /run/dbus/.env ]; then
+  eval `dbus-launch --auto-syntax`
+  echo "export DBUS_SESSION_BUS_PID=$DBUS_SESSION_BUS_PID" >
+/run/dbus/.env
+  echo "export DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS" >>
+/run/dbus/.env
+  chmod 600 /run/dbus/.env
+fi
+end script
+
+post-start script
+. /run/dbus/.env
+jack_control start
+if [ -f /etc/default/jackd ]; then
+  awk '/^[esdri]/{system("jack_control "$0)}' /etc/default/jackd
+  awk '/^ /{system("jack_load "$0)}' /etc/default/jackd
+  awk '/^>/{  
+        system("jack_connect "$2":capture_1 "$3":playback_1");
+        system("jack_connect "$2":capture_2 "$3":playback_2");
+  }' /etc/default/jackd
+fi
+end script
+
+post-stop script
+. /run/dbus/.env
+if [ -f /etc/default/jackd ]; then
+  awk '/^ /{system("jack_unload "$1)}' /etc/default/jackd
+fi
+jack_control exit
+end script
+\\\\
+upstart is now a history but the principle should be the same I guess.
+systemd allows you even to have user-level session initiation, so
+should be much mroe flexible in this regard.
+
+The key point back then was /run/dbus/.env - that one allowed me to
+join same DBus session where JackDBus was spawned.
+
+Then each application which was going to use Jack should be started
+with .env file loaded populating the environment variables.
+
+You can ignore /etc/default/jackd - that one was my custom recipe file
+which pre-loaded required modules and made required connections at the
+early start.
+
+1526068997.20853_0.ltw:2, <7783da3e070550bc161ce6205da8d45d56fe4efa.camel at ruff dot mobi>
+________________________________________________________________________________
+

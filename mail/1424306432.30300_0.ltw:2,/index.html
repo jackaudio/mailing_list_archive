@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] [PATCH] Jack-1: jack_port_by_name: REVISED</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] [PATCH] Jack-1: jack_port_by_name: REVISED</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1422931986.30741_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1424307865.31061_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1424306432.30300_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 18 Feb 2015 19:40:13 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Tim E. Real </span> &lt;[hidden] at rogers dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Tim E. Real
+<a href='../1422131488.28688_0.ltw:2,/index.html'>Re: [Jack-Devel] [PATCH] Jack-1: jack_port_by_name: REVISED </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1424307865.31061_0.ltw:2,/index.html'>Re: [Jack-Devel] [PATCH] Jack-1: jack_port_by_name: REVISED </a></td></tr>
+</table>
+<pre>
+Hello? Anyone home?
+
+Paul, have you had a chance to evaluate this?
+
+Thanks.
+Tim.
+
+On January 24, 2015 03:30:51 PM Tim E. Real wrote:
+&gt; On January 24, 2015 02:22:52 PM John Rigg wrote:
+&gt; &gt; On Fri, Jan 23, 2015 at 08:33:51PM -0500, Tim E. Real wrote:
+&gt; &gt; &gt; The original message singled out Debian and variants,
+&gt; &gt; &gt; 
+&gt; &gt; &gt;  but I have seen other distros with this problem.
+&gt; &gt; &gt; 
+&gt; &gt; &gt; Which is, they don't include /usr/local/lib in /etc/ld.so.conf
+&gt; &gt; 
+&gt; &gt; Debian includes it in /etc/ld.so.conf.d/libc.conf. IIRC the original
+&gt; &gt; message referred to the old (confusing) Debian package naming for jack
+&gt; &gt; files, but that was fixed several years ago. Perhaps the Debian reference
+&gt; &gt; should now be removed :-)
+&gt; &gt; 
+&gt; &gt; John
+&gt; 
+&gt; OK. Apologies, should have asked first.
+&gt; Once again I reach a wrong conclusion, where it ends up here  ;-)
+&gt; My KUbuntu didn't have the path and I've been through this before,
+&gt;  I was certain that was the source of the message.
+&gt; 
+&gt; I offer this revised straight forward, stern yet toned down patch.
+&gt; Tim.
+&gt; 
+&gt; (Your old .asoundrc examples  helped me with multiple cards. big thx.)
+&gt; 
+&gt; 
+&gt; https://dl.dropboxusercontent.com/u/53315356/jack1_port_by_name_fix_ver_2.di
+&gt; ff
+&gt; 
+&gt; diff --git configure.ac configure.ac
+&gt; index 5c20236..aee4346 100644
+&gt; --- configure.ac
+&gt; +++ configure.ac
+&gt; @@ -8,6 +8,12 @@ dnl
+&gt;  dnl Check for existing JACK installs
+&gt;  dnl
+&gt; 
+&gt; +
+&gt; +
+&gt; +AC_ARG_ENABLE(force_install,
+&gt; +        AC_HELP_STRING([--enable-force-install],[force install CAUTION:
+&gt; Read warnings! (default=no)]),,
+&gt; +        [ enable_force_install=no ])
+&gt; +
+&gt;  AC_MSG_CHECKING([existing, conflicting JACK installs])
+&gt;  not_overwriting=0
+&gt;  installs=
+&gt; @@ -30,22 +36,24 @@ if test $not_overwriting -gt 0 ; then
+&gt;      echo
+&gt;      echo "Complete or partial JACK installs exist in:$installs"
+&gt;      echo
+&gt; -    echo "Installing this version will leave at least one of these"
+&gt; -    echo "existing installations installed and this will probably break"
+&gt; -    echo "JACK on your machine. "
+&gt; +    echo "WARNING:"
+&gt; +    echo "Installing multiple jack versions, even in different locations,"
+&gt; +    echo "could cause JACK to break unless your system is setup properly."
+&gt; +    echo "Be sure THIS installation is found first in your system's"
+&gt; +    echo "executable and library paths."
+&gt;      echo
+&gt; -    echo "Before building, you should first remove the existing JACK"
+&gt; -    echo "installation(s). "
+&gt; +    echo "Alternatively, you might be simply reinstalling THIS version."
+&gt; +    echo "Or replacing some other local version you built - BE SURE TO"
+&gt; +    echo "completely uninstall any such previous local install first !"
+&gt;      echo
+&gt; -    echo "Alternatively use ./configure --prefix=... to force overwriting"
+&gt; -    echo "the existing install."
+&gt; -    echo
+&gt; -    echo "WARNING: ON ANY DEBIAN-DERIVED DISTRIBUTION (Debian, Ubuntu etc)"
+&gt; -    echo "CHANGING THE INSTALLATION PREFIX WILL NOT PRODUCE A WORKING
+&gt; JACK" -    echo "INSTALL. Please contact the distribution packager for JACK
+&gt; and" -    echo "ask them to fix their packaging."
+&gt; +    echo "If you KNOW WHAT YOU ARE DOING and are sure you want to proceed,"
+&gt; +    echo "run ./configure with --enable-force-install"
+&gt;      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+&gt; -    exit 1
+&gt; +    echo
+&gt; +
+&gt; +    if test "x$enable_force_install" = xno; then
+&gt; +      exit 1
+&gt; +    fi
+&gt;  fi
+&gt; 
+&gt;  AC_CONFIG_AUX_DIR(config)
+&gt; diff --git include/internal.h include/internal.h
+&gt; index bf622c8..ffb1d1b 100644
+&gt; --- include/internal.h
+&gt; +++ include/internal.h
+&gt; @@ -537,7 +537,7 @@ extern jack_port_t *jack_port_by_id_int (const
+&gt; jack_client_t *client,
+&gt;  					 jack_port_id_t id, int* free);
+&gt; 
+&gt;  extern jack_port_t *jack_port_by_name_int (jack_client_t *client,
+&gt; -					   const char *port_name);
+&gt; +					   const char *port_name, int* free);
+&gt;  extern int jack_port_name_equals (jack_port_shared_t* port, const char*
+&gt; target);
+&gt; 
+&gt;  /** Get the size (in bytes) of the data structure used to store
+&gt; diff --git libjack/port.c libjack/port.c
+&gt; index 481f6e0..5ebfea3 100644
+&gt; --- libjack/port.c
+&gt; +++ libjack/port.c
+&gt; @@ -487,8 +487,16 @@ jack_port_by_id (jack_client_t *client, jack_port_id_t
+&gt; id)
+&gt;  }
+&gt; 
+&gt;  jack_port_t *
+&gt; -jack_port_by_name_int (jack_client_t *client, const char *port_name)
+&gt; +jack_port_by_name_int (jack_client_t *client, const char *port_name, int*
+&gt; free)
+&gt;  {
+&gt; +	JSList *node;
+&gt; +	for (node = client-&gt;ports; node; node = jack_slist_next (node)) {
+&gt; +		if (jack_port_name_equals(((jack_port_t *) node-&gt;data)-&gt;shared,
+&gt; port_name)) {
+&gt; +			*free = FALSE;
+&gt; +			return (jack_port_t *) node-&gt;data;
+&gt; +		}
+&gt; +	}
+&gt; +
+&gt;  	unsigned long i, limit;
+&gt;  	jack_port_shared_t *port;
+&gt; 
+&gt; @@ -497,6 +505,7 @@ jack_port_by_name_int (jack_client_t *client, const char
+&gt; *port_name)
+&gt; 
+&gt;  	for (i = 0; i &lt; limit; i++) {
+&gt;  		if (port[i].in_use &amp;&amp; jack_port_name_equals (&amp;port[i], port_name)) {
+&gt; +			*free = TRUE;
+&gt;  			return jack_port_new (client, port[i].id,
+&gt;  					      client-&gt;engine);
+&gt;  		}
+&gt; @@ -510,6 +519,7 @@ jack_port_by_name (jack_client_t *client,  const char
+&gt; *port_name)
+&gt;  {
+&gt;  	JSList *node;
+&gt;  	jack_port_t* port;
+&gt; +	int need_free = FALSE;
+&gt;  	for (node = client-&gt;ports_ext; node; node = jack_slist_next (node)) {
+&gt;  		port = node-&gt;data;
+&gt;  		if (jack_port_name_equals (port-&gt;shared, port_name)) {
+&gt; @@ -518,10 +528,10 @@ jack_port_by_name (jack_client_t *client,  const char
+&gt; *port_name)
+&gt;  		}
+&gt;  	}
+&gt; 
+&gt; -	/* Otherwise allocate a new port structure, keep it in the
+&gt; +	/* Otherwise possibly allocate a new port structure, keep it in the
+&gt;  	 * ports_ext list for later use. */
+&gt; -	port = jack_port_by_name_int (client, port_name);
+&gt; -	if (port != NULL)
+&gt; +	port = jack_port_by_name_int (client, port_name, &amp;need_free);
+&gt; +	if (port != NULL &amp;&amp; need_free)
+&gt;  		client-&gt;ports_ext =
+&gt;  			jack_slist_prepend (client-&gt;ports_ext, port);
+&gt;  	return port;
+&gt; 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1422931986.30741_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1424307865.31061_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1424306432.30300_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1424306432.30300_0.ltw:2,&nbsp;&lt;1595720.L951AtRzdM at col-desktop&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,64 @@
+Date:        Tue, 15 May 2012 13:57:23 -0600
+From:        Steve Schow  <[hidden] at bstage dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Peter L Jones Re: [Jack-Devel] Wineasio on OSX (1337515994.31830_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Wineasio on OSX
+
+I'm trying to build wineasio 0.90 on osx.  So far can't get past some ELF assember code injection which I believe is a work around for COM.  Somehow whatever is in wineasio's asio.c file is not compatible with Mac.  Anyone have an idea how I might fix this?
+
+Here is the compiler error and below that the code I think causing the problem:
+
+Error:
+
+gcc -c -I. -I/usr/include -I/Users/sjs/wine/wine-1.5.4/include -I/Users/sjs/wine/wine-1.5.4/include/wine -I/Users/sjs/wine/wine-1.5.4/include/wine/windows    -m32 -g -O2 -D__WINESRC__ -D_REENTRANT -fPIC -Wall -pipe -fno-strict-aliasing -Wdeclaration-after-statement -Wwrite-strings -Wpointer-arith -o asio.o asio.c
+{standard input}:36:Unknown pseudo-op: .type
+{standard input}:36:Rest of line ignored. 1st junk character valued 95 (_).
+{standard input}:38:Unknown pseudo-op: .cfi_startproc
+{standard input}:43:Unknown pseudo-op: .cfi_endproc
+{standard input}:44:Unknown pseudo-op: .previous
+{standard input}:48:Unknown pseudo-op: .type
+
+
+Code:
+
+/* ASIO drivers (breaking the COM specification) use the Microsoft variety of
+ * thiscall calling convention which gcc is unable to produce.  These macros
+ * add an extra layer to fixup the registers. Borrowed from config.h and the
+ * wine source code.
+ */
+
+/* From config.h */
+#define __ASM_DEFINE_FUNC(name,suffix,code) asm(".text\n\t.align 4\n\t.globl " #name suffix "\n\t.type " #name suffix ",@function\n" #name suffix ":\n\t.cfi_startproc\n\t" code "\n\t.cfi_endproc\n\t.previous");
+#define __ASM_GLOBAL_FUNC(name,code) __ASM_DEFINE_FUNC(name,"",code)
+#define __ASM_NAME(name) name
+#define __ASM_STDCALL(args) ""
+
+/* From wine source */
+#ifdef __i386__  /* thiscall functions are i386-specific */
+
+#define THISCALL(func) __thiscall_ ## func
+#define THISCALL_NAME(func) __ASM_NAME("__thiscall_" #func)
+#define __thiscall __stdcall
+#define DEFINE_THISCALL_WRAPPER(func,args) \
+    extern void THISCALL(func)(void); \
+    __ASM_GLOBAL_FUNC(__thiscall_ ## func, \
+                      "popl %eax\n\t" \
+                      "pushl %ecx\n\t" \
+                      "pushl %eax\n\t" \
+                      "jmp " __ASM_NAME(#func) __ASM_STDCALL(args) )
+#else /* __i386__ */
+
+#define THISCALL(func) func
+#define THISCALL_NAME(func) __ASM_NAME(#func)
+#define __thiscall __cdecl
+#define DEFINE_THISCALL_WRAPPER(func,args) /* nothing */
+
+#endif /* __i386__ */
+
+/* Hide ELF symbols for the COM members - No need to to export them */
+#define HIDDEN __attribute__ ((visibility("hidden")))
+
+1337111865.29791_0.ltw:2,a <A67F2D0A-1FD2-4922-808C-7D63267B84F4 at bstage dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,54 @@
+diff --git a/common/JackEngine.cpp b/common/JackEngine.cpp
+index 564c8fc..af418ed 100644
+--- a/common/JackEngine.cpp
++++ b/common/JackEngine.cpp
+@@ -138,8 +138,12 @@ void JackEngine::ProcessNext(jack_time_t cur_cycle_begin)
+ {
+     fLastSwitchUsecs = cur_cycle_begin;
+     if (fGraphManager->RunNextGraph())  { // True if the graph actually switched to a new state
+-        //fChannel.Notify(ALL_CLIENTS, kGraphOrderCallback, 0);
++#ifndef PATCHVALERIO
++        fChannel.Notify(ALL_CLIENTS, kGraphOrderCallback, 0);
++#else
++				#warning DBUS PROBLEM
+         NotifyGraphReorder();
++#endif
+     }
+     fSignal.Signal();                   // Signal for threads waiting for next cycle
+ }
+@@ -196,14 +200,20 @@ void JackEngine::CheckXRun(jack_time_t callback_usecs)  // REVOIR les conditions
+ 
+             if (status != NotTriggered && status != Finished) {
+                 jack_error("JackEngine::XRun: client = %s was not run: state = %ld", client->GetClientControl()->fName, status);
+-                //fChannel.Notify(ALL_CLIENTS, kXRunCallback, 0);  // Notify all clients
++#ifndef PATCHVALERIO
++                fChannel.Notify(ALL_CLIENTS, kXRunCallback, 0);  // Notify all clients
++#else
+                 NotifyXRun(ALL_CLIENTS);
++#endif
+             }
+ 
+             if (status == Finished && (long)(finished_date - callback_usecs) > 0) {
+                 jack_error("JackEngine::XRun: client %s finished after current callback", client->GetClientControl()->fName);
+-                //fChannel.Notify(ALL_CLIENTS, kXRunCallback, 0);  // Notify all clients
++#ifndef PATCHVALERIO
++                fChannel.Notify(ALL_CLIENTS, kXRunCallback, 0);  // Notify all clients
++#else
+                 NotifyXRun(ALL_CLIENTS);
++#endif
+             }
+         }
+     }
+@@ -280,8 +290,11 @@ void JackEngine::NotifyXRun(jack_time_t callback_usecs, float delayed_usecs)
+ {
+     // Use the audio thread => request thread communication channel
+     fEngineControl->NotifyXRun(callback_usecs, delayed_usecs);
+-    //fChannel.Notify(ALL_CLIENTS, kXRunCallback, 0);
++#ifndef PATCHVALERIO
++    fChannel.Notify(ALL_CLIENTS, kXRunCallback, 0);
++#else
+     NotifyXRun(ALL_CLIENTS);
++#endif
+ }
+ 
+ void JackEngine::NotifyXRun(int refnum)

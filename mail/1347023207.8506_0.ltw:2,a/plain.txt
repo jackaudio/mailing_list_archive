@@ -1,0 +1,75 @@
+Date:        Fri, 07 Sep 2012 15:06:28 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Robin Gareus <[hidden] at gareus dot org>
+Cc:          "[hidden] at lists dot jackaudio dot org Developers" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Robin Gareus Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources (1347017251.30877_0.ltw:2,a)
+Follow-Up:   Robin Gareus Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources (1347032022.22602_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources
+
+Le 7 sept. 2012 à 13:27, Robin Gareus a écrit :
+
+> On 09/03/2012 09:05 PM, Stéphane Letz wrote:
+>> See: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=674651
+>> 
+>> Anybody interested to work on that?
+> 
+> Funny, I had not seen this email when starting work on it :)
+> Anyway, there are two problems:
+> 
+> 1) opus_encode() will not always result in a fixed length.
+> In particular if the input is silent or if the bitrate is large,
+> fCompressedSizeByte will be less than the max possible.
+> 
+> To work arount this I use the first 4 bytes of the actual payload to
+> transmit the fCompressedSizeByte per channel - I have not yet committed
+> that patch.
+> 
+> Would this be the way to go? Any better alternatives?
+
+Seems reasonable.
+> 
+> 
+> 2) netjack currently uses opus-custom. the debian package does not [yet]
+> include that (see http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=686777).
+> 
+> This issue has spawned quite some discussion on IRC #opus.
+> 
+> In short: non-custom (aka normal) opus modes will only work on
+> buffersizes 120, 240,.. samples (motivated by 5ms phone latency).
+> Power-of-two and block-sizes < 120 samples do requires custom modes.
+> 
+> Although most agree that nejack is a valid use-case for opus
+> custom-modes, upstream is reluctant to enable custom-modes by default,
+> because it breaks interoperability
+
+In what way?
+
+> and the concern is that many people
+> will use them to lazily port their celt (which used power-of-two
+> blocksizes) code.
+> 
+> A drawback from custom-mode is that compression is not as good as it can
+> be (it has not been optimized).
+
+But will it be at some point?
+
+> It was suggested to have netjack use
+> normal modes if custom is not available.
+> 
+> This would work in general but require buffering inside jackd and add
+> additional latency.. I'm somewhat reluctant to go that way. Comments?
+> 
+> best,
+> robin
+> 
+> PS. The initial work on this was done for netjack2 only. Once the dust
+> has settled, updating netjack1/netone will be easy.
+
+I think we should clearly avoid degrading the performances (and adding code complexity with any buffering scheme..) because of this kind of reasons.  Going from CELT to Opus is not "our" choice, so we should keep pushing to keep the best we can.
+
+Stéphane
+
+1347023207.8506_0.ltw:2,a <86288E85-79C5-41E4-BF67-92D802C94AB8 at grame dot fr>
+________________________________________________________________________________
+

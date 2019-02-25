@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297782797.6067_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297788752.18400_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297787398.15689_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 15 Feb 2011 17:29:28 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Valerio Pilo &lt;[hidden] at akhela dot com&gt;, torbenh Hohn &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>"[hidden] at lists dot jackaudio dot org List" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Valerio Pilo
+<a href='../1297781103.1912_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>torbenh
+<a href='../1297788752.18400_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Valerio Pilo
+<a href='../1297842576.1424_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client </a></td></tr>
+</table>
+<pre>
+Le 15 f&#xE9;vr. 2011 &#xE0; 15:44, Valerio Pilo a &#xE9;crit :
+
+&gt; Hi guys; thanks a lot for your invaluable support! The patch, unfortunately, 
+&gt; does nothing to fix or even improve the problem, which appears being 
+&gt; completely unrelated to killing  clients...
+
+Well the real problem is that the ALSA backend returns an error (-1) that is considered "non recoverable" by the upper layer (the JackAudioDriver::ProcessSync function), then the wrapper ALSA backend thread is just stopped. When this wrapper thread is not running anymore, no client can connect anymore. 
+
+Now the *reason* the ALSA backend returns an error may be caused by several different events:
+
+- either an issue in ALSA backend code (the thing you're trying to debug)
+
+- or a "late graph" occurrence (for instance by killing a client in synchronous mode, that was not correctly handled, the AUDIO_DRIVER.diif patch from yesterday was supposed to fix this specific issue.
+
+
+&gt; 
+&gt; Let me explain. We did never try booting up our ARM box and just leaving JACK 
+&gt; running without any clients connected, until yesterday. It happened by chance 
+&gt; and we noticed that JACK *was already blocked*! We didn't connect any client 
+&gt; to it yet!
+
+So it means the ALSA backend and/or the interaction with the upper layer (the JackAudioDriver::ProcessSync function) still has an issue.
+
+
+&gt; I've tried to better pinpoint the problem, and here's what I've found:
+&gt; 
+&gt; First: ALSA docs specify error codes for some pcm_snd_* functions used by 
+&gt; jacks' ALSA driver - that is -EPIPE, -EINTR and -ESTRPIPE - but in a couple 
+&gt; occasions you use the defined values without the minus. I've attached a patch, 
+&gt; "fix-ALSA-error-codes.patch", to fix this.
+
+OK, JACK1 has the same issue. I guess this should be fixed in JACK1 ALSA backend also (Torben ?)
+
+&gt; 
+&gt; The actual problem wasn't fixed by this patch so I kept trying and adding 
+&gt; debug messages. JACK starts up and hums away until an xrun occurs. As soon as 
+&gt; this happens, the driver breaks. The reason is that it tries to perform 
+&gt; recovery (by restarting the driver) but it makes no effect because it ends up 
+&gt; in an infinite loop within JackAlsaDriver::Read() ! 
+&gt; There, alsa_driver_wait returns 0, the "goto retry;" runs it again, the xrun 
+&gt; code is ran again, and alsa_driver_wait returns 0 again, entering an infinite 
+&gt; loop.
+&gt; 
+&gt; I'm attaching two patches, both with a lot of added log messages (and also the 
+&gt; previously explained patch)  to help understand what was going on.
+&gt; The first version ("without-recovery") only adds debugging. A test run with it 
+&gt; is linked at Pastebin: http://jackd.pastebin.com/JTswYfLd . the second one 
+&gt; also attempts to fix the issue using ALSA's snd_pcm_recover(), and a test run 
+&gt; of it is linked here: http://jackd.pastebin.com/2iifw6Gh .
+&gt; With the recovery in place the issue is still present, but seemingly better 
+&gt; identifiable, because JackAlsaDriver simply gets stuck within the poll() call 
+&gt; in alsa_driver_wait() .
+&gt; 
+&gt; At the moment this is as far as I've got with the debugging. Do you have any 
+&gt; idea or suggestion?
+&gt; 
+
+Not at this time... I would need to go again deep in the ALSA backend.. and it's interaction with JackAudioDriver. Not too much time this week. Can we work on that next week? We could also do some debugging session o #jack channel on Freenode.
+
+St&#xE9;phane
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297782797.6067_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297788752.18400_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297787398.15689_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1297787398.15689_0.ltw:2,a&nbsp;&lt;2032F3DD-333C-4904-B141-9C3BA6346CA3 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,55 @@
+Date:        Fri, 17 Aug 2012 16:57:09 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] Application crashes when connecting newly registered ports using callback. (1345210882.5488_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Application crashes when connecting newly registered ports using callback.
+
+Paul Davis <[hidden]> writes:
+
+> On Thu, Aug 16, 2012 at 12:24 PM, Fabrice Lebas <[hidden]>wrote:
+>
+>> Hi All,
+>>
+>> I am maintainer of meterec and I am stuck with a problem when trying
+>> to automatically connect to ports beeing newly registered.
+>>
+>> I use jack_set_port_registration_callback() to have
+>> process_port_register() handling new ports. In process_port_register()
+>> I look if the port is part of the list I want to connect to and from
+>> there call connect_any_port() function that is used also when
+>> connecting already existing ports manually or connecting existing
+>> ports at startup.
+>>
+>
+> you cannot make calls that talk to the server while in a server-initiated
+> callback.
+
+Is this true for both jack1 and jack2?
+
+> this ought to be documented along with a list of jack api calls that talk
+> to the server. but it isn't.
+
+It must be documented for sure, but I think it should be possible to
+call connect functions from port registration callback. This is actually
+what any session manager (control app) is expected to do.
+
+>> Only when called from process_port_register() the jack_connect()
+>> function inside connect_any_port() fails and the app crashes after
+>> jackd issues the following message:
+>> 'bad status (1) for client meterc handling event (type = 6)'
+>>
+>
+> an app that crashes when the server zombifies it or disconnects from it
+> needs some attention.
+
+It is pure speculation, but if libjack code crashes, it may be fault in
+libjack.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1345211961.7113_0.ltw:2,a <87a9xt1v0q.fsf at arnaudov dot name>
+________________________________________________________________________________
+

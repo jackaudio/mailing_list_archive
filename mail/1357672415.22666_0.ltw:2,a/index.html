@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] A couple of related issues in jackd on ARM</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] A couple of related issues in jackd on ARM</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357671968.21865_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357672674.23024_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357672415.22666_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 08 Jan 2013 20:13:26 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> MONTANARO Luciano (MM) </span> &lt;[hidden] at magnetimarelli dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Patrick Shirkey
+<a href='../1357673168.23855_0.ltw:2,a/index.html'>Re: [Jack-Devel] A couple of related issues in jackd on ARM </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1357674332.25723_0.ltw:2,a/index.html'>Re: [Jack-Devel] A couple of related issues in jackd on ARM </a></td></tr>
+</table>
+<pre>
+Hi all again,
+I am having new problems with jackd2, after our embedded platform switched to the 3.1 kernel.
+Actually, I think they were present with our previous kernel as well, but they have become systematic while once they were sporadic.
+
+I think I have found the problematic code, but I need some insight from someone that knows the code.
+The first problem I am seeing is a very high number of xrun notifications, tens of them a second.
+They is due to alsa_driver_wait() returning with 0 as its frame number, which normally means an xrun has occurred, but in this case what seems to be happening is that jack_wait returns "normally", but with a capture_avail of 0 and a playback_avail of 512 on 9 calls out of 10. The tenth call I get both capture_avail and playback_avail set to 512. The wait_status is set to 0, as in "everything normal", I guess, and so I tried to modify JackAlsaDriver to skip the notification in this case, and things seem to be working fine, no noticeable glitches in the audio playback at all.
+
+The second problem I was referring to is that this high number of notifications is triggering a problem in the JackRequest code:
+The CheckRes() macro checks for errors from the Read/Write calls, but these calls may silently fail: they can return without writing or reading, and this is accounted as success, but then Read() may return uninitialized data or Write is not retried when it should.
+
+There is code like this:
+
+         CheckRes(JackRequest::Write(trans));
+         CheckRes(trans-&gt;Write(&amp;fName, sizeof(fName)));
+         CheckRes(trans-&gt;Write(&amp;fProtocol, sizeof(int)));
+         CheckRes(trans-&gt;Write(&amp;fOptions, sizeof(int)));
+         CheckRes(trans-&gt;Write(&amp;fUUID, sizeof(int)));
+
+Where I think after each Write there is potential for a needed retry, which is not done at all. Am I missing something?
+
+I am using Jackd2 1.9.8, but the affected code has changed little in the latest git revisions.
+
+Thanks in advance for your support,
+
+Regards,
+Luciano Montanaro
+
+
+====
+a38ecd0f049af3b809c5444f66186cdb25ed52fe
+ dist/jackd2/src/linux/alsa/JackAlsaDriver.cpp |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/dist/jackd2/src/linux/alsa/JackAlsaDriver.cpp b/dist/jackd2/src/linux/alsa/JackAlsaDriver.cpp
+index a79772f..effb8dd 100644
+--- a/dist/jackd2/src/linux/alsa/JackAlsaDriver.cpp
++++ b/dist/jackd2/src/linux/alsa/JackAlsaDriver.cpp
+@@ -387,8 +387,10 @@ retry:
+         /* we detected an xrun and restarted: notify
+          * clients about the delay.
+          */
+-        jack_log("ALSA XRun wait_status = %d", wait_status);
+-        NotifyXRun(fBeginDateUst, fDelayedUsecs);
++       if (wait_status != 0) {
++            jack_log("ALSA XRun wait_status = %d", wait_status);
++            NotifyXRun(fBeginDateUst, fDelayedUsecs);
++       }
+         goto retry; /* recoverable error*/
+     }
+
+
+
+--
+Luciano Montanaro
+EntryNAV - Audio Software Integrator
+Magneti Marelli Electronic Systems
+Viale Carlo Emanuele II 150, Venaria Reale (To)
+
+
+Confidential Notice: This message - including its attachments - may contain proprietary, confidential and/or legally protected information and is intended solely for the use of the designated addressee(s) above. If you are not the intended recipient be aware that any downloading, copying, disclosure, distribution or use of the contents of the above information is strictly prohibited.
+If you have received this communication by mistake, please forward the message back to the sender at the email address above, delete the message from all mailboxes and any other electronic storage medium and destroy all copies.
+Disclaimer Notice: Internet communications cannot be guaranteed to be safe or error-free. Therefore we do not assure that this message is complete or accurate and we do not accept liability for any errors or omissions in the contents of this message.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357671968.21865_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357672674.23024_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357672415.22666_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1357672415.22666_0.ltw:2,a&nbsp;&lt;67BA5DEFFBE7BF46B4C53F7E5FC5AD4419E72052D0 at MXCL13 dot fgremc dot it&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

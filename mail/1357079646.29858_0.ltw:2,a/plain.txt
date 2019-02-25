@@ -1,0 +1,50 @@
+Date:        Tue, 01 Jan 2013 17:34:01 -0500
+From:        jordan  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jeremy Jongepier Re: [Jack-Devel] L_ProAudio: A Linux Proaudio FrameWork with improved Wine/kernel(rt) support (1357072616.19316_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] L_ProAudio: A Linux Proaudio FrameWork with improved Wine/kernel(rt) support
+
+Hi, i replied to jeremy off list, so i thought i would address this on
+list, as well. (for those interested)
+
+> * how do the above things influence Linux audio performance?
+
+2 words: OS jitter.
+
+> * what is delayed acpi?
+> * what is indirect fan control?
+> * what is tame conntrack?
+> * what is stable_page_write?
+
+delaying acpi, using an indirect patch to fan control and making sure
+conntrack (netfilter) doesn't cause interference, ensures that we
+don't have these kernel-level components causing inconsistent and
+undesiered behavior (that can produce things like xruns /
+interference.
+
+Stable_page_write is fairly incompatible with wine and causes huse
+latencies with [poll schedule timeouts], these can be very higher
+numbers like 80 to 200+ms - which is TERRIBLE. Google, Oracle,
+samsung, Bao Mao and others have chosen to revert this commit -
+because they (in all of their glory) couldn't work around the issue ~
+and neither can I.. That being said, this is a somewhat temparary
+patch (although it has been is use by me, for quite some time now). I
+know that a solution is just down the pipe, but may not surface for a
+while yet. revert_stable_page_write.patch in my patchset is CRITICAL
+for Wine, for now.
+
+> * why 3.6? Aren't there still some issues with it (softirq related stuff)?
+
+I was plagued by that, on one system ~ which appears to be fixed. ~
+this led to me releasing L_ProAudio, after cleaning up and rebasing my
+patchsets against upstream linux-rt and upstream wine.
+
+so i guess the softirq problems, might be a blessing in disguise. (ie:
+i have been using _most_ of L_Proaudio for months).
+
+cheerz
+
+1357079646.29858_0.ltw:2,a <CAOcfFMzx0FD+wKd=vykPAO2U3kcaH+8R_+wuD77A+3YTodixzw at mail dot gmail dot com>
+________________________________________________________________________________
+

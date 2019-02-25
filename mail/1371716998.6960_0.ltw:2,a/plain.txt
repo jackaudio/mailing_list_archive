@@ -1,0 +1,78 @@
+Date:        Thu, 20 Jun 2013 10:29:43 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          jack-devel <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Paul Davis Re: [Jack-Devel] Fwd: Bug#712484: [jackd2] "Cannot create shm registry segment (Permission denied)" (1371729245.29005_0.ltw:2,)
+
+Subject:     [Jack-Devel] Fwd: Bug#712484: [jackd2] "Cannot create shm registry segment (Permission denied)"
+
+Hi!
+
+
+Here's a Debian bug report we've recently received. The /run/shm issue
+is not critical, it's certainly working for most people, so somebody
+will figure out why /run/shm wasn't mounted. /dev/shm is just a symlink
+to /run/shm on Debian systems these days.
+
+More importantly: do we care about the aspect mentioned in the wiki? It
+says:
+
+   If you're using /dev/shm directly, then your package is broken. You
+   should only be accessing it via the eglibc shm_* and sem_* functions
+   implementing the POSIX SHM and SEM features. If we do eventually
+   deprecate /dev/shm in favour of /run/shm, eglibc will need
+   configuring to use /run/shm directly. In consequence, if you are
+   using the standard interfaces such as shm_open, sem_open etc., no
+   transition is required.
+
+
+The same more or less holds true for jackd1. I'm perfectly happy to keep
+the status quo and do a downstream package transition instead of
+changing code upstream. However, if you prefer to go the shm_* way, I
+can give it a shot.
+
+
+WDYT?
+
+-------- Original Message --------
+Subject: Bug#712484: [jackd2] "Cannot create shm registry segment
+(Permission denied)"
+Date: Sun, 16 Jun 2013 13:55:14 +0200
+From: manuk7 <[hidden]>
+Reply-To: manuk7 <[hidden]>, [hidden]
+To: [hidden]
+
+Package: jackd2
+Version: 1.9.8~dfsg.4+20120529git007cdc37-5
+Severity: minor
+
+--- Please enter the report below this line. ---
+Since few time i'm was unable to launch jackd with the following message
+: « Cannot create shm registry segment (Permission denied) »
+
+I found this is mostly due to /run/shm which wasn't mounted as tmpfs
+(btw i don't know were to report this bug).
+
+However it seems jackd is also guilty because it tries to access
+/dev/shm instead of /run/shm. According to release notes of /run
+migration (
+http://wiki.debian.org/ReleaseGoals/RunDirectory#Packages_using_.2Fdev.2Fshm
+) this shall be done with shm_* and sem_*. Could you correct this ?
+
+Thanks
+
+--- System information. ---
+Architecture: amd64
+Kernel:       Linux 3.2.0-3-amd64
+
+Debian Release: 7.0
+  500 testing         mirrors.ircam.fr
+  500 testing         ftp.igh.cnrs.fr
+  500 stable          mirrors.ircam.fr
+  100 unstable        mirrors.ircam.fr
+  100 unstable        ftp.gajim.org
+  100 experimental    mozilla.debian.net
+  100 experimental    mirrors.ircam.fr
+
+1371716998.6960_0.ltw:2,a <51C2BD77.6060806 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

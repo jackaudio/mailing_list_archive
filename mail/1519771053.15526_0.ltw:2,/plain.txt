@@ -1,0 +1,48 @@
+Date:        Tue, 27 Feb 2018 23:37:01 +0100
+From:        David Kastrup  <[hidden] at gnu dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Tim Janes [Jack-Devel] The playback device hw:0 is already in use (1519768823.13432_0.ltw:2,)
+Follow-Up:   Tim Janes Re: [Jack-Devel] The playback device hw:0 is already in use (1519855879.18840_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] The playback device hw:0 is already in use
+
+Tim Janes <[hidden]> writes:
+
+> I am new to jack and trying to setup Jack2 on Ubuntu 17.10 on a Dell
+> laptop 15-5570 that uses a Realtek ALC3246 sound device.
+>
+> It is basically working ( I am testing it with simple_client and
+> latent_client) but I think that I am doing something wrong as the
+> first time I use it after booting the laptop  I get the error.
+>
+> "ATTENTION: The playback device "hw:0" is already in use. Please stop
+> the application using it and run JACK again"  followed by lots of
+>
+> "Cannot connect to server socket err = No such file or directory"
+> "Cannot connect to server request channel"
+>
+> fuser -v /dev/snd/pcmC0D0p shows that it is use by pulseaudio.
+
+Well, tell Pulseaudio to stop hogging the device.  One way is to call
+pavucontrol and turn that device's Pulseaudio profile to "Off".  Another
+is to configure Pulseaudio to not restart in the first place (create a
+.pulse/client.conf file containing
+
+autospawn = no
+
+.  You will then need to start pulseaudio manually using
+
+pulseaudio -D
+
+every time you want to use it.  One audio daemon less competing for
+realtime resources is probably not the worst idea, but I don't really
+know how much of a problem a dormant Pulseaudio can be.
+
+
+
+-- 
+David Kastrup
+
+1519771053.15526_0.ltw:2, <87o9ka83g2.fsf at fencepost dot gnu dot org>
+________________________________________________________________________________
+

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Stack preallocation issues</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Stack preallocation issues</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1300029018.16392_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1300031086.20268_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1300030939.20027_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 13 Mar 2011 17:41:54 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Sampo Savolainen </span> &lt;[hidden] at iki dot fi&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Sampo Savolainen
+<a href='../1300031601.21329_0.ltw:2,a/index.html'>[Jack-Devel] Stack preallocation issues </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1300048052.23000_0.ltw:2,a/index.html'>Re: [Jack-Devel] Stack preallocation issues </a></td></tr>
+</table>
+<pre>
+Hi,
+
+I ran into issues with Foo YC20 and the latest and greatest release of JACK
+1. The organ synth dies immediately when running it with JACK 0.120.1 in
+realtime (I tested both dummy and alsa drivers). It worked fine with
+previous releases, so I dug into SVN history and found the critical change
+in JACK to be commit r3996. The commit moved the stack touching code from
+libjack/client.c to libjack/thread.c. Stack touching means that each JACK
+thread reads &amp; writes to nearly all stack memory. This forces the operating
+system to map the stack memory and thus the application can use the memory
+without page faults. This code has been used regardless of whether the
+thread is realtime or not.
+
+In r3996, not only was the code moved, but it was also uncommented. I do not
+know why the code was not active before this release. The current
+implementation touches 50000 bytes of memory (of 524288 bytes set as the
+thread stack size), but leaves all of that memory allocated!
+
+The DSP in Foo YC20 is Faust, which uses a lot of stack variables. The
+remaining 24k memory just isn't enough and it dies due to a page fault /
+running out of stack.
+
+I've attached a proposed patch. Note that my tests showed that it was not
+enough to have the buf variable go out of scope. The stack allocation had to
+be put in a separate function for gcc (4.4.3) to release it before
+continuing to the actual code the thread is supposed to run.
+
+
+ Sampo
+
+<a href='files/jack-stack-touch.patch' target='_blank'>* Attachment: 'jack-stack-touch.patch'</a>
+content-type: text/x-patch
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1300029018.16392_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1300031086.20268_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1300030939.20027_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1300030939.20027_0.ltw:2,a&nbsp;&lt;AANLkTi=hsw_giHV1P_uR0xyz41W5CZJP1cOyzZSQEhbA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

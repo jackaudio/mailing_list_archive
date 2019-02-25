@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] [LAU] jack2 turned verbose</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] [LAU] jack2 turned verbose</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1338555135.29847_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1338559106.5422_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338558541.4298_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 01 Jun 2012 15:48:52 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> David Adler </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot linuxaudio dot org </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1338555135.29847_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>David Adler
+<a href='../1338559106.5422_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1338559141.5496_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1338560578.7500_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>David Adler
+<a href='../1338561053.7996_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+</table>
+<pre>
+On Fri, Jun 1, 2012 at 2:52 PM, Robin Gareus wrote:
+&gt;
+&gt; It might have to do with Arch's compiler[-flags] and how jack2 uses
+&gt; unions .. or scoping: JackGlobals vs Engine-Parameters.. although I
+&gt; don't have an explanation.. all seems good.
+
+Compiler flags (for 32bit) are, (from unaltered /etc/makepkg.conf):
+CXXFLAGS="-march=i686 -mtune=generic -O2 -pipe -fstack-protector
+--param=ssp-buffer-size=4 -D_FORTIFY_SOURCE=2"
+
+&gt; A hunch: it could be caused by using 'server_ptr-&gt;verbose.b' (a union)
+&gt; as boolean. The sever only checks "if (server_ptr-&gt;verbose.b)". The
+&gt; union itself comprises other uninitialized values that could make it
+&gt; evaluate to true (though it shouldn't, but maybe some compiler
+&gt; optimization casts it to (int) instead of (bool) )
+&gt;
+&gt;
+&gt; I know this is the '-users' list (I'm ccing jack-devel), but could
+&gt; someone who experiences the problem try to track it down?
+&gt;
+&gt; Basically just add a few printf()'s. Start at: common/JackControlAPI.cpp
+&gt; - line 926 - before the call to &#xA0;"new JackServer(..)" add
+&gt;
+&gt; &#xA0;printf("DEBUG verbose: %s\n",(server_ptr-&gt;verbose.b)?"on":"off");
+&gt;
+&gt; recompile, launch jackd. If it prints "verbose: on", sth is wrong with
+&gt; parameter initialization in main() or with using unions. If it's "off"
+&gt; the problem sits deeper:
+
+DEBUG verbose: on
+
+&gt; add a line just after common/JackServer.cpp line 66
+&gt; &#xA0;printf("DEBUG verbose2: %s\n",(JackGlobals::fVerbose)?"on":"off");
+&gt; ...
+
+above, your line number didn't match exactly, so we seem to have
+different versions (1.9.7 here). Thus, I wasn't exactly sure where to
+add the prinf() and did the following:
+
+...
+    JackServerGlobals::fUserCount = 1;     // One user
+    printf("DEBUG verbose2: %s\n",(JackGlobals::fVerbose)?"on":"off");
+    JackGlobals::fVerbose = verbose;
+    printf("DEBUG verbose3: %s\n",(JackGlobals::fVerbose)?"on":"off");
+}
+
+which prints:
+DEBUG verbose2: off
+DEBUG verbose3: on
+
+&gt; A crude test for the union() hunch would be to change
+&gt; common/JackControlAPI.h line 53:
+&gt; &#xA0;replace
+&gt; &#xA0;"union jackctl_parameter_value"
+&gt; with
+&gt; &#xA0;"struct jackctl_parameter_value"
+&gt; and compile with '-fpermissive' like this:
+&gt;
+&gt;  CXXFLAGS="-fpermissive" ./waf  configure
+&gt;  ./waf
+&gt;
+
+Again, mismatching line numbers. I assume you meant the line:
+union jackctl_parameter_value verbose;
+
+Changing that to struct fixes both issues I reported,
+the verbose output and exit on last client close.
+
+So we seem to be getting somewhere. Nice.
+
+
+thanks Robin,
+d
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1338555135.29847_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1338559106.5422_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338558541.4298_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1338558541.4298_0.ltw:2,a&nbsp;&lt;CAHsfu2vbzpwmJaGqU=7bLOhGxx8pYuJxZ8xGj+ezsABdvoWC_Q at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

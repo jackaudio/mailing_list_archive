@@ -1,0 +1,99 @@
+Date:        Thu, 06 Sep 2012 07:38:30 -0700
+From:        István Király - LaKing  <[hidden] at yahoo dot com>
+To:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Paul Davis Re: [Jack-Devel] Fedora 17 (1346942605.29749_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Fedora 17
+
+I was able to playback from console with the command: 
+
+cvlc --jack-auto-connect file:///home/x/test.wav
+
+.. it struggles, ofc, as all other applications. (jackd -r -d alsa -d hw:Gina24   .. gave no errors in the console)
+
+@Jeremy mplayer seems to be complied without jack in Fedora. .. but thanks to the suggestion, I try ed it, ..
+
+
+@Paul
+
+I think you probably meant http://alsa.opensrc.org/.asoundrc
+
+[root@casino ~]# locate asoundrc
+/usr/share/doc/alsa-lib-1.0.25/asoundrc.txt
+
+.. I don't have such a file, but as I read on the wiki, I don't need one, ..
+
+Some interesting files are:
+/etc/asound.conf
+.. empty, only a comment: # Place your global alsa-lib configuration here...
+
+
+/var/lib/alsa/asound.state
+.. seems to describe the current state of all soundcard's.
+
+
+The script that generates asoundrc from the wiki created: 
+
+
+pcm.NVidia { type hw; card NVidia; }
+ctl.NVidia { type hw; card NVidia; }
+pcm.Gina24 { type hw; card Gina24; }
+ctl.Gina24 { type hw; card Gina24; }
+pcm.External { type hw; card External; }
+ctl.External { type hw; card External; }
+pcm.U0x46d0x8c9 { type hw; card U0x46d0x8c9; }
+ctl.U0x46d0x8c9 { type hw; card U0x46d0x8c9; }
+pcm.!default pcm.Gina24
+ctl.!default ctl.Gina24
+
+
+
+>> system:playback_1 
+
+
+I could not find any files with find-in-files techniques that are responsible for this naming. I guess this must happen in some in binary form, ..
+
+
+
+By the way, the system feels like it is responding a little bit slower, when jack is running in any form. (Console characters appear with some latency :)
+
+
+
+
+Open to any suggestions, ...
+
+
+
+[hidden]
+D250 Laboratories
+www.D250.hu
+
+
+________________________________
+Von: Paul Davis <[hidden]>
+An: István Király - LaKing <[hidden]> 
+CC: "[hidden]" <[hidden]> 
+Gesendet: 15:15 Donnerstag, 6.September 2012
+Betreff: Re: [Jack-Devel] Fedora 17
+
+
+
+
+
+On Thu, Sep 6, 2012 at 9:08 AM, István Király - LaKing <[hidden]> wrote:
+
+>> I would try starting jackd in a terminal with minimal parameters,
+>
+>.. I try to start a simple playback from console, with minimal fanciness: jack and aplay
+>
+
+you appear to be trying to use a ~/.asoundrc file that defines ports with names like alsa_pcm:playback_1
+
+this is wrong. the names should be system:playback_1 
+
+that may not be your only problem. i suggest you post your ~/.asoundrc file and/or compare it to the one in the JACK FAQ at http://jackaudio.org/faq 
+
+1346942318.29365_0.ltw:2,a <1346942310.66913.YahooMailNeo at web164903 dot mail dot bf1 dot yahoo dot com>
+________________________________________________________________________________
+

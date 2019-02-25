@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Stopping jack from callback</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Stopping jack from callback</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1376571212.15466_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1376576011.18785_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1376573508.16930_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 15 Aug 2013 15:31:26 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Anders Tornvig </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Adrian Knoth &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Adrian Knoth
+<a href='../1376571212.15466_0.ltw:2,a/index.html'>Re: [Jack-Devel] Stopping jack from callback </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Harry van Haaren
+<a href='../1376576011.18785_0.ltw:2,a/index.html'>Re: [Jack-Devel] Stopping jack from callback </a></td></tr>
+</table>
+<pre>
+On 15 August 2013 14:53, Adrian Knoth &lt;[hidden]&gt; wrote:
+
+&gt; On Thu, Aug 15, 2013 at 02:27:27PM +0200, Anders Tornvig wrote:
+&gt;
+&gt; &gt; int process (jack_nframes_t nframes, void *arg) {
+&gt; &gt;    DPOAE *dpoae = (DPOAE *)arg;
+&gt; &gt;    dpoae-&gt;m++;
+&gt; &gt; }
+&gt;
+&gt; Just return 1 in the process cycle if your variable reaches the
+&gt; threshold, and jackd will deactivate you.
+&gt;
+
+Neat. It works.
+
+So it's:
+&gt;
+&gt; int process (jack_nframes_t nframes, void *arg) {
+&gt;    DPOAE *dpoae = (DPOAE *)arg;
+&gt;
+&gt;    return (dpoae-&gt;m++ &gt; 100) ? 1 : 0;
+&gt; }
+&gt;
+&gt; or something less hacky. You'd probably set your global stop variable,
+&gt; too, just to inform main() about it. ;)
+&gt;
+&gt; Yes ok, then I still have to check on the m-variable. Jack wouldn't happen
+to have a thread-safe "isactive(client)" function?
+
+Great response time by the way, thanks!
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1376571212.15466_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1376576011.18785_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1376573508.16930_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1376573508.16930_0.ltw:2,a&nbsp;&lt;CAMeZe4HA6XkHiF4ZG9nrDVZ=S8Y=r6iHc08AOW1R1KdNHciojw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

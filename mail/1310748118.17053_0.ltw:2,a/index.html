@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT"</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT"</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1310742395.5903_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1310767123.21679_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1310748118.17053_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 15 Jul 2011 18:38:59 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Robin Gareus &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1310742395.5903_0.ltw:2,a/index.html'>Re: [Jack-Devel] jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT" </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1310767123.21679_0.ltw:2,a/index.html'>Re: [Jack-Devel] jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT" </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1310902179.4317_0.ltw:2,a/index.html'>Re: [Jack-Devel] jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT" </a></td></tr>
+</table>
+<pre>
+Le 15 juil. 2011 &#xE0; 17:06, Robin Gareus a &#xE9;crit :
+
+&gt; [..]
+&gt; 
+&gt;&gt;&gt; long story short: it was not in synchronous mode when the errors 
+&gt;&gt;&gt; happened and I can reproduce the JackActivationCount by + running
+&gt;&gt;&gt; in async mode + using lots of DSP-load
+&gt;&gt; 
+&gt;&gt; Ok, this makes much more sense!
+&gt;&gt; 
+&gt;&gt;&gt; 
+&gt;&gt;&gt; But why are these messages printed out by default? Shouldn't
+&gt;&gt;&gt; signaling an x-run be enough?
+&gt;&gt; 
+&gt;&gt; They are still not "strict XRun": in asynchronous mode XRuns are
+&gt;&gt; detected by the server which just checks that all clients have be run
+&gt;&gt; previous cycle. It then print something like:
+&gt;&gt; 
+&gt;&gt; "JackEngine::XRun : client = XXX was not run: state = 2"
+&gt;&gt; 
+&gt;&gt; Don't you see there kind of messages along the
+&gt;&gt; "JackActivationCount...." ones?
+&gt; 
+&gt; yes.
+&gt; 
+&gt; jackd verbose log:
+&gt; JackEngine::XRun: client = ardour was not run: state = 2
+&gt; JackAudioDriver::ProcessGraphAsyncMaster: Process error
+&gt; JackEngine::XRun: client = ardour was not run: state = 2
+&gt; JackAudioDriver::ProcessGraphAsyncMaster: Process error
+&gt; 
+&gt; ardour log:
+&gt; [ERROR]: JACK: JackActivationCount::Signal value = 0 ref = 3
+&gt; [ERROR]: JACK: JackActivationCount::Signal value = 0 ref = 3
+
+But basically you are going to get *real* XRun error message in this case right?
+
+&gt; 
+&gt; 
+&gt;&gt;&gt; IMHO these msgs should only be generated in verbose mode, because
+&gt;&gt;&gt; printing those messages just makes things worse: more system load
+&gt;&gt;&gt; due to logging, etc. -&gt; even more messages.
+&gt;&gt; 
+&gt;&gt; OK this can be done quite easily...
+&gt; 
+&gt; Good!
+&gt; 
+&gt; This is only really relevant when DSP load is ~ 85-95%.
+
+So I can make "JackActivationCount" report in verbose mode only, but we agree that there still will be  XRun error message  right?
+&gt; 
+&gt; 
+&gt; 
+&gt; 
+&gt;&gt;&gt; [..]
+&gt;&gt; Yes -S for "synchronous" is a server setting. It can actually be used
+&gt;&gt; with different kind of backend.
+&gt; 
+&gt; Well, I do launch jackdbus and then call
+&gt;    jack_control eps sync true
+&gt; _before_ starting the engine. There's no "-S" parameter involved.
+&gt; 
+&gt; robin
+
+Ask Nedko?
+
+St&#xE9;phane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1310742395.5903_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1310767123.21679_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1310748118.17053_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1310748118.17053_0.ltw:2,a&nbsp;&lt;A47574E1-B6BD-4FAE-B12D-27D346611D93 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

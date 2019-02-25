@@ -1,0 +1,77 @@
+Date:        Tue, 06 Mar 2018 10:27:45 +0100
+From:        Christoph Kuhr  <[hidden] at web dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Filipe Coelho Re: [Jack-Devel] libjack.so and libjackserver.so bug (1520327708.25156_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] libjack.so and libjackserver.so bug
+
+Why is it not documented somewhere?
+
+I have both libraries working now. Just by linking against jack first 
+and afterwards against libjackserver.
+
+
+
+On 03/06/2018 10:14 AM, Filipe Coelho wrote:
+> This is a known scenario.
+>
+> Those 2 libs share some code, but in a different way.
+> A client application is never supposed to control the server.
+>
+> Do not link against the 2 libraries from within the same application, 
+> and you'll be fine.
+>
+>
+> On 06.03.2018 09:04, Christoph Kuhr wrote:
+>> Hi *,
+>>
+>> I observed some strange behavior of libjack and libjackserver.
+>>
+>> If I have a multiprocessing application with one jack server fork and 
+>> one jack client fork, jack_client_open crashs.
+>>
+>> Here the backtrace:
+>> #0  __strcmp_ssse3 () at ../sysdeps/x86_64/multiarch/../strcmp.S:174
+>> #1  0x00007f83dddb803f in jack_find_driver_descriptor(_JSList*, char 
+>> const*) () from /usr/local/lib/libjackserver.so.0
+>> #2  0x00007f83dddb9ef8 in Jack::JackServerGlobals::Init() () from 
+>> /usr/local/lib/libjackserver.so.0
+>> #3  0x00007f83dddb64f8 in jack_client_open_aux(char const*, 
+>> JackOptions, JackStatus*, __va_list_tag*) () from 
+>> /usr/local/lib/libjackserver.so.0
+>> #4  0x00007f83dddb67b1 in jack_client_open () from 
+>> /usr/local/lib/libjackserver.so.0
+>> #5  0x0000000000414f04 in talker_Process (arguments=0x63f680 
+>> <arguments>) at ../src/net/avb/talker/talker_process.c:395
+>> #6  0x000000000042d487 in avbruntime (arguments=0x63f680 <arguments>) 
+>> at ../src/avbruntime.c:644
+>> #7  0x000000000042e888 in main (argc=11, argv=0x7ffebee6f678) at 
+>> ../src/main.c:144
+>>
+>>
+>> The interesting thing is, jack_client_open keeps crashing if I remove 
+>> all the jack server code.
+>>
+>> It was neccessary to remove the -ljackserver linker option as well, 
+>> because the client code linked against libjackserver.so instead of 
+>> libjack.so.
+>>
+>> This means it is not possible to have a jack server and a jack client 
+>> in a single multiprocessing application.
+>>
+>>
+>> BR,
+>> Ck
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1520328493.26046_0.ltw:2, <8fac44b4-5a84-5e99-e0c8-aa8d79be7858 at web dot de>
+________________________________________________________________________________
+

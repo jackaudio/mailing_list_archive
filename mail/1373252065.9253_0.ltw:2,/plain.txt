@@ -1,0 +1,88 @@
+Date:        Sun, 07 Jul 2013 20:54:14 -0600
+From:        Dan Swain  <[hidden] at gmail dot com>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] Questions on tuning netjack performance (1373180002.4917_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Questions on tuning netjack performance
+
+Thanks Stéphane! That did the trick :-)
+
+
+On Sun, Jul 7, 2013 at 12:52 AM, Stéphane Letz <[hidden]> wrote:
+
+>
+> Le 7 juil. 2013 à 08:00, Dan Swain <[hidden]> a écrit :
+>
+> > Dear all,
+> >
+> > I've been searching for ways to improve the 'latency' of netjack. Thanks
+> to quite a few threads and online documents, I finally managed to get -l 1
+> working with the netjack driver (I didn't realise the order of switches
+> were as significant as they are).
+> >
+> > The lowest latency I've managed to find is with this -l 1 switch, and
+> also without -S, although since my discovery I've not tried sync. Would
+> this make a difference?
+>
+> -S (synchronous) on the slave allows the salve to better handle network
+> timing jitter, so I would recommend -S on slave side.
+>
+> >
+> > I did try -l 0, but it made my slave machine eventually fall behind in
+> an expected way (I tried to break it, and it did :-) ).
+> >
+> > I've not been able to find success in the -p switch, so I began to
+> wonder if this was driver specific (i.e. portaudio), or if again the
+> ordering of the switches is important. If so, where should it be placed?
+>
+>
+> jackd -d net -h gives:
+>
+> jackdmp comes with ABSOLUTELY NO WARRANTY
+> This is free software, and you are welcome to redistribute it
+> under certain conditions; see the file COPYING for details
+>         -a, --multicast-ip      Multicast address, or explicit IP of the
+> master (default: 225.3.19.154)
+>         -p, --udp-net-port      UDP port (default: 19000)
+>         -M, --mtu       MTU to the master (default: 1500)
+>         -C, --input-ports       Number of audio input ports. If -1, audio
+> physical input from the master (default: -1)
+>         -P, --output-ports      Number of audio output ports. If -1, audio
+> physical output from the master (default: -1)
+>         -i, --midi-in-ports     Number of MIDI input ports. If -1, MIDI
+> physical input from the master (default: -1)
+>         -o, --midi-out-ports    Number of MIDI output ports. If -1, MIDI
+> physical output from the master (default: -1)
+>         -c, --celt      Set CELT encoding and number of kBits per channel
+> (default: -1)
+>         -n, --client-name       Name of the jack client (default:
+> 'hostname')
+>         -s, --auto-save         Save/restore connection state when
+> restarting (default: false)
+>         -l, --latency   Network latency (default: 5)
+>
+> ==> -p is for "UDP port"
+>
+> >
+> > So far, my command line looks like this (the slave is on a Windows
+> machine):
+> >
+> > jackd -R -d net -l 1 -i 1 -C 0 -P 8 -n VST
+> >
+> > I hope that provides enough information to work from, but please let me
+> know if you have further questions!
+> >
+> > Thanks in advance!
+> >
+> > Dan
+>
+> I would suggest to add -S.
+>
+> Stéphane
+>
+>
+
+1373252065.9253_0.ltw:2, <CABhkv4NUesxCcPPoFUrmNrUSJg916CvviCiGfU9W3MRfjS06oA at mail dot gmail dot com>
+________________________________________________________________________________
+

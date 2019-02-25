@@ -1,0 +1,142 @@
+Date:        Wed, 07 Mar 2012 17:18:41 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Rui Nuno Capela <[hidden] at rncbc dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Rui Nuno Capela Re: [Jack-Devel] Compiling QjackCtl 0.3.8 on Windows (1331132217.5730_0.ltw:2,a)
+Follow-Up:   Rui Nuno Capela Re: [Jack-Devel] Compiling QjackCtl 0.3.8 on Windows (1331139001.16654_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Compiling QjackCtl 0.3.8 on Windows
+
+Le 7 mars 2012 à 15:57, Rui Nuno Capela a écrit :
+
+> On 03/07/2012 12:39 PM, Stéphane Letz wrote:
+>> 
+>> Le 2 mars 2012 à 17:00, Rui Nuno Capela a écrit :
+>> 
+>>> On 03/02/2012 01:22 PM, Stéphane Letz wrote:
+>>>> 
+>>>> Hi all,
+>>>> 
+>>>> The binary version of  QjackCtl included in JACK for Windows
+>>>> package is now quite old and a bit buggy. I need to compile the
+>>>> latest version.
+>>>> 
+>>>> Has anybody succeeded in compiling QjackCtl 0.3.8 on WIndows?
+>>>> 
+>>>> As I understand src.pri  and config.h have to be setup correctly.
+>>>> Anybody with a version of those files I could reuse? Can
+>>>> QTCreator be used?
+>>>> 
+>>>> Thanks in advance for any info on how to setup the compilation
+>>>> environement and build the application.
+>>>> 
+>>> 
+>>> hi Stephane, you should know this better ;)
+>>> 
+>>> but, ntl
+>>> 
+>>> edit the files here attached, rewrite those placeholders with the
+>>> windows thing, like drive:\directory\to\whatever
+>>> 
+>>> </path/to/jack/includes> </path/to/portaudio/includes>
+>>> </path/to/jack/libs> </path/to/portaudio/libs>
+>>> 
+>>> disclaimer: these have been NOT tested (i don't do windoze for
+>>> ages:)) but i guess it gets plain str8 fwd to use qtcreator
+>>> anywhere,
+>>> 
+>>> yada yada -- rncbc aka Rui Nuno Capela [hidden]
+>> 
+>> 
+>> Thanks a lot Rui.
+>> 
+>> I finally succeeded compiling the project directly from QT Creator
+>> (which is just fine...). The resulting QjackCtl works fine, but for
+>> some reason the start logic has changed a bit. if a just put "jackd
+>> -S" in server path, then QjackCtl tries to start
+>> "c:/Windows/system32/jackd.exe", which is wrong. I would like
+>> QjackCtl to just use the jackd.exe that is located in the same folder
+>> where QjackCtl is. This was working this way before. I can use a
+>> complete path, but this is not so practical.
+>> 
+>> Is there a way to get back to the old way? An option at compilation
+>> time? Or will I need to hack the "start jackd" code?
+>> 
+> 
+> gosh! lookout for those #ifdef WIN32's in qjackctlMainForm.cpp
+> 
+> most suspicious are that kind that appears in
+> qtractorMainForm::startJack() ... for which a lookup through the PATH
+> environment variable takes place when the server executable path (nee
+> server prefix on svn trunk) is given in relative terms ("jackd" vs.
+> "drive:/path/to/jackd.exe"
+> 
+> byee
+> -- 
+> r
+
+OK . Basically commenting this block, it works again.
+
+if (fi.isRelative()) {
+	#if defined(WIN32)
+		const char chPathSep = ';';
+		if (fi.suffix().isEmpty())
+			sCommand += ".exe";
+	#else
+		const char chPathSep = ':';
+	#endif
+		const QString sPath = ::getenv("PATH");
+		QStringList paths = sPath.split(chPathSep);
+		QStringListIterator iter(paths);
+		while (iter.hasNext()) {
+			const QString& sDirectory = iter.next();
+			fi.setFile(QDir(sDirectory), sCommand);
+			if (fi.isExecutable()) {
+				sCommand = fi.filePath();
+				break;
+			}
+		}
+	}
+
+But now I have a "non systematic" crash when I quit QjackCtl with the server running. It crashes in  qjackctlMainForm::jackCleanup , for instance in :
+
+	appendMessages(tr("JACK was stopped")
+			+ formatExitStatus(m_pJack->exitCode()));
+
+or when deleting the m_pJack.
+	
+Basically it sees the m_pJack is just NULL . Here is a backtrace.
+
+0	QProcessPrivate::cleanup	qprocess.cpp	801	0x6a1be639	
+1	QProcess::~QProcess	qprocess.cpp	1162	0x6a1bf4cb	
+2	qjackctlMainForm::jackCleanup	qjackctlMainForm.cpp	1433	0x43a818	
+3	qjackctlMainForm::stopJackServer	qjackctlMainForm.cpp	1330	0x43a1f3	
+4	qjackctlMainForm::queryClose	qjackctlMainForm.cpp	824	0x4368d8	
+5	qjackctlMainForm::closeEvent	qjackctlMainForm.cpp	834	0x4368f7	
+6	QWidget::event	qwidget.cpp	8519	0x1206bc9	
+7	QApplicationPrivate::notify_helper	qapplication.cpp	4550	0x11bc020	
+8	QApplication::notify	qapplication.cpp	4515	0x11bbea1	
+9	QCoreApplication::notifyInternal	qcoreapplication.cpp	876	0x6a213252	
+10	QCoreApplication::sendEvent	qcoreapplication.h	231	0x185029a	
+11	QWidgetPrivate::close_helper	qwidget.cpp	7927	0x120596a	
+12	QWidget::close	qwidget.cpp	7996	0x1205c0d	
+13	qjackctlMainForm::quitMainForm	qjackctlMainForm.cpp	3567	0x445ec9	
+14	qjackctlMainForm::qt_static_metacall	moc_qjackctlMainForm.cpp	135	0x463f9f	
+15	QMetaObject::activate	qobject.cpp	3547	0x6a22928b	
+16	QAbstractButton::clicked	moc_qabstractbutton.cpp	220	0x17ea460	
+17	QAbstractButtonPrivate::emitClicked	qabstractbutton.cpp	546	0x154d9b3	
+18	QAbstractButtonPrivate::click	qabstractbutton.cpp	539	0x154d931	
+19	QAbstractButton::mouseReleaseEvent	qabstractbutton.cpp	1121	0x154eddd	
+20	QToolButton::mouseReleaseEvent	qtoolbutton.cpp	718	0x16228d4	
+...	<plus>				
+
+
+Any idea?
+
+Thanks.
+
+Stéphane 
+
+1331137153.13804_0.ltw:2,a <2DF645CA-3636-4832-B372-DBBE1C1DFA27 at grame dot fr>
+________________________________________________________________________________
+

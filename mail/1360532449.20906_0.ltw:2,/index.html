@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] [PATCH 2/4] Added multicast interface selection to NetInterface</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] [PATCH 2/4] Added multicast interface selection to NetInterface</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1360532336.20872_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1360532545.20934_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1360532449.20906_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 10 Feb 2013 22:40:39 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Ruslan N. Marchenko </span> &lt;[hidden] at ruff dot mobi&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Ruslan N. Marchenko
+<a href='../1360531851.20603_0.ltw:2,/index.html'>[Jack-Devel] [PATCH 0/4] Multicast interface selection </a></td></tr>
+</table>
+<pre>
+Added fMulticastIF field and it's basic handling to JackNetInterface
+---
+ common/JackNetInterface.cpp | 9 ++++++++-
+ common/JackNetInterface.h   | 2 ++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/common/JackNetInterface.cpp b/common/JackNetInterface.cpp
+index 3ad42b1..9f8ab95 100644
+--- a/common/JackNetInterface.cpp
++++ b/common/JackNetInterface.cpp
+@@ -57,6 +57,7 @@ namespace Jack
+         fSetTimeOut = false;
+         fTxBuffer = NULL;
+         fRxBuffer = NULL;
++	fMulticastIF[0]=0;
+         fNetAudioCaptureBuffer = NULL;
+         fNetAudioPlaybackBuffer = NULL;
+         fNetMidiCaptureBuffer = NULL;
+@@ -685,6 +686,12 @@ namespace Jack
+ 
+         if (fSocket.IsLocal(fMulticastIP)) {
+             jack_info("Local IP is used...");
++        } else if (fMulticastIF[0]) {
++            // bind the socket &amp; interface
++            if (fSocket.Bind(fMulticastIF) == SOCKET_ERROR) {
++                jack_error("Can't bind the socket : %s", StrError(NET_ERROR_CODE));
++                return NET_SOCKET_ERROR;
++            }
+         } else {
+             // bind the socket
+             if (fSocket.Bind() == SOCKET_ERROR) {
+@@ -704,7 +711,7 @@ namespace Jack
+         }
+ 
+         // send 'AVAILABLE' until 'SLAVE_SETUP' received
+-        jack_info("Waiting for a master...");
++        jack_info("Waiting for a master on %s...",(fMulticastIF[0])?fMulticastIF:"default");
+         do {
+             // send 'available'
+             session_params_t net_params;
+diff --git a/common/JackNetInterface.h b/common/JackNetInterface.h
+index b20a4b8..480e4fb 100644
+--- a/common/JackNetInterface.h
++++ b/common/JackNetInterface.h
+@@ -27,6 +27,7 @@ namespace Jack
+ {
+ 
+ #define DEFAULT_MULTICAST_IP "225.3.19.154"
++#define DEFAULT_MULTICAST_IF "any"
+ #define DEFAULT_PORT    19000
+ #define DEFAULT_MTU     1500
+ 
+@@ -55,6 +56,7 @@ namespace Jack
+             session_params_t fParams;
+             JackNetSocket fSocket;
+             char fMulticastIP[32];
++            char fMulticastIF[32];
+ 
+             // headers
+             packet_header_t fTxHeader;
+-- 
+1.8.1.2
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1360532336.20872_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1360532545.20934_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1360532449.20906_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1360532449.20906_0.ltw:2,&nbsp;&lt;50a44c65b3c54ef2c7c59b18a3e41406be1fcb3a.1360530044.git.me at ruff dot mobi&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

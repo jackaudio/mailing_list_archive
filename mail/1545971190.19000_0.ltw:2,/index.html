@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Multiple latency across jack</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Multiple latency across jack</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1545969963.18003_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1545979314.25227_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1545971190.19000_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 27 Dec 2018 22:25:59 -0600 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>[hidden] at grossmann-venter dot com
+<a href='../1545969963.18003_0.ltw:2,/index.html'>[Jack-Devel] Multiple latency across jack </a></td></tr>
+</table>
+<pre>
+On Thu, December 27, 2018 10:05 pm, [hidden] wrote:
+&gt; Is it possible to have different signal sources handled differently by
+&gt; jack ?
+
+All jack clients run at the same buffer size.
+I think you could make a client which stored multiple buffers and handled
+the appropriate translation between buffer sizes, but I am not aware if
+Pulse does this.  The pulse jack implementation has in the past been
+described as not optimal.
+
+&gt; As an example, Mixbus uses jack directly  and runs at 44100 buffer 128/2
+
+Do you need such low latency for Mixbus?  Increasing the latency would be
+the simplest thing to check if you are having problems with under-runs.
+
+&gt; These other applications all use pulseaudio and I dont know if
+&gt; pulseaudio causes the overruns and resultant rickety sound.
+
+Check the default sample rate which pulseaudio uses, and the sample rate
+of the applications which connect through pulse.  PulseAudio will use
+sample rate conversion when clients and default sample rate do not match,
+that causes higher CPU usage and decrease in audio quality.
+
+&gt; I am really not familiar how pulseaudio works with jack. At the moment
+&gt; both pulseaudio and mixbus/jack outputs
+&gt; sound simultaneously  to the same output device without problem
+
+The jack server requires exclusive use of an output device, so you must be
+using the jack-sink client of pulse audio to send the audio to jack for
+output to the physical device.
+
+&gt; Or should I find a way to send all these applications directly to jack
+&gt; for better buffer handling and somehow cut out pulseaudio ??
+
+That would be the optimal solution.
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1545969963.18003_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1545979314.25227_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1545971190.19000_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1545971190.19000_0.ltw:2,&nbsp;&lt;81793ce3375c9ac1ec4ba3b77db25ff6.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

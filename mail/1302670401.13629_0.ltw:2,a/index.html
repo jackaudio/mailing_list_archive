@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK Capabilities</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK Capabilities</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302625489.18886_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302672557.17821_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302670401.13629_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 13 Apr 2011 06:52:52 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Hampiholi, Vallabha Vasant </span> &lt;[hidden] at harman dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>David Nielson &lt;[hidden] at comcast dot net&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>"[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+Hi David,
+
+Thanks for your inputs.
+
+&gt; You could write a client that would do this, but it would be 
+meaningless, since the only potential destination for the converted data 
+would be a JACK sink, which is running at 48khz.
+
+Well in my system I get input speech sampled at 48 KHz which needs to be sent to a BT device connected on a I2S line operating at 8 KHz.
+
+&gt; What's HMI?
+Communication between clients is probably best done through MIDI or OSC, 
+though there's no reason you couldn't use HTTP, or define your own 
+protocol on top of TCP or UDP. JACK doesn't define a way of 
+communicating between clients except audio and MIDI.
+
+HMI = Human Machine Interface.
+In my design all JACK clients would reside in the same system. Probably my question was not framed properly. Say in case of a mobile phone, while the audio is played through a player, the PCM data gets routed through some equalizer (a JACK plugin). Now the user changes the equalizer settings (gain/attenuation for some specific band) through some UI. How can we reset/set the equalizer (JACK client) with the modified values?
+
+&gt; Probably the most helpful thing for you to do at this point is to 
+download and install JACK and some example applications like JAMin, JACK 
+rack, a synth or two, and just play with them for a while. Once you've 
+done that, you'll have a much better understanding of what JACK is and 
+what it's for.
+
+Yes that would be my next step :). But unfortunately I do not have the time on my side as the decision needs to be taken within next few days :(
+
+Thanks for your help again.
+
+Have a great day/evening.
+
+-Rgds
+Vallabha   
+
+
+
+-----Original Message-----
+From: David Nielson [mailto:[hidden]] 
+Sent: Wednesday, April 13, 2011 9:44 AM
+To: Hampiholi, Vallabha Vasant
+Subject: Re: [Jack-Devel] JACK Capabilities
+
+On 04/12/2011 09:17 PM, Hampiholi, Vallabha Vasant wrote:
+&gt; Are there any JACK plugins which can do sample rate conversion? Say if I get my speech data from the sound card @ 48 KHz but I want to do some ECNR on this. But to do that I need to convert the 48KHz signal to 8 KHz. Is there a plugin that can do this?
+
+You could write a client that would do this, but it would be 
+meaningless, since the only potential destination for the converted data 
+would be a JACK sink, which is running at 48khz.
+&gt; I have another query now. From my project perspective, say if I have a JACK client which is doing some equalization. Now while this is happening, the user changes the equalizer parameters on the HMI. How will this get communicated to the JACK equalizer client?
+What's HMI?
+
+Communication between clients is probably best done through MIDI or OSC, 
+though there's no reason you couldn't use HTTP, or define your own 
+protocol on top of TCP or UDP. JACK doesn't define a way of 
+communicating between clients except audio and MIDI.
+&gt; A few more queries:
+&gt; 1) I read somewhere that a JACK client failure can stop other clients from running. If true, is there a way to overcome this without introducing major latency/sample drop-outs?
+If a JACK client that's part of your signal chain dies, then your client 
+will stop processing. This is what you want, since any more data coming 
+in might be unsafe to process on. If a JACK client that's not connected 
+in any way to your client dies, then your client will continue to 
+process as if nothing had happened.
+&gt; 2) How easy/difficult is it to write a JACK plugin. I know that this could be relative, but consider a comparison with PA in terms of effort and testing.
+"Plugin" implies something like LV2 or LADSPA, which (can) operate on 
+top of JACK, but which aren't really part of it.
+
+Writing a JACK client isn't difficult, but it does require you to make 
+some design decisions up-front--the thread which does audio work needs 
+to be driven by a process callback that you register with the JACK 
+daemon, and that thread really, really needs to not do certain things 
+like disk access or memory allocation. I'm simplifying here; there is 
+really good documentation on the JACK website.
+
+Basically, what you need to know about writing a JACK client is this: 
+you can't expect to write a PA, ALSA or OSS-capable program in isolation 
+and make it work with JACK later. Your application really needs to be 
+designed correctly from the start.
+&gt; 3) Is there a command line tool to test the JACK plugins like gst-launch for GStreamer?
+Once the JACK daemon is running, you can start any clients you like from 
+the command line, and use jack_connect and jack_disconnect to experiment 
+with them; however, using qjackctl or patchage to manage connections is 
+much, much easier.
+&gt; 4) So according to your reply for the 1st question I will assume that I can create a JACK pipeline that can take input from a source (file, mic, internet etc) and send the same to a output sink (file, speaker, BT etc).
+Not exactly. Jack sources and sinks are either hardware audio interfaces 
+(PCI, USB or Firewire, mainly, using either the ALSA or FFADO backends) 
+or a client program. A file can't be a source or a sink directly, though 
+it would be fairly simple to write a client to read a file and play it 
+through JACK, or record JACK data to a file. (I know examples of these 
+clients exist, and you can find them. I'll not do your homework for you. ;-)
+
+Probably the most helpful thing for you to do at this point is to 
+download and install JACK and some example applications like JAMin, JACK 
+rack, a synth or two, and just play with them for a while. Once you've 
+done that, you'll have a much better understanding of what JACK is and 
+what it's for.
+
+David
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302625489.18886_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302672557.17821_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302670401.13629_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1302670401.13629_0.ltw:2,a&nbsp;&lt;40AB961720DC3042A642DED8E8B936AC013E38541FFA at HIKAWSEX01 dot ad dot harman dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

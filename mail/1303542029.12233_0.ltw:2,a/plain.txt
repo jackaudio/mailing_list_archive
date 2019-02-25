@@ -1,0 +1,54 @@
+Date:        Sat, 23 Apr 2011 01:13:25 -0000
+From:        Eric  <[hidden] at yahoo dot com>
+To:          [hidden] at yahoogroups dot com
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] [jackosx] MIDI timing and Jack (not OS-X-specific) (1303557131.11256_0.ltw:2,a)
+
+Subject:     [Jack-Devel] [jackosx] MIDI timing and Jack (not OS-X-specific)
+
+Writing a synth. 
+
+I started thinking about the way the jack process callback works, wrt midi, and I'm becoming convinced that using Jack isn't the best approach, unless I misunderstand the way it works. 
+
+At the beginning of the process callback, a jack_midi_get_event_count() call is made. Then, as I walk through the frames of the buffer, I compare where I am in the buffer to the next available midi event, and if I'm on the right sample I process the midi. 
+
+But I think this HAS to mean that the actual midi event happened at least one buffer's worth of data ago, right? I can't get a count of midi events at the beginning of the process callback if they haven't happened yet... 
+
+I looked at the source to a2jmidid (ALSA to Jack MIDI bridge for linux) and I noticed it doesn't even bother with the timestamps (I think I've got the most recent source). So ... do people just tend to not worry about a 512 (default I think) sample delay (or the sort of jitter that a2jmidid is causing) in midi processing? 
+
+This leads me to think I will use CoreMIDI to get the midi events and handle the audio the jack way.
+
+Please correct me if I'm wrong,
+Eric
+
+
+
+
+
+
+------------------------------------
+
+Yahoo! Groups Links
+
+<*> To visit your group on the web, go to:
+   http://groups.yahoo.com/group/jackosx/
+
+<*> Your email settings:
+   Individual Email | Traditional
+
+<*> To change settings online go to:
+   http://groups.yahoo.com/group/jackosx/join
+   (Yahoo! ID required)
+
+<*> To change settings via email:
+   [hidden] 
+   [hidden]
+
+<*> To unsubscribe from this group, send an email to:
+   [hidden]
+
+<*> Your use of Yahoo! Groups is subject to:
+   http://docs.yahoo.com/info/terms/
+
+1303542029.12233_0.ltw:2,a <iot93l+s67o at eGroups dot com>
+________________________________________________________________________________
+

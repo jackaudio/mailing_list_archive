@@ -1,0 +1,80 @@
+Date:        Tue, 30 Jan 2018 18:57:53 +0100
+From:        Ralf Mattes  <[hidden] at mh-freiburg dot de>
+To:          Christian Affolter <[hidden] at purplehaze dot ch>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Christian Affolter Re: [Jack-Devel] Usage feasibility Q (1517333969.17827_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] ?==?utf-8?q? Usage feasibility Q
+
+ 
+Am Dienstag, 30. Januar 2018 18:38 CET, Christian Affolter <[hidden]> schrieb: 
+ 
+> Hi Robert,
+> 
+> On 30.01.2018 18:21, Robert Bielik wrote:
+> >> 2. recompile jack2 without dbus support
+> > 
+> > Ok, so I've compiled/installed jack2 without dbus support, and I'm now running jackd on a RT patched Raspbian Stretch (https://github.com/guysoft/RealtimePi)
+> > 
+> > And it seems to work wonderfully, no problem reaching buffer sizes below 1 ms. Happy joy!
+> > 
+> > I start jack with:
+> > 
+> > sudo jackd -P70 -d alsa -r 48000 -p 64 &
+> > sudo jack_wait --wait --timeout 10
+> > sudo jack_connect system:capture_1 system:playback_1
+> > sudo jack_connect system:capture_2 system:playback_2
+> > 
+> > I need sudo, otherwise allocation of shared memory + realtime prio setting fails.
+> 
+> Make sure, that the user which starts jackd is allowed to raise the real
+> time priority and memlock address space.
+> 
+> See http://jackaudio.org/faq/linux_rt_config.html
+> 
+> Most distributions ship and install a limits.conf snipped file with the
+> jack package. Here is an example from CentOS/Fedora:
+> 
+> cat /etc/security/limits.d/95-jack.conf
+> 
+> # Default limits for users of jack-audio-connection-kit
+> 
+> @jackuser - rtprio 70
+> @jackuser - memlock 4194304
+> 
+> In this case, the user has to be in the @jackuser group to be able to
+> raise the priority.
+> 
+
+One important caveat: an often missed bit of information when this configutation is mentioned is the 
+fact that this configures the pam_limits PAM module. So: pam needs to be enabled and configured (most
+if not all distros do this) and whatever process need these setting needs to gothrough a pam session
+or inherit/fork of a process that does. A "normal" login will usually do so but some process started during
+bootup or chron or directly started from init/systemd will not. You've been warned ;-)
+
+ Cheers, RalfD
+
+> 
+> > And then I've setup the ALSA JACK PCM plugin, but to use aplay I need to use sudo aswell:
+> > 
+> > sudo aplay -D pcm.jack /usr/share/sounds/alsa/Front_Center.wav>
+> > Is there a way to set this up so sudo is not needed?
+> 
+> What error message do you get without sudo? Maybe your user has to be in
+> the "audio" group (or similar).
+> 
+> Regards,
+> Chris
+> 
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+ 
+ 
+ 
+ 
+
+1517335112.19316_0.ltw:2, <b77-5a70b200-23-79c7fe00 at 30047487>
+________________________________________________________________________________
+

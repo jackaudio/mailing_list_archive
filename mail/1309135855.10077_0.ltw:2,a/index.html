@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] JACK midi events lost on 64 bit machines</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] JACK midi events lost on 64 bit machines</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1308867874.23720_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1309140654.18988_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1309135855.10077_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 26 Jun 2011 21:50:29 -0300 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Carlos Eduardo da Fonseca </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1309140654.18988_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK midi events lost on 64 bit machines </a></td></tr>
+</table>
+<pre>
+I have an application using JACK MIDI under Linux. It works perfectly on 32
+bit machines, but on my new one, which is 64 bits, I get event loss all the
+time.
+
+I checked:
+
+   - Values coming from jack_ringbuffer_read, they are OK (valid 2-3 bytes
+   MIDI messages);
+   - midi_out_port and client, they are OK (non-null) and appearing on my
+   JACK port list.
+
+Here is part of my code:
+
+#define MidiMessageSize 3
+
+jack_client_t* client;
+jack_port_t* midi_out_port;
+char current_message[MidiMessageSize];
+
+jack_ringbuffer_t* midi_rb;
+int process (jack_nframes_t nframes, void *arg) {
+  void* output_buffer = jack_port_get_buffer(midi_out_port, nframes);
+  jack_midi_clear_buffer(output_buffer);
+  int read_space = jack_ringbuffer_read_space(midi_rb);
+  if (read_space == 0) return 0;
+  int i;
+  for (i = 0; i &lt; read_space; i += MidiMessageSize) {
+    jack_ringbuffer_read(midi_rb, current_message, MidiMessageSize);
+    jack_midi_event_write(output_buffer, i/MidiMessageSize,
+			   (jack_midi_data_t*)current_message, MidiMessageSize);
+    if (jack_midi_get_lost_event_count(midi_out_port)) {
+      printf("Lost\n"); /* Never get here on 32 bit but always on 64 */
+    }
+  }
+  jack_ringbuffer_reset(midi_rb);
+  return 0;
+}
+
+
+What may be wrong?
+
+Thanks,
+
+-- 
+Carlos Eduardo da Fonseca
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1308867874.23720_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1309140654.18988_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1309135855.10077_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1309135855.10077_0.ltw:2,a&nbsp;&lt;BANLkTimresrnUho=ztKJ0vgqueKJ5enmmg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

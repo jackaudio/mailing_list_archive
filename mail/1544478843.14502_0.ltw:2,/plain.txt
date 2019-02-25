@@ -1,0 +1,57 @@
+Date:        Mon, 10 Dec 2018 22:53:32 +0100
+From:        [hidden] at microfx dot de  <[hidden] at microfx dot de>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Kjetil Matheussen Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service (1544479648.15095_0.ltw:2,)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service (1544479938.15387_0.ltw:2,)
+
+Subject:     [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service
+
+Hey!
+
+Using the jack audio toolkit with my pisound DAC on a Raspberry Pi 3 which was a hassle - but I got it running with some hacks. 
+
+Now for convenience I added jackd and jack_connect (to route input to output) as a service inside systemd - which works as expected. Before I could easily start jack_capture to record the input. But now it’s not starting anymore unfortunately. I get this error: 
+
+jack_capture -c 5 -mb -tm -f flac
+Cannot connect to server socket err = No such file or directory
+Cannot connect to server request channel
+jack server is not running or cannot be started
+JackShmReadWritePtr::~JackShmReadWritePtr - Init not done for -1, skipping unlock
+JackShmReadWritePtr::~JackShmReadWritePtr - Init not done for -1, skipping unlock
+>>> jack_client_open() failed, status = 0x11
+
+I copied jack_capture also to /usr/locale/bin 
+
+
+My systemd service files:
+
+jack-connect.service —> starts also jackd.service   
+[Unit]
+Description=jack-connect
+Wants=jackd.service
+After=jackd.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/sleep 1s
+ExecStartPre=/usr/local/bin/jack_connect system:capture_2 system:playback_2
+ExecStart=/usr/local/bin/jack_connect system:capture_1 system:playback_1
+
+
+jackd.service
+[Unit]
+Description=jackd Unit
+
+[Service]
+ExecStart=/usr/local/bin/jackd -t 2000 -P 75 -d alsa -d hw:pisound -r 48000 -p 128 -n 2 -X seq -s
+
+ExecStop=/usr/bin/killall jackd
+
+Can anyone help me with this?
+
+Kind regards
+Jan
+
+1544478843.14502_0.ltw:2, <DFC3E14E-E907-406C-9C4E-B9599AA1CFEF at microfx dot de>
+________________________________________________________________________________
+

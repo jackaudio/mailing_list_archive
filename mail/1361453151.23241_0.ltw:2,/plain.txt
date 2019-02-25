@@ -1,0 +1,47 @@
+Date:        Thu, 21 Feb 2013 15:25:29 +0200
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Clemens Ladisch <[hidden] at ladisch dot de>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Clemens Ladisch Re: [Jack-Devel] AMD Bulldozer CPUs, shared FPU and Intel Hyper-threading (1361393255.12502_0.ltw:2,a)
+Follow-Up:   Allan Klinbail Re: [Jack-Devel] AMD Bulldozer CPUs, shared FPU and Intel Hyper-threading (1363758807.19153_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] AMD Bulldozer CPUs, shared FPU and Intel Hyper-threading
+
+Clemens Ladisch <[hidden]> writes:
+
+> Chris Caudle wrote:
+>> The issue with bulldozer (and piledriver) is that two integer cores share
+>> a single floating point core, so the scheduler thinks it can schedule two
+>> cores, but depending on whether the processes being scheduled are mostly
+>> integer or mostly floating point, it might work well or there might be
+>> contention for the single FP core.
+>
+> AMD says (in the optimization manual):
+> | The AMD Family 15h processor floating point unit (FPU) was designed to
+> | provide four times the raw FADD and FMUL bandwidth as the original AMD
+> | Opteron and Athlon 64 processors.  It achieves this by means of two
+> | 128-bit fused multiply-accumulate (FMAC) units which are supported by
+> | a 128-bit high-bandwidth load-store system. [...]
+> | The FPU can receive up to four ops per cycle. These ops can only be
+> | from one thread, but the thread may change every cycle. Likewise the
+> | FPU is four wide, capable of issue, execution and completion of four
+> | ops each cycle. Once received by the FPU, ops from multiple threads
+> | can be executed.
+>
+> So if you're running two FP-heavy threads that happen to interfere with
+> each other in the most negative way, the theoretical performance will
+> only be double that of earlier CPUs ...
+>
+> In practice, the FPU sharing matters only if you use 256-bit AVX
+> instructions, because those must be executed in two steps.
+
+It is expected that performance of the newer CPU family is better. The
+point is the possibility of xruns happening occasionally at 50% DSP
+load.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1361453151.23241_0.ltw:2, <877gm1pzna.fsf at arnaudov dot name>
+________________________________________________________________________________
+

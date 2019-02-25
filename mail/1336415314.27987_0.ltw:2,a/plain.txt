@@ -1,0 +1,78 @@
+Date:        Mon, 07 May 2012 20:28:28 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Jason Jones <[hidden] at gmail dot com>
+Cc:          Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>, [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jason Jones Re: [Jack-Devel] Very frustrating problem with JACK and exporting through mixbus (1336412424.25824_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Very frustrating problem with JACK and exporting through mixbus (1336416452.29689_0.ltw:2,a)
+Follow-Up:   Jason Jones Re: [Jack-Devel] Very frustrating problem with JACK and exporting through mixbus (1336418688.635_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Very frustrating problem with JACK and exporting through mixbus
+
+On 05/07/2012 07:40 PM, Jason Jones wrote:
+
+> Okay... A little more info on this little bug.
+> 
+> I loaded up a new Ardour3 session this morning, recorded one audio track,
+> and it exported just fine with Jack2 / Raydat.  I tried exporting 5 times
+> in a row, and it worked without issue all 5 times.
+> 
+> I loaded up a new Ardour2 session, recorded one track, and it exported just
+> fine 5 times as well with Jack2 / Raydat.  No problems at all.
+> 
+> I loaded up a new mixbus session, recorded one track, and it exported just
+> fine 5 times as well with Jack2 / Raydat.  No problems at all.
+> 
+> I then loaded up a finalized session in mixbus with 20 tracks and 10 busses
+> (in addition to the 8 default mixbus's), as well as 10-20 plugins running,
+> and tried to export - and it failed with the same aforementioned problem.
+>  Just hangs, with the "JackFreewheelDriver::Process: Process error" error.
+>  In order to exit mixbus, I have to kill through a terminal, too.
+> 
+> So... Not sure if that sheds light on anything, but for small simple
+> sessions, the Jack2 / Raydat combo doesn't seem to have a problem
+> exporting.  The only problem I've noticed so far is with big sessions on
+> mixbus.
+
+I did and do experience similar issues - problems during export - with
+large sessions and automation in A3.
+
+Export either hangs or - if it completes - there are clicks in it.
+The source of the problem is invalid automation data. here: only volume
+and panning, no plugin/effects are required.
+
+When loading a session that is affected I usually get:
+  [WARNING]: Ignoring illegal points on AutomationLine "gain"
+messages. Note that ardour3 only shows those messages when loading the
+session. The messages do not appear when the automation is created
+(here: using a BCF2000).
+
+As workaround I save the session and fix the automation data in .ardour
+project file using my favorite text-editor and re-open it.
+
+Previously discussed at
+http://old.nabble.com/ardour3-%2B-automation-%2B-fader-desk-td32526713.html
+
+According to Paul there are known issues with the A2/A3 automation
+implementation and "we hope that Ben will find some time to port over
+the mostly-all-new automation data handling code from mixbus."
+
+Now I'm worried because you experience similar problems in Mixbus.
+
+
+> I'll try big session on A2 / A3 as soon as I am able.
+
+Can you check the .ardour session-file that fails to export for
+automation <events>..</events>. The data between the tags consist of two
+numbers per line
+  {time in audio-samples} {value}
+
+Here: if the time-value is non-integer (eg. I've seen 14975730.4095213)
+or if the value is out of range (negative gain or an exponential number
+e.g. 6.22672596364282e-05), export does not work and either hangs or
+contains noise.
+
+robin
+
+1336415314.27987_0.ltw:2,a <4FA8144C.5010208 at gareus dot org>
+________________________________________________________________________________
+

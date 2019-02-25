@@ -1,0 +1,61 @@
+Date:        Tue, 28 Jun 2011 14:00:18 -0700
+From:        Evan Buswell  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+
+Subject:     Re: [Jack-Devel] jack_client_close error...
+
+I think this is all happening in JackLockedEngine.h within
+CATCH_EXCEPTION_RETURN; the exception is thrown by
+JackEngine::ReleaseRefnum called by JackEngine::ClientCloseAux.  I
+could be wrong about this.
+
+I'm pretty sure it doesn't have anything to do with the way I'm
+calling jack from my code, as all you need to reproduce it is this:
+
+int main(int argc, char **argv) {
+    jack_client_t *client = jack_client_open("someclient", 0, NULL);
+    int r = jack_client_close(client);
+    if(r != 0) {
+        printf("\nJack_client_close returned nonzero: %d!\n", r);
+    } else {
+        printf("\nEverything OK!\n");
+    }
+    return 0;
+}
+
+Run jack elsewhere, you get "Everything OK!"; let the library start it
+on jack_client_open, you get "Jack_client_close returned nonzero:
+-1!".
+
+Evan
+
+On Tue, Jun 28, 2011 at 1:14 PM, Stéphane Letz <[hidden]> wrote:
+>
+> Le 28 juin 2011 à 22:04, Evan Buswell a écrit :
+>
+>> With libjack2, I've noticed that jack_client_close returns nonzero
+>> (error) when running the "temporary" server.  As far as I can tell
+>> (which is probably not all that far), this is because the method for
+>> quitting is to throw a JackTemporaryException, which is then caught,
+>> the server is quit, and a nonzero error code is returned.
+>
+> Where is the code?
+>
+>>  Is this
+>> expected behavior?  When running the temporary server, is there a way
+>> to tell the difference between normal server quit and an actual error
+>> (like a broken socket) on close?
+>>
+>> Cheers,
+>>
+>> Evan
+>
+> Thanks.
+>
+> Stephane
+>
+>
+
+1309294971.12538_0.ltw:2,a <BANLkTinzf32HOYmrhfrRMNKfaxr3KRTYsw at mail dot gmail dot com>
+________________________________________________________________________________
+

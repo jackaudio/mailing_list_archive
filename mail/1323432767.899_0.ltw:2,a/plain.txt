@@ -1,0 +1,200 @@
+Date:        Fri, 09 Dec 2011 06:14:10 -0300
+From:        Gabriel Rios  <[hidden] at gmail dot com>
+To:          Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Compañía Trama [Jack-Devel] Fwd: Compiling QjackCtl 0.3.8 on Windows XP (1321929456.14842_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] Fwd: Compiling QjackCtl 0.3.8 on Windows XP (1323433263.1616_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Fwd: Compiling QjackCtl 0.3.8 on Windows XP
+
+Hello everyone
+
+I finally figure out how to compile qjackctl in Windows. The GUI works fine
+by itself but, when I run it with a precompiled version of jackd, the GUI
+suddenly closes (crashes) but the "jackd.exe" process still alive. I tried
+with qjackctl 0.3.4 and 0.3.8 with Jack 1.9.5 and qjackctl had the same
+behaviour.
+
+I didn't modify the config.h file. The win32 part of src.pri file shows the
+following:
+
+win32 {
+
+	CONFIG  += console
+
+        INCLUDEPATH += C:\\Tesis\\qjackctl-0.3.4\\includes
+C:\\Tesis\\qjackctl-0.3.4\\includes\\portaudio
+
+        LIBS    += C:\\Tesis\\qjackctl-0.3.4\\lib\\libjack.lib
+C:\\Tesis\\qjackctl-0.3.4\\lib\\libjackserver.lib
+C:\\Tesis\\qjackctl-0.3.4\\lib\\portaudio_x86.lib
+
+}
+
+
+I included the jack and portaudio headers and the libraries libjack.lib,
+libjackserver.lib and portaudio_x86.lib.
+
+Well, as I said, when I try to start jackd from qjackctl (clicking the
+"start" button), jack starts but qjackctl closes. Jackd process continues
+but is not working. After kill the process I can run it again without
+problems. When I try the inverse, I mean, start jackd server from console
+and then qjackctl I got the following output:
+
+Cannot read named pipe err = 109
+HandleRequest: cannot read header
+
+The version of Jackd is 1.9.5 and is the precompiled version for win32
+included in the package.
+
+Thanks in advanced for your suggestions.
+
+
+
+
+
+
+2011/11/21 Compañía Trama <[hidden]>
+
+> Gabriel:
+>
+> I tried the same as you but I got the same in both versions of QjackCtl. I
+> used Qt Creator 2.3.0.
+>
+> Any suggestions?
+>
+> Thanks!
+>
+>
+> 2011/11/21 Gabriel Rios <[hidden]>
+>
+>>
+>>
+>> ---------- Forwarded message ----------
+>> From: Rui Nuno Capela <[hidden]>
+>> Date: Mon, Nov 14, 2011 at 3:26 PM
+>> Subject: Re: [Jack-Devel] Compiling QjackCtl 0.3.8 on Windows XP
+>> To: [hidden]
+>>
+>>
+>> On 11/14/2011 05:34 PM, Gabriel Rios wrote:
+>>
+>>> I just did the "Hello word" test and everything is OK. I just did that
+>>> Rui suggest to me: get Qt SDK (2.3.0 based on Qt 4.7.4), get JACK2
+>>> (v1.9.5 in my particular situation) and edit the 'config.h' and
+>>> 'src.pri' files. As I know, 'config.h' allows to "activate" some options
+>>> of the final app and 'src.pri' tells to the linker where it can reach
+>>> the lib and header files. Where in JACK packet are that files? Or maybe
+>>> I have to build it by myself?
+>>>
+>>> Thanks a lot.
+>>>
+>>>
+>> i remember i've provided a sample for those files off-list before. put
+>> that under src subdirectory.
+>>
+>> nb. you sure have to edit the src/src.pri one, no doubt.
+>>
+>> you probably didn't notice at first but you _must_ substitute these
+>> placeholders with the corresponding windows thing, like
+>> drive:\directory\to\whatever, absolutely:
+>>
+>> </path/to/jack/includes>
+>> </path/to/portaudio/includes>
+>> </path/to/jack/libs>
+>> </path/to/portaudio/libs>
+>>
+>> take a 2nd look, here it goes again.
+>>
+>> --
+>> rncbc aka Rui Nuno Capela
+>> [hidden]
+>>
+>>
+>>  On Mon, Nov 14, 2011 at 9:31 AM, Royi Freifeld <[hidden]
+>>> <mailto:[hidden]>> wrote:
+>>>
+>>>    Never tried to install Qjackctl on Windows but I did try to install
+>>>    Qt on Windows once, and I remember that I had to install
+>>>    MinGW/Cygwin for C/C++ environment. I guess that VS can work too.
+>>>    Are you sure everything installed OK? Can you compile other C/C++
+>>>    programs?
+>>>
+>>>    Royi
+>>>
+>>>
+>>>    On Mon, Nov 14, 2011 at 1:58 PM, Rui Nuno Capela <[hidden]
+>>>    <mailto:[hidden]>> wrote:
+>>>
+>>>        On 11/14/2011 11:40 AM, Gabriel Rios wrote:
+>>>
+>>>            Hey people!
+>>>
+>>>            I just trying to figure out how to compile a Windows-32bits
+>>>            version of
+>>>            QjackCtl. I downloaded Qt Creator 2.3.0 (Based in Qt 4.7.4)
+>>>            and JACK
+>>>            1.9.5 and I don't know how to setup the files src.pri and
+>>>            config.h
+>>>            contained in the QjackCtl source files. When I run or build,
+>>>            I only have
+>>>            "undefined symbols" error type.
+>>>
+>>>
+>>>        those "undefined symbols" must come from the linker which means
+>>>        that the LIBS variable on þe src/src.pri file might be missing
+>>>        some library path (-L) or name (-l)
+>>>
+>>>        cheers
+>>>        --
+>>>        rncbc aka Rui Nuno Capela
+>>>        [hidden] <mailto:[hidden]>
+>>>
+>>
+>>
+>>
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>>
+>>
+>>
+>>
+>> --
+>> *Gabriel Ríos Palacios*
+>> Ingeniero en Sonido - Músico
+>>
+>>
+>
+>
+> --
+> "Agrupación Cultural, Social y Recreativa TRAMA"
+>
+> http://www.teatrotrama.es.tl
+>
+>
+>
+> --
+> "Agrupación Cultural, Social y Recreativa TRAMA"
+>
+> http://www.teatrotrama.es.tl
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+>
+
+
+-- 
+*Gabriel Ríos Palacios*
+Ingeniero en Sonido - Músico
+* Attachment: '1323432767.899_0.ltw:2,a/files/AfterStartQjackctl.JPG'
+content-type: image/jpeg
+* Attachment: '1323432767.899_0.ltw:2,a/files/StartJackFromConsole.JPG'
+content-type: image/jpeg
+
+1323432767.899_0.ltw:2,a <CAAmdMquvNWjLy0bF1yeS_JXGjK4aw0PA80T5zjanJy4MuubQHw at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,64 @@
+Date:        Wed, 28 Dec 2011 10:02:27 -0800
+From:        Fernando Lopez-Lezcano  <[hidden] at ccrma dot Stanford dot EDU>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] jack 1.9.8 + many many connections = problems? (1325071615.20554_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack 1.9.8 + many many connections = problems?
+
+On 12/28/2011 03:26 AM, Fons Adriaensen wrote:
+> On Tue, Dec 27, 2011 at 06:03:23PM -0800, Fernando Lopez-Lezcano wrote:
+>
+>> It would seem that something bad is happening when all ports are being
+>> connected and the end result is that inside jack some of the soundcard
+>> ports seem to go nowhere.
+>>
+>> The aj-snapshot process that connects everything takes a bit to run and
+>> as it progresses jack reports more and more xruns until it finishes. It
+>> would seem that something is running inside jack when ports are
+>> connected that is proportional to the number of existing connections
+>> (the graph reordering?, that would make sense - but it should not
+>> generate xruns, right?).
+>>
+>> It also appears to be that if I minimize the number of ports I'm
+>> connecting the problem goes away (but then of course the system is not
+>> completely functional :-).
+>>
+>> Clues?
+>> Ways to debug?
+>
+> The complexity of the graph doesn't directly depend on the number
+> of ports - all that matters is if app A is driving app B or not.
+> The algorithms used to manage the graph should take advantage
+> of that, but I don't know if they do. Anyway I'd suspect the
+> problem to be with individual port/conncection management.
+>
+> Suggestions:
+>
+> - If you have any apps using port/connection callbacks, remove
+>    these.
+
+Hmmm, I'll check, I don't think so (all apps are stock except for the sc 
+program - I'm not setting any callbacks myself).
+
+I did try to use "-v" in jackd to see more details but the amount of 
+stuff being printed out slowed down things so much it did not work (most 
+was about recalculating port latencies - maybe after each connection?).
+
+> - Patch aj-snapshot so it delivers a fixed number of requests
+>    per unit time instead of running as-fast-as-possible.
+
+I did add a delay after each connection yesterday and it did not seem to 
+make a difference.
+
+One more test that occurred to me overnight is to send noise over the 
+troublesome channels starting right before the aj-snapshot run starts, 
+to really really make sure that the connection process is what is 
+causing the problem.
+
+Thanks for the suggestions!
+-- Fernando
+
+1325095362.23953_0.ltw:2,a <4EFB59B3.2000507 at localhost>
+________________________________________________________________________________
+

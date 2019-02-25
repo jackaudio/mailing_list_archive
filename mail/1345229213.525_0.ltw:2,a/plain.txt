@@ -1,0 +1,48 @@
+Date:        Fri, 17 Aug 2012 11:46:22 -0700
+From:        Evan Laforge  <[hidden] at gmail dot com>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] Application crashes when connecting newly registered ports using callback. (1345210882.5488_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Application crashes when connecting newly registered ports using callback.
+
+On Fri, Aug 17, 2012 at 6:41 AM, Paul Davis <[hidden]> wrote:
+>
+>
+> On Thu, Aug 16, 2012 at 12:24 PM, Fabrice Lebas <[hidden]>
+> wrote:
+>>
+>> Hi All,
+>>
+>> I am maintainer of meterec and I am stuck with a problem when trying
+>> to automatically connect to ports beeing newly registered.
+>>
+>> I use jack_set_port_registration_callback() to have
+>> process_port_register() handling new ports. In process_port_register()
+>> I look if the port is part of the list I want to connect to and from
+>> there call connect_any_port() function that is used also when
+>> connecting already existing ports manually or connecting existing
+>> ports at startup.
+>
+>
+> you cannot make calls that talk to the server while in a server-initiated
+> callback.
+
+Thanks Fabrice for bringing this up!  I think I had that problem, I
+meant to ask on the list but instead I gave up on jack support for a
+while.  I will try having the callback kick off a thread instead of
+directly doing the work.
+
+It was a while ago, but if I remember correctly, symptoms were that
+jack2 would hang until a socket connect timed out, and jack1 I don't
+exactly remember, but after the app disconnected midi data would get
+stuck in the buffer and the server would continually spam clients with
+the same set of midi msgs.  So they definitely don't want calls from
+callbacks, but "report" the error in different ways.
+
+So documentation would be nice, as would crashing with a consistent
+message when the implicit rule is violated.
+
+1345229213.525_0.ltw:2,a <CACbaDy4EesN=XvyLL_=9NNyQPtFCWUB1BxP0Q9r4rayB6ReC7A at mail dot gmail dot com>
+________________________________________________________________________________
+

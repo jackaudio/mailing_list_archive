@@ -1,0 +1,79 @@
+Date:        Tue, 13 Mar 2012 21:05:54 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] FFADO issues after freewheeling (was: Re: update jack from 1.9.7 to 1.9.8) (1331216976.31062_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] FFADO issues after freewheeling (was: Re: update jack from 1.9.7 to 1.9.8)
+
+On Thu, Mar 08, 2012 at 09:28:38AM -0500, Paul Davis wrote:
+
+> > Paul didn't give any reasons why freewheeling is implemented that way,
+> > and I'm somewhat surprised it is. To me the simplest way to do it
+> > would be:
+> >
+> > 1. The RT thread that normally calls the backend's 'wait for next cycle'
+> > function continues to do so, it feeds silence to the backend and discards
+> > any input it produces. That way even the backend would be unaware of
+> > freewheeling.
+> >
+> > 2. A second non-RT thread runs cycles as fast as it can, substituting
+> > the backend buffers by dummy ones. Only two extra buffers are required
+> > to do that, one (silenced) given to all clients that have system:capture
+> > ports connected, and one for output (which can be shared for all system:
+> > playback channels as it will be discarded anyway).
+> >
+> > I always imagined things worked that way...
+> 
+> what you describe is actually more complex. it requires special
+> handling of port buffers, which the current scheme(s) (multiple since
+> both jack1 and jack2 do this) do not. it also requires a second thread
+> which comes and goes.  the current schemes simply tell the backend
+> that its freewheeling - it stops the device it is using, and simply
+> wakes up the "engine" immediately that the engine returns from the
+> previous "cycle" (rather than waiting for the device). almost no other
+> code is required. starting and stopping devices is something that the
+> backend will already have code for; the idea that such code is not
+> functional if called more than once seems problematic.
+
+It looks like there's a dedicated freewheeling thread anyway...
+
+(from engine.c)
+
+    engine->stop_freewheeling = 1;
+
+    VERBOSE (engine, "freewheeling stopped, waiting for thread");
+    pthread_join (engine->freewheel_thread, &ftstatus);
+    VERBOSE (engine, "freewheel thread has returned");
+
+    engine->fwclient = 0;
+    engine->freewheeling = 0;
+
+
+But that's not the point of this post. There seems to be 
+a more serious problem: it looks like when freewheeling
+terminates the DLL is not re-initialised correctly.
+
+This results in the following problem: a client reading
+jack_last_frame_time() and converting this to usecs
+using jack_frames_to_time() gets the impression that no
+time has passed while jackd was freewheeling. In other
+words, until the DLL catches up correcting this error
+(which takes a time roughly equal to 1/DLL_bandwidth)
+the client gets a completely wrong idea of the start
+time of the current period - one that continues at the
+point when freewheeling was *started* rather than when
+it terminated. This completely messes up clients that
+need to compare this time to other event times measured
+using jack's usecs timer.
+
+Ciao,
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+
+1331672777.11451_0.ltw:2,a <20120313210554.GA11540 at linuxaudio dot org>
+________________________________________________________________________________
+

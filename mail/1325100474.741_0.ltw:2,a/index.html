@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack 1.9.8 + many many connections = problems?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack 1.9.8 + many many connections = problems?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325095362.23953_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325104584.7919_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325100474.741_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 28 Dec 2011 20:27:10 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fernando Lopez-Lezcano &lt;[hidden] at ccrma dot Stanford dot EDU&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fernando Lopez-Lezcano
+<a href='../1325037816.11061_0.ltw:2,a/index.html'>[Jack-Devel] jack 1.9.8 + many many connections = problems? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fernando Lopez-Lezcano
+<a href='../1325104584.7919_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack 1.9.8 + many many connections = problems? </a></td></tr>
+</table>
+<pre>
+On 12/28/2011 03:03 AM, Fernando Lopez-Lezcano wrote:
+&gt; Hi all, has anyone out there experienced something similar to what I
+&gt; describe below? Sorry for the length of the post.
+&gt; 
+&gt; I'm really puzzled...
+&gt; 
+&gt; (running jack 1.9.8, freshly built today, just in case - running with
+&gt; 4096 total ports and 768 ports per client)
+&gt; 
+&gt; I have a quite complex jack based system (OpenMixer in our Listening
+&gt; Room driving 22 speakers plus 4 subs). Many programs, all interconnected
+&gt; through jack and running under Linux (ie: jack itself, three instances
+&gt; of supercollider, three instances of ambdec, two instances of
+&gt; jconvolver, four internal 24 channel netjack1 clients, etc, etc).
+&gt; Everything is run from inside the supercollider language and startup is
+&gt; automatic from a boot of the workstation. All jack connections are
+&gt; managed by writing them to a file and then running aj-snapshot.
+&gt; 
+&gt; Lately one or two speakers are "silent" after startup.
+
+Does downgrading jackd to 1.9.7 help?
+
+Which version of aj-snapshot are you using?
+There's been some activity the the last weeks. e.g 4 weeks ago:
+  "graph reorder jackd bug workaround implemented"
+I don't know the details, but there's more:
+http://aj-snapshot.git.sourceforge.net/git/gitweb.cgi?p=aj-snapshot/aj-snapshot;a=log
+
+
+&gt; Restarting the
+&gt; audio engine sometimes fixes the problem, sometimes moves it to a
+&gt; different speaker. Not all speakers are equal in that sense, in most of
+&gt; them this never happens, in some of them it nearly always does. There is
+&gt; nothing special in the speakers that sometimes fail, they all come from
+&gt; the same hardware source. And from the clues described below it does not
+&gt; look like it is a hardware problem.
+&gt; 
+&gt; As far as I can tell jack gets into a state where sometimes a given port
+&gt; goes nowhere instead of going to the soundcard output it should go to.
+&gt; 
+&gt; That is, system:playback_25 is there, other ports connect and disconnect
+&gt; to it normally, no errors are logged and yet input to that port does not
+&gt; go to the corresponding speaker (all the associated equipment seems to
+&gt; be fine). If I restart the system suddenly the port works fine. Or not.
+&gt; Or some other port does not work. At most two or three fail, usually
+&gt; just one, sometimes none (the problem seems to have gotten worse since I
+&gt; added more things to the system that implied more clients and total
+&gt; ports and connections).
+&gt; 
+&gt; If I do _not_ run the aj-snapshot port connection process and I manually
+&gt; send a signal (from jnoise) to the ports that are normally affected,
+&gt; everything is fine, that is, in my tests I never managed to get the
+&gt; system to fail in that state (ie: everything running, no ports connected).
+&gt;
+&gt;
+&gt; It would seem that something bad is happening when all ports are being
+&gt; connected and the end result is that inside jack some of the soundcard
+&gt; ports seem to go nowhere.
+
+sounds like jackd's internal connection state somehow becomes
+inconsistent. There was a bug in the dbus code a while ago (1.9.6): the
+dbus layer kept an independent list of the connections but that was
+fixed in 1.9.6+svn before 1.9.7.
+
+I can't see how aj-snapshot could be the culprit; but minimizing the
+number of tools involved makes it easy.
+
+
+&gt; The aj-snapshot process that connects everything takes a bit to run and
+&gt; as it progresses jack reports more and more xruns until it finishes. It
+&gt; would seem that something is running inside jack when ports are
+&gt; connected that is proportional to the number of existing connections
+&gt; (the graph reordering?, that would make sense - but it should not
+&gt; generate xruns, right?).
+&gt; 
+&gt; It also appears to be that if I minimize the number of ports I'm
+&gt; connecting the problem goes away (but then of course the system is not
+&gt; completely functional :-).
+&gt; 
+&gt; Clues?
+&gt; Ways to debug?
+
+pinpoint _when_ it goes wrong -&gt; that makes it easier to determine
+_where_ it goes wrong.
+
+1)Try `jnoise` after startup -&gt; verify signals end up at speakers.
+2)Launch all apps; walk the `jnoise` again.
+3)run aj-connect.
+4)`jnoise` again.
+
+sth like:
+
+#!/bin/bash
+jnoise; sleep 1;
+i=1; while [ $i -lt 26 ]; do \
+  jack_connect jnoise:pink system:playback_$i; \
+  sleep 1;
+  jack_disconnect jnoise:pink system:playback_$i; \
+  sleep 1;
+  i=$[ $i + 1 ];\
+done
+
+
+`jack_lsp -c | grep "^ " | wc -l` counts the current number of
+connections times two. Maybe things go amiss after 4096 connections are
+made or sth... just guessing.
+
+&gt; Anyone seen something similar?
+no.
+
+&gt; -- Fernando
+
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325095362.23953_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325104584.7919_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325100474.741_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1325100474.741_0.ltw:2,a&nbsp;&lt;4EFB6D8E.6090204 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

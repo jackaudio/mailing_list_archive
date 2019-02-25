@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How does --hwmon work?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How does --hwmon work?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1493900455.31883_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1493938164.18838_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1493937379.17997_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 04 May 2017 17:35:24 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>David Kastrup
+<a href='../1493889498.15504_0.ltw:2,a/index.html'>Re: [Jack-Devel] How does --hwmon work? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>David Kastrup
+<a href='../1493942077.23103_0.ltw:2,a/index.html'>Re: [Jack-Devel] How does --hwmon work? </a></td></tr>
+</table>
+<pre>
+I found this reply from Paul Davis (original jackd author/designer) for
+essentially the same question from many years back:
+
+---------------------------
+On Fri, Aug 27, 2010 at 3:29 PM, Niels Mayer &lt;[hidden email]&gt; wrote:
+&gt; Finally reading the jackd manpage again (
+&gt; http://linux.die.net/man/1/jackd ) I notice
+&gt; -H, --hwmon
+
+Most people do not use this. It is entirely replaced by using a h/w
+specific utility (such as hdspmixer or envy2ctl) to control signal
+routing. The one benefit that it has is that it means that JACK
+*applications* can control that kind of routing, which early in the
+life of Ardour seemed kind of important. It no longer seems very
+important.
+If you're already using a h/w specific utility for this purpose, then
+don't use -H.
+
+&gt; PS: likewise what does the "-M, --hwmeter" option do -- again I don't
+&gt; see any difference between this being on or off. And how would it know
+
+it doesn't really do anything. It was a placeholder for functionality
+that has never been implemented because (a) so few cards implement it
+and (b) the meter is basically useless for any app other than a h/w
+specific utility app (which has other mechanisms available to get the
+meter values).
+---------------------------
+
+So it looks like this feature never really became common, and it appears
+that the jackd hardware monitor option only works on ICE or hdsp based
+cards.  Maybe a few others, but unfortunately you would have to inspect
+the ALSA driver source to make sure.
+
+On Thu, May 4, 2017 4:17 am, David Kastrup wrote:
+&gt; I am currently in the process of Frankensteining a Roland FR1b "virtual
+&gt; accordion" with soft- and hardware Midi expanders, and the Roland only
+&gt; has a single Midi connector that is either in- or output.  So when the
+&gt; registration calls for the Roland to be silent, I have to access the
+&gt; mixer programmatically.
+
+Which mixer?  The mixer in the audio interface?  I don't fully understand
+the hardware configuration you are describing.
+
+&gt; Since I don't want the software to be tied to a particular soundcard, a
+&gt; more generic interface that _does_ use hardware monitoring/mixing of
+&gt; some kind internally when available would seem like the best fit.
+
+In practical terms it seems you will be tied to a particular soundcard, or
+at least family of cards, since it seems only the ICE/envy24 drivers and
+the RME drivers implemented this feature.  Maybe a few others, but good
+luck figuring out which.
+
+&gt; But it's not clear to me where which stuff is being done and whether,
+&gt; say, using jack_mix_box for the Roland sound control will magically buy
+&gt; me "zero-latency" monitoring or not.
+
+Only if the ALSA driver reports has_hw_monitoring as true.
+Which driver does the Roland sound control use?
+
+&gt; It really depends on what --hwmon does and what interfaces of Jack are
+&gt; involved.
+
+From a quick look at the jackd code it appears that the ALSA backend of
+jackd queries the ALSA driver, and if the drivers reports
+has_hw_monitoring then it sets the hw_monitoring property of the driver to
+on if requested.  If the driver reports has_hw_monitoring as false then it
+does nothing.
+
+&gt; the manual pages are vague and terribly outdated and
+
+That is unfortunately true.  For most uses for which jack was designed, it
+does what it is needed and has fallen into a barely maintained "just keep
+it compiling" kind of state.  There is a new jackd maintainer, but I think
+just working on it part time, and basic things like keeping man pages and
+web pages up to date is not being done currently.
+
+&gt; Many ALSA cards have some sort of hardware mixer
+
+Yes, but most of them have utilities for configuring the hardware mixer. 
+The hwmon option to jackd is just on/off, it doesn't give any way to
+control the gain of the connection, or the routing if there are multiple
+inputs and multiple outputs.  I think the jackd option never caught on
+because it was too limited to be useful.
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1493900455.31883_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1493938164.18838_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1493937379.17997_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1493937379.17997_0.ltw:2,a&nbsp;&lt;bed495776342b05c5fa564cfec0467c0.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

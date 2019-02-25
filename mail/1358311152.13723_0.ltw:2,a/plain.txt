@@ -1,0 +1,202 @@
+Date:        Wed, 16 Jan 2013 15:38:22 +1100
+From:        Paul Sheean  <[hidden] at gmail dot com>
+To:          Patrick Shirkey <[hidden] at boosthardware dot com>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Patrick Shirkey Re: [Jack-Devel] JACK in Chrome !! (1358309130.10669_0.ltw:2,a)
+Follow-Up:   Patrick Shirkey Re: [Jack-Devel] JACK in Chrome !! (1358312082.15189_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK in Chrome !!
+
+I am aware of the ability for pulse to be wired through jack, but as far as
+I am aware jack does not play well in a "consumer" setup - plugging in and
+out sound cards etc. If it worked correctly in this case then I think it
+would be a great default.
+
+An example (on a laptop for instance):
+
+soundcard1: onboard with builtin speakers
+soundcard2: onboard with headphones (autodetected)
+soundcard3: usb or firewire interface
+
+laptop boots up and all sound is routed through soundcard1. user plugs in
+headphones and (optionally) all sound routes through headphones. user
+starts ardour and works on project. user wants to record a guitar and plugs
+in soundcard3. (optional) popup asks user if they wish to use newly
+detected card as the primary device. if so then all sound is now routed
+through soundcard3. if not then soundcard3's inputs and outputs are
+available in the list.
+
+obviously there are issues with sync etc with multiple cards at once on one
+application, so either this would have to be warned against or only
+accessible by manually patching things. this sounds complex but is almost
+identical to how OSX does it. it saves a lot of hassle and means that a
+"consumer" build or distro is also ready to go as a pro setup (as OSX is
+ready to go without needing to install various packages to get 'pro audio'
+working).
+
+note that this isn't an 'OSX is better than Linux' post - i use linux
+almost exclusively other than for some audio work that requires certain
+virtual instruments.
+
+
+On 16 January 2013 15:05, Patrick Shirkey <[hidden]>wrote:
+
+>
+> On Wed, January 16, 2013 2:40 pm, Paul Sheean wrote:
+> > I don't know. I think there is a definite advantage to having an audio
+> > server that can cover both Jack and PulseAudio use cases. I do think that
+> > this is one of the areas that OSX has it right. I love Jack but it would
+> > be
+> > nice if it's features were "always on". By this I mean if that this new
+> > audio server (or a modification of Jack) could be run in the background
+> at
+> > all times then I think that pro audio on linux will be much more flexible
+> > and simple.
+> >
+> > In OSX I can run Jack on top of CoreAudio and still have functionality of
+> > non-jack applications without restarting them or wrapping them into Jack
+> > at
+> > the same time. If I close Jack then those applications are still working.
+> > If I decide to pipe the output of one of those applications into a Jack
+> > application then I can do that as well, without the application needing
+> to
+> > be written in a special way to take advantage of it (just using
+> > CoreAudio).
+> >
+> > If there was a way for Jack to be set up like this reliably (ie. major
+> > distributions being able to and confident to have this enabled by
+> default)
+> > then there would be no need for such a thing.
+>
+> It is already possible to route pulseaudio through jack. The system will
+> automatically reconfigure itself if you have the correct pulse-jack
+> configuration.
+>
+> Fedora gets this right ootb but Debian and Ubuntu packagers have made it
+> an optional manual configuration step.
+>
+> My suggestion is to write a blog post about why Ubuntu and Debian
+> packagers don't see the obvious benefit of making pulse and jack play
+> together nicely ootb.
+>
+> The other option is that the pulse team just hardwire this functionality
+> into pulse but that means they have to add testing pulse-jack integration
+> into their QA procedures. However as long as nothing changes dramatically
+> in the existing system configuration this should just be a minor test
+> procedure to run before a major release.
+>
+>
+>
+>
+> > My understanding of Jack,
+> > however is that it is not flexible enough to do this and cope with
+> dynamic
+> > adding and removing of sound devices etc. Perhaps something from
+> > PulseAudio
+> > can be pulled out into a (say) PulseAudioCore or something similar and
+> > then
+> > both PulseAudio and Jack can live on top of it? I assume from the amount
+> > of
+> > hate that PulseAudio gets that this wouldn't please too many people
+> > though.
+> >
+> > I think the *idea* of a low level library that can satisfy both sides (in
+> > the way CoreAudio does for OSX) and allow simultaneous operation is a
+> > great
+> > one though.
+> >
+> >
+> > On 16 January 2013 14:26, Patrick Shirkey
+> > <[hidden]>wrote:
+> >
+> >>
+> >> On Wed, January 16, 2013 9:39 am, Ã¢Ë†Â´ triune . wrote:
+> >> > You've almost capture what I was about to add, Sam:
+> >> >
+> >> > In ChromeOS, the only thing talking to the sound card is Chrome... you
+> >> > can't install any local apps (apps in the traditional sense... not web
+> >> > apps). So, there is no contention between different apps, just Chrome.
+> >> At
+> >> > the moment, all they are doing is having Chrome talk to the ALSA
+> >> driver.
+> >> > So, this is a step up from that very simple implementation.
+> >> >
+> >>
+> >> I agree with Stephane on thins one. What is with Google and having to
+> >> reinvent the Linux Audio Stack. They did it with Audio Flinger with the
+> >> result that Android is still useless for pro audio applications and now
+> >> they want to do it with ChromeOS too by effectively rewriting pulseaudio
+> >> and JACK.
+> >>
+> >> These guys are really taking the piss.
+> >>
+> >>
+> >>
+> >> > On Tue, Jan 15, 2013 at 5:33 PM, Sam Mulvey <[hidden]> wrote:
+> >> >
+> >> >>
+> >> >> On Jan 15, 2013, at 2:30 PM, StÃƒÂ©phane Letz wrote:
+> >> >>
+> >> >> I really don't see the point.. It seems to me that their need is
+> >> exactly
+> >> >> the purpose of PulseAudio no? Moreover if their audio server is going
+> >> to
+> >> >> "take the audio card" (possibly a exclusive manner right?) how other
+> >> >> audio
+> >> >> applications (PA based or JACK based...) are going to work at the
+> >> same
+> >> >> time? Or do they want this new audio server to completely replace
+> >> >> everything? A new audio API (!?!)
+> >> >>
+> >> >> Hum....
+> >> >>
+> >> >>
+> >> >> If this is the ChromeOS in the new chromebooks, I think the idea is
+> >> that
+> >> >> there aren't going to be a lot of applications requesting the sound
+> >> >> card,
+> >> >> and most of it is going to be stuff written for ChromeOS.    For the
+> >> >> most
+> >> >> part, ChromeOS is just enough of an operating system to run the
+> >> browser.
+> >> >>
+> >> >> -Sam
+> >> >>
+> >> >> 
+> >> >> Jack-Devel mailing list
+> >> >> [hidden]
+> >> >> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> >> >>
+> >> >> --
+> >> >> Ã¢Ë†Â´*triune.*
+> >> >> <http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org>
+> >> > 
+> >> > Jack-Devel mailing list
+> >> > [hidden]
+> >> > http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> >> >
+> >>
+> >>
+> >> --
+> >> Patrick Shirkey
+> >> Boost Hardware Ltd
+> >> 
+> >> Jack-Devel mailing list
+> >> [hidden]
+> >> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> >>
+> >
+>
+>
+> --
+> Patrick Shirkey
+> Boost Hardware Ltd
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+
+1358311152.13723_0.ltw:2,a <CAA9fWnhRkASgN5LhjOJMzqx872_9G+pNeb3utrZ3-vVDh5OX0w at mail dot gmail dot com>
+________________________________________________________________________________
+

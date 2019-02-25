@@ -1,0 +1,75 @@
+Date:        Thu, 17 Jan 2013 12:30:54 +0100
+From:        Julien Rosener  <[hidden] at digital-scratch dot org>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] Windows dev: error linking libjack64.lib (1358426892.11430_0.ltw:2,Sa)
+
+Subject:     [Jack-Devel] Windows dev: error linking libjack64.lib
+
+Hello,
+
+I am trying to port an application using Jack from Linux to Windows. I
+have an issue when linking with libjack64.
+
+My development environment is Windows 7 64 bits + QtCreator (using
+Visual Studio 10.0 as compiler/linker).
+
+I installed Jack binaries for Windows and found Jack\lib\libjack64.lib
+and C:\Windows libjack64.dll.
+I would like to use these 2 files to link with Jack, for that I wrote
+a small exemple with QtCreator.
+
+[.pro]
+This is the part about lib linking (.lib and .dll are in
+jack-1.9.9/lib/, .h are in jack-1.9.9/includes) :
+
+win32: LIBS += -L$$PWD/jack-1.9.9/lib/ -llibjack64
+INCLUDEPATH += $$PWD/jack-1.9.9/includes
+DEPENDPATH += $$PWD/jack-1.9.9/includes
+
+[.cpp]
+#include <jack/jack.h>
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    QLabel versions;
+
+    // get jack version
+    versions.setText(QString("libjack v") + QString(jack_get_version_string()));
+
+    versions.show();
+    return a.exec();
+}
+
+[Build error]
+Compilation is OK, but link stage fails with:
+"main.obj : error LNK2019: unresolved external symbol
+_jack_get_version_string referenced in _main"
+
+[Comments]
+I do not understand why it is failling because I am always doing
+successfully like that with other libs, I have got suppositions :
+- some paths are wrong ?
+- should I link statically instead of dynamically ?
+- libjack64.lib was not compiled with a MSVC compiler and so I can't
+link using MSVC ?
+- is it a QtCreator related issue ?
+
+If it is not possible (for some reasons) to link against
+libjack64.lib, would it be a good solution to load only libjack64.dll
+at runtime using LoadLibrary("libjack64.dll") ?
+Another solution is to recompile Jack on Windows but I only have
+Visual Studio 2012 express which seems not to be supported according
+to the REAMDE in Windows source directory.
+
+I am definitely not a Windows developer, so maybe I just do not
+understand nicely how DLL linking is working.
+
+Do you have any idea what is the best way to link libjack64 using MSVC
+compiler ?
+
+Bests,
+Julien.
+
+1358422259.3576_0.ltw:2,a <CAKMA=NajeFGXUHssb3K+9Tvm31CNBh8yr2T4c=hk=v_H+MYc6g at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,72 @@
+Date:        Fri, 03 Oct 2014 09:50:12 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          "Tim E. Real" <[hidden] at rogers dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Tim E. Real Re: [Jack-Devel] Jack2 alsarawmidi slave: Pluggable device registration problem? (1412319419.20560_0.ltw:2,)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] Jack2 alsarawmidi slave: Pluggable device registration problem? (1412363271.10441_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Jack2 alsarawmidi slave: Pluggable device registration problem?
+
+On Fri, Oct 3, 2014 at 1:10 AM, Tim E. Real <[hidden]> wrote:
+
+>
+> I think drivers should fill in 'hardware' and maybe 'pretty name' with
+>  default values. And as above, if numbers such as midi indexing are
+>  desired they should be made separate properties since they might
+>  change day to day.
+>
+
+"pretty name" could only be meaningfully set by a backend that can talk to
+some layer that knows that (eg.) channel 26 of an RME HDSP device is
+"S/PDIF R". ALSA does not provide this information, CoreAudio does. Thus if
+you want this functionality on Linux, it isn't available.
+
+I set my HDSP channel names with this script:
+
+--------------
+
+#!/bin/sh
+
+#
+# set up nice names for all the ports
+#
+
+for n in `seq 1 24` ; do
+    jack_property -p -s system:playback_$n
+http://jackaudio.org/metadata/pretty-name "ADAT $n"
+    jack_property -p -s system:capture_$n
+http://jackaudio.org/metadata/pretty-name "ADAT $n"
+done
+jack_property -p -s system:playback_25
+http://jackaudio.org/metadata/pretty-name "S/PDIF L"
+jack_property -p -s system:capture_25
+http://jackaudio.org/metadata/pretty-name "S/PDIF L"
+jack_property -p -s system:playback_26
+http://jackaudio.org/metadata/pretty-name "S/PDIF R"
+jack_property -p -s system:capture_26
+http://jackaudio.org/metadata/pretty-name "S/PDIF R"
+
+# and now the driver itself
+
+jack_property -c -s system http://jackaudio.org/metadata/pretty-name "RME
+HDSP"
+
+exit 0
+
+-------------------------
+
+The "hardware" property is something I don't remember very well, but with
+the memory I have of it, it suffers from the same problem: on Linux the
+device driver cannot/does not provide the information required to set it.
+
+
+>
+> Question: Some metadata such as the 'hardware' property might be
+>  crucial and should not change.
+>
+
+No metadata/properties should be considered "crucial".
+
+1412344221.5584_0.ltw:2, <CAFa_cKkOVRU-nPOK5oNOdvYW9X8TpyvY7xgQYhUZknfoG2sTqQ at mail dot gmail dot com>
+________________________________________________________________________________
+

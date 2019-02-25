@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [LAD] [Jack-Devel] A picture...of the global mess</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [LAD] [Jack-Devel] A picture...of the global mess</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1242823577.377_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1242855836.14687_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1242848900.5899_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 20 May 2009 21:38:39 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at kokkinizita dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt;, Linux Audio Developers &lt;[hidden] at lists dot linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1242743262.32706_0.ltw:2,a/index.html'>[LAD] A picture...of the global mess </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Jack O'Quin
+<a href='../1242855836.14687_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] A picture...of the global mess </a></td></tr>
+</table>
+<pre>
+On Tue, May 19, 2009 at 04:23:30PM +0200, St&#xE9;phane Letz wrote:
+&gt; A picture to try  summary what I understand about we would like :
+&gt;
+
+&gt; -  "jackcontrol" is an *always" running deamon that defined an entry IPC 
+&gt; point.  jackcontrol get requests from control applications. "jackcontrol" 
+&gt; can start a seprated server called "jackserver (using a fork+exec) way. 
+&gt; "jackcontrol" is a *unique* place where setting are handled.
+&gt;
+&gt; - "jackd" is a recoded  control application that parse it's command line, 
+&gt; and use the control IPC to speak to "jackcontrol" (then just quits). 
+&gt; jackcontrol then start the "jackserver" whith the appropriate paramaters.
+
+You don't need this jackd. If all the IPC is in libjack, an
+autostart request can be passed directly to jackcontrol without
+creating a transient process.
+
+1. Client uses jack_client_open() with autostart.
+2. Libjack doesn't find the server
+3. Libjack sends 'start server' to jackcontrol
+4. jackcontrol starts the server
+5. jackcontrol notifies libjack
+6. The jack_client_open() call proceeds.
+
+Between 3 and 5 the thread doing the original call
+(i.e. the client's thread) just waits within libjack
+for the ok/fail message from jackcontrol.
+
+Ciao,
+
+-- 
+FA
+
+Io lo dico sempre: l'Italia &#xE8; troppo stretta e lunga.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1242823577.377_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1242855836.14687_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1242848900.5899_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1242848900.5899_0.ltw:2,a&nbsp;&lt;20090520193839.GC2964 at zita2 dot kokkinizita dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

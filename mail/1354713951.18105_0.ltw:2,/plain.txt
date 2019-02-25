@@ -1,0 +1,125 @@
+Date:        Wed, 05 Dec 2012 15:25:41 +0200
+From:        Stefan Stefanov  <[hidden] at gmail dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Stefan Stefanov Re: [Jack-Devel] Everything works with JACK, but I always got "Cannot lock down ..." message at startup (1354714060.18143_0.ltw:2,)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] Everything works with JACK, but I always got "Cannot lock down ..." message at startup (1354714534.18488_0.ltw:2,)
+
+Subject:     [Jack-Devel] Everything works with JACK, but I always got "Cannot lock down ..." message at startup
+
+Hello
+
+I'm using JACK with mpd. Everything works, but I'm confused with
+following message in my log:
+"Cannot lock down 82274202 byte memory area (Cannot allocate memory)"
+
+1) Here is how I start JACK:
+/usr/bin/jackd -R -P 95 -d alsa -P hw:0,1 -r 96000 -p 64 -n 2 -z s
+
+2) Here is output from "ulimit -r -l" :
+real-time priority              (-r) 80
+max locked memory       (kbytes, -l) unlimited
+
+which correspond with settings in /etc/security/limits.conf.
+
+3) I'm in "audio" group.
+4) I'm using headless archlinux system.
+5) I'm not using any jack-related tools.
+
+6) Here is more complete snippet from my log:
+
+Dec 05 16:02:37 homeserver jackd[287]: jackdmp 1.9.9.5
+Dec 05 16:02:37 homeserver jackd[287]: Copyright 2001-2005 Paul Davis
+and others.
+Dec 05 16:02:37 homeserver jackd[287]: Copyright 2004-2012 Grame.
+Dec 05 16:02:37 homeserver jackd[287]: jackdmp comes with ABSOLUTELY NO WARRANTY
+Dec 05 16:02:37 homeserver jackd[287]: This is free software, and you
+are welcome to redistribute it
+Dec 05 16:02:37 homeserver jackd[287]: under certain conditions; see
+the file COPYING for details
+Dec 05 16:02:37 homeserver jackd[287]: JACK server starting in
+realtime mode with priority 80
+Dec 05 16:02:37 homeserver jackd[287]: Cannot lock down 82274202 byte
+memory area (Cannot allocate memory)
+Dec 05 16:02:38 homeserver jackd[287]: Jack: JackPosixThread::StartImp
+: create non RT thread
+Dec 05 16:02:38 homeserver jackd[287]: Jack:
+JackPosixThread::ThreadHandler : start
+Dec 05 16:02:38 homeserver jackd[287]: Jack: playback device hw:0,1
+Dec 05 16:02:38 homeserver jackd[287]: Jack: apparent rate = 96000
+Dec 05 16:02:38 homeserver jackd[287]: Jack: frames per period = 64
+Dec 05 16:02:38 homeserver jackd[287]: Jack: JackDriver::Open
+capture_driver_name = hw:0
+Dec 05 16:02:38 homeserver jackd[287]: Jack: JackDriver::Open
+playback_driver_name = hw:0,1
+Dec 05 16:02:38 homeserver jackd[287]: Jack: Check protocol client = 8
+server = 8
+Dec 05 16:02:38 homeserver jackd[287]: Jack:
+JackEngine::ClientInternalOpen: name = system
+Dec 05 16:02:38 homeserver jackd[287]: Jack: JackEngine::AllocateRefNum ref = 0
+Dec 05 16:02:38 homeserver jackd[287]: Jack:
+JackPosixSemaphore::Allocate name = jack_sem.1000_default_system val =
+0
+Dec 05 16:02:38 homeserver jackd[287]: Jack:
+JackEngine::NotifyAddClient: name = system
+Dec 05 16:02:38 homeserver jackd[287]: Jack:
+JackGraphManager::SetBufferSize size = 64
+Dec 05 16:02:38 homeserver jackd[287]: Jack:
+JackConnectionManager::DirectConnect first: ref1 = 0 ref2 = 0
+Dec 05 16:02:38 homeserver jackd[287]: Jack:
+JackGraphManager::ConnectRefNum cur_index = 0 ref1 = 0 ref2 = 0
+Dec 05 16:02:38 homeserver jackd[287]: Jack:
+JackDriver::SetupDriverSync driver sem in flush mode
+Dec 05 16:02:38 homeserver jackd[287]: creating alsa driver ...
+hw:0,1|-|64|2|96000|0|0|nomon|swmeter|-|32bit
+Dec 05 16:02:38 homeserver jackd[287]: configuring for 96000Hz, period
+= 64 frames (0.7 ms), buffer = 2 periods
+Dec 05 16:02:38 homeserver jackd[287]: ALSA: final selected sample
+format for playback: 32bit integer little-endian
+Dec 05 16:02:38 homeserver jackd[287]: ALSA: use 2 periods for playback
+Dec 05 16:02:38 homeserver jackd[287]: Jack: JackSocketServerChannel::Open
+Dec 05 16:02:38 homeserver jackd[287]: Jack: JackServerSocket::Bind :
+addr.sun_path /dev/shm/jack_default_1000_0
+Dec 05 16:02:38 homeserver jackd[287]: Jack:
+JackSocketServerChannel::BuildPoolTable size = 1
+Dec 05 16:02:38 homeserver jackd[287]: Jack: JackEngine::Open
+Dec 05 16:02:38 homeserver jackd[287]: Jack: JackClientSocket::Connect
+: addr.sun_path /dev/shm/jack_default_1000_0
+Dec 05 16:02:38 homeserver jackd[287]: Jack:
+JackEngine::ClientInternalOpen: name = freewheel
+Dec 05 16:02:38 homeserver jackd[287]: Jack: JackEngine::AllocateRefNum ref = 1
+Dec 05 16:02:38 homeserver jackd[287]: Jack:
+JackPosixSemaphore::Allocate name = jack_sem.1000_default_freewheel
+val = 0
+Dec 05 16:02:38 homeserver jackd[287]: Jack:
+JackEngine::NotifyAddClient: name = freewheel
+Dec 05 16:02:38 homeserver jackd[287]: Jack: JackDriver::ClientNotify
+ref = 1 driver = system name = freewheel notify = 0
+Dec 05 16:02:38 homeserver jackd[287]: Jack: JackDriver::ClientNotify
+ref = 0 driver = freewheel name = system notify = 0
+Dec 05 16:02:38 homeserver jackd[287]: Jack:
+JackConnectionManager::DirectConnect first: ref1 = 1 ref2 = 1
+Dec 05 16:02:38 homeserver jackd[287]: Jack:
+JackGraphManager::ConnectRefNum cur_index = 0 ref1 = 1 ref2 = 1
+Dec 05 16:02:38 homeserver jackd[287]: Jack:
+JackDriver::SetupDriverSync driver sem in flush mode
+Dec 05 16:02:38 homeserver jackd[287]: Jack:
+JackGraphManager::SetBufferSize size = 64
+Dec 05 16:02:38 homeserver jackd[287]: Jack: JackAlsaDriver::Attach
+fBufferSize 64 fSampleRate 96000
+Dec 05 16:02:38 homeserver jackd[287]: Jack: JackEngine::PortRegister
+ref = 0 name = system:playback_1 type = 32 bit float mono audio flags
+=
+....
+....
+
+
+So, my reasonable question: how to get rid of this "Cannot lock down
+..." message?
+Does it means that my JACK instance doesn't run in realtime mode?
+
+Regards
+Stefan
+
+1354713951.18105_0.ltw:2, <CACbSjoXTSWmpzexScXNQXcF5D0je+KNOQ5htEQietw1ae67MAA at mail dot gmail dot com>
+________________________________________________________________________________
+

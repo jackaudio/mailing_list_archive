@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Windows: Problem running Jack Server and Clients with DLLs</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Windows: Problem running Jack Server and Clients with DLLs</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1335811574.3569_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1335820401.17161_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1335820112.16655_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 30 Apr 2012 17:08:20 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Sprague, Christopher M CIV NAVAIR, Code 4 dot 6 dot 2 dot 3 </span> &lt;[hidden] at navy dot mil&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1335811574.3569_0.ltw:2,a/index.html'>Re: [Jack-Devel] Windows: Problem running Jack Server and Clients with DLLs </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1335854767.28157_0.ltw:2,a/index.html'>Re: [Jack-Devel] Windows: Problem running Jack Server and Clients with DLLs </a></td></tr>
+</table>
+<pre>
+I Don't think what I am doing is an "In Server" client.
+
+Attached is a test program where I just threw all the parts of the process into a console app.
+With this test program, the problem is still there.  
+
+I create the server. Then I create a client and register its ports and process callback with the server. I sleep for 5 seconds so you can see the process callback happening.
+
+Then I try to create another client by another name for the purpose of making connections.  After I call jack_client_open()...the problems arise  
+
+Because my process callback is printing "." this is what I see:
+
+.................................................JackWinSemaphore::TimedWait name = jack_pipe.default_freewheel time_out
+JackFreewheelDriver::ProcessSync SuspendRefNum error
+JackAudioDriver::ProcessGraphSync: ProcessWriteSlaves error, engine may now behave abnormally!!
+
+And that repeats indefinitely but since the callback isn't being called anymore, no more periods.
+
+Also, if I create the server and make connections this way, but run my client as a separate process, things work just fine.  
+
+
+Thanks,
+
+Chris
+ 
+
+-----Original Message-----
+From: St&#xE9;phane Letz [mailto:[hidden]] 
+Sent: Monday, April 30, 2012 2:46 PM
+To: Sprague, Christopher M CIV NAVAIR, Code 4.6.2.3
+Cc: [hidden]
+Subject: Re: [Jack-Devel] Windows: Problem running Jack Server and Clients with DLLs
+
+
+Le 30 avr. 2012 &#xE0; 19:24, Sprague, Christopher M CIV NAVAIR, Code 4.6.2.3 a &#xE9;crit :
+
+&gt; I have two DLLs. 
+&gt; 
+&gt; 1) which uses the JACK Control API to setup and start the JACK server
+&gt; and make / break connections
+&gt; 
+&gt; 2) an implementation of a JACK Client that does some processing 
+&gt; 
+&gt; When I use the DLL's from a launcher application, everything seems to
+&gt; work fine until I make connections...(i.e. when I call jack_activate()
+&gt; from my Server DLL to activate a client I created to make connections)
+&gt; 
+&gt; JACK server DLL spawns a thread that sets up the server, creates, and
+&gt; starts it. Then spins on jackctl_wait_signals(signal)
+&gt; 
+&gt; The Client DLL registers itself with the server, registers the process
+&gt; callback, defines ports, activates etc...
+&gt; 
+&gt; At that point things work as expected.  The client callback is being
+&gt; called by the Jack Server and it all looks good. 
+&gt; 
+&gt; Now...In order to make connections, My Jack Server DLL creates a client
+&gt; called "jack_connnect" and when jack_activate(client) is called things
+&gt; start going wrong.  The DSP load jumps to 75% and the process callback
+&gt; in the client starts getting skipped. I discovered that if ANY other
+&gt; client calls jack_activate() this happens.
+
+So you basically create a "in server" client right?
+
+Described behaviour looks like a thread priority issue..
+
+Do you have any test code that shows the problem that you could share?
+
+Thanks.
+
+St&#xE9;phane 
+
+<a href='files/JackTest.cpp' target='_blank'>* Attachment: 'JackTest.cpp'</a>
+content-type: application/octet-stream
+content-description: JackTest.cpp
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1335811574.3569_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1335820401.17161_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1335820112.16655_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1335820112.16655_0.ltw:2,a&nbsp;&lt;CE5DE611805B6547BFDAC077D8BF7F0203DDC9AB at naeajaxsez02v dot nadsusea dot nads dot navy dot mil&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Patches for jack-0.121-3</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Patches for jack-0.121-3</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1332417351.4372_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1332439977.19943_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1332419512.5586_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 22 Mar 2012 13:31:36 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1332417351.4372_0.ltw:2,/index.html'>Re: [Jack-Devel] Patches for jack-0.121-3 </a></td></tr>
+</table>
+<pre>
+Le 22 mars 2012 &#xE0; 12:55, Fons Adriaensen a &#xE9;crit :
+
+&gt; On Thu, Mar 22, 2012 at 10:55:18AM +0100, St&#xE9;phane Letz wrote:
+&gt; 
+&gt; 
+&gt;&gt; Right now I see two flags that force "re-init" of the DLL: engine-&gt;first_wakeup  and timer-&gt;reset_pending. Those flags are tested in jack_run_cycle (engine-&gt;first_wakeup || timer-&gt;reset_pending).
+&gt;&gt; 
+&gt;&gt; 1) "first_wakeup" is set in jack_engine_new and in jack_stop_freewheeling. 
+&gt;&gt; 
+&gt;&gt; 2) "reset_pending" is set in jack_engine_delay
+&gt;&gt; 
+&gt;&gt; Would it make sense to keep only one flag? and set it in 4 places: first cycle, stop freewheel, XRun handling, buffer size change?
+&gt; 
+&gt; I didn't remove 'reset_pending' because I wasn't sure if 
+&gt; 'first_wakeup' could be used from the context that sets
+&gt; 'reset_pending'. The 'pending' part suggested something
+&gt; asynchronous, i.e. this flag implicitly being used as a
+&gt; sema in combination with some mutexes.
+&gt; 
+&gt; Apart from that there could be just one flag.
+&gt; 
+&gt; But you really want the 'perfect' way, there could be more.
+&gt; There are 3 things to initialise:
+&gt; 
+&gt; 1. next_wakeup (to the current wakeup time, as the DLL will run)
+&gt; 2. period_usecs
+&gt; 3. filter_omega
+&gt; 
+&gt; 'First cycle' and 'buffer size change' should set them all.
+&gt; For 'xrun' and 'end of freewheeling', just setting (1) is
+&gt; enough, as the current value of (2) would be more accurate
+&gt; than the initial one, and (3) is a constant.
+
+OK, but the thing is that  'end of freewheeling' event happens outside of the audio RT thread. 
+
+Right now JACK2 "set them all" in case of  : 'First cycle', 'buffer size change', and  'end of freewheeling' (since actually the audio driver is restarted and get back in the "First cycle'" case).
+
+In JACK2,  Xrun case can be possibly do " just setting (1)". I'll change that.
+
+&gt; 
+&gt; There are two other matters to consider/check.
+&gt; 
+&gt; For the first, see the comments near the end of jack_run_cycle();
+
+Ok for JACK1, JACK2 does that for "each callback" (real one or emulated one  with a thread + blocking backend)
+&gt; 
+&gt; The second concerns Jack1 only IIRC. If a cycle is skipped, 
+&gt; the DLL should be run anyway. Jack1-0.121.3 did the right
+&gt; thing and I don't think the patches affect this. But it's
+&gt; worth checking.
+&gt; 
+&gt; Ciao.
+&gt; 
+OK for JACK1 possibly, JACK2 does not have this issue.
+
+St&#xE9;phane
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1332417351.4372_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1332439977.19943_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1332419512.5586_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1332419512.5586_0.ltw:2,&nbsp;&lt;786B68C4-6049-4448-9F25-C6314B3C23D9 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

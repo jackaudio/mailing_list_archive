@@ -1,0 +1,63 @@
+Date:        Thu, 20 Mar 2014 20:10:52 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Yves Perron <[hidden] at gmail dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Yves Perron Re: [Jack-Devel] Using Jack (1395359521.481_0.ltw:2,a)
+Follow-Up:   Yves Perron Re: [Jack-Devel] Using Jack (1395364377.4678_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Using Jack
+
+On Thu, Mar 20, 2014 at 7:51 PM, Yves Perron <[hidden]> wrote:
+
+> *Hi Paul, I can feel hope here! **J*
+>
+>
+>
+> He wants to generate audio too. Since JACK does both (and with a fairly
+> similar API) you can see the appeal.
+>
+> However, the added complexity of the server/client architecture make this
+> somewhat inappropriate in my opinion. Not stupid, but probably not the
+> right approach (at least on Windows).
+>
+>
+>
+> I'm interested in the client/server features in and I don't mind going
+> that road.
+>
+>
+>
+> I'm a little surprised that the focus of attention is whether or not I
+> need Jack... rather than the original question. I still don't have any clue
+> if I can use Jack SDK to start a server programmatically without external
+> dependency other than the Jack libraries.
+>
+
+As has been mentioned already, the Windows version of JACK uses the same
+system that was created for POSIX systems to enable autostart. This system
+is what Ardour and Mixbus both use: write the command to $HOME/.jackdrc and
+when jack_client_open() is called, if there is no server, one will be
+created using the command given in that file.
+
+Of course, the format of the file is different for jack2 than for jack1,
+but since jack1 doesn't run on windows, no problem: one component of the
+command per line. QJackctl also creates this file to store the last
+configuration in. You could get the command correct using QJackctl and then
+just re-use the file contents in the future.
+
+What you are trying to do is unconventional, and not intended to be easy,
+nor is it documented or planned for use by random developers. There are
+ways to make it work, but as I've tried to make it clear, you are really on
+your own trying to accomplish this. The facilities for starting the JACK
+server from within a client are a mostly hidden element of the API and
+intended for people writing control applications NOT for people who wish to
+focus on a normal client.
+
+This is why we are focusing on this. You are not only using JACK on the
+least-used-with-JACK platform, but wanting to do something quite
+unconventional, when in fact all of your goals could be achieved without
+dealing with JACK at all.
+
+1395360661.1526_0.ltw:2,a <CAFa_cK=4L9tTT5-OBNP-ojQveJS5GDn5SmRpvSotyU24kkMW4A at mail dot gmail dot com>
+________________________________________________________________________________
+

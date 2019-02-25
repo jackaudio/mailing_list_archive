@@ -1,0 +1,55 @@
+Date:        Tue, 08 Jan 2013 02:06:58 +0200
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357597795.8865_0.ltw:2,a)
+Follow-Up:   Robin Gareus Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357676372.29073_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)
+
+Adrian Knoth <[hidden]> writes:
+
+> So this leaves us with the following options:
+>
+>    a) use aligned and provide the proper alignment size OR
+>    b) use packed and disable it on ARM
+>    c) use ms_struct on gcc Win x86
+
+d) use packed structs and manually align using padding data members
+
+As for msvc vs gcc on jack2 for windows... You also may have problem
+with the C++ standard library. I bet they are incompatible. Providing
+windows builds for different compilers (and platforms) should solve the
+c++ stdlib issue and the libjack ABI issue. I think that for the libjack
+API structs, either natural (for the currently selected compiler)
+alignment should be used, or the packed format format with explicit
+padding. As it makes little sense to have libjack and jack server built
+using different compilers, we are left with the 32/64 bit issue that is
+a sin of the proprietary corporations (Microsoft, Adobe). If this one is
+to be resolved, the packed format with explicit padding makes most sense
+to me.
+
+I personally only care about the RISC issue. Because by packging without
+ensuring the required alignment (C is portable across machines, do you
+remember?), the produced code is in the dark zone of the undefined
+behaviour (as stated by the language standards). And those standards are
+crafted exactly to make C a language that allows writting portable
+programs. Portable, not portable without addition thought and work.
+
+The 32/64 issue has non-libre roots.
+
+The msvc issues grow in a non-libre environment with c++ agnostic
+(read, hardly portable) attitude.
+
+This thread caused me think about and sing this song:
+
+People talking without speaking,
+People hearing without listening,
+People writing songs that voices never share
+And no one dared Disturb the sound of silence.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1357603637.17666_0.ltw:2,S <87txqso7vh.fsf at arnaudov dot name>
+________________________________________________________________________________
+

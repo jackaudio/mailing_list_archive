@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303119606.373_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303136125.23498_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303135901.23184_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 18 Apr 2011 16:11:06 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> torbenh </span> &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1303047253.22998_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1303136125.23498_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>torbenh
+<a href='../1303136812.24192_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3 </a></td></tr>
+</table>
+<pre>
+On Sun, Apr 17, 2011 at 01:33:50PM +0000, Fons Adriaensen wrote:
+&gt; On Sun, Apr 17, 2011 at 10:48:04AM +0000, Fons Adriaensen wrote:
+&gt;  
+&gt; &gt; &gt; So it randomly siwtches between 2 and 3 ?
+&gt; &gt; 
+&gt; &gt; It more or less alternates between the two, with
+&gt; &gt; some random element being involved as well.
+&gt; &gt; 
+&gt; &gt; As posted before, what happens is that after a
+&gt; &gt; subgraph timeout (which is reported) sometimes
+&gt; &gt; the alsa device is restarted (as it should be),
+&gt; &gt; and sometimes (when in the '-n 3' state) it
+&gt; &gt; isn't. Since in the same cycle there was no
+&gt; &gt; driver-&gt;write() (as the result of the timeout),
+&gt; &gt; things continue to work but with a period shift
+&gt; &gt; between playback and capture, as if '-n 2'. 
+&gt; &gt; When a new timeout occurs in that state it will
+&gt; &gt; trigger a stop/start, restoring the original
+&gt; &gt; conditions. So the net result is that the system
+&gt; &gt; almost alternates between the two states.
+&gt; 
+&gt; I found out a bit more.
+&gt; 
+&gt; 1. It seems the ALSA device restart is triggered by
+&gt; an error condition in alsa_driver_wait() and not
+&gt; by the engine.
+&gt; 
+&gt; 2. OTOH the engine, when there is subgraph timeout,
+&gt; (in this case due to an app not closing down cleanly)
+&gt; will not call driver-&gt;write() for the current cycle. 
+&gt; 
+&gt; With -n 3, (2) can happen without (1), as as far as
+&gt; ALSA is concerned there is no problem - it still has
+&gt; almost a complete period before anything overruns.
+&gt; 
+&gt; Now to keep things in sync either each cycle must be
+&gt; completed fully, including writing to the ALSA device,
+&gt; or the device must be restarted. This really should
+&gt; be enforced 'by design' but it isn't.
+&gt; 
+&gt; There seem to be two solutions: 
+&gt; 
+&gt; A. Make sure the ALSA device is restarted when the
+&gt; engine does not complete the cycle. This would 
+&gt; negate any advantage there is to using -n 3, the
+&gt; whole point of it is that an occasional single cycle
+&gt; taking a bit too long is not fatal.
+&gt; 
+&gt; B. Always complete the cycle by calling driver-write().
+
+B is the right thing to do, will look into it this evening.
+i dont remember, why i have changed this.
+
+
+&gt; 
+&gt; 
+&gt; Ciao,
+&gt; 
+&gt; -- 
+&gt; FA
+&gt; 
+&gt; 
+&gt; 
+&gt; 
+&gt; 
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+-- 
+torben Hohn
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303119606.373_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303136125.23498_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303135901.23184_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1303135901.23184_0.ltw:2,a&nbsp;&lt;20110418141106.GA13755 at siel dot b&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

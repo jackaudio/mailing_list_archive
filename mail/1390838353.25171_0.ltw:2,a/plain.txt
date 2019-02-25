@@ -1,0 +1,73 @@
+Date:        Mon, 27 Jan 2014 15:59:45 +0100
+From:        Christian Schoenebeck  <[hidden] at crudebyte dot com>
+To:          김정연 <[hidden] at gmail dot com>, Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: 김정연 Re: [Jack-Devel] JACK2 for Android newly released! (1390658123.845_0.ltw:2,a)
+Follow-Up:   김정연 Re: [Jack-Devel] JACK2 for Android newly released! (1390915420.21678_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] JACK2 for Android newly released!
+
+On Saturday 25 January 2014 14:55:11 김정연 wrote:
+> > First, the framework only supported I/O via built-in audio devices. No
+> > USB. This means audio quality is compromised by their audio hardware.
+> > Importantly, they are restricted to 48k/16 bit.
+> 
+> Yes, it is true, but most of things are platform dependent. Not a jack
+> domain.
+
+What do you mean with "platform dependent"? External USB audio devices usually 
+support the "USB audio class" standard protocol nowadays. Support for such 
+devices is provided by a standard Linux kernel module which is platform 
+independent.
+
+> I think these XRUNS related cpufreq on demand governor when a jack client
+> runs during low CPU frequency mode in mobile device. Please refer:
+> http://bamboopuppy.com/android-cpu-frequency-using-cpufreq-ondemand-governo
+> r/ As I know, there were already discussion in here, so I found Robin's
+> jackfreqd, How do you think for solution?
+> http://rg42.org/oss/jackfreqd/start
+
+Yes, CPU scaling (CPUFreq) is one of the major reasons for xruns. You could 
+first try whether this is the case by:
+
+	cpufreq-set -r -g performance
+
+to find out whether that is sufficient to solve the xruns. That would set the 
+CPU cores to maximum performance. If that looks well, you could then go ahead 
+with a production solution like i.e. jackfreqd or something based on that idea 
+to both save power whenever possible and not having xruns in audio 
+performances.
+
+> >> > What about low latency/RT stabilty, have you tested running JACK2 with
+> >> > low latency period settings (i.e. <= 5ms) on Android? Does it run
+> >> > quite stable without xruns?
+> >> 
+> >> Well, it is hard to say, latency depends on platform limitation or hw
+> >> spec. for example, android's fast mixer introduces 10ms of latency.
+> >> http://source.android.com/devices/latency_design.html
+> >> 
+> >> Generally, mobile devices do control power consumption much sensitive
+> >> than PC, of course this limitation may possible occur XRUNS in some
+> >> scenarios.
+> >> We always think how to improve performance better, *** so I need
+> >> expert's advice here. ***
+> >> But, modern mobile devices increase number of cores(quad-core or
+> >> more...), so I guess JACK2 works better performance along with number
+> >> of cores. Of course, it works stable if allows reasonable clock-speed
+> >> and cores.
+
+I don't know what kind of hardware components you are using exactly, but I 
+somehow doubt that latency issues are caused by your hardware. iOS devices 
+deliver rock solid low latency from day one (for more than 6 years now). And 
+there are various other ARM based hardware on the market which also deliver 
+reliable low latency if being equipped with the right OS & co.
+
+Are you running a hypervisor kernel like OKL4 on lowest level and 
+Android/Linux on top of it? Or is the Android/Linux kernel running directly on 
+the ARM CPU?
+
+Best regards,
+Christian Schoenebeck
+
+1390838353.25171_0.ltw:2,a <201401271559.46122.schoenebeck at crudebyte dot com>
+________________________________________________________________________________
+

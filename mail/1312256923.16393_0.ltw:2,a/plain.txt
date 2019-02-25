@@ -1,0 +1,91 @@
+Date:        Mon, 01 Aug 2011 21:48:17 -0600
+From:        Dan Swain  <[hidden] at gmail dot com>
+To:          Jeroen Van den Keybus <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jeroen Van den Keybus Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1312149850.11311_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1312290438.5354_0.ltw:2,Sa)
+
+Subject:     Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea
+
+On Sun, Jul 31, 2011 at 4:03 PM, Jeroen Van den Keybus <
+[hidden]> wrote:
+
+>
+> I'm just a Jack user, not a developer at all, but I do have some FPGA
+> knowledge.
+>
+>  It looks to me that NetJack only relies on UDP. That will keep memory
+> requirements in your IP stack down. But for 128 channels you need to
+> transmit at least 4*128*48000 = 25MB/sec (Jack uses floats - just consider
+> that part of the 'learning exercise' ;-) ) That's a massive amount of data
+> for a network stack, let alone an embedded one running on a softcore. And
+> you need GbE.
+>
+> The hard part is going to be the synchronisation. However, you're in the
+> unique position to be able to vary your clock...
+>
+> Therefore: why not run your system as a *slave*, doing only 8 channels or
+> so ?
+>
+> I'm wondering if you would be able to send/receive only broadcast MAC
+> traffic (to/from FF:...:FF) to initiate the UDP communications with the
+> master and then strip the orig. MAC address from the server's response to
+> set up the final link without ARP. You may be able to drop the software IP
+> stack entirely in that case, allowing you to keep your program really small.
+>
+> I think you could get that going on a cheap 144-pin Cyclone III EP3C5 or
+> EP3C10 without any external memories, interfacing to e.g. a CS5368 and a
+> Fast Ethernet PHY. And a MIDI port.
+>
+> The hard part (making connections, doing qjackctl) remains on the server.
+>
+> Need more channels ? Connect more slaves to a (gigabit) Ethernet switch.
+> You cannot do that with Jack servers.
+>
+> Finally, lets you keep away from Gigabit on your board as well.
+>
+> Just my initial thoughts. Feel free to comment.
+>
+>
+> J.
+>
+
+Thanks for your response and your expertise Jeroen!
+
+I agree in that 128 channels for one unit is going to be quite a challenge,
+technically, and for someone like me who intends on having a modest project
+studio, I doubt that I would ever need more than 16 channels (32 at the
+extreme) to be sent in. For most orchestra configurations, even if you had
+one microphone per performer, 40 would be certainly feasible!
+
+I did also wonder about Leeloo's approach in terms of having the hardware
+device being the master, rather than the computer. In one way I can
+understand it in that the hardware clock may be more reliable, but with a
+Linux machine that has a programmable kernel timer, so the flexibility there
+would definitely supersede that.
+
+So, in your slave scenario, would you have the device instantly begin to
+send UDP data once it starts? Removing the MAC traffic certainly sounds like
+an efficient way of doing it - to have a running status. Although, would
+that create problems if you had more that one of these devices running into
+the same master computer?
+
+I will research the components that you have listed as well. For the use of
+the MIDI port, would that be intended to send MIDI data from a keyboard or
+controller, or do you mean more for synchronisation purposes? Do you
+recommend any development boards that may be suitable for this project?
+
+Already, for me this is starting to feel more feasible, given the educated
+real-world response. Please feel free to comment as well, as I am sure there
+are many things I'll need to learn before I start to get somewhere with this
+project!
+
+I look forward to hearing more!
+
+Kind Regards,
+
+Dan
+
+1312256923.16393_0.ltw:2,a <CABhkv4NQqGv7hFF9+sAzZV9EwT2juFEFnoMANMkuv1bUuURD8Q at mail dot gmail dot com>
+________________________________________________________________________________
+

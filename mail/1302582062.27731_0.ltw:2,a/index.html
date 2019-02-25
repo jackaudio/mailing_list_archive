@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] need a little help with jack_midi_latency_test</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] need a little help with jack_midi_latency_test</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302580580.26415_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302589695.8048_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302582062.27731_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 11 Apr 2011 21:20:31 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at charityfinders dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at chriscaudle dot org, JACK Developers &lt;[hidden] at jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Devin Anderson
+<a href='../1302580580.26415_0.ltw:2,a/index.html'>Re: [Jack-Devel] need a little help with jack_midi_latency_test </a></td></tr>
+</table>
+<pre>
+On Mon, Apr 11, 2011 at 8:56 PM, Devin Anderson
+&lt;[hidden]&gt; wrote:
+
+&gt;&gt; /usr/local/bin/jackd -t2000 -Xalsarawmidi -dalsa -dhw:0 -r44100 -p2048 -n2
+&gt;&gt; -i2 -zt
+&gt;&gt;
+&gt;&gt; jack_midi_latency_test -m 3 -s 8192 -t 5 "system:1-1 Lexicon Lambda 1 out"
+&gt;&gt; "system:1-1 Lexicon Lambda 1 in"
+&gt;
+&gt; A test with these parameters will take more than a couple minutes.
+
+In asynchronous mode, with your period size set to 2048 and your frame
+rate set to 44100, your in port latency will be around 46.5 ms, and
+your out port latency will be around 93 ms.  If you add the two
+together and multiply by 8192, you have a little over 19 minutes.
+
+The reason this takes as long as it does is because the MIDI hardware
+driver wants to align MIDI messages with audio so that your external
+devices sync with JACK.  IOW, if you send a MIDI note on message to a
+JACK soft-synth and a hardware synth, the notes should sound like they
+occur at the same time.  If you do this with an ALSA port that isn't
+wrapped with a JACK MIDI driver, the hardware synth will send out
+audio for the note before the soft-synth's audio gets to whatever
+audio interface you're using.
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302580580.26415_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302589695.8048_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302582062.27731_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1302582062.27731_0.ltw:2,a&nbsp;&lt;BANLkTimWqWT_ifiTNWQ2ZgJASaiL6LXhXg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

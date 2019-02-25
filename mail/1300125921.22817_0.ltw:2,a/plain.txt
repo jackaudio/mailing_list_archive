@@ -1,0 +1,32 @@
+Date:        Mon, 14 Mar 2011 12:32:54 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Clemens Ladisch <[hidden] at ladisch dot de>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Clemens Ladisch Re: [Jack-Devel] what could cause: "impossible sample width (1) discovered!" (1300123548.18179_0.ltw:2,a)
+Follow-Up:   Felix Pfeifer Re: [Jack-Devel] what could cause: "impossible sample width (1) discovered!" (1300123368.17839_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] what could cause: "impossible sample width (1) discovered!"
+
+On Mon, Mar 14, 2011 at 10:58 AM, Clemens Ladisch <[hidden]> wrote:
+
+> "16bits or 24bits" indeed.  I don't know where Jack's one byte
+> comes from, but you might want to correct this.
+
+JACK's ALSA backend does this:
+
+	driver->playback_sample_bytes =
+		snd_pcm_format_physical_width (driver->playback_sample_format)
+		/ 8;
+
+and then later checks that value to determine how it is going to
+convert samples into 32 bit floating point.
+
+it is certainly true that it does not handle 8 bit values, and the
+error message could be friendlier. but the value is being reported by
+ALSA.
+
+--p
+
+1300125921.22817_0.ltw:2,a <AANLkTik4mUmuSY9b8Z6dm=hOWQc9jSqauZpS_6aAJWMw at mail dot gmail dot com>
+________________________________________________________________________________
+

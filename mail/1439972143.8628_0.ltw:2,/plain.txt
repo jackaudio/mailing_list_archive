@@ -1,0 +1,105 @@
+Date:        Wed, 19 Aug 2015 18:15:30 +1000
+From:        Matt Flax  <[hidden] at flatmax dot org>
+To:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Matt Flax [Jack-Devel] jack1 and MIPS architecture (1439966831.32345_0.ltw:2,)
+Follow-Up:   Jeremy Jongepier Re: [Jack-Devel] jack1 and MIPS architecture (1440402332.25566_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] jack1 and MIPS architecture
+
+Good news,
+
+It turns out these problems were because shm was on a very space 
+restricted device ... I moved shm to the tmp directory and it is now 
+functioning as it should.
+
+jack1 on MIPS arch. is tested working.
+I ran jackd 1 using 2ms latency, no xruns. That is with a 48kHz sample rate.
+
+I played from my desktop using netjack one and I have seen the I2S data 
+flowing out ... nice first test. When I get an audio codec connected I 
+will do a listening test.
+
+Matt
+
+On 19/08/15 16:47, Matt Flax wrote:
+> I can now start jackd 1 on a MIPS 24Kc architecture.
+>
+> When I try to do anything - even probe the sample rate, it dies with 
+> Bus Error :
+> creating alsa driver ... 
+> hw:0|hw:0|1000|16|48000|0|2|nomon|swmeter|-|32bit
+>
+> jack_samplerate ....
+> Bus error
+>
+> Even when I use the dummy driver :
+> jackd -ddummy
+> creating dummy driver ... dummy_pcm|48000|1024|21333|2|2
+>
+> jack_samplerate ....
+> Bus error
+>
+> I have tried to use gdb and gdbserver, but it is non trivial as the 
+> binaries are stripped ... even when I use gdb remotely with a 
+> non-stripped binary, still don't get any sensible information.
+>
+> I have run jackd with -v and here is what I get - bus error - when I 
+> run jack_lsp
+> ... snip ...
+> start poll on 4 fd's
+> server thread back from poll
+> polling sync client netjack
+> ++ jack_sort_graph
+> client event poll on 12 for netjack starts at 1156835181
+> back from client event poll after 515 usecs
+> client event poll on 12 for netjack starts at 1156835803
+> back from client event poll after 224 usecs
+> ++ jack_rechain_graph():
+> +++ client is now netjack active ? 1
+> client netjack: start_fd=7, execution_order=0.
+> client event poll on 12 for netjack starts at 1156836279
+> back from client event poll after 457 usecs
+> client netjack: wait_fd=9, execution_order=1 (last client).
+> -- jack_rechain_graph()
+> -- jack_sort_graph
+> client event poll on 12 for netjack starts at 1156836908
+> back from client event poll after 389 usecs
+> client event poll on 12 for netjack starts at 1156837389
+> back from client event poll after 269 usecs
+> client event poll on 12 for netjack starts at 1156837788
+> back from client event poll after 298 usecs
+> start poll on 4 fd's
+> load = 5.5052 max usecs: 2206.000, spare = 18627.000
+> load = 7.8695 max usecs: 2132.000, spare = 18701.000
+> load = 11.4493 max usecs: 3131.000, spare = 17702.000
+> server thread back from poll
+> new client: lsp, uuid = 8589934595 type 2 @ 0x7720e000 fd = 14
+> start poll on 5 fd's
+> server thread back from poll
+> new client lsp using 15 for events
+> start poll on 5 fd's
+> server thread back from poll
+> marking client lsp with SOCKET error state = Not triggered errors = 0
+> waking server thread
+> non-POLLIN events on fd 14
+> trying to lock graph to remove 1 problems
+> we have problem clients (problems = 1
+> ++ Removing failed clients ...
+> client lsp error status 10000000
+> removing failed client lsp state = Not triggered errors = 10000000
+> removing client "lsp"
+> removing client "lsp" from the processing chain
+> +++ deactivate lsp
+> before: client list contains 3
+> removed from client list, via matching UUID
+> after: client list contains 2
+> lock-driven null cycle
+> Bus error
+>
+>
+>
+> Matt
+
+1439972143.8628_0.ltw:2, <55D43B22.8010406 at flatmax dot org>
+________________________________________________________________________________
+

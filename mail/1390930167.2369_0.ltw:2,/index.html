@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK2 for Android newly released!</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK2 for Android newly released!</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1390916111.22852_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1390930247.2397_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1390930167.2369_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 28 Jan 2014 17:30:00 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Christian Schoenebeck </span> &lt;[hidden] at crudebyte dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>&#xAE40;&#xC815;&#xC5F0; &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>&#xAE40;&#xC815;&#xC5F0;
+<a href='../1390915420.21678_0.ltw:2,/index.html'>Re: [Jack-Devel] JACK2 for Android newly released! </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Bradley Justice
+<a href='../1390951943.27361_0.ltw:2,/index.html'>Re: [Jack-Devel] JACK2 for Android newly released! </a></td></tr>
+</table>
+<pre>
+On Tuesday 28 January 2014 14:23:30 &#xAE40;&#xC815;&#xC5F0; wrote:
+&gt; &gt; support the "USB audio class" standard protocol nowadays. Support for
+&gt; &gt; such devices is provided by a standard Linux kernel module which is
+&gt; &gt; platform independent.
+&gt; 
+&gt; Yes. android officially support USB Audio by framework level.
+&gt; But, how to JACK access and use /dev/usb/... as audio device using jack
+&gt; driver?
+&gt; I have no background about that.
+&gt; Are there any bridge between usb~alsa?
+
+Like already suggested by Patrick, you need the ALSA USB audio kernel module
+(modprobe snd-usb-audio), which already comes with the official Linux kernel. 
+The driver module file should be at a location like:
+
+	/lib/modules/KERNEL_NAME_AND_VERSION/kernel/sound/usb/snd-usb-audio.ko
+
+By the way, devices under /dev/usb are just shown if there is a compatible 
+driver available &amp; loaded on the system. Otherwise the USB device will never 
+appear under /dev/usb at all.
+
+Once you loaded the kernel module, check whether the USB audio device is 
+visible in the ALSA system, i.e with
+
+	aplay -l
+
+if yes, you can use i.e. "aplay -D DEVICENAME /foo/some.wav" to output some 
+sound file to the USB audio device.
+
+If you do not have that kernel module and are not permitted to add it to the 
+Android release, you might solve it in user space. But that would mean quite 
+some work: Since around kernel 2.6.2x there is something called "USB file 
+system" (usbfs). If that is enabled in your kernel configuration, then every 
+USB device attached will automatically appear under /proc/bus/usb/, that is no 
+matter whether there is a driver for it or not. usbfs allows to communicate 
+with USB devices in user space, by simply conveniently opening their "USB 
+endpoint" file under /proc/bus/usb/ and reading/writing to it by a normal 
+application. However you might then need to write such an application on your 
+own, by looking at what snd-usb-audio for example does or by reading the "USB 
+audio class" protocol definition, since I am not aware of some 
+daemon/application ready to be used for that purpose.
+
+If you solved that, you have the next problem: the JACK server is usually 
+started with exactly one audio device. JACK2 has a slave driver concept, 
+however I can't remember the details about it right now. Maybe St&#xE9;phane or 
+somebody can comment it. I guess you would need to restart the JACK server 
+each time a USB audio device was attached or detached, supplying the USB 
+device(s) as slave device(s) at command line. Maybe you could also control 
+that at runtime by dealing with JACK2's driver API.
+
+&gt; &gt; Are you running a hypervisor kernel like OKL4 on lowest level and
+&gt; &gt; Android/Linux on top of it? Or is the Android/Linux kernel running
+&gt; 
+&gt; directly on
+&gt; 
+&gt; &gt; the ARM CPU?
+&gt; 
+&gt; I have no idea about hypervisor or something.
+
+Hypervisor kernels are often used on mobile devices on lowest level. They are 
+acting as kind of virtual machine layer for the "actual" operating systems 
+running on top of the hypervisor kernel. This is usually done for two 
+purposes: a) it allows multiple OSs to run at the same time, i.e. one OS for 
+controlling embedded communication components, and in parallel the actual end 
+user advertised OS like Android or Symbian. Further it allows b) the same OS 
+binaries to run on a variety of hardware without modifications, saving 
+development costs.
+
+So whether or not there is a hypervisor kernel running, could have a large 
+impact on the question whether you are actually able to run audio apps with 
+low latency at all. So you might talk to somebody responsible for kernel level 
+issues there at Samsung to find out whether that is the case.
+
+Best regards,
+Christian Schoenebeck
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1390916111.22852_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1390930247.2397_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1390930167.2369_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1390930167.2369_0.ltw:2,&nbsp;&lt;201401281730.00658.schoenebeck at crudebyte dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,52 @@
+Date:        Tue, 15 Feb 2011 19:24:19 +0100
+From:        hermann  <[hidden] at web dot de>
+To:          torbenh <[hidden] at gmx dot de>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: torbenh Re: [Jack-Devel] buffer size callback, revisit (1297792161.26637_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] buffer size callback, revisit (1297794426.31518_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] buffer size callback, revisit
+
+Am Dienstag, den 15.02.2011, 18:49 +0100 schrieb torbenh:
+> On Tue, Feb 15, 2011 at 11:36:07AM -0600, Jack O'Quin wrote:
+> > On Tue, Feb 15, 2011 at 11:21 AM, Paul Davis <[hidden]> wrote:
+> > 
+> > > this is true EVEN IF the client registered a buffer size callback. why
+> > > so? despite the suggestion in the API docs for the buffer size
+> > > callback, existing implementations do NOT guarantee to call the
+> > > client's buffer size callback from within jack_activate(). this means
+> > > that there is no reliable way for a client to know the port buffer
+> > > size before its first process callback. the buffer size callback will
+> > > notify it of later changes to the size, but not the initial size when
+> > > it gets its first process() call.
+> > 
+> > Perhaps a stupid question: why not ensure the buffer size callback
+> > *is* invoked before the first process callback?
+> > 
+> > Is that because it cannot be called in the realtime thread?
+> 
+> how would you detect that its invoked ?
+> jack-svn is invoking bufsize callback during jack_activate()
+> there is no way, to be sure this happens.
+> 
+> so currently, one needs to allocate everything. then the bufsize cb will
+> come, and results in reallocations. the old signature of the bufsize cb
+> also does not allow determining the size of the midi port buffers.
+> 
+> the new functionname allows us do detect whether it will be called via
+> weak linking. we are basically solving 2 problems at once.
+> 
+> does it make sense to you now ?
+
+I never experience any problem in my client related to the buffersize
+during jack_activate() or later when buffersize possible changes.
+
+Do you talk about a race condition were one client is in the activation
+state when a other just change the buffersize ?
+
+regards
+hermann
+
+1297794325.31322_0.ltw:2,a <1297794259.2213.15.camel at box>
+________________________________________________________________________________
+

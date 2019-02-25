@@ -1,0 +1,60 @@
+Date:        Mon, 07 May 2012 13:24:47 -0600
+From:        Jason Jones  <[hidden] at gmail dot com>
+To:          Robin Gareus <[hidden] at gareus dot org>
+Cc:          Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>, [hidden] at lists dot jackaudio dot org
+In-Reply-To: Robin Gareus Re: [Jack-Devel] Very frustrating problem with JACK and exporting through mixbus (1336415314.27987_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Very frustrating problem with JACK and exporting through mixbus (1336420312.3261_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Very frustrating problem with JACK and exporting through mixbus
+
+>
+>
+> Can you check the .ardour session-file that fails to export for
+> automation <events>..</events>. The data between the tags consist of two
+> numbers per line
+>  {time in audio-samples} {value}
+>
+> Here: if the time-value is non-integer (eg. I've seen 14975730.4095213)
+> or if the value is out of range (negative gain or an exponential number
+> e.g. 6.22672596364282e-05), export does not work and either hangs or
+> contains noise.
+>
+> robin
+>
+
+Very interesting...  I just checked the .ardour file for the same mixbus
+session which failed this morning, and found this:
+
+<Region id="28280" name="VP1-5.4" start="0" length="862989"
+position="6226886" ancestral-start="0" ancestral-length="0" stretch="1"
+shift="1" first_edit="nothing" layer="3" sync-position="0"
+flags="Opaque,DefaultFadeOut,FadeIn,FadeOut" scale-gain="1"
+source-0="28228" channels="1" master-source-0="28228">
+        <FadeIn active="yes">
+          <AutomationList id="28281" default="1" min_yval="0" max_yval="2"
+max_xval="0" state="Off" style="Absolute">
+*            <events>0 1.0000000116861e-07*
+*29665 1*
+*</events>*
+          </AutomationList>
+        </FadeIn>
+        <FadeOut default="yes" active="yes"/>
+        <Envelope default="yes"/>
+        <extra>
+          <GUI waveform-visible="yes" envelope-visible="no"
+waveform-rectified="no" waveform-logscaled="no"/>
+        </extra>
+      </Region>
+
+There are ~32 instances of these <events> tags in this file, and all of
+them contain exponential numbers.  This particular session, however, has no
+automation in it at all, that I can remember...?  Perhaps these are values
+pertaining to cross-fades?  I'll back-up this session, get rid of the
+events numbers, and see if it exports tonight.  Thank you for your
+response, Robin.
+
+--Jason
+
+1336418688.635_0.ltw:2,a <CAEv8nmAymAq-Kx7sSq_QO=CTk2dO5SzB+Taw3GbxAeG0A=4m3Q at mail dot gmail dot com>
+________________________________________________________________________________
+

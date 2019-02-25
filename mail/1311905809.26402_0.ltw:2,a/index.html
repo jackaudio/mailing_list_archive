@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] jack_wait extensions</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] jack_wait extensions</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1311889882.7186_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1311905994.26518_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1311905809.26402_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 29 Jul 2011 04:15:49 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Adrian Knoth </span> &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+</table>
+<pre>
+Hi!
+
+I recently came across jack_wait and wanted to use this tool for
+scripting. Besides parsing the output, there is no way to check if jackd
+is now running or not.
+
+I propose to set the exit code. This way, a script can tell if the
+server isn't running when it is supposed to be (-c option, exit code 2),
+when the operation just timed out (-t, exit code 3), there was something
+wrong (exit code 1) or when everything was fine (rc 0).
+
+Given that this is a semantic change, it might break existing
+functionality for those who already use it in scripts. What do you
+think?
+
+
+Cheers
+
+PS: Patch is untested, just for discussion...
+
+diff --git a/example-clients/wait.c b/example-clients/wait.c
+index 9150bb6..b6f77e5 100644
+--- a/example-clients/wait.c
++++ b/example-clients/wait.c
+@@ -92,6 +92,7 @@ main (int argc, char *argv[])
+
+ 	start_timestamp = time( NULL );
+
++    int rc = 0;
+ 	while(1) {
+ 		client = jack_client_open ("wait", options, &amp;status, server_name);
+ 		/* check for some real error and bail out */
+@@ -108,6 +109,7 @@ main (int argc, char *argv[])
+ 			}
+ 			if( just_check ) {
+ 				fprintf( stdout, "not running\n" );
++                rc = 2;
+ 				break;
+ 			}
+ 		} else {
+@@ -124,6 +126,7 @@ main (int argc, char *argv[])
+ 		if( wait_timeout ) {
+ 		       if( (time( NULL ) - start_timestamp) &gt; wait_timeout ) {
+ 			       fprintf( stdout, "timeout\n" );
++                   rc = 3;
+ 			       break;
+ 		       }
+ 		}
+@@ -132,5 +135,5 @@ main (int argc, char *argv[])
+ 		sleep(1);
+ 	}
+
+-	exit (0);
++	exit (rc);
+ }
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1311889882.7186_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1311905994.26518_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1311905809.26402_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1311905809.26402_0.ltw:2,a&nbsp;&lt;4E3217D5.5080609 at drcomp dot erfurt dot thur dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

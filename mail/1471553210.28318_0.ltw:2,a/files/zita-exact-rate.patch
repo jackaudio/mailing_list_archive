@@ -1,0 +1,142 @@
+diff -aur zita-ajbridge-0.6.0.orig/source/zita-a2j.cc zita-ajbridge-0.6.0/source/zita-a2j.cc
+--- zita-ajbridge-0.6.0.orig/source/zita-a2j.cc	2015-08-23 14:38:45.000000000 +0200
++++ zita-ajbridge-0.6.0/source/zita-a2j.cc	2016-06-15 21:22:41.095625355 +0200
+@@ -40,7 +40,7 @@
+ static bool          S_opt = false;
+ static const char   *jname = APPNAME;
+ static const char   *device = 0;
+-static int           fsamp = 48000;
++static float         fsamp = 48000;
+ static int           bsize = 256;
+ static int           nfrag = 2;
+ static int           nchan = 2;
+@@ -93,7 +93,7 @@
+ 	case 'S' : S_opt = true; break;
+         case 'j' : jname = optarg; break;
+         case 'd' : device = optarg; break;
+-	case 'r' : fsamp = atoi (optarg); break;    
++	case 'r' : fsamp = atof (optarg); break;
+ 	case 'p' : bsize = atoi (optarg); break;    
+ 	case 'n' : nfrag = atoi (optarg); break;    
+ 	case 'c' : nchan = atoi (optarg); break;    
+diff -aur zita-ajbridge-0.6.0.orig/source/zita-j2a.cc zita-ajbridge-0.6.0/source/zita-j2a.cc
+--- zita-ajbridge-0.6.0.orig/source/zita-j2a.cc	2015-08-23 14:39:15.000000000 +0200
++++ zita-ajbridge-0.6.0/source/zita-j2a.cc	2016-06-16 21:06:51.180271206 +0200
+@@ -40,7 +40,7 @@
+ static bool          S_opt = false;
+ static const char   *jname = APPNAME;
+ static const char   *device = 0;
+-static int           fsamp = 48000;
++static float         fsamp = 48000;
+ static int           bsize = 256;
+ static int           nfrag = 2;
+ static int           nchan = 2;
+@@ -93,7 +93,7 @@
+         case 'S' : S_opt = true; break;
+         case 'j' : jname = optarg; break;
+         case 'd' : device = optarg; break;
+-	case 'r' : fsamp = atoi (optarg); break;    
++	case 'r' : fsamp = atof (optarg); break;
+ 	case 'p' : bsize = atoi (optarg); break;    
+ 	case 'n' : nfrag = atoi (optarg); break;    
+ 	case 'c' : nchan = atoi (optarg); break;    
+diff -aur zita-ajbridge-0.6.0.orig/zita-alsa-pcmi-0.2.0/libs/zita-alsa-pcmi.cc zita-ajbridge-0.6.0/zita-alsa-pcmi-0.2.0/libs/zita-alsa-pcmi.cc
+--- zita-ajbridge-0.6.0.orig/zita-alsa-pcmi-0.2.0/libs/zita-alsa-pcmi.cc	2012-03-20 21:23:07.000000000 +0100
++++ zita-ajbridge-0.6.0/zita-alsa-pcmi-0.2.0/libs/zita-alsa-pcmi.cc	2016-06-15 21:22:41.095625355 +0200
+@@ -41,7 +41,7 @@
+ Alsa_pcmi::Alsa_pcmi (const char        *play_name,
+                       const char        *capt_name,
+                       const char        *ctrl_name,
+-                      unsigned int       fsamp,
++					  float              fsamp,
+                       unsigned int       fsize,
+                       unsigned int       nfrag,
+                       unsigned int       debug) :
+@@ -337,7 +337,7 @@
+     if (_play_handle)
+     {
+         fprintf (stdout, "\n  nchan  : %d\n", _play_nchan);
+-        fprintf (stdout, "  fsamp  : %d\n", _fsamp);
++		fprintf (stdout, "  fsamp  : %.2f\n", _fsamp);
+         fprintf (stdout, "  fsize  : %ld\n", _fsize);
+         fprintf (stdout, "  nfrag  : %d\n", _nfrag);
+         fprintf (stdout, "  format : %s\n", snd_pcm_format_name (_play_format));
+@@ -347,7 +347,7 @@
+     if (_capt_handle)
+     {
+         fprintf (stdout, "\n  nchan  : %d\n", _capt_nchan);
+-        fprintf (stdout, "  fsamp  : %d\n", _fsamp);
++		fprintf (stdout, "  fsamp  : %.2f\n", _fsamp);
+         fprintf (stdout, "  fsize  : %ld\n", _fsize);
+         fprintf (stdout, "  nfrag  : %d\n", _nfrag);
+         fprintf (stdout, "  format : %s\n", snd_pcm_format_name (_capt_format));
+@@ -362,7 +362,7 @@
+ 
+ void Alsa_pcmi::initialise (const char *play_name, const char *capt_name, const char *ctrl_name)
+ {
+-    unsigned int          fsamp;
++	unsigned int          rate_num, rate_den;
+     snd_pcm_uframes_t     fsize;
+     unsigned int          nfrag;
+     int                   err;
+@@ -443,7 +443,7 @@
+ 
+     if (_play_handle)
+     {
+-        if (snd_pcm_hw_params_get_rate (_play_hwpar, &fsamp, &dir) || (fsamp != _fsamp) || dir)
++		if (snd_pcm_hw_params_get_rate_numden (_play_hwpar, &rate_num, &rate_den) || (rate_num != _fsamp * rate_den))
+         {
+             if (_debug & DEBUG_INIT) fprintf (stderr, "Alsa_pcmi: can't get requested sample rate for playback.\n"); 
+             return;
+@@ -550,7 +550,7 @@
+ 
+     if (_capt_handle)
+     {
+-        if (snd_pcm_hw_params_get_rate (_capt_hwpar, &fsamp, &dir) || (fsamp != _fsamp) || dir)
++		if (snd_pcm_hw_params_get_rate_numden (_capt_hwpar, &rate_num, &rate_den) || (rate_num != _fsamp * rate_den))
+         {
+             if (_debug & DEBUG_INIT) fprintf (stderr, "Alsa_pcmi: can't get requested sample rate for capture.\n"); 
+             return;
+@@ -657,6 +657,8 @@
+ int Alsa_pcmi::set_hwpar (snd_pcm_t *handle,  snd_pcm_hw_params_t *hwpar, const char *sname, unsigned int *nchan)
+ {
+     bool err;
++	unsigned rate;
++	int dir;
+ 
+     if (snd_pcm_hw_params_any (handle, hwpar) < 0)
+     {
+@@ -699,9 +701,10 @@
+                                           sname);
+         return -1;
+     }
+-    if (snd_pcm_hw_params_set_rate (handle, hwpar, _fsamp, 0) < 0)
++	rate = _fsamp;
++	if (snd_pcm_hw_params_set_rate_near (handle, hwpar, &rate, &dir) < 0)
+     {
+-        if (_debug & DEBUG_INIT) fprintf (stderr, "Alsa_pcmi: can't set %s sample rate to %u.\n",
++		if (_debug & DEBUG_INIT) fprintf (stderr, "Alsa_pcmi: can't set %s sample rate near %u.\n",
+                                           sname, _fsamp);
+         return -1;
+     }
+diff -aur zita-ajbridge-0.6.0.orig/zita-alsa-pcmi-0.2.0/libs/zita-alsa-pcmi.h zita-ajbridge-0.6.0/zita-alsa-pcmi-0.2.0/libs/zita-alsa-pcmi.h
+--- zita-ajbridge-0.6.0.orig/zita-alsa-pcmi-0.2.0/libs/zita-alsa-pcmi.h	2012-03-20 21:23:07.000000000 +0100
++++ zita-ajbridge-0.6.0/zita-alsa-pcmi-0.2.0/libs/zita-alsa-pcmi.h	2016-06-15 21:22:41.095625355 +0200
+@@ -42,7 +42,7 @@
+     Alsa_pcmi (const char        *play_name,
+                const char        *capt_name,
+    	       const char        *ctrl_name,
+-               unsigned int       rate,
++			   float              rate,
+                unsigned int       frsize,
+                unsigned int       nfrags,
+ 	       unsigned int       debug = 0);
+@@ -147,7 +147,7 @@
+     const char *capt_24swap (const char *src, float *dst, int nfrm, int step);
+     const char *capt_16swap (const char *src, float *dst, int nfrm, int step);
+ 
+-    unsigned int           _fsamp;
++	float                  _fsamp;
+     snd_pcm_uframes_t      _fsize;
+     unsigned int           _nfrag;
+     unsigned int           _debug;

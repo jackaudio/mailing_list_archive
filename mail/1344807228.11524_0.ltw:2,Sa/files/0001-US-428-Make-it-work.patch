@@ -1,0 +1,416 @@
+From 67fcb642594676211ca200824752bd70c8ec3df9 Mon Sep 17 00:00:00 2001
+From: Karsten Wiese <fzuuzf@googlemail.com>
+Date: Sun, 12 Aug 2012 23:23:50 +0200
+Subject: [PATCH] US-428: Make it work
+
+Preconditions outside of jackd:
+-1: RT-Kernel running.
+0: Connect to a real uhci, no hub nor ehci.
+   That excludes most modern mainboards.
+1: modprobe snd-usb-usx2y nrpacks=1
+2: Make the uhci's irq priority high, like so:
+   chrt -fp 90 `ps --ppid 2 -o pid,rtprio,cmd|grep irq/21-u|awk '{print $1}'`
+
+Jackd invocation:
+   jackd -P78 -dalsa -dhw:1,2 -r44100
+
+Signed-off-by: Karsten Wiese <fzuuzf@googlemail.com>
+---
+ linux/alsa/alsa_driver.c |   21 +++++----
+ linux/alsa/usx2y.cpp     |  106 +++++++++++++++-------------------------------
+ linux/alsa/usx2y.h       |    8 ++++
+ linux/wscript            |    3 +-
+ 4 files changed, 55 insertions(+), 83 deletions(-)
+
+diff --git a/linux/alsa/alsa_driver.c b/linux/alsa/alsa_driver.c
+index 8e588e9..b06718c 100644
+--- a/linux/alsa/alsa_driver.c
++++ b/linux/alsa/alsa_driver.c
+@@ -202,15 +202,12 @@ alsa_driver_ice1712_hardware (alsa_driver_t *driver)
+         return 0;
+ }
+ 
+-// JACK2
+-/*
+ static int
+ alsa_driver_usx2y_hardware (alsa_driver_t *driver)
+ {
+     driver->hw = jack_alsa_usx2y_hw_new (driver);
+     return 0;
+ }
+-*/
+ 
+ static int
+ alsa_driver_generic_hardware (alsa_driver_t *driver)
+@@ -237,16 +234,11 @@ alsa_driver_hw_specific (alsa_driver_t *driver, int hw_monitoring,
+                 if ((err = alsa_driver_ice1712_hardware (driver)) !=0) {
+                         return err;
+                 }
+-	}
+-    // JACK2
+-    /*
+-        else if (!strcmp(driver->alsa_driver, "USB US-X2Y")) {
++	} else if (!strcmp(driver->alsa_driver, "USB US-X2Y")) {
+ 		if ((err = alsa_driver_usx2y_hardware (driver)) !=0) {
+ 				return err;
+ 		}
+-	}
+-    */
+-       else {
++	} else {
+ 	        if ((err = alsa_driver_generic_hardware (driver)) != 0) {
+ 			return err;
+ 		}
+@@ -982,6 +974,9 @@ alsa_driver_start (alsa_driver_t *driver)
+ 	driver->poll_last = 0;
+ 	driver->poll_next = 0;
+ 
++	if (driver->nt_start)
++		return driver->nt_start(driver);
++
+ 	if (driver->playback_handle) {
+ 		if ((err = snd_pcm_prepare (driver->playback_handle)) < 0) {
+ 			jack_error ("ALSA: prepare error for playback on "
+@@ -1513,6 +1508,9 @@ alsa_driver_wait (alsa_driver_t *driver, int extra_fd, int *status, float
+ int
+ alsa_driver_read (alsa_driver_t *driver, jack_nframes_t nframes)
+ {
++	if (driver->read)
++		return driver->read(driver, nframes);
++
+ 	snd_pcm_sframes_t contiguous;
+ 	snd_pcm_sframes_t nread;
+ 	snd_pcm_uframes_t offset;
+@@ -1604,6 +1602,9 @@ alsa_driver_write (alsa_driver_t* driver, jack_nframes_t nframes)
+ 
+ 	driver->process_count++;
+ 
++	if (driver->write)
++		return driver->write(driver, nframes);
++
+ // JACK2
+ /*
+ 	if (!driver->playback_handle || driver->engine->freewheeling) {
+diff --git a/linux/alsa/usx2y.cpp b/linux/alsa/usx2y.cpp
+index a6b696d..feaa7f4 100644
+--- a/linux/alsa/usx2y.cpp
++++ b/linux/alsa/usx2y.cpp
+@@ -18,6 +18,10 @@
+ 
+ */
+ 
++#include "jack/jack.h"
++#include "JackError.h"
++#include "JackEngineControl.h"
++#include "JackGlobals.h"
+ #include "hardware.h"
+ #include "alsa_driver.h"
+ #include "usx2y.h"
+@@ -76,21 +80,21 @@ usx2y_driver_get_channel_addresses_playback (alsa_driver_t *driver,
+ 		iso = h->hwdep_pcm_shm->playback_iso_start;
+ 		if (0 > iso)
+ 			return 0; /* FIXME: return -1; */
+-		if (++iso >= ARRAY_SIZE(h->hwdep_pcm_shm->captured_iso))
++		if (++iso >= (int)ARRAY_SIZE(h->hwdep_pcm_shm->captured_iso))
+ 			iso = 0;
+ 		while((bytes -= h->hwdep_pcm_shm->captured_iso[iso].length) > 0)
+-			if (++iso >= ARRAY_SIZE(h->hwdep_pcm_shm->captured_iso))
++		  if (++iso >= (int)ARRAY_SIZE(h->hwdep_pcm_shm->captured_iso))
+ 				iso = 0;
+ 		h->playback_iso_bytes_done = h->hwdep_pcm_shm->captured_iso[iso].length + bytes;
+ #ifdef DBGHWDEP
+-		dbg_offset = sprintf(dbg_buffer, "first iso = %i %i@%p:%i\n",
++		dbg_offset += sprintf(dbg_buffer + dbg_offset, "first iso = %i %i@%p:%i\n",
+ 					iso, h->hwdep_pcm_shm->captured_iso[iso].length,
+ 					h->hwdep_pcm_shm->playback,
+ 					h->hwdep_pcm_shm->captured_iso[iso].offset);
+ #endif
+-	} else {
++	} else
+ 		iso = h->playback_iso_start;
+-	}
++
+ #ifdef DBGHWDEP
+ 	dbg_offset += sprintf(dbg_buffer + dbg_offset, "iso = %i(%i;%i); ", iso,
+ 				h->hwdep_pcm_shm->captured_iso[iso].offset,
+@@ -104,13 +108,14 @@ usx2y_driver_get_channel_addresses_playback (alsa_driver_t *driver,
+ 		(driver->playback_sample_bytes * 2);
+ 	if (*playback_avail >= playback_iso_avail) {
+ 		*playback_avail = playback_iso_avail;
+-		if (++iso >= ARRAY_SIZE(h->hwdep_pcm_shm->captured_iso))
++		if (++iso >= (int)ARRAY_SIZE(h->hwdep_pcm_shm->captured_iso))
+ 			iso = 0;
+ 		h->playback_iso_bytes_done = 0;
+ 	} else
+ 		h->playback_iso_bytes_done =
+ 			*playback_avail * (driver->playback_sample_bytes * 2);
+ 	h->playback_iso_start = iso;
++	memset(playback, 0, *playback_avail * driver->playback_sample_bytes * 2);
+ 	for (chn = 0; chn < driver->playback_nchannels; chn++) {
+ 		const snd_pcm_channel_area_t *a = &driver->playback_areas[chn];
+ 		driver->playback_addr[chn] = playback + a->first / 8;
+@@ -144,7 +149,7 @@ usx2y_driver_get_channel_addresses_capture (alsa_driver_t *driver,
+ 			return 0; /* FIXME: return -1; */
+ 		h->capture_iso_bytes_done = 0;
+ #ifdef DBGHWDEP
+-		dbg_offset = sprintf(dbg_buffer, "cfirst iso = %i %i@%p:%i\n",
++		dbg_offset += sprintf(dbg_buffer + dbg_offset, "cfirst iso = %i %i@%p:%i\n",
+ 					iso, h->hwdep_pcm_shm->captured_iso[iso].length,
+ 					h->hwdep_pcm_shm->capture0x8,
+ 					h->hwdep_pcm_shm->captured_iso[iso].offset);
+@@ -165,7 +170,7 @@ usx2y_driver_get_channel_addresses_capture (alsa_driver_t *driver,
+ 		(driver->capture_sample_bytes * 2);
+ 	if (*capture_avail >= capture_iso_avail) {
+ 		*capture_avail = capture_iso_avail;
+-		if (++iso >= ARRAY_SIZE(h->hwdep_pcm_shm->captured_iso))
++		if (++iso >= (int)ARRAY_SIZE(h->hwdep_pcm_shm->captured_iso))
+ 			iso = 0;
+ 		h->capture_iso_bytes_done = 0;
+ 	} else
+@@ -181,7 +186,7 @@ usx2y_driver_get_channel_addresses_capture (alsa_driver_t *driver,
+ #ifdef DBGHWDEP
+  {
+ 	int f = 0;
+-	unsigned *u = driver->capture_addr[0];
++	unsigned *u = (unsigned *)driver->capture_addr[0];
+ 	static unsigned last;
+ 	dbg_offset += sprintf(dbg_buffer + dbg_offset, "\nvon %6u  bis %6u\n", last, u[0]);
+ 	while (f < *capture_avail && dbg_offset < (sizeof(dbg_buffer) - 256)) {
+@@ -346,6 +351,7 @@ usx2y_driver_stop (alsa_driver_t *driver)
+ 	int err;
+ 	JSList* node;
+ 	int chn;
++	jack_info(__FUNCTION__);
+ 
+ 	usx2y_t *h = (usx2y_t *) driver->hw->private_hw;
+ 
+@@ -357,11 +363,10 @@ usx2y_driver_stop (alsa_driver_t *driver)
+ 		node = jack_slist_next (node), chn++) {
+ 
+ 		jack_port_t* port;
+-		char* buf;
+-		jack_nframes_t nframes = driver->engine->control->buffer_size;
++		jack_nframes_t nframes = Jack::GetEngineControl()->fBufferSize;
+ 
+ 		port = (jack_port_t *) node->data;
+-		buf = jack_port_get_buffer (port, nframes);
++		void *buf(jack_port_get_buffer (port, nframes));
+ 		memset (buf, 0, sizeof (jack_default_audio_sample_t) * nframes);
+ 	}
+ 
+@@ -392,10 +397,10 @@ usx2y_driver_null_cycle (alsa_driver_t* driver, jack_nframes_t nframes)
+ 	snd_pcm_uframes_t offset;
+ 	snd_pcm_uframes_t contiguous, contiguous_;
+ 	int chn;
+-
++	/*
+ 	VERBOSE(driver->engine,
+ 		"usx2y_driver_null_cycle (%p, %i)", driver, nframes);
+-
++	*/
+ 	if (driver->capture_handle) {
+ 		nf = nframes;
+ 		offset = 0;
+@@ -470,17 +475,14 @@ usx2y_driver_null_cycle (alsa_driver_t* driver, jack_nframes_t nframes)
+ static int
+ usx2y_driver_read (alsa_driver_t *driver, jack_nframes_t nframes)
+ {
++	jack_nframes_t orig_nframes(nframes);
+ 	snd_pcm_uframes_t contiguous;
+ 	snd_pcm_sframes_t nread;
+ 	snd_pcm_uframes_t offset;
+-	jack_default_audio_sample_t* buf[4];
+-	channel_t chn;
+-	JSList *node;
+-	jack_port_t* port;
+ 	int err;
+ 	snd_pcm_uframes_t nframes_ = nframes;
+ 
+-	if (!driver->capture_handle || driver->engine->freewheeling) {
++	if (!driver->capture_handle /*|| Jack::GetEngineControl()->freewheeling*/) {
+ 		return 0;
+ 	}
+ 
+@@ -497,15 +499,6 @@ usx2y_driver_read (alsa_driver_t *driver, jack_nframes_t nframes)
+ 		return -1;
+ 	}
+ 
+-	for (chn = 0, node = driver->capture_ports;
+-	     node; node = jack_slist_next (node), chn++) {
+-		port = (jack_port_t *) node->data;
+-		if (!jack_port_connected (port)) {
+-			continue;
+-		}
+-		buf[chn] = jack_port_get_buffer (port, nframes_);
+-	}
+-
+ 	while (nframes) {
+ 
+ 		contiguous = nframes;
+@@ -513,29 +506,16 @@ usx2y_driver_read (alsa_driver_t *driver, jack_nframes_t nframes)
+ 			    driver, &contiguous) < 0) {
+ 			return -1;
+ 		}
+-		for (chn = 0, node = driver->capture_ports;
+-		     node; node = jack_slist_next (node), chn++) {
+-			port = (jack_port_t *) node->data;
+-			if (!jack_port_connected (port)) {
+-				/* no-copy optimization */
+-				continue;
+-			}
+-			alsa_driver_read_from_channel (driver, chn,
+-						       buf[chn] + nread,
+-						       contiguous);
+-/* 			sample_move_dS_s24(buf[chn] + nread, */
+-/* 					   driver->capture_addr[chn], */
+-/* 					   contiguous, */
+-/* 					   driver->capture_interleave_skip); */
+-		}
++
++		ReadInput(orig_nframes, contiguous, nread);
+ 		nread += contiguous;
+ 		nframes -= contiguous;
+ 	}
+ 
+ 	if ((err = snd_pcm_mmap_commit (driver->capture_handle,
+ 					offset, nframes_)) < 0) {
+-		jack_error ("ALSA/USX2Y: could not complete read of %"
+-			    PRIu32 " frames: error = %d", nframes_, err);
++		jack_error ("ALSA/USX2Y: could not complete read of %u"
++			    " frames: error = %d", nframes_, err);
+ 		return -1;
+ 	}
+ 
+@@ -545,19 +525,17 @@ usx2y_driver_read (alsa_driver_t *driver, jack_nframes_t nframes)
+ static int
+ usx2y_driver_write (alsa_driver_t* driver, jack_nframes_t nframes)
+ {
+-	channel_t chn;
+-	JSList *node;
+-	jack_default_audio_sample_t* buf[2];
++	jack_nframes_t orig_nframes(nframes);
+ 	snd_pcm_sframes_t nwritten;
+ 	snd_pcm_uframes_t contiguous;
+ 	snd_pcm_uframes_t offset;
+-	jack_port_t *port;
+ 	int err;
+ 	snd_pcm_uframes_t nframes_ = nframes;
+ 
+ 	driver->process_count++;
+ 
+-	if (!driver->playback_handle || driver->engine->freewheeling) {
++
++	if (!driver->playback_handle /*|| driver->engine->freewheeling*/) {
+ 		return 0;
+ 	}
+ 
+@@ -570,13 +548,6 @@ usx2y_driver_write (alsa_driver_t* driver, jack_nframes_t nframes)
+ 
+ 	driver->input_monitor_mask = 0;
+ 
+-	for (chn = 0, node = driver->capture_ports; node;
+-		node = jack_slist_next (node), chn++) {
+-		if (((jack_port_t *) node->data)->shared->monitor_requests) {
+-			driver->input_monitor_mask |= (1<<chn);
+-		}
+-	}
+-
+ 	if (driver->hw_monitoring) {
+ 		if ((driver->hw->input_monitor_mask
+ 			!= driver->input_monitor_mask)
+@@ -594,12 +565,6 @@ usx2y_driver_write (alsa_driver_t* driver, jack_nframes_t nframes)
+ 		return -1;
+ 	}
+ 
+-	for (chn = 0, node = driver->playback_ports;
+-	     node; node = jack_slist_next (node), chn++) {
+-		port = (jack_port_t *) node->data;
+-		buf[chn] = jack_port_get_buffer (port, nframes_);
+-	}
+-
+ 	while (nframes) {
+ 
+ 		contiguous = nframes;
+@@ -607,21 +572,16 @@ usx2y_driver_write (alsa_driver_t* driver, jack_nframes_t nframes)
+ 			    driver, &contiguous) < 0) {
+ 			return -1;
+ 		}
+-		for (chn = 0, node = driver->playback_ports;
+-		     node; node = jack_slist_next (node), chn++) {
+-			port = (jack_port_t *) node->data;
+-			alsa_driver_write_to_channel (driver, chn,
+-						      buf[chn] + nwritten,
+-						      contiguous);
+-		}
++
++		WriteOutput(orig_nframes, contiguous, nwritten);
+ 		nwritten += contiguous;
+ 		nframes -= contiguous;
+ 	}
+ 
+ 	if ((err = snd_pcm_mmap_commit (driver->playback_handle,
+ 					offset, nframes_)) < 0) {
+-		jack_error ("ALSA/USX2Y: could not complete playback of %"
+-			    PRIu32 " frames: error = %d", nframes_, err);
++		jack_error ("ALSA/USX2Y: could not complete playback of %u"
++			    " frames: error = %d", nframes_, err);
+ 		if (err != -EPIPE && err != -ESTRPIPE)
+ 			return -1;
+ 	}
+@@ -632,6 +592,7 @@ usx2y_driver_write (alsa_driver_t* driver, jack_nframes_t nframes)
+ static void
+ usx2y_driver_setup (alsa_driver_t *driver)
+ {
++	jack_info(__FUNCTION__);
+ 	driver->nt_start = (JackDriverNTStartFunction) usx2y_driver_start;
+ 	driver->nt_stop = (JackDriverNTStopFunction) usx2y_driver_stop;
+ 	driver->read = (JackDriverReadFunction) usx2y_driver_read;
+@@ -640,6 +601,7 @@ usx2y_driver_setup (alsa_driver_t *driver)
+ 		(JackDriverNullCycleFunction) usx2y_driver_null_cycle;
+ }
+ 
++extern "C"
+ jack_hardware_t *
+ jack_alsa_usx2y_hw_new (alsa_driver_t *driver)
+ {
+diff --git a/linux/alsa/usx2y.h b/linux/alsa/usx2y.h
+index 522d19a..a5be213 100644
+--- a/linux/alsa/usx2y.h
++++ b/linux/alsa/usx2y.h
+@@ -22,6 +22,11 @@
+ #ifndef __jack_usx2y_h__
+ #define __jack_usx2y_h__
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++
+ #define USX2Y_MAXPACK		50
+ #define USX2Y_MAXBUFFERMS	100
+ #define USX2Y_MAXSTRIDE	3
+@@ -64,4 +69,7 @@ usx2y_t;
+ jack_hardware_t *
+ jack_alsa_usx2y_hw_new (alsa_driver_t *driver);
+ 
++#ifdef __cplusplus
++} // extern "C" {
++#endif
+ #endif /* __jack_usx2y_h__*/
+diff --git a/linux/wscript b/linux/wscript
+index 2af5077..5da4083 100644
+--- a/linux/wscript
++++ b/linux/wscript
+@@ -55,7 +55,8 @@ def build(bld):
+                        'alsa/hdsp.c',
+                        'alsa/alsa_driver.c',
+                        'alsa/hammerfall.c',
+-                       'alsa/ice1712.c'
++                       'alsa/ice1712.c',
++                       'alsa/usx2y.cpp'
+                        ]
+ 
+     alsarawmidi_driver_src = ['alsarawmidi/JackALSARawMidiDriver.cpp',
+-- 
+1.7.7.6
+

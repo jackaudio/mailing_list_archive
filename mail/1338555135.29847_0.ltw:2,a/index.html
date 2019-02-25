@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] [LAU] jack2 turned verbose</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] [LAU] jack2 turned verbose</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1338446093.16637_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1338558541.4298_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338555135.29847_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 01 Jun 2012 14:52:03 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>linux-audio-user &lt;[hidden] at lists dot linuxaudio dot org&gt;, JACK Mailing List &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>David Adler
+<a href='../1338558541.4298_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+</table>
+<pre>
+On 05/31/2012 01:58 AM, David Adler wrote:
+&gt; On Thu, May 31, 2012 at 1:00 AM, mark hadman wrote:
+&gt; 
+&gt;&gt; I have the same verbose behaviour problem with jack2 on Arch Linux 64 bit.
+&gt; 
+&gt; Thanks Mark, good to know I'm not the only one.
+&gt; I have it on both, 64 and 32 bit.
+&gt; 
+&gt; best,
+&gt; d
+
+It might have to do with Arch's compiler[-flags] and how jack2 uses
+unions .. or scoping: JackGlobals vs Engine-Parameters.. although I
+don't have an explanation.. all seems good.
+
+A hunch: it could be caused by using 'server_ptr-&gt;verbose.b' (a union)
+as boolean. The sever only checks "if (server_ptr-&gt;verbose.b)". The
+union itself comprises other uninitialized values that could make it
+evaluate to true (though it shouldn't, but maybe some compiler
+optimization casts it to (int) instead of (bool) )
+
+
+I know this is the '-users' list (I'm ccing jack-devel), but could
+someone who experiences the problem try to track it down?
+
+Basically just add a few printf()'s. Start at: common/JackControlAPI.cpp
+- line 926 - before the call to  "new JackServer(..)" add
+
+  printf("DEBUG verbose: %s\n",(server_ptr-&gt;verbose.b)?"on":"off");
+
+recompile, launch jackd. If it prints "verbose: on", sth is wrong with
+parameter initialization in main() or with using unions. If it's "off"
+the problem sits deeper:
+
+add a line just after common/JackServer.cpp line 66
+  printf("DEBUG verbose2: %s\n",(JackGlobals::fVerbose)?"on":"off");
+...
+
+A crude test for the union() hunch would be to change
+common/JackControlAPI.h line 53:
+ replace
+  "union jackctl_parameter_value"
+with
+  "struct jackctl_parameter_value"
+
+and compile with '-fpermissive' like this:
+
+  CXXFLAGS="-fpermissive" ./waf  configure
+  ./waf
+
+..not sure if that'll work though..
+
+HTH,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1338446093.16637_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1338558541.4298_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338555135.29847_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1338555135.29847_0.ltw:2,a&nbsp;&lt;4FC8BAF3.2080407 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

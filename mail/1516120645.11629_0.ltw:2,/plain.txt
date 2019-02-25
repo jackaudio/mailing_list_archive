@@ -1,0 +1,62 @@
+Date:        Tue, 16 Jan 2018 16:36:54 +0000
+From:        Benny Alexandar  <[hidden] at outlook dot com>
+To:          Chris Caudle <[hidden] at chriscaudle dot org>, "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Chris Caudle Re: [Jack-Devel] Using USB sound card with Jack (1516033756.5295_0.ltw:2,)
+Follow-Up:   John Rigg Re: [Jack-Devel] Using USB sound card with Jack (1516139114.31752_0.ltw:2,)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] Using USB sound card with Jack (1516139661.32534_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Using USB sound card with Jack
+
+Hi,
+
+I want to test how zita-ajbridge behaves when there is a drift in clock.
+Any idea how to artificially create clock drift for testing purpose.
+
+Any test code available in Jack audio.
+
+-ben
+________________________________
+From: Jack-Devel <[hidden]> on behalf of Chris Caudle <[hidden]>
+Sent: Monday, January 15, 2018 9:58 PM
+To: [hidden]
+Subject: Re: [Jack-Devel] Using USB sound card with Jack
+
+On Mon, January 15, 2018 10:13 am, Benny Alexandar wrote:
+> I want both PC and USB sound card ports to be accessed at the same time.
+
+The design of jackd (really any sound server) requires it to be
+synchronized to the sampling clock of the interface, and since your two
+interfaces are not synchronized to each other then jackd cannot use both
+at the same time without some intervention.
+
+Using two  at the same time requires choosing one card to the be the main
+backend device, then loading a sample rate converter to make the sample
+stream rate to and from the secondary card(s) match exactly that of the
+main card.
+
+The packages you want are zita-alsa2jack and zita-jack2alsa, in Fedora
+both come together in a package named zita-ajbridge.
+This is covered in the jack FAQ, which needs to be updated, the section
+describing alsa_in and alsa_out bridges is the relevant section, but those
+older implementations had some problems, the zita bridges are higher
+quality replacements.
+http://jackaudio.org/faq/multiple_devices.html
+
+The zita tools are included in the audio aware distributions, if you are
+using a distribution which does not package them for some reason you can
+get them along with the other zita applications here:
+https://kokkinizita.linuxaudio.org/linuxaudio/
+
+The jackd v1 implementation includes the equivalent of the zita bridges
+internally, they need to be enabled from the command line but not loaded
+as an external component.  The jackd v2 implementation (I think you said
+you were using jackd 1.9.12, that is considered jackd v2) does not yet
+include the zita bridges as part of the server, you will need to load them
+externally.
+
+--
+Chris Caudle
+
+1516120645.11629_0.ltw:2, <MAXPR01MB0154C4A81603F4952B2D70178BEA0 at MAXPR01MB0154 dot INDPRD01 dot PROD dot OUTLOOK dot COM>
+________________________________________________________________________________
+

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1301687973.15282_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1301703149.29989_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1301701945.28867_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 01 Apr 2011 19:37:07 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Tim E. Real </span> &lt;[hidden] at rogers dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Devin Anderson
+<a href='../1301686758.14180_0.ltw:2,a/index.html'>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1301703149.29989_0.ltw:2,a/index.html'>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages </a></td></tr>
+</table>
+<pre>
+On April 1, 2011 03:38:58 pm Devin Anderson wrote:
+&gt; On Fri, Apr 1, 2011 at 12:32 PM, Pedro Alves &lt;[hidden]&gt; wrote:
+&gt; &gt; On Friday 01 April 2011 20:04:02, Devin Anderson wrote:
+&gt; &gt;&gt; No.  The 'jack_midi_blobstream_t' type would allow file-like
+&gt; &gt;&gt; operations on blobs.
+&gt; &gt;&gt;
+&gt; &gt;&gt; I don't envision blobs growing dynamically.  A client knows the size
+&gt; &gt;&gt; of sysex messages it's going to send, and should be able to deal with
+&gt; &gt;&gt; received sysex messages in another thread if memory allocation is
+&gt; &gt;&gt; necessary.
+&gt; &gt;&gt;
+&gt; &gt;&gt; The only exception would be MIDI drivers, which have no idea about the
+&gt; &gt;&gt; size of sysex messages they might receive.  In this case, I think
+&gt; &gt;&gt; command-line arguments should be used to specify the number of blobs
+&gt; &gt;&gt; and the size of the blobs that a MIDI driver should create before
+&gt; &gt;&gt; starting.
+&gt; &gt;
+&gt; &gt; Okay.
+&gt; &gt;
+&gt; &gt; And, I understand that a blob always must hold a whole complete sysex?
+&gt; &gt; Or can we split a sysex over several blobs if we wanted (with a flag
+&gt; &gt; in jack_midi_blobstream_t indicating there's more to come, or "this
+&gt; &gt; blob is the next chunk of a previous incomplete sysex").
+&gt;
+&gt; I think continuing to guarantee one complete MIDI event per
+&gt; 'jack_midi_event_t' object is the best way to go.  
+This means the event is not delivered to us until it is completely
+ received, possibly after several process cycles, right?
+
+I know that the ALSA API breaks long received sysex into chunks and 
+ delivers them.
+And I get an size error if sending one long sysex with ALSA, I need to
+ change our code to chunk them.
+IIRC my (older) music keyboard sends chunked sysex.
+
+Thanks.
+Tim.
+
+&gt; It's a disadvantage
+&gt; for MIDI drivers, but it's simpler for most other clients.
+&gt;
+&gt; &gt; Alternatively, given you have a stream API, drivers could still
+&gt; &gt; preallocate a pool of N blob chunks of M size each (roughly, your "number
+&gt; &gt; of blobs and the size of the blobs"), and those blob-chunks could be
+&gt; &gt; moved out of the pool and linked-listed per sysex/blob, and released into
+&gt; &gt; the
+&gt; &gt; driver's blob-chunk pool again as readers move past the blob-chunk,
+&gt; &gt; all hidden from the clients.  If clients aren't fast enough advancing
+&gt; &gt; their read streams, so that the driver ends up with no blob chunks left,
+&gt; &gt; clients would get their read streams closed, and their next read would
+&gt; &gt; fail.
+&gt;
+&gt; This sounds too complex, both in implementation and for clients.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1301687973.15282_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1301703149.29989_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1301701945.28867_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1301701945.28867_0.ltw:2,a&nbsp;&lt;201104011937.07164.termtech at rogers dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

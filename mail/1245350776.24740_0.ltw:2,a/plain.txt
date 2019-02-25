@@ -1,0 +1,85 @@
+Date:        Thu, 18 Jun 2009 20:45:31 +0200
+From:        Lennart Poettering  <[hidden] at 0pointer dot de>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          [hidden] at lists dot jackaudio dot org, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>
+In-Reply-To: Paul Davis Re: [LAD] [Jack-Devel] jack2's dbus name (1245347529.14855_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] jack2's dbus name
+
+On Thu, 18.06.09 13:51, Paul Davis ([hidden]) wrote:
+
+> On Thu, Jun 18, 2009 at 12:21 PM, Lennart Poettering <[hidden]>wrote:
+> 
+> >
+> >
+> > This is a bit more complex than you might think. Jack's thread
+> > management is very unflexible and insists on controlling the entire
+> > thread life cycle, only calling into client code in very few
+> > occasions.
+> 
+> 
+> You might want to check out the more recent API additions:
+> 
+> jack_cycle_wait()
+> jack_cycle_signal()
+> 
+> which were created for precisely the sort of reasons you are describing.
+
+That sounds like it was what I need. 
+
+So, how would I use this? I figure something like this:
+
+<snip>
+void* my_thread(void*arg) {
+    for (;;) {
+        n = jack_cycle_wait(client);
+        process_my_data(n);
+        jack_cycle_signal(client, 0);
+        do_my_other_work_if_there_is_any();
+    }
+}
+
+jack_set_process_thread(client, foo_func);
+</snip>
+
+Is that the rough idea? Hmm, with the other RT loops I have in PA I
+usually just dispatch a single my own events and then immediately
+check the IO device again, possibly dealing with the IO stuff first,
+and only after finishing that I dispatch the next of my own events and
+immediately check for IO again. That way I make sure that IO always
+takes priority over dispatching those events. i.e. something along the
+lines of:
+
+<snip>
+void *my_thread(void *arg) {
+    for (;;) {
+        n = how_much_shall_i_process();
+        if (n > 0) {
+            process_my_data(n);
+            continue;
+        }
+        n = how_many_events_to_dispatch();
+        if (n > 0) {
+            process_one_event();
+            continue;
+        }
+        wait_for_io();
+}
+</snip>
+
+So, to map this to JACK, I would prefer if jack_cycle_wait() would
+also exist in a non-blocking variant. i.e. something that can return 0
+if there's nothing to process, but doesn't necessarily wait.
+
+(we probably should stop the cross-posting, though)
+
+Lennart
+
+-- 
+Lennart Poettering                        Red Hat, Inc.
+lennart [at] poettering [dot] net
+http://0pointer.net/lennart/           GnuPG 0x1A015CC4
+
+1245350776.24740_0.ltw:2,a <20090618184531.GA20535 at tango dot 0pointer dot de>
+________________________________________________________________________________
+

@@ -1,0 +1,50 @@
+Date:        Sun, 13 Mar 2011 11:09:53 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Felix Pfeifer <[hidden] at googlemail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Felix Pfeifer [Jack-Devel] what could cause: "impossible sample width (1) discovered!" (1300028608.15507_0.ltw:2,a)
+Follow-Up:   Felix Pfeifer Re: [Jack-Devel] what could cause: "impossible sample width (1) discovered!" (1300031086.20268_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] what could cause: "impossible sample width (1) discovered!"
+
+On Sun, Mar 13, 2011 at 11:03 AM, Felix Pfeifer
+<[hidden]> wrote:
+
+> If i add inputs
+> or use inputs only i get this error message:
+> "impossible sample width (1) discovered!"
+
+i don't recall.
+
+> Does anybody have an idea what can cause
+> this error? What exactly means width?
+
+bits per sample
+
+a quick perusal of the source code for the alsa backend should give
+you some deep clues about what is going on.
+
+>Is it
+> maybe an uncorrect samplerate in my hardware?
+> When starting jack, does jack provide the masterclock
+> for playback and record? Is it necessary that my
+> soundcard acts as a samplerate slave or is it
+> possible to use it as the mastersamplingclock?
+
+JACK doesn't provide a sample clock to anything (directly). it does
+rely on the backend's wait() function, which in your case means ALSA
+waiting for the device to indicate that its ready for input and/or
+output. jack doesn't do anythng on a per-sample basis - it waits for
+the next block ("period") of data/space to be ready, runs the process
+callback cycle to process/generate the data, and then waits for the
+next block.
+
+if you're using the normal ALSA USB1 class driver, the error is likely
+to be in your system, because JACK and its ALSA backend works OK on
+just about all the implementations that we know of (OK, not great,
+thanks to issues with Linux USB support, but that's another long
+story).
+
+1300029018.16392_0.ltw:2,a <AANLkTimEmTmDqHECTQ_bGp42mRfnUOwzBgxZyEHLMzwU at mail dot gmail dot com>
+________________________________________________________________________________
+

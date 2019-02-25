@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] routing alsa through jack</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] routing alsa through jack</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1387310016.3840_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1387404453.17687_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1387340690.15205_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 18 Dec 2013 05:24:37 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Lucio Crusca </span> &lt;[hidden] at sulweb dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Robin Gareus &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1387310016.3840_0.ltw:2,/index.html'>Re: [Jack-Devel] routing alsa through jack </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Dominique Michel
+<a href='../1387404453.17687_0.ltw:2,/index.html'>Re: [Jack-Devel] routing alsa through jack </a></td></tr>
+</table>
+<pre>
+In data marted&#xEC; 17 dicembre 2013 20:53:26, hai scritto:
+&gt; Entirely appropriate. That approach works just fine here with older
+&gt; versions of skype that support plain ALSA (I think newer versions of
+&gt; skype are pulse only, but I don't know. 
+
+AFAICT Skype 4 supports both Pulse and Alsa.
+
+&gt; Did you find
+&gt; http://alsa.opensrc.org/Jack_and_Loopback_device_as_Alsa-to-Jack_bridge
+&gt; ? It's somewhat verbose, but a very nice article with complete
+&gt; step-by-step instructions and background information.
+
+Yes, I did find it, but it's quite focused on a different target than simply 
+routing audio through Jack with a single sound card, and I couldn't manage to 
+distinguish the parts to be ignored in my case. When I finished doing what's 
+written there, I was stuck with no audio at all, be it Alsa or Jack. I must 
+have done something wrong, but I can't tell what because I wasn't 
+understanding most of the things I was doing.
+
+&gt; Long story short: You cannot write directly to the loop-hardware once
+&gt; alsa_in/out are connected. 
+
+I'd say "oviously" here, except I didn't realize it myself... I think I took 
+the opposite for granted because snd_aloop creates two soundcards, so I 
+assumed I could lock one with Jack and the other with Alsa.
+
+&gt; asoundrc: http://robin.linuxaudio.org/tmp/asoundrc-loopback
+
+Ok, I don't want to make the loop be the default device, for the time being: 
+this way if something goes wrong i can just stop jackd and everything keeps 
+working through Alsa. Should I avoid or change the last part ("pcm.!default") 
+of that asoundrc then?
+
+&gt; 
+&gt;  zita-a2j -L -d hw:Loopback,1,0 -j cloop -n 2 -p 256
+&gt;  zita-j2a -L -d hw:Loopback,1,1 -j ploop -n 2 -p 256
+&gt;  sleep 1
+&gt;  jack_connect cloop:capture_1 system:playback_1 &amp;&gt;/dev/null
+&gt;  jack_connect cloop:capture_2 system:playback_2 &amp;&gt;/dev/null
+&gt;  jack_connect system:capture_1 ploop:playback_1 &amp;&gt;/dev/null
+&gt;  jack_connect system:capture_2 ploop:playback_2 &amp;&gt;/dev/null
+
+I assume I could also make connections through the patchbay in qjackctl 
+instead of using jack_connect, right? It's a more trial-and-error friendly 
+method for the beginners...
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1387310016.3840_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1387404453.17687_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1387340690.15205_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1387340690.15205_0.ltw:2,&nbsp;&lt;1536755.xCOZm48Ui4 at fx&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,93 @@
+Date:        Sun, 17 May 2009 11:48:57 +0100
+From:        Rui Nuno Capela  <[hidden] at rncbc dot org>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          Linux Audio Users <[hidden] at lists dot linuxaudio dot org>, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>, JACK Developers <[hidden] at jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [LAD] [Jack-Devel] more jack/qjackctl madness (1242545806.1739_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [LAD] [Jack-Devel] more jack/qjackctl madness (1242560416.23177_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] more jack/qjackctl madness
+
+Stéphane Letz wrote:
+>> To whom it may concern: (again)
+>>
+>> Jackdmp 1.9.2, Qjackctl 0.3.4
+>>
+>> I do the following:
+>>
+>> - Log in.
+>> - Start a jack app.
+>> - The app starts jackd, but using the wrong card,
+>>   and things don't work as expected.
+>>
+>> Questions:
+>>
+>>  1. Which parameters are used for such an autostart ?
+>>     Certainly not the ones in ~/.jackdrc, these would
+>>     have been correct.
+>>  2. Qjackctl also ignores ~/.jackdrc, so what is the
+>>     purpose of this file ?
+>>
+>> - I terminate the app. Check with ps, there is no
+>>   more jackd running.
+>> - I start qjackctl. It immediately shows a running
+>>   jackd, but his has restarted the previous wrong one.
+>> - Click Stop, Start in qjackctl. Get the same wrong
+>>   jackd again.
+>> - Verify qjackctl's Setup window. This shows the
+>>   settings for the right jackd, while it is running
+>>   another one.
+>>
+>> This is *madness*
+>>
+>> One more: you can't terminate qjackctl without
+>> terminating jackd as well. Why not ? Killing
+>> qjackctl does the right thing.
+>>
+>> A request to the jackdmp and qjackctl devs:
+>>
+>>    PLEASE REMOVE THAT DBUS MADNESS
+>>
+>> Ciao,
+>>
+> 
+> Fons,
+> 
+> I really appreciate your feedback...,  but AFAICS Qjackctl is
+> *absolutely* not using the DBUS layer!
+> 
+> With jackdmp/jack2 compiled with default settings (that is *not* using
+> the --dbus at configure step), then it should absolutely behave as jack1
+> was behaving.
+> 
+> And I guess Rui can better answer the points concerning "~/.jackdrc,"
+> and son on.
+> 
+
+qjackctl only writes to ~/.jackdrc *iif* you opt to (see Setup/Misc/Save
+JACK audio server configuration). otherwise it *never* makes use of that
+file ie. it never auto-starts jackd implicitly; it only does start jackd
+explicitly if none is found running atm.
+
+if you really want several jackd server running simultaneously you'll
+have to take use of the JACK_DEFAULT_SERVER environment variable to tell
+qjackctl which server it will refer to. in fact, that is the only tricky
+way for you to have several qjackctl instances running as well.
+
+Stephane is right, qjackctl makes no use of the d-bus interface in
+jackaudio.org domain, although the latest in qjackctl cvs has some d-bus
+stuff of its own (rncbc.org domain) and only serves for
+starting/stopping qjackctl control--found useful for example to any
+system suspend/resume script you may think of.
+
+otoh, the only other jack application i know of that writes to
+~/.jackdrc is ardour; have a look at your use case when starting jackd
+from behind ardour's open session dialog...
+
+cheera
+-- 
+rncbc aka Rui Nuno Capela
+[hidden]
+
+1242557515.21256_0.ltw:2,a <4A0FEB99.3080505 at rncbc dot org>
+________________________________________________________________________________
+

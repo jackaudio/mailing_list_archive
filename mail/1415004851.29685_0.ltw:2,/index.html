@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] USB MIDI keyboard Akai LPK, jackd</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] USB MIDI keyboard Akai LPK, jackd</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1415000217.22871_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1415015573.15067_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1415004851.29685_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 03 Nov 2014 09:54:02 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jeremy Jongepier </span> &lt;[hidden] at autostatic dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>&#x141;ukasz Kidzi&#x144;ski
+<a href='../1415000217.22871_0.ltw:2,/index.html'>[Jack-Devel] USB MIDI keyboard Akai LPK, jackd </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>&#x141;ukasz Kidzi&#x144;ski
+<a href='../1415087257.23469_0.ltw:2,/index.html'>Re: [Jack-Devel] USB MIDI keyboard Akai LPK, jackd </a></td></tr>
+</table>
+<pre>
+On 11/03/2014 08:36 AM, &#x141;ukasz Kidzi&#x144;ski wrote:
+&gt; I got Akai LPK25 and I am trying to make it working on my Ubuntu. I tried
+&gt; to follow a tutorial
+&gt; http://terokarvinen.com/2014/usb-midi-keyboard-on-linux-akai-lpk25-professional.
+&gt; I have no knowledge about jack and other applications involed so let me
+&gt; write everything since I don't know where to look for the problem. I posted
+&gt; the problem here
+&gt; http://askubuntu.com/questions/544672/usb-midi-keyboard-akai-lpk-jackd and
+&gt; they suggested to aks you here.
+&gt; 
+&gt; When I run
+&gt; 
+&gt;     zynjacku &amp;
+&gt; 
+
+Hello &#x141;ukasz,
+
+zynjacky is hopelessly outdated and you don't need it to set up your
+LPK25. Also you don't aconnectgui.
+
+This is what I would do to get things going:
+- Connect your LPK25
+- Install necessary software: apt-get install jackd qjackctl zynaddsubfx
+- Start QjackCtl and set it up for your soundcard, some googling should
+get you started
+- Start ZynAddSubFX and make the connections in the Audio tab from the
+Zyn output ports to your playback ports.
+- Do the same for MIDI, connect your LPK25 output to the Zyn input in
+the ALSA tab of the QjackCTL Connections window.
+
+That should do the trick, if not, shoot!
+
+&gt; I get errors
+&gt; 
+&gt;     Cannot connect to server socket err = No such file or directory
+&gt;     Cannot connect to server request channel
+&gt;     jack server is not running or cannot be started
+&gt;     Failed to connect to JACK.
+&gt;     Failed to initialize zynjacku engine
+&gt; 
+&gt; I figured I may need to run the jackd server first so I installed it and ran
+&gt; 
+&gt;     jackd -sRp 70 -d alsa -d hw:1 -r 44100 -H -z s
+&gt; 
+
+jackd -s is not necessary in most cases. -R (real-time mode) is a
+default option so not necessary. -p 70 sets JACK to use 70 ports, you
+probably mean -P 70, to set JACK's priority to 70. Afaik -H is only used
+if your soundcard supports hardware monitoring. What soundcard are you
+using? You also don't need to set dithering (-z s), the default setting
+should be just fine.
+
+&gt; but I still can't make zynjacku running and get
+&gt; 
+&gt;     flex scanner jammed
+&gt; 
+&gt; If I run zynaddsubfx and aconnectgui I manage to get signal from the
+&gt; keyboard (the indicator at the bottom gets blue) but I can't hear anythnig.
+&gt; 
+&gt; I tried to manually send some signal to jackd by `ecasound` and it reaches
+&gt; the jackd server but again I can't hear any sound.
+&gt; 
+&gt; I have totally no experience with jackd so that's why my trials are that
+&gt; random. Thanks in advance for your help.
+&gt; 
+&gt; If I run `jackd -sRp 70 -d alsa -d hw:1 -r 44100 -H -z s`, I get
+&gt; 
+&gt;     no message buffer overruns
+&gt;     JACK server starting in realtime mode with priority 10
+&gt;     audio_reservation_init
+&gt;     Acquire audio card Audio0
+&gt;     creating alsa driver ...
+&gt; hw:0|hw:0|1024|2|44100|0|0|hwmon|swmeter|-|32bit
+&gt;     Failed to open server
+&gt; 
+
+Try raising the verbosity of JACK by adding -v:
+
+jackd -v -P 70 -d alsa -d hw:1 -r 44100
+
+&gt; Thank you very much in advance,
+&gt; 
+&gt; Best,
+&gt; &#x141;ukasz Kidzi&#x144;ski
+
+Best,
+
+Jeremy
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1415000217.22871_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1415015573.15067_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1415004851.29685_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1415004851.29685_0.ltw:2,&nbsp;&lt;545742AA.6030302 at autostatic dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

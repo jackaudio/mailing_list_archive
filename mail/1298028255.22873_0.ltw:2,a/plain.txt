@@ -1,0 +1,64 @@
+Date:        Fri, 18 Feb 2011 12:23:57 +0100
+From:        torbenh  <[hidden] at gmx dot de>
+To:          "[hidden] at lists dot jackaudio dot org List" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Robin Gareus Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1297947692.32535_0.ltw:2,a)
+Follow-Up:   Robin Gareus Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1298121766.797_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client
+
+On Thu, Feb 17, 2011 at 02:01:06PM +0100, Robin Gareus wrote:
+> On 02/14/2011 03:14 PM, Stéphane Letz wrote:
+> >>>>
+> >>>
+> >>> Since I cannot reproduce the original issue here on my Linux machine, I cannot go much further. To summarize:
+> >>>
+> >>> - when JACK2 in synchronous mode, the server does : blocking ALSA read (actually, wait + read), graph activation, wait for graph to complete, write ALSA. 
+> >>>
+> >>> - when a client is killed, it may fail to correctly complete a cycle, before the server detect the client has been removed, and cleanup the graph.  The server has a timeout to decide when the graph has really failed before trying to write back in ALSA. Since the server is late, ALSA backend issue a  "ALSA: could not complete playback" error in alsa_driver_write. This is considered as a "non recoverable error" and the backend wrapping thread is just stopped.
+> >>>
+> >>> - how does JACK1 behave is a similar situation? I guess there is a "graph late" problem also? Is there a timeout to decide when the graph has really failed? why is the "ALSA: could not complete playback" error not triggered in this precise case?
+> >>
+> >> jack1 will be late too.
+> >> but jack1 does not try to write to the driver when the graph is late.
+> >> the next alsa wait will detect the xrun and recover.
+> >> so the next cycle, things should be fine again.
+> >>
+> > 
+> > 
+> > OK this makes sense, Valerio here a patch to test that does not write back in the backend if the "graph process" fails:
+> > 
+> > 
+> 
+> 
+> while you're at it: Would it be unreasonable to ask looking into
+> ignoring device disconnect?  f.i. have jackd survive and not crash when
+> an interface (eg ALSA-USB) goes away.
+> 
+> No further action should be taken by JACK (well, maybe some hook-script
+> could be invoked or a d-bus command send); some 3rd party software could
+> issue d-bus commands to switch backends.
+
+i basically did this with tschack. using pyjackd this should be working.
+not well tested, as i dont have an usb soundcard with me very often.
+
+> 
+> > 
+> > Can you try is and report?
+> > 
+> > Thanks
+> > 
+> > Stéphane 
+> > 
+> > 
+> > 
+> > 
+> > Jack-Devel mailing list
+> > [hidden]
+> > http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+-- 
+torben Hohn
+
+1298028255.22873_0.ltw:2,a <20110218112357.GC3124 at siel dot b>
+________________________________________________________________________________
+

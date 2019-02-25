@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack's timing functions</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack's timing functions</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324919191.9270_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324983805.19397_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324980542.16108_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 27 Dec 2011 11:08:49 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Florian Paul Schmidt </span> &lt;[hidden] at gmx dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1324919191.9270_0.ltw:2,a/index.html'>[Jack-Devel] Jack's timing functions </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Rigg
+<a href='../1324983805.19397_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack's timing functions </a></td></tr>
+</table>
+<pre>
+I have nothing to add except for my support for your proposal, whatever 
+it's worth. Your first suggestion seems to be the least amount of work, 
+so +1 :D
+
+Flo
+
+On 12/26/2011 06:06 PM, Fons Adriaensen wrote:
+&gt; Hello all,
+&gt;
+&gt; During the weekend I've been working on adaptive resampling
+&gt; algorithms (as required for e.g. alsa_in and similar apps).
+&gt;
+&gt; The first tentative result produces around 100 times less
+&gt; jitter on the dynamic resample ratio than alsa_in. See
+&gt; &lt;http://kokkinizita.linuxaudio.org/linuxaudio/resample.html&gt;,
+&gt; The difference in phase noise levels is roughly 40 dB.
+&gt;
+&gt; In fact it has reached the point where the performance is no
+&gt; longer dominated by random timing errors, but also systematic
+&gt; ones resulting from quantisation of some of the variables
+&gt; involved in the calculation (mostly frame counts expressed
+&gt; as integers) start to show up.
+&gt;
+&gt; This is very visible in the time domain test results, but even
+&gt; the frequency domain ones start to show this, Note all those
+&gt; little discrete lines in the first plot (link above) - each
+&gt; of these is the result of a deterministic error pattern.
+&gt;
+&gt; This in turn made me look into Jack's timing-related functions.
+&gt;
+&gt; One of the values I needed was the microseconds time for the
+&gt; start of the current cycle (the one filtered by the DLL). This
+&gt; is not available in the public API. It can be computed in two
+&gt; ways. The first is
+&gt; jack_frames_to_time (client, jack_last_frame_time (client));
+&gt; which is a rather convolved way to recompute an already known
+&gt; value: client-&gt;engine-&gt;current_time.current_wakeup.
+&gt;
+&gt; The second involves using jack_frames_since_cycle_start() and
+&gt; jack_get_time() and compute the result from those. This is even
+&gt; more convolved and won't produce an accurate result because:
+&gt;
+&gt; a) the usecs clock is read twice, the values used should be the
+&gt;     same but they won't,
+&gt; b) the value returned by jack_frames_since_cycle_start() is
+&gt;     quantised to an integer and precision is lost,
+&gt; c) the base usecs time used by this function is apparently not
+&gt;     the DLL filtered time but the unfiltered one.
+&gt;
+&gt; (c) in fact introduces an inconsistency in the set of time-related
+&gt; functions.
+&gt;
+&gt; So my first suggestion is to add two functions to transclient.c:
+&gt;
+&gt; jack_time_t jack_current_wakeup_time (const jack_client_t *client)
+&gt; {
+&gt;      return client-&gt;engine-&gt;frame_timer.current_wakeup;
+&gt; }
+&gt;
+&gt; jack_time_t jack_next_wakeup_time (const jack_client_t *client)
+&gt; {
+&gt;      return client-&gt;engine-&gt;frame_timer.next_wakeup;
+&gt; }
+&gt;
+&gt; which together with jack_last_frame_time() provide all the
+&gt; info a client could need to do its own calculations to full
+&gt; precision.
+&gt;
+&gt; Note that it is perfectly safe to read these three values in
+&gt; the process callback even without the 'guards' used to ensure
+&gt; an atomic copy in jack_read_frame_time() - a new cycle isn't
+&gt; supposed to start at that time (and if it does there is bigger
+&gt; trouble ahead anyway).
+&gt;
+&gt; An alternative would be to provide a single function to allow
+&gt; a client to read all three in a single call, with or without
+&gt; guards.
+&gt;
+&gt; Another way to provide better precision would be to let
+&gt; jack_frames_since_cycle_start() return a double or float,
+&gt; and to modify the two frames&lt;-&gt;usecs conversion functions
+&gt; to accept/return a float or double frametime referenced
+&gt; to the start of the cycle (i.e. removing the potentially
+&gt; large offset, which is given by jack_last_frame_time()
+&gt; anyway).
+&gt;
+&gt; Ciao,
+&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324919191.9270_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324983805.19397_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324980542.16108_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1324980542.16108_0.ltw:2,a&nbsp;&lt;4EF99931.1030809 at gmx dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

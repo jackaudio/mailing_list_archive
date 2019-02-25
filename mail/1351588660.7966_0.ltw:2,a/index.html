@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Introducing delay into simple_client.c</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Introducing delay into simple_client.c</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1351580380.29863_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1351616560.19110_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1351588660.7966_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 30 Oct 2012 10:17:26 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jason Martyn &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Jason Martyn
+<a href='../1351580380.29863_0.ltw:2,a/index.html'>[Jack-Devel] Introducing delay into simple_client.c </a></td></tr>
+</table>
+<pre>
+On 10/30/2012 07:59 AM, Jason Martyn wrote:
+&gt; Hi everyone,
+&gt; 
+&gt; I'm brand new to JACK and its implementation, so please bear with me.
+&gt; I'm looking to modify the example script simple_client.c to introduce
+&gt; a predetermined time delay from the input to the output.  I.e.,
+&gt; unmodified, simple_client.c simply copies the input to the output, and
+&gt; instead, I would like to take the input, delay it by t seconds, and
+&gt; then send it to the output.
+&gt; 
+&gt; To do this, I thought I would declare an array of type
+&gt; jack_default_audio_sample_t and then store the input into that array
+&gt; until the critical time where it should start playing it to the
+&gt; output. The new input then overwrites the old input by cycling through
+&gt; the array from the beginning.
+&gt; 
+&gt; Here's my process callback (with comments on my reasoning):
+&gt; 
+&gt; //Initialize counting integers
+&gt; int i = 0;
+&gt; int j = 0;
+&gt; 
+&gt; //Initialize storage array
+&gt; jack_default_audio_sample_t *prev[200]; //Note: 200 is just a test number
+&gt; 
+&gt; int process (jack_nframes_t nframes, void *arg)
+&gt; {
+&gt;    //For the first 200 cycles, store input into array, don't output anything
+&gt;     if (i&lt;200){
+&gt; 
+&gt;         prev[i] = (jack_default_audio_sample_t *) jack_port_get_buffer
+&gt; (input_port, nframes);
+&gt;         i++;
+&gt;     }
+&gt; 
+&gt;     //For all following cycles, play the input, starting from the
+&gt; beginning of the array
+&gt;     else {
+&gt; 
+&gt;     jack_default_audio_sample_t *out = (jack_default_audio_sample_t *)
+&gt; jack_port_get_buffer (output_port, nframes);
+&gt;     memcpy (out, prev[j], sizeof (jack_default_audio_sample_t) *
+&gt; nframes); //Note: j is the new counting variable
+&gt; 
+&gt;    //Overwrite recently played input with new input:
+&gt;     prev[j] = (jack_default_audio_sample_t *) jack_port_get_buffer
+&gt; (input_port, nframes);
+&gt;     j++;
+&gt; 
+&gt;    //Reset array counter to 0 when it reaches the end
+&gt;     if (j = 200){ j = 0; } //reset j
+&gt;     }
+&gt; 
+&gt; return 0;
+&gt; }
+&gt; 
+&gt; If this looks way off (as in I'm missing the point of how JACK, etc.
+&gt; works), I'd appreciate any resources that might help me get started
+&gt; with regards to understanding how this all works.  I have gone through
+&gt; the tutorials listed on the JACK site, and have a lot of troubles
+&gt; trying to find anything else.
+&gt; 
+&gt; Regards,
+&gt; Jason
+
+Hi Jason,
+
+welcome aboard! The issue with above code is
+    prev[i] = jack_port_get_buffer(..);
+
+The buffer returned by jack_port_get_buffer() is only valid for the
+current process cycle. You need to memcpy() that to a temp. queue.
+
+While easy in principle, things can get a bit complicated because the
+period size can change. When the delay-line buffer wraps-around and the
+delay-line buffer-size is not an exact multiple of the period-size, you
+will need two memcpy()s for writing and two for reading to make it seamless.
+
+While it's a good exercise to code that, the easiest way is to use
+libjack's ringbuffer which does exactly that:
+http://jackaudio.org/files/docs/html/ringbuffer_8h.html
+
+HTH,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1351580380.29863_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1351616560.19110_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1351588660.7966_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1351588660.7966_0.ltw:2,a&nbsp;&lt;508F9B26.4000309 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

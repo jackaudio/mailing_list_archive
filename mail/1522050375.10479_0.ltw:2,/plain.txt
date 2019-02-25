@@ -1,0 +1,77 @@
+Date:        Mon, 26 Mar 2018 07:45:45 +0000
+From:        Robert Bielik  <[hidden] at dirac dot com>
+To:          Christopher Obbard <[hidden] at 64studio dot com>, "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Christopher Obbard [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes (1521973955.21072_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes
+
+Hi Chris,
+
+Not sure how much this helps, but I have been running the audioinjector octocard (6 in/8 out) on a RPi 3, with stable streaming down to 8 frames per buffer, with a distribution called RealtimePi (https://github.com/guysoft/RealtimePi) Unfortunately I don't know the specific kernel details of it.
+
+My exact setup can be found here: http://forum.audioinjector.net/viewtopic.php?f=5&t=2727&start=30#p5749
+
+Problem of course is that the lower the buffer size, the higher the CPU utilization. With 64 frames per buffer, the latency/CPU tradeoff is acceptable (I think with 8 frame per buffer, I had nearly 100% CPU just shoveling audio from input to output, with 64 it's ~10%).
+
+Regards
+/Robert
+
+> -----Original Message-----
+> From: Jack-Devel <[hidden]> On Behalf Of
+> Christopher Obbard
+> Sent: den 25 mars 2018 12:32
+> To: [hidden]
+> Subject: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes
+> 
+> Hi Guys,
+> 
+> Running jack with a small buffer (-p64 -n2), and connecting with any
+> client causes issues.
+> With higher buffer sizes, all is OK.
+> 
+> This is on an ARM embedded system, with a single core 1MHz processor.
+> I've set the cpu governor to performance.
+> 
+> I have a custom compiled 4.14 kernel with omap2plus_defconfig with the
+> following config settings:
+> > CONFIG_PREEMPT_VOLUNTARY=y
+> > HZ_100=y
+> > CONFIG_NO_HZ_IDLE=y
+> 
+> $ jackd -R -P95 -dalsa -dhw:0 -r48000 -p64 -n2
+> > JackPosixProcessSync::LockedTimedWait error usec = 5000000 err =
+> Connection timed out
+> > Driver is not running
+> > Cannot create new client
+> > CheckSize error size = 32 Size() = 12
+> > CheckRead error
+> > CheckSize error size = -1 Size() = 4
+> > CheckRead error
+> > CheckSize error size = 0 Size() = 12
+> > CheckRead error
+> 
+> 
+> Also, with higher buffer sizes sometimes I get xruns. After enabling
+> alsa debugging, the error is:
+> > ALSA: PCM: [Q] Lost interrupts?: (stream=0, delta=221,
+> new_hw_ptr=181343, old_hw_ptr=181122)
+> 
+> Loosing the FIFO interrupts doesn't seem like a great thing.........
+> 
+> 
+> I _think_ the issue is to do with the kernel scheduling, but this why
+> I ask the experts :-).
+> Can anyone suggest any kernel settings that will improve my situation?
+> 
+> 
+> Many thanks,
+> 
+> Chris
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1522050375.10479_0.ltw:2, <f3090faa0cbb470491e628245c8356e6 at hosted3-mb02 dot itm dot host>
+________________________________________________________________________________
+

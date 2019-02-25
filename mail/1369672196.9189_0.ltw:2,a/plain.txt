@@ -1,0 +1,61 @@
+Date:        Mon, 27 May 2013 12:29:23 -0400
+From:        Jason Cipriani  <[hidden] at gmail dot com>
+To:          Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] Netjack - one audio source, multiple remote destinations (1369566251.13872_0.ltw:2,a)
+Follow-Up:   Jason Cipriani Re: [Jack-Devel] Netjack - one audio source, multiple remote destinations (1369673131.10613_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Netjack - one audio source, multiple remote destinations
+
+Thanks Adrian,
+
+
+On Sun, May 26, 2013 at 7:03 AM, Adrian Knoth <[hidden]>wrote:
+
+> On 05/26/13 01:57, Jason Cipriani wrote:
+>
+>> I'm working on a project where we'd like to have a single central PC
+>> (running Linux, currently Ubuntu) streaming different audio streams to
+>> multiple other devices (Gumstix Overo, jackd 1 available, 20 devices).
+>>
+>
+> Is latency important? If not, ignore all the jackd stuff, run
+>
+
+Latency is important, so I am trying the alsa_in / zita path:
+
+
+If you really want/need a jackd-based setup, then do something like
+
+> this:
+>
+>    - PC is master, can even be -d dummy (no local audio I/O)
+>    - 20 slaves connected with jack_netsource -N slaveX -H slaveX
+>    - Run alsa_in/alsa_out or even better zita-ajbridge (a2j, j2a) on
+>      each slave to enable local audio I/O
+>
+
+This is exactly what I want to do, thanks! Unfortunately, alsa_in/alsa_out
+do not seem to be available for the devices (Gumstix Overo). I did find the
+zita-ajbridge source and compiled it with no issues, but am getting
+floating point exceptions from zita-j2a on initialization:
+
+# zita-j2a -d hw:0,0 -L -r 44100 -p 1024 -v
+playback :
+  nchan  : 2
+  fsamp  : 44100
+  fsize  : 1024
+  nfrag  : 2
+  format : S16_LE
+capture  : not enabled
+Floating point exception
+
+Fortunately gdb is available and the zita source is very tidy, so...
+hopefully I can get to the bottom of it.
+
+Thanks again,
+Jason
+
+1369672196.9189_0.ltw:2,a <CAF1GSthNbyUwP=n+MqR9BG4j_WBH0x__8WMLBDRAArUdpJTBkg at mail dot gmail dot com>
+________________________________________________________________________________
+

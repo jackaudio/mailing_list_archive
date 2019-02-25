@@ -1,0 +1,134 @@
+Date:        Wed, 16 Jan 2013 17:25:54 +0200
+From:        Stefan Stefanov  <[hidden] at gmail dot com>
+To:          Patrick Shirkey <[hidden] at boosthardware dot com>
+Cc:          [hidden] at jackaudio dot org
+In-Reply-To: Patrick Shirkey Re: [Jack-Devel] Console based software EQ for jack (1358347642.6017_0.ltw:2,a)
+Follow-Up:   Patrick Shirkey Re: [Jack-Devel] Console based software EQ for jack (1358363449.25744_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Console based software EQ for jack
+
+Thanks for the suggestion but I have to rethink how to accomplish this.
+
+Let me describe my set-up and what I have tried till now.
+I'm using Archlinux with pure systemd.
+I wrote my custom jack.service and jackd is started at system boot:
+
+My jack.service (also discussed here a couple weeks ago):
+[Unit]
+Description=JACK
+After=sound.target
+
+[Service]
+User=stefan
+ExecStart=/usr/bin/jackd -P 85 -d alsa -P hw:2,0 -r 96000 -n 3 -p 256
+LimitMEMLOCK=infinity
+LimitRTPRIO=infinity
+
+[Install]
+WantedBy=multi-user.target
+
+My mpd.conf is configured to use jack:
+...
+audio_output {
+       type             "jack"
+       name             "JACK Audiolab MDAC"
+       device           "hw:2,0"
+       format           "*:24_3:2"
+       mixer_type       "disabled"
+}
+...
+
+This is my current set-up and I'm very happy with it :)
+
+
+As you can see above mpd uses hard-coded connection to jack and
+it do real connection when my mpd-client (running on another machine)
+starts playing (hit "Play" button)
+
+(1) mpd -> jackd
+
+Now, I have to include jackeq in the middle of the (1) connection. So,
+I wrote another systemd service - for jackeq:
+[Unit]
+Description=JackEQ
+Requires=jack.service
+After=jack.service
+
+[Service]
+Type=simple
+User=stefan
+ExecStart=/usr/bin/jackeq -d
+
+[Install]
+WantedBy=multi-user.target
+
+Then I start jackeq.service.
+To make the connections to jackeq I use:
+
+Music Player Daemon:left -> jackEQ:c.1-in-L
+jackEQ:c.1-out-L -> system:playback_1
+Music Player Daemon:right -> jackEQ:c.1-in-R
+jackEQ:c.1-out-R -> system:playback_2
+
+
+jack_connect Music\ Player\ Daemon:left jackEQ:c.1-in-L
+jack_connect Music\ Player\ Daemon:right jackEQ:c.1-in-R
+
+jack_connect jackEQ:c.1-out-L system:playback_1
+jack_connect jackEQ:c.1-out-R system:playback_2
+
+This way I get:
+(2) mpd -> jackeq -> jackd
+
+and I'm able to use jackeq, but only statically.
+Statically means that cannot adjust of bass and treble during playback,
+but just load values (for bass and treble) from jackeq.conf file
+located in my $HOME (same as Roland Mas suggests).
+
+
+The main problem is that connection (1) is always created (from mpd I think)
+when the playback starts from mpd-client and I have to disconnect it
+every time before I make connection (2).
+
+
+
+2013/1/16 Patrick Shirkey <[hidden]>:
+>
+> On Wed, January 16, 2013 8:03 pm, Stefan Stefanov wrote:
+>> Hello
+>>
+>> My music server is headless (no graphical environment).
+>> I'm using mpd + JACK to play music.
+>> Now I need some software equalizer (JACK based of course), but running
+>> in daemon mode.
+>>
+>> JackEQ is the application I currently installed. It could be run in
+>> daemon mode like that:
+>> $ jackeq -d
+>>
+>> But I don't understand how to use it further more:
+>> - how to connect it (to mpd in my case) ?
+>
+> IIRC ,you can connect the channels via jack_connect
+>
+>> - how to adjust bass and treble ?
+>
+> To the best of my knowledge you are the first person who has publicly
+> expressed an interest in having this functionality. Hence it doesn't exist
+> yet :-)
+>
+> I'm happy to spend some time on it if you have some ideas for how to
+> achieve it for your use case.
+>
+>
+> --
+> Patrick Shirkey
+> Boost Hardware Ltd
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1358349962.9908_0.ltw:2,a <CACbSjoWjTwMg7OmM42tz9RvSUSTviAwabp-XBPz3TN=HxzziUw at mail dot gmail dot com>
+________________________________________________________________________________
+

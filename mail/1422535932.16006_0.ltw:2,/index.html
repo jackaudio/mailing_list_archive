@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Dispersing MIDI messages: one to multiple</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Dispersing MIDI messages: one to multiple</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1422526218.31626_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1422539363.22160_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1422535932.16006_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 29 Jan 2015 12:52:04 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Harry van Haaren </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Marjan Mrak &lt;[hidden] at gmail dot com&gt;, JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+On Thu, Jan 29, 2015 at 10:08 AM, Marjan Mrak &lt;marjan.mrak@gmail.comwrote:
+&gt; I have developed JACK MIDI client, which grabs midi messages from MIDI
+&gt; keyboard on one port, and disperses it according to:
+Hey,
+
+&gt; It works, but if I am using it, totaly at random sound output "hangs" for
+&gt; like 10th of second.
+I'm not sure why it would "hang", and I'm not sure quite what you mean
+with that: are notes not passed through at all, or is it that certain
+notes are skipped?
+
+&gt; I suspect my code is the problem. I would just like someone to examine it -
+&gt; perhaps I am doiung something wrong here.
+I hope its the latter.. because there's a little bug hiding in the
+MIDI get code from JACK. It attempts to read *one* event, for every
+"nframe" that is available. The following code snippet is taken from
+the JACK example-clients - midisine.c
+
+jack_midi_event_t in_event;
+jack_nframes_t event_index = 0;
+jack_nframes_t event_count = jack_midi_get_event_count(port_buf);
+
+if(event_count 1)
+{
+   printf(" midisine: have %d events\n", event_count);
+   for(i=0; i&lt;event_count; i++)
+   {
+      jack_midi_event_get(&amp;in_event, port_buf, i);
+      printf(" event %d time is %d. 1st byte is 0x%x\n", i,
+in_event.time, *(in_event.buffer));
+   }
+}
+
+I'm not sure if your code is "production ready" - printf locks a
+mutex, a big no-no in RT code. Since MIDI handling and audio are in
+the same real-time thread, its not wise to printf in production code.
+It could cause xruns in JACK if the printf decides to lock and wait
+too long.
+
+Hope the above helps the issue, cheers, -Harry
+
+-- 
+
+http://www.openavproductions.com
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1422526218.31626_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1422539363.22160_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1422535932.16006_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1422535932.16006_0.ltw:2,&nbsp;&lt;CAKudYbM+_cnW6YGA--Ss_gjsTb61i5v3sXOGmUVAzG14=g4X7w at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

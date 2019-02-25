@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] System signals and JACK</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] System signals and JACK</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1416148135.16185_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1416168562.17354_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1416153022.24081_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 16 Nov 2014 16:50:35 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Hans Petter Selasky </span> &lt;[hidden] at selasky dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Robin Gareus &lt;[hidden] at gareus dot org&gt;, [hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Hans Petter Selasky
+<a href='../1414439643.19018_0.ltw:2,/index.html'>Re: [Jack-Devel] System signals and JACK </a></td></tr>
+</table>
+<pre>
+On 10/27/14 20:54, Hans Petter Selasky wrote:
+&gt; On 10/27/14 20:42, Hans Petter Selasky wrote:
+&gt;&gt; On 10/23/14 16:52, Robin Gareus wrote:
+&gt;&gt;&gt; On 10/23/2014 09:46 AM, Hans Petter Selasky wrote:
+&gt;&gt;&gt;&gt; Hi,
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; Some applications are using signals() and the jack client needs to
+&gt;&gt;&gt;&gt; ignore these. Consequently read/write calls should be wrapped. See
+&gt;&gt;&gt;&gt; attached patch. Can this be put upstream? Probably same issue with
+&gt;&gt;&gt;&gt; jack2.
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;
+&gt;&gt;&gt; JACK is a *realtime* audio system, if application code changes the
+&gt;&gt;&gt; behavior so that jack read/writes to be interrupted by a EINTR, it
+&gt;&gt;&gt; really seems something is broken by design there.
+&gt;&gt;&gt;
+&gt;&gt;&gt; signal() is sent to the main process thread. It should not be able to
+&gt;&gt;&gt; affect the jack-process callback thread at all. (Marking the jack thread
+&gt;&gt;&gt; as TASK_UNINTERRUPTIBLE could be a way forward or explicitly using
+&gt;&gt;&gt; pthread_sigmask() - but those are hacks and workarounds).
+&gt;&gt;&gt;
+&gt;&gt;&gt; Either way I cannot reproduce the problem in the first place, jltcgen
+&gt;&gt;&gt; from https://github.com/x42/ltc-tools uses SIGHUP to re-sync and that
+&gt;&gt;&gt; never caused issues here with jack2 on various architectures.
+&gt;&gt;&gt;
+&gt;&gt;
+&gt;&gt; Hi,
+&gt;&gt;
+&gt;&gt; I have a QT4/5.x based application using JACK, and this is a race. On
+&gt;&gt; one machine the issue never triggered. On another it happens from time
+&gt;&gt; to time, and prevents the JACK-client from registering. Have have not
+&gt;&gt; seen a problem in the jack-process callback thread yet, but when the
+&gt;&gt; register call is done from the main() thread. Initially I thought there
+&gt;&gt; was a problem with jackd, and I did a "strace" / "ktrace" and the
+&gt;&gt; problem went away.
+&gt;&gt;
+&gt;&gt; QT4/5.x has similar wrappers around its read/write operations.
+&gt;&gt;
+&gt;&gt; --HPS
+&gt;
+&gt; Hi,
+&gt;
+&gt; I suspect QT is setting up SIGCHLD, and when treads are created, the
+&gt; "main process" is receiving signals, which sometimes kill the jack
+&gt; client register.
+&gt;
+&gt; One solution would be to move the jack client register into the
+&gt; beginning of the process thread, to avoid this, or simply add the
+&gt; wrappers I'm suggesting.
+&gt;
+&gt; --HPS
+
+Ping - any more comments on this issue?
+
+--HPS
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1416148135.16185_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1416168562.17354_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1416153022.24081_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1416153022.24081_0.ltw:2,&nbsp;&lt;5468C7CB.8000305 at selasky dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

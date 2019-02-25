@@ -1,0 +1,74 @@
+Date:        Tue, 27 Mar 2018 20:21:35 -0500
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Josh de Kock Re: [Jack-Devel] MacOS support (1521999747.16075_0.ltw:2,)
+Follow-Up:   Ralf Mattes Re: [Jack-Devel] ?==?utf-8?q? MacOS support (1522201318.3653_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] MacOS support
+
+On Sun, March 25, 2018 12:41 pm, Josh de Kock wrote:
+> On 2018/02/01 13:59, Stefan Hellkvist wrote:
+>> Hi list,
+>>
+>> (Sorry this question has already been discussed but the search function
+>> in the archive of the list does not work)
+>>
+>> Is anyone working on the problem of getting Jack up and running on MacOS
+>> again? I installed Jack with brew but I get these “could not handle
+>> external client request” errors which seems to be old problems from
+>> looking at search results and GitHub discussions - problems introduced
+>> when MacOS audio architecture was changed a while back. Is there any
+>> progress on these matters? Is someone working on it? I need Jack as it
+>> is a dependency to another library I would like to use but I realize
+>> that I might have to abandon MacOS as a platform in the process.
+>
+> I looked at this a year or so ago, but ended up concluding that it was
+> too much work (for someone who had little to gain from it other than
+> just interest). I concluded in the case of JackOSX it would require an
+> almost full rewrite of the Router for modern macOS APIs. I could
+> probably look into it again, if someone could convince me :)
+
+
+For the original poster, do not use brew, go get the latest package for
+MacOS from jackaudio.org.
+That will install jackd and several other tools that are needed.
+
+This came up a few months back. The original developer stated that because
+of sandbox/security changed in MacOS the jack router application could no
+longer be the default audio device, so software which lets you select the
+audio device may continue to work, but software which only uses the system
+default device may not be able to use jackd through jack router.
+
+A list user named "Michael" then posted this reply:
+
+I have Jack router working in 10.9.5 as the default audio device. Yes, there
+were sandbox issues, but the small set of changes needed for the sandbox file
+was just that: small.
+
+Add to the end of system.sb:
+
+;;; local additions for Jack
+  (allow network*
+         (regex #"/private/tmp/jack_.*"))
+  (allow file-write*
+         (regex #"/private/tmp/jack_.*"))
+  (allow mach-lookup
+         (global-name-regex "jack_mach_sem.*"))
+  (allow ipc-sysv-sem)
+  (allow ipc-posix-shm-read*
+         (ipc-posix-name-regex "/jack-.*"))
+  (allow ipc-posix-shm-write*
+         (ipc-posix-name-regex "/jack-.*"))
+  (allow file-read*
+         (regex
+#"/Library/Audio/Plug-Ins/Components/JACK-insert.component.*"))
+
+
+Perhaps that can help.
+
+-- 
+Chris Caudle
+
+1522200126.2269_0.ltw:2, <0de52ff77a4971dd5fcff7864cd11e12.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

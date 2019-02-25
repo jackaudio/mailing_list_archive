@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] jack_port_get_buffer segfaults</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] jack_port_get_buffer segfaults</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303392085.31631_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303396327.7728_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303393333.1712_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 21 Apr 2011 16:42:00 +0300 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Dan Muresan </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Gabriel M. Beddingfield
+<a href='../1303400164.15081_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack_port_get_buffer segfaults </a></td></tr>
+</table>
+<pre>
+I keep getting segfaults inside a process thread (non-callback model)
+when calling jack_port_get_buffer. Is it possible that Jack zombifies
+the client and frees the memory associated to the port "behind my
+back"? I.e. can this happen without any on_shutdown or
+port_registration notifications delivered to the application?
+
+As a separate issue, I don't understand how the process thread can
+time out. A while ago Paul mentioned that ardour uses semaphores and
+that those are the closest thing to real-time IPC. I couldn't find any
+semaphores at all in ardour, but I came up with this code:
+
+  for (;;) {
+    jack_nframes_t nframes = jack_cycle_wait (jclient);
+    if (nframes &lt;= 0 || zombified) break;
+    sample_t *in = jack_port_get_buffer (jport, nframes);  // &lt;
+sporadic SEGFAULT
+
+    size_t avail = jack_ringbuffer_write_space (jbuf) / sizeof (sample_t);
+    if (avail &lt; nframes) nframes = avail;
+    jack_ringbuffer_write (jbuf, (const char *) in, nframes * sizeof
+(sample_t));
+    jack_cycle_signal (jclient, 0);
+
+    if (nframes &gt; 0) {
+      struct sembuf sops1 = { .sem_num = 0, .sem_op = nframes, .sem_flg = 0 };
+      semop (jbufavail_sem, &amp;sops1, 1);
+    }
+  }
+
+In theory this should be immune to anything the non-realtime threads
+do, but in practice I get zombifications (and segfaults) often enough.
+Any ideas on what I might be missing?
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303392085.31631_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303396327.7728_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303393333.1712_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1303393333.1712_0.ltw:2,a&nbsp;&lt;BANLkTimQO+nLh+hMfyfQ2JpN-iaoZmnC9Q at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

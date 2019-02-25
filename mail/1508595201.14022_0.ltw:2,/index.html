@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] AES67 / SMPTE ST 2110-30</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] AES67 / SMPTE ST 2110-30</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1507890214.32101_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1508729521.18353_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1508595201.14022_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 21 Oct 2017 09:13:03 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Philippe Bekaert
+<a href='../1506939170.27129_0.ltw:2,/index.html'>Re: [Jack-Devel] AES67 / SMPTE ST 2110-30 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>happy musicmaker
+<a href='../1508729521.18353_0.ltw:2,/index.html'>Re: [Jack-Devel] AES67 / SMPTE ST 2110-30 </a></td></tr>
+</table>
+<pre>
+On Mon, October 2, 2017 5:12 am, Philippe Bekaert wrote:
+&gt; I&#146;m also in contact with people at
+&gt; Merging regarding their VSC driver in progress for Linux.
+
+Did you get a copy of the ALSA driver?  The current git head does not
+compile, I waited to see if merging would correct that on their own, but
+still not corrected after a month, so I need to ask what is happening
+there.  Not encouraging that it is actually getting any attention if the
+source can go more than a month in a non-buildable state.
+
+&gt; I'm aiming for a jack client application, and perhaps a jack audio driver
+&gt; (like the net drivers). The latter allow to have jack running at AES67
+&gt; clock, and being fully transparent (no sample rate conversion). But the
+&gt; former, a client application, is probably better if you just want to
+&gt; receive and monitor / send AES67 on / from a computer having a sound card
+&gt; already.
+
+I recommend a jack audio driver.  If you want to monitor from a local
+sound card you can always load zita-j2a and zita-a2j resampling bridges,
+that work has been done so no need to implement twice what Fons has
+already implemented.  The advantages of a net driver is that you can in
+principle collect streams from different devices that are in the same
+clock domain and have a large virtual sound card.  For example, in a home
+recording environment you could have a Ravenna output device in your room
+with a computer, have a Ravenna in/out device in a different room with
+someone playing keyboards, and a Ravenna in/out device in the house large
+room playing guitar, and all three of those physically separated devices
+could be treated as one large audio interface.
+I am not sure if jackd will let a driver load and then change the number
+of ports at a later time, so how configuration would work is a task that
+needs to be investigated early (e.g. would you have to discover and
+configure Ravenna streams first, then load the net driver, or could the
+net driver be loaded with some arbitrary number of ports declared to
+jackd, and various Ravenna streams connected and disconnected from those
+declared ports at run time).
+
+I am still struggling to find reasonable cost network connected
+interfaces.  The small device from Hasseb I linked last time is reasonable
+cost, but very low feature, I would prefer at least a duplex stereo
+device.  Focusrite have a new two channel Dante device which could run in
+AES67 mode, but it is output only, and I think is around US$400.  The 4
+input 2 output Cymatic device is still not available yet, and even though
+the 24 channel Cymatic device has reduced price by 50% lately, that is the
+base USB version only, so by the time you purchase the Ravenna option card
+it is still around US$1000.  Not a bad price for 24 channels, but still
+could be considered quite a lot to spend on a hobby investigation project.
+
+If a Windows computer is available, the Lawo R3lay virtual sound card for
+Windows is the best option to get started.  I tried it and was able to
+send audio between two Windows laptops.  You will need a PTP master on the
+network, that VSC will not act as clock master, but I am running a
+BeagleBone Black as PTP master (uses chronyd to sync time to ntp, then
+provides the ntp time to the network using linuxptp).  You could also use
+your existing linux machine to act at PTP master, it would just have more
+jitter in the PTP performance if you do not have hardware timestamping
+capability (the BeagleBone has hardware timestamp in the MAC layer but not
+the phy, not ideal but still fairly high performance).
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1507890214.32101_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1508729521.18353_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1508595201.14022_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1508595201.14022_0.ltw:2,&nbsp;&lt;312a7ea209110b66b083b5607ef3b37c.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

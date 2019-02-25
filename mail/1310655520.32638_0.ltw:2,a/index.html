@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack2 patches to add mingw build target to waf scripts</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack2 patches to add mingw build target to waf scripts</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1310565715.17007_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1310664318.15905_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1310655520.32638_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 14 Jul 2011 16:58:24 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Nedko Arnaudov &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+</table>
+<pre>
+Le 14 juil. 2011 &#xE0; 06:41, Tim Mayberry a &#xE9;crit :
+
+&gt; Hi St&#xE9;phane,
+&gt; 
+&gt; I've been working on a windows port of Ardour on and off for a few
+&gt; years. I believe we spoke briefly on IRC a few months ago and I
+&gt; mentioned a had a patch to the JACK2 build system to compile it for
+&gt; windows using the mingw compiler.
+&gt; 
+&gt; The Ardour port is coming along ok, I've talked with Paul and we will
+&gt; probably add support for building Ardour for Windows after Ardour 3.0
+&gt; is released and then try to work on fixing the bugs in the next
+&gt; development cycle etc. You can have a look at a few images and a short
+&gt; video here if you like: http://timbyr.net/images and
+&gt; http://timbyr.net/images/Ardour-3.0-windows-installer.ogg
+&gt; 
+&gt; I've been developing Ardour for windows by cross compiling Ardour and
+&gt; some of the library dependencies on Fedora. Fedora has packaged the
+&gt; mingw compiler and some of the libraries like Gtk+ for a while now:
+&gt; http://fedoraproject.org/wiki/MinGW and hopefully as of Fedora 16 the
+&gt; mingw-64 compiler will be used. OpenSuse also has had MinGW packages
+&gt; for some time.
+&gt; 
+&gt; I've had a bit of time to clean up the patches for JACK2 enough that
+&gt; you may be interested in looking at them and seeing whether it is
+&gt; worth adding them to JACK2.
+&gt; 
+&gt; So I modified the waf build system and added a --dist-target flag that
+&gt; can be used to cross compile with the mingw compiler. There are also
+&gt; the flags to enable --portaudio and --winmme drivers.
+&gt; 
+&gt; I had to update waf to be able to generate the windows import
+&gt; libraries correctly, so the patches I've attached assume that you have
+&gt; first updated waf to the latest version in the 1.5 series which is
+&gt; 1.5.19.
+&gt; 
+&gt; The first two patches, 0001 and 0002 aren't related to the mingw build
+&gt; but are required to fix the waf scripts with the new version of
+&gt; waf(1.5.19), the first fixes the formatting of the configure output
+&gt; and the second fixes the build for linux, I haven't tested for Mac OS
+&gt; X, maybe similar small changes are necessary.
+&gt; 
+&gt; The 0003 patch adds the --dist-target flag and the changes necessary
+&gt; to build the client lib, server and drivers using mingw.
+&gt; 
+&gt; The 0004 patch is something I found necessary to build using mingw,
+&gt; I'm not sure why, it may be I'm not defining something correctly in
+&gt; the build but I haven't spent much time to find out.
+&gt; 
+&gt; The 0005 patch was necessary because I haven't been successful in
+&gt; cross compiling portaudio with asio support yet, because of issues
+&gt; with autotools/libtool etc. This means that if you were to use this
+&gt; patch you need to define HAVE_ASIO in the other windows build files to
+&gt; get ASIO support in the jack_portaudio driver. I'd also like to
+&gt; eventually get mingw JACK2 packages added to Fedora, which can't use
+&gt; the ASIO driver(I believe) so I think being able to compile without
+&gt; ASIO support a good idea.
+&gt; 
+&gt; Patch 0006 are changes required to get the example clients to build,
+&gt; the changes are mostly untested but fairly trivial.
+&gt; 
+&gt; These patches are against a fairly recent trunk version of JACK2 and
+&gt; should apply. I haven't done much testing of the resulting binaries
+&gt; but if I install my development version of Ardour(which includes
+&gt; JACK2) on a clean windows install and start JACK2 with something like
+&gt; $jackd.exe -S -X winmme -d portaudio then Ardour plays back audio OK.
+&gt; I haven't tested anything to do with midi yet, sorry.
+&gt; 
+&gt; Thanks for your time,
+&gt; 
+&gt; Tim.
+
+All patches committed on a git "mingw" branch and pushed here: http://repo.or.cz/w/jack2.git/shortlog/refs/heads/mingw
+
+Required waf 1.5.19 version still not added. 
+
+Testing welcome.
+
+Stephane
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1310565715.17007_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1310664318.15905_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1310655520.32638_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1310655520.32638_0.ltw:2,a&nbsp;&lt;1C43AB92-1DAF-4CE5-BDED-7D1FEE54DB6C at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,67 @@
+Date:        Tue, 27 Aug 2013 23:31:47 +0200
+From:        Ruslan N. Marchenko  <[hidden] at ruff dot mobi>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: David Woodfall Re: [Jack-Devel] Problems with Networking Jack (1377609282.10499_0.ltw:2,)
+Follow-Up:   David Woodfall Re: [Jack-Devel] Problems with Networking Jack (1377667426.6749_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Problems with Networking Jack
+
+On Tue, Aug 27, 2013 at 02:14:23PM +0100, David Woodfall wrote:
+> On (27/08/13 12:04), David Woodfall <[hidden]> put forth the proposition:
+> >Hi, I had until yesterday a working jack setup between my laptop and
+> >server using netone. While trying to troubleshoot why the audio
+> >was so out of sync while playing videos in mplayer, I tried playing
+> >with my iptables firewall script. (The sync problem seemed to have
+> >started when I connected a new router.)
+> >
+> >Well, I don't know exactly how I've done it but now I get no networked
+> >sound at all unless I stop the master firewall completely.
+> >
+> >I'm guessing that I took out a line allowing access to a certain port.
+> >Google doesn't help much except that I've found that UDP 3000 and UDP
+> >on 19000 may be involved but allowing those hasn't helped. I also
+> >tried playing with ICMP echo settings, but also to no avail.
+> >
+> >So my question is, what ports should be set on the master firewall to
+UDP/19000. At the same time you need to make sure you're allowing local
+musticats to get out of your firewall to your broadcast segment. Or you
+need to use unicast peering instead of default multicast discovery.
+> >fix this problem? I tried looking at netstat but only found some
+> >random ports in use, which isn't very helpful.
+> >
+> >Incidentally, I also tried using -d net instead of -d netone, but then
+> >I get no sound at all, even with firewalls on both machines off.
+> 
+> Well I solved the netone problem by specifying a -r port with
+> jack_netsource.
+> 
+> I'd still like to know why using -d net doesn't work for me though.
+>
+First you need to understand the difference between netjack and netone.
+
+From jackdmp perspective netjack(2) is Jack2 networking stack, while 
+netone is jack(1) networking. Protocols are pretty different, as well as
+daemons themselves.
+
+Then the difference between master and slave.
+
+Master is the one how has access to hardware and listens (passively)
+for slaves to connect while genrating beacons for them to discover itself.
+
+You can think of it as who is the clocking master - master is its own master
+(having clocks from underlying hardware) and slave is using master clocks.
+But slave is actively performing attempts to connect to the master (it is 
+active from network perspective - initates connection).
+
+So when you say -d net - you're creating network slave - i.e. jack2 daemon
+who is expecting to connect to the master and be driven by that.
+Network slave  - unless instructed to use unicast master - is waiting for
+master's beacons on the BMA network to initiate connections. Once it
+discovers master's beacon - it connects to it and becomes a part of the loop
+
+Regards,
+Ruslan
+
+1377639130.28717_0.ltw:2, <20130827213147.GA31231 at ruff dot mobi>
+________________________________________________________________________________
+

@@ -1,0 +1,74 @@
+Date:        Sat, 26 Dec 2015 17:49:11 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          John Emmas <[hidden] at tiscali dot co dot uk>, JACK devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: John Emmas Re: [Jack-Devel] jack dsp load calculation (1451147237.5755_0.ltw:2,a)
+Follow-Up:   John Emmas Re: [Jack-Devel] jack dsp load calculation (1451151957.31921_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack dsp load calculation
+
+On 12/26/2015 05:27 PM, John Emmas wrote:
+> On 26 Dec 2015, at 15:38, Robin Gareus wrote:
+> 
+>>
+>> My criticism is that jack's currently algorithm does not satisfy the
+>> criteria: "an x-run implies 100% reported load".
+>>
+>> How can we justify buffer over/under-runs if there is time left to
+>> process the buffer?
+>>
+> 
+> Huh? You've already pointed out that any value higher than 95% gets
+> reported verbatim (i.e. without getting factored into any averaging). So
+> why will 100% not get reported correctly?
+
+Where did I say that?
+
+This is not true. There is always a low-pass filter after the cut and
+averaging. Please read my email again and maybe also the code that've
+linked in the original email.
+
+> The problem here is that Ardour's DSP printout is NOT intended to
+> highlight xruns (not in any sense). It's simply a display (in green)
+> which turns to red when the value gets worryingly high.
+
+No, The problem at hand is that *JACK* reports some mostly useless value.
+
+If you want a more abstract description: Two correlated variables are
+used to create a single read-out.
+
+The discussion is about jack's mechanism - not the policy applied by
+application display.
+
+I was under the impression that jack only provides mechanisms. The
+current implementation of the load calculation in libjack however does
+make assumptions and does not provide raw data (which an application can
+then later use to whatever ends..)
+
+> BUT... it only gets updated once every second. And since the display
+> isn't (currently) affected in any way by xruns, if an xrun happens to
+> occur in between 2 updates it can go unreported (as far as that DSP
+> reading is concerned). Removing Jack's averaging won't fix that problem.
+>
+> HOWEVER... Ardour already has a mechanism for registering xruns. So
+> if we want xruns to get reflected somehow in that DSP printout, we can
+> already achieve that within Ardour. It's not necessary to modify Jack.
+
+No we cannot. jack currently does not provide data to allow that. it
+reports some tainted average value.
+
+I still have not heard a good justification for libjack doing that, nor
+an explanation how to interpret that value and how one can use it.
+
+Why should jack report a percentage if we need to resort to hand-wavey
+explanations: "yeah the average is low, but you still get occasional
+x-runs..."?
+
+if there's an average we should provide a variance or stddev with the
+average.
+
+2c,
+robin
+
+1451148559.7023_0.ltw:2,a <567EC507.7010206 at gareus dot org>
+________________________________________________________________________________
+

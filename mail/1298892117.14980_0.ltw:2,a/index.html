@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jconvolver and OSX</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jconvolver and OSX</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298891804.14567_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298892343.15159_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298892117.14980_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 28 Feb 2011 12:21:32 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> torbenh </span> &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1298891573.14109_0.ltw:2,a/index.html'>Re: [Jack-Devel] jconvolver and OSX </a></td></tr>
+</table>
+<pre>
+On Mon, Feb 28, 2011 at 12:12:27PM +0100, St&#xE9;phane Letz wrote:
+&gt; But then what about this message?
+&gt; 
+&gt; http://tech.groups.yahoo.com/group/jackosx/message/3305
+&gt; 
+&gt; Le 28 f&#xE9;vr. 2011 &#xE0; 12:07, Fons Adriaensen a &#xE9;crit :
+&gt; 
+&gt; &gt; On Mon, Feb 28, 2011 at 11:36:33AM +0100, Natasha Barrett wrote:
+&gt; &gt; 
+&gt; &gt; 
+&gt; &gt;&gt; I've been trying to install jconvolver under OSX (10.5 / 10.6).  Does  
+&gt; &gt;&gt; anyone know if this is at all possible, and if so, any hints?
+&gt; &gt; 
+&gt; &gt; It is not possible ATM because zita-convolver uses 'anonymous'
+&gt; &gt; semaphores (sem_t, semaphore.h) which are not available in OSX.
+&gt; 
+&gt; Why not using named semaphore ? (available on OSX)
+
+requires housekeeping. thats annoying.
+
+anyways... maybe you can just adapt from ardours semaphore:
+
+/*
+    Copyright (C) 2010 Paul Davis
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+
+#include "pbd/semutils.h"
+#include "pbd/failed_constructor.h"
+
+using namespace PBD;
+
+ProcessSemaphore::ProcessSemaphore (const char* name, int val)
+{
+#ifdef __APPLE__
+	if ((_sem = sem_open (name, O_CREAT, 0600, val)) == (sem_t*) SEM_FAILED) {
+		throw failed_constructor ();
+	}
+
+	/* this semaphore does not exist for IPC */
+	
+	if (sem_unlink (name)) {
+		throw failed_constructor ();
+	}
+
+#else
+	if (sem_init (&amp;_sem, 0, val)) {
+		throw failed_constructor ();
+	}
+#endif
+}
+
+ProcessSemaphore::~ProcessSemaphore ()
+{
+#ifdef __APPLE__
+	sem_close (ptr_to_sem());
+#endif
+}
+
+
+&gt; 
+&gt; &gt; 
+&gt; &gt; I've been told you can have the same functionality in OSX using
+&gt; &gt; the Mach semaphores. If anyone can provide example source code to
+&gt; &gt; do this I could abstract that and Linux's sem_t into a C++ class
+&gt; &gt; and make the zita-convolver code portable to OSX.
+&gt; &gt; 
+&gt; &gt; It's probably a trivial thing to do for anyone familiar with
+&gt; &gt; this sort of stuff.
+&gt; &gt; 
+&gt; &gt; Ciao,
+&gt; 
+&gt; St&#xE9;phane
+&gt; 
+&gt; 
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+-- 
+torben Hohn
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298891804.14567_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298892343.15159_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298892117.14980_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1298892117.14980_0.ltw:2,a&nbsp;&lt;20110228112132.GF2977 at siel dot b&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

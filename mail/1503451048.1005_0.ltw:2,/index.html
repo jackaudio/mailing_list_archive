@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack: "Too many servers already active"</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack: "Too many servers already active"</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1503449218.31342_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1503452369.2224_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1503451048.1005_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 22 Aug 2017 18:17:18 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Yuri </span> &lt;[hidden] at rawbw dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Malik Costet &lt;[hidden] at malikc dot neomailbox dot net&gt;, [hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Malik Costet
+<a href='../1503449218.31342_0.ltw:2,/index.html'>Re: [Jack-Devel] Jack: "Too many servers already active" </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Yuri
+<a href='../1503452369.2224_0.ltw:2,/index.html'>Re: [Jack-Devel] Jack: "Too many servers already active" </a></td></tr>
+</table>
+<pre>
+On 08/22/17 17:45, Malik Costet wrote:
+&gt; Do you have any indication which filesystem/location JACK would be
+&gt; looking for the condition? Could it also be a case of flag misuse?
+
+
+Looking again, ENOSPC is returned by jack_register_server. 
+jack_register_server simulates the error ENOSPC when it can't find a 
+free slot in the shared memory table.
+
+The table allows up to MAX_SERVERS=8 servers. It appears that shared 
+memory isn't deleted when the last process using it quits, and it got 
+polluted with bogus data.
+
+Jack appears to use shared memory at "/jack-shm-registry".
+
+
+I recently saw such situation on FreeBSD with another app, 
+supercollider. Creating shared memory was failing there, no apps were 
+using it. Not sure if this is a bug in kernel that it isn't 
+automatically free when users die. But Jack could at least test if pids 
+registered there are alive.
+
+
+In short, no quick solution for you. Jack needs to be fixed. It needs to 
+detect that pids recorded in the table are dead and invalidate them.
+
+
+I propose the following fix.
+
+The line:
+
+ &gt; if (jack_shm_header-&gt;server[i].pid == 0) {
+
+changes to
+
+ &gt; if (jack_shm_header-&gt;server[i].pid == 0 || 
+kill(jack_shm_header-&gt;server[i].pid, 0) != 0) {
+
+
+Yuri
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1503449218.31342_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1503452369.2224_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1503451048.1005_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1503451048.1005_0.ltw:2,&nbsp;&lt;167a92c9-2581-2c77-3174-1086cd0f6478 at rawbw dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

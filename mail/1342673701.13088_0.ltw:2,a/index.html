@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] packed data structures in jack2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] packed data structures in jack2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1342669279.6949_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1342687764.2873_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1342673701.13088_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 19 Jul 2012 06:54:41 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Basil Nutmeg &lt;[hidden] at li95-58 dot members dot linode dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Basil Nutmeg
+<a href='../1342669279.6949_0.ltw:2,a/index.html'>[Jack-Devel] packed data structures in jack2 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Basil Nutmeg
+<a href='../1342712525.8573_0.ltw:2,a/index.html'>Re: [Jack-Devel] packed data structures in jack2 </a></td></tr>
+</table>
+<pre>
+The point to pack memory is to allow a 64 bits server to be used with 32 bits clients or the contrary. Since shared memory is going to be used by "both sides", the only safe way we found was to use packed memory struct.
+
+If 64/32 bits code cohabitation is not mandatory, then I guess "packed" can be disabled.
+
+Stephane
+
+
+Le 19 juil. 2012 &#xE0; 05:41, Basil Nutmeg a &#xE9;crit :
+
+&gt; Hello,
+&gt; 
+&gt; I found Jack2 was crashing on my ARM cpu, and I traced it down to a
+&gt; misuse of __attribute__((packed)).
+&gt; 
+&gt; This CPU doesn't support misaligned memory references. packed structs are
+&gt; supported, by having the compiler emit a longer sequence of instructions.
+&gt; However, consider this code from common/JackAtomicArrayState.h:
+&gt; 
+&gt; ... CAS(Counter1(old_val), Counter1(new_val), (UInt32*)&amp;fCounter) ...
+&gt; 
+&gt; fCounter is a member of a class which is packed, and this happens to make
+&gt; it misaligned. Its address is taken and passed off to a different
+&gt; function, where it appears to the compiler to be an ordinary pointer. The
+&gt; compiler justifiably assumes the pointer is aligned, so it emits normal
+&gt; code, and the code crashes at runtime because the pointer isn't actually
+&gt; aligned.
+&gt; 
+&gt; Looking around, I was surprised to see that lots of classes in Jack2 are
+&gt; marked packed, for example classes like JackConnectionManager,
+&gt; JackClientControl, and JackEngineControl, and I'm puzzled.
+&gt; 
+&gt; Making JackEngineControl packed, for example, shrinks its nominal size
+&gt; from 1040 to 1032 (on this platform). It doesn't look like there are that
+&gt; many JackEngineControl instances floating around at runtime, so this isn't
+&gt; actually saving much memory. And it doesn't appear to be serialized
+&gt; anywhere. And on the down side, packed makes many of JackEngineControl's
+&gt; fields misaligned, making them slower to access.
+&gt; 
+&gt; Also, it's possible to shrink JackEngineControl to size 1032 just by
+&gt; reordering the fields, without using packed at all.
+&gt; 
+&gt; So I'm curious, why so much use of packed? Is there some reason I missed,
+&gt; or is it just a general attempt to save memory? If the latter, could I
+&gt; politely suggest this approach be reconsidered?
+&gt; 
+&gt; Thanks,
+&gt; 
+&gt; -- Basil
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1342669279.6949_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1342687764.2873_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1342673701.13088_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1342673701.13088_0.ltw:2,a&nbsp;&lt;CC7EB2C5-C51E-46FF-AB54-0995A7F03AF1 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

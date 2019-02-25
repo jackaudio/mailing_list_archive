@@ -1,0 +1,67 @@
+Date:        Mon, 28 Feb 2011 19:35:39 +0100
+From:        Torben Hohn  <[hidden] at gmx dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Torben Hohn [Jack-Devel] [PATCH 1/2] [core] change pthread_t to jack_native_thread_t in all public headers. (1298918171.14384_0.ltw:2,a)
+
+Subject:     [Jack-Devel] [PATCH 2/2] [core] add jack_port_type_get_buffer_size()
+
+this function is supposed to replace jack_get_buffer_size()
+it also deals with midi port sizes, and will most likely work correctly
+with later added port types too.
+---
+ jack/jack.h    |    8 ++++++++
+ libjack/port.c |   16 ++++++++++++++++
+ 2 files changed, 24 insertions(+), 0 deletions(-)
+
+diff --git a/jack/jack.h b/jack/jack.h
+index c3c72f2..8eabeca 100644
+--- a/jack/jack.h
++++ b/jack/jack.h
+@@ -849,6 +849,14 @@ int jack_port_name_size(void) JACK_OPTIONAL_WEAK_EXPORT;
+  * including the final NULL character.  This value is a constant.
+  */
+ int jack_port_type_size(void) JACK_OPTIONAL_WEAK_EXPORT;
++
++/**
++ * @return the buffersize of a port of type @arg port_type.
++ *
++ * this function may only be called in a buffer_size callback.
++ */
++size_t jack_port_type_get_buffer_size (jack_client_t *client, const char *port_type) JACK_WEAK_EXPORT;
++
+ /*@}*/
+ 
+ /**
+diff --git a/libjack/port.c b/libjack/port.c
+index c2a870c..ae442b0 100644
+--- a/libjack/port.c
++++ b/libjack/port.c
+@@ -216,6 +216,22 @@ jack_port_new (const jack_client_t *client, jack_port_id_t port_id,
+ 	return port;
+ }
+ 
++size_t 
++jack_port_type_get_buffer_size (jack_client_t *client, const char *port_type)
++{
++	int i;
++
++	for (i=0; i<client->engine->n_port_types; i++) {
++		if (!strcmp(port_type, client->engine->port_types[i].type_name))
++			break;
++	}
++
++	if (i==client->engine->n_port_types)
++		return 0;
++
++	return jack_port_type_buffer_size (&(client->engine->port_types[i]), client->control->nframes);
++}
++
+ jack_port_t *
+ jack_port_register (jack_client_t *client, 
+ 		    const char *port_name,
+-- 
+1.7.2.3
+
+1298918163.14379_0.ltw:2,a <1298918139-22040-2-git-send-email-torbenh at gmx dot de>
+________________________________________________________________________________
+

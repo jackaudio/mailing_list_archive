@@ -1,0 +1,38 @@
+Date:        Thu, 12 Jan 2017 23:39:32 +0100
+From:        Thomas Brand  <[hidden] at trellis dot ch>
+To:          [hidden] at lists dot jackaudio dot org
+
+Subject:     [Jack-Devel] strange valgrind results for client initialization and shutdown
+
+Hi list,
+
+i have recently started to play with valgrind and for yet unknown reasons
+i get a lot of "Syscall param write(buf) points to uninitialised byte(s)"
+even for a simple program like this:
+
+#include <jack/jack.h>
+int main()
+{
+	const char *name="test";
+	jack_client_t *client;
+	jack_options_t options=JackNoStartServer;
+	jack_status_t status;
+	client=jack_client_open(name,options,&status);
+	jack_client_close(client);
+	return 0;
+}
+
+//gcc -o test test.c -ljack
+//valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -v
+./test
+
+Is there anything missing in the code example?
+Should i worry about the errors shown by valgrind (in that case 10 errors
+from 6 contexts) at all?
+
+Thanks for your suggestions.
+Thomas
+
+1484260859.25897_0.ltw:2,a <e34195d870d8384b2672a53dc6ae14b6.squirrel at ips73 dot ips dot ch>
+________________________________________________________________________________
+

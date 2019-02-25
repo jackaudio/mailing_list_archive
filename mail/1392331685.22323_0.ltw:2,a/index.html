@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] use case for IIO was Re: [PATCH 6/6] Added author to the Changelog.</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] use case for IIO was Re: [PATCH 6/6] Added author to the Changelog.</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1392330427.20333_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1392371762.21654_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1392331685.22323_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 14 Feb 2014 09:47:52 +1100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Matt Flax </span> &lt;[hidden] at flatmax dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Chris Caudle
+<a href='../1392330427.20333_0.ltw:2,a/index.html'>[Jack-Devel] use case for IIO was Re: [PATCH 6/6] Added author to the Changelog. </a></td></tr>
+</table>
+<pre>
+On 14/02/14 09:26, Chris Caudle wrote:
+&gt;&gt; I do think however that it would make it very hard for people to
+&gt;&gt; actually use the src code
+&gt; Speaking of using, what is the use case for this interface?  I searched
+&gt; for IIO and it seems to be an in kernel interface for analog to digital
+&gt; converters that some embedded linux people developed.  What kinds of uses
+&gt; would use that and JACK together?
+&gt;
+End user cases ... I guess it isn't obvious.
+
+I can think of a few :
+
+A researcher wants to record high sample rate analog signals simply ... 
+well, why not connect a set of IIO modules to their computer, fire up a 
+standard audio recorder and record away.
+
+Someone wants to implement ultrasound - for whatever reason - then using 
+Jack, there are plenty of end user applications off the shelf which can 
+be used ... which require no investment. Free software.
+
+There are many many different ideas, but in general anything analog 
+which needs to run low latency, either locally or over the network.
+
+There are also crazily high audio sample rate standard frequencies : 
+http://en.wikipedia.org/wiki/Sampling_rate#Audio
+
+The whole idea here is to not re-invent the wheel ... glue pieces of 
+software together which are proven to work and implement what's required 
+in between ... free software ;-)
+
+Say you wanted to implement a custom piece of software to do very high 
+frequency analog stuff, look no further - it is really a 7 line piece of 
+code to get processing defined :
+
+class TestJackClient : public JackClient 
+&lt;http://www.flatmax.org/gtkiostream/html/classJackClient.html&gt; {
+int processAudio 
+&lt;http://www.flatmax.org/gtkiostream/html/classJackClient.html#add6551d28b1535e745c52586d781ac9a&gt;(jack_nframes_t 
+nframes) {
+jack_default_audio_sample_t *out = ( jack_default_audio_sample_t* ) 
+jack_port_get_buffer ( outputPorts 
+&lt;http://www.flatmax.org/gtkiostream/html/classJackClient.html#a4d7c45b32920c0f13854956feb39ef7b&gt;[0], 
+nframes );
+// load the output audio samples here
+// do something with the audio samples here
+jack_default_audio_sample_t *in = ( jack_default_audio_sample_t* ) 
+jack_port_get_buffer ( inputPorts 
+&lt;http://www.flatmax.org/gtkiostream/html/classJackClient.html#a68fe7ccf19776d5c8eb0dc6a1d6666c3&gt;[0], 
+nframes );
+// do something with the input audio samples here
+return 0;
+}
+};
+
+And then 4 lines to actually run it :
+
+TestJackClient jackClient; // init the jack client
+int res=jackClient.connect("jack test client"); // connect the client to 
+the Jack system indicating the callback
+res=jackClient.createPorts("in ", 1, "out ", 1); // create the ports for 
+the jack patching system.
+res=jackClient.startClient(1, 1, true); // Start the client running with 
+one input and one output port, which is auto-connected to the system ports
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1392330427.20333_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1392371762.21654_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1392331685.22323_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1392331685.22323_0.ltw:2,a&nbsp;&lt;52FD4B98.1080907 at flatmax dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

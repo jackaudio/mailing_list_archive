@@ -1,0 +1,58 @@
+Date:        Sun, 17 Apr 2011 22:33:58 -0500
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Peter Nelson Re: [Jack-Devel] extra latency compensation was Re: is this latency coming from ALSA, jack, or ardour? (1303109243.8638_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] extra latency compensation was Re: is this latency coming from ALSA, jack, or ardour? (1303119381.32397_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] extra latency compensation was Re: is this latency coming from ALSA, jack, or ardour? (1303146624.11113_0.ltw:2,a)
+
+Subject:     [Jack-Devel] extra latency compensation was Re: is this latency coming from ALSA, jack, or ardour?
+
+OK, understanding extra latency compensation better now, but still a bit
+confused by the results.  I can't seem to reconcile the results from
+jack_iodelay with the track to track delays I see in Ardour 3.
+
+On Fri, April 15, 2011 2:04 pm, Chris Caudle wrote:
+> OK, so now I connected jack_delay out to the card physical output port,
+then connected the card physical input port to jack_delay in, and got
+this:
+>
+> 4155.593 frames     94.231 ms
+
+I haven't really optimized this setup yet, so I'm running 1024
+frames/period, 3 periods/buffer.
+
+So according to jack_iodelay, the additional latency not due to the period
+buffer is 3131 frames (4155 - 1024 frames per period).
+
+So 3131 frames is about 71 ms at 44100 frames/second.  I don't see
+anywhere near 71ms offset when I record one track out of Ardour, and
+physically loop back to a second track in Ardour.  Does that make any
+sense? Shouldn't that extra latency show up in a time offset between
+tracks?
+I tried using that 3131 value, and used 1566 for the values passed to the
+-I and -O arguments, but it made alignment between tracks noticeably
+worse.  And the delay became negative, the audio on the second track was
+70 ms ahead of the first track.  That matches pretty closely the 3131
+frames number, but the direction implies that the correction wasn't
+needed.  How could that be?
+
+I changed the jackd settings to use 512 frames per period, 2 periods per
+buffer, and jack_iodelay reports 1595 frames latency. 1595-512 = 1083
+frames "extra" latency.
+
+I expected the "extra" latency to be due to the latency in the AD
+conversion and DA conversion, and to be constant for a given sample rate. 
+Why such a large difference in extra latency when the period size is
+changed?
+
+These results are confounding my expectations, and I have to think that
+either there is something fundamental I missed in the setup, or the test
+methodology has a big hole I can't see.  Anyone else see what is going on
+that I'm missing?
+
+-- 
+Chris Caudle
+
+1303097663.26599_0.ltw:2,a <37581d5d48febee55707f7a6d9bac6f4.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

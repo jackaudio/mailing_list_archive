@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1538129603.27143_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1538164256.637_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1538160705.30217_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 28 Sep 2018 20:51:09 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Holger Marzen </span> &lt;[hidden] at marzen dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>David Kastrup &lt;[hidden] at gnu dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Holger Marzen
+<a href='../1537790919.32570_0.ltw:2,/index.html'>Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Holger Marzen
+<a href='../1538164256.637_0.ltw:2,/index.html'>Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Chris Caudle
+<a href='../1538164951.1388_0.ltw:2,/index.html'>Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency? </a></td></tr>
+</table>
+<pre>
+On Mon, 24 Sep 2018, Holger Marzen wrote:
+
+&gt; On Mon, 24 Sep 2018, David Kastrup wrote:
+&gt; 
+&gt; &gt; Holger Marzen &lt;[hidden]&gt; writes:
+&gt; &gt; 
+&gt; The output of the first adapter is used for
+&gt; - direct monitoring
+&gt; - headphone monitoring and mixing/mastering, but without EQ
+&gt; 
+&gt; &gt; &gt; As I played around with the quality setting (-q0 ... -q4) I noticed an
+&gt; &gt; &gt; enormous CPU load with -q4 (sinc) but couldn't hear any differences in
+&gt; &gt; &gt; audio quality. -q0 sounds as good as -q4.
+&gt; &gt; &gt;
+&gt; &gt; &gt; Now my question:
+&gt; &gt; &gt; When the audioadapter has to resample to the same frequency (from 48000
+&gt; &gt; &gt; to 48000), do higher -q settings improve the audio quality? As I
+&gt; &gt; &gt; understand there is no interpolation needed at all so -q0 would be
+&gt; &gt; &gt; enough to have a perfect audio quality.
+&gt; &gt; &gt;
+&gt; &gt; &gt; Any comments/ideas to this?
+&gt; &gt; 
+&gt; &gt; Interpolation will be needed when the clocks drift.
+&gt; 
+&gt; Or you can simply wait til the "right" moment und use the original
+&gt; values. But that would not use more CPU depending on the quality
+&gt; setting. So there seems to bee an interpolation happening.
+&gt; 
+&gt; It looks as if I have to do a looptest (play through the 2nd interface
+&gt; and record with the 1st) to get an impression how's the signal distorted
+&gt; at the different quality settings.
+
+I used the interface that's connected via audioadapter for playback and
+the "main" interface that's directly controlled by jackd for recording.
+As a signal source I used Audacity with generated sine waves of 5000 and
+10000 Hz. I played this signal and recorded it (audio cable between
+interfaces). The result showed that the signal gets indeed resampled and
+that the quality setting matters.
+
+q0 (SRC_LINEAR) and q1 (SRC_ZERO_ORDER_HOLD) showed a non-flat envelope
+of the recorded signal - bad.
+
+q2 (SRC_SINC_FASTEST) showed the desired flat envelope and seems to be
+the best compromise between CPU load and quality.
+
+-&gt; That's the setting I'll use from now on.
+
+I cannot to further examination because the spectrum analyzer in
+Audacity can't show the harmonics accurately. I expect a single peak in
+a sine wave's spectrum but I got a softer curve.
+
+SRC seems to bee an abbreviation for Secret Rabbit Code
+http://www.mega-nerd.com/SRC/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1538129603.27143_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1538164256.637_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1538160705.30217_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1538160705.30217_0.ltw:2,&nbsp;&lt;alpine.DEB.2.20.1809282039560.6557 at bubu dot intern dot marzen dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

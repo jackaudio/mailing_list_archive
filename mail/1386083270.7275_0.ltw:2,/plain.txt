@@ -1,0 +1,38 @@
+Date:        Tue, 03 Dec 2013 07:07:28 -0800
+From:        Gabriel M. Beddingfield  <[hidden] at gmail dot com>
+To:          jack-devel <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Clemens Ladisch Re: [Jack-Devel] ALSA PCM substreams (1386085031.11834_0.ltw:2,)
+
+Subject:     [Jack-Devel] ALSA PCM substreams
+
+When opening a PCM, would it make sense for JACK to open all the 
+substreams on that PCM?
+
+I was helping a user on IRC with the Audio 4 DJ, a 4-in/4-out USB sound 
+card.  The card uses the `caiaq' driver in ALSA.  It didn't "just work" 
+because the 4 channels are split up into stereo substreams.  So, when 
+jack opens "hw:1,0", it opens "hw:1,0,0" (2 channels) and ignores 
+"hw:1,0,1" (2 more channels).[1]
+
+I spoke with the developers of the `caiaq' driver, and they said it 
+would make sense for JACK to go ahead and open all the substreams. 
+Substreams are intended to be a clock-synchronized concept.[2]
+
+Looking at the ALSA driver within JACK, this seems feasible.  The 
+solution also makes sense to me.  This type of situation *could* be in 
+the `caiaq' driver[3] or even with card-specific asoundrc stuff... it 
+makes the most sense to me that jack open all the substreams.
+
+-gabe
+
+[1] The issue was resolved by creating a virtual PCM in ~/.asoundrc
+     That makes the two substreams look like a single substream.
+[2] I can't find that principle written anywhere, but it can be
+     verified using snd_pcm_info_get_sync() to see that the two
+     substreams return the same ID (clock).
+[3] Let substream 0 support up to 4 channels.  substream 1 returns
+     EBUSY or EAGAIN if substrem 0 is using the channels.
+
+1386083270.7275_0.ltw:2, <529DF3B0.8000006 at gmail dot com>
+________________________________________________________________________________
+

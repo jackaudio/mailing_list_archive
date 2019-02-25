@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: Segfault when watchdog object is deleted</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: Segfault when watchdog object is deleted</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1373430649.14154_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1374064736.30645_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1373635797.16821_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 12 Jul 2013 22:59:10 +0930 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jonathan Woithe </span> &lt;[hidden] at just42 dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Adrian Knoth &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot sourceforge dot net, [hidden] at just42 dot net </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Jonathan Woithe
+<a href='../1373413843.30084_0.ltw:2,/index.html'>Re: Segfault when watchdog object is deleted (was: Re: [FFADO-devel] Segfault on jackd/ffado shutdown?) </a></td></tr>
+</table>
+<pre>
+On Wed, Jul 10, 2013 at 08:57:39AM +0930, Jonathan Woithe wrote:
+&gt; On Tue, Jul 09, 2013 at 03:57:55PM +0200, Adrian Knoth wrote:
+&gt; &gt; On 07/09/2013 03:26 PM, Jonathan Woithe wrote:
+&gt; &gt; I vaguely remember a discussion on jack-devel and Paul saying "You must
+&gt; &gt; never ever rely on pthread cancellation, it's broken." Maybe you're just
+&gt; &gt; seeing this.
+&gt; 
+&gt; Perhaps.  I also recall this discussion, but I don't think the reasons
+&gt; behind the statement were ever described in detail (at least not at that
+&gt; time).  I might search the list jack archives and see what turns up.
+
+A web search was surprisingly thin on results.  The general gist of Paul's
+point (according to the only post I could find quickly) appears to stem from
+the significant restrictions that are placed on the thread functions being
+called.  If those functions are doing purely computational tasks with no
+system calls then you can get away with it.  If system calls are involved
+then all bets are apparently off because the rollback can't be done reliably.
+
+In the present case, the segfault occurs in the _Unwind_Resume() function
+having interrupted SystemTimeSource::SleepUsecRelative().  The latter
+function definitely consists of syscalls, which would make the entire thread
+unsuitable for pthread_cancel().  Add to this that the watchdog threads are
+set with a cancellation type of PTHREAD_CANCEL_ASYNCHRONOUS (which places
+even more restrictions on the thread) and we have a significant issue.  Note
+however that changing this to the more conventional PTHREAD_CANCEL_DEFERRED
+doesn't fix the problem.
+
+Removing the calls to SleepUsecRelative() and replacing them with a crude
+loop delay resolves the segfault for me, which pretty much proves the point.
+This all makes sense except for the fact that a segfault has taken so long
+to appear due to all this - and even not it's only affecting a specific
+distribution.  We must have just been lucky.
+
+I'm working on a patch to fix this.  We can't just Stop() the PosixThreads
+because the sleep time can be quite lengthy.  Libffado would therefore take
+quite a few seconds to clean up typically, which is inconvenient.  I expect
+the solution to involve some combination of Stop() and pthread_signal() (to
+interrupt a system call and hopefully speed up the thread exit) but I'm
+still working through various issues (for example, the global nature of
+signal handlers, even if execution context is by thread).
+
+As far as I can tell, only the watchdog uses pthread_cancel() on its
+threads; all other FFADO threads are stopped using PoxixThread::Stop(). 
+Therefore this problem only affects the watchdog object.
+
+Regards
+  jonathan
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1373430649.14154_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1374064736.30645_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1373635797.16821_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1373635797.16821_0.ltw:2,&nbsp;&lt;20130712132910.GA1435 at marvin dot atrad dot com dot au&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

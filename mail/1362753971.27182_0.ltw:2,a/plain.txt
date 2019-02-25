@@ -1,0 +1,48 @@
+Date:        Fri, 08 Mar 2013 08:45:24 -0600
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: John Emmas Re: [Jack-Devel] Denon ASIO and Jack (1362740658.12612_0.ltw:2,a)
+Follow-Up:   John Emmas Re: [Jack-Devel] Denon ASIO and Jack (1362759779.4158_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Denon ASIO and Jack
+
+On Fri, March 8, 2013 5:04 am, John Emmas wrote:
+> Lloyd, forgive me for coming late into this conversation but the
+> following command should start Jack successfully for you:-
+>
+> jackd.exe -S -d portaudio -r44100 -p512 -P "ASIO::DENON DJ ASIO Driver"
+> -C "ASIO::DENON DJ ASIO Driver"
+
+Isn't -C capture port?  From the output Lloyd sent earlier it appears that
+this Denon device has no inputs:
+
+[default ASIO input]
+[default ASIO output]
+Name = ASIO::DENON DJ ASIO Driver
+max Inputs = 0
+max outputs = 4
+ASIO min buffer size = 512
+ASIO max buffer size = 512
+ASIO preferred buffer size = 512
+Buffer granularity = 0
+Default sample rate = 0.00
+end of list
+cannot initialize driver
+Jack server failed with -1
+failed to open server
+
+
+So Jack cannot be started in duplex mode, it has to be started in playback
+only mode.  That bit me once before, I had a card configured to use a
+S/PDIF input, but no S/PDIF data source running, so attempting to start
+jack in duplex mode would crash because there was no valid input
+available.  Something similar might be happening here if jack is being
+started in duplex mode either explicitly or by default on a playback only
+device.
+
+-- 
+Chris Caudle
+
+1362753971.27182_0.ltw:2,a <fe5be3a7c7685ddf4d4de1ced32d0302.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

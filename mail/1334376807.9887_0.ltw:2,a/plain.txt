@@ -1,0 +1,40 @@
+Date:        Fri, 13 Apr 2012 16:29:33 -0500
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Friedrich Ewaldt Re: [Jack-Devel] Variable delay line problem (1334395993.30392_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Variable delay line problem
+
+On Fri, April 13, 2012 11:52 am, Stéphane VAXELAIRE wrote:
+> Thanks, I did try that, but when I do, the sine does not seem to evolve.
+
+Maybe I suggested the division in the incorrect location.
+I tried the equivalent in Octave, and it seems to work with:
+cos(n/Fs*2*pi*freq)
+
+I don't remember how operator order of precedence works in Octave, so I
+also tried:
+cos(2*pi*n*(freq/sample_rate))
+
+and that also seemed to work like expected.
+
+By work as expected, I just mean it generated cosine values of the
+expected period.  I did not try to actually implement a variable delay so
+that I could make a flanger in Octave code.
+
+Are you doing any prototype code in Octave, or is everything in C?
+
+Also, I didn't really pay attention to how you were implementing the
+delay.  I had assumed you would do an interpolated delay so you can make
+smooth phase adjustments.  If you are just grabbing samples from the delay
+buffer, you are going to have discontinuous jumps between samples, and
+that is going to sound really bad, just like having lots of under-runs
+(same effect, you are just skipping over some samples and not playing
+them).
+
+-- 
+Chris Caudle
+
+1334376807.9887_0.ltw:2,a <86ac5ffa8a67c44bbd610dec596f5050.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

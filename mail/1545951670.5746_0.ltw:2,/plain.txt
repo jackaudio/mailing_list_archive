@@ -1,0 +1,63 @@
+Date:        Fri, 28 Dec 2018 01:00:40 +0200
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: [hidden] at grossmann-venter dot com Re: [Jack-Devel] Sudden Pulseaudio Faulure reported due to jack (1545614412.17865_0.ltw:2,)
+Follow-Up:   Holger Marzen Re: [Jack-Devel] Sudden Pulseaudio Faulure reported due to jack (1545979314.25227_0.ltw:2,)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] Sudden Pulseaudio Faulure reported due to jack (1546021019.28653_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Sudden Pulseaudio Faulure reported due to jack
+
+>> I cannot tell from the error messages whether the problem is jackd
+>> is not
+>> running when expected, or if jackd is running but for some reason Pulse
+>> cannot make a connection.
+
+The history of calling both jackd and jackdbus jack servers "jackd" did
+not make things clearer. Naming of module-jackdbus-detect.so already
+suggests that PulseAudio uses shared library to communicate with
+jackdbus (not jackd) and detect something (whether jack server in
+jackdbus is running). Whether suggestion is a fact or not is best
+checked in the source code, when documentation is not available.
+
+> I am using AVLinux which is Debian9 Stretch.
+>
+> I cannot edit config files if I dont know how all these
+> pulseaudio/jack/alsa daemons interact.
+
+IIRC the information used to be in the jackaudio.org trac wiki.
+Maybe someone else on this list knows if the trac wiki is still
+accessible somehow.
+
+> Therefore,
+> Do you have a suggestion how I should approach the startup of these
+> daemons.
+
+To my knowledge PulseAudio works better with jackdbus over D-Bus
+than with jackd. I'm even surprised it works at all with jackd. After
+all jackdbus is "jack server" that can be autolaunched, controlled and
+monitored over D-Bus :)
+
+When D-Bus was introduced to jackd, it was only for reservation protocol
+used for coordination (with PulseAudio) of audio device ownership/use.
+The purpose of this reservation protocol is/was to allow jack server
+take audio device ownership from PulseAudio.
+
+In contrast, jackdbus exposes jack server control API over D-Bus and
+also uses the audio device reservation protocol (which also works over
+D-Bus).
+
+PulseAudio (still?) uses the jackdbus control API.
+
+Also, systems with both jackdbus and jackd executables, while possible,
+are more complex to setup than ones with jackd or jackdbus only and at
+least some of linux distros keep proving this for years.
+
+Another common issue with such complex setups comes from the fact that
+libjack.so that is used by JACK applications, can autostart the jack
+server. libjack.so (source) code can autostart jack server in
+jackd or in jackdbus but which one is proper depends on particular
+system setup.
+
+1545951670.5746_0.ltw:2, <85efa21so7.fsf at arnaudov dot name>
+________________________________________________________________________________
+

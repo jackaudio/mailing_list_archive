@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Fwd: Possible error codes for jack_midi_event_get()?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Fwd: Possible error codes for jack_midi_event_get()?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1532789817.21574_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1532872787.19673_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1532802150.3977_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 28 Jul 2018 20:21:59 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Hanspeter Portner </span> &lt;[hidden] at open-music-kontrollers dot ch&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Matthias Geier
+<a href='../1532789817.21574_0.ltw:2,/index.html'>[Jack-Devel] Fwd: Possible error codes for jack_midi_event_get()? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Matthias Geier
+<a href='../1532872787.19673_0.ltw:2,/index.html'>Re: [Jack-Devel] Fwd: Possible error codes for jack_midi_event_get()? </a></td></tr>
+</table>
+<pre>
+On 28.07.2018 16:55, Matthias Geier wrote:
+&gt; Dear list.
+&gt; 
+&gt; I'm the author of one of the Python bindings for JACK:
+&gt; https://jackclient-python.readthedocs.io/
+&gt; 
+&gt; I was a bit lazy when implementing a generator function that's
+&gt; supposed to yield all incoming MIDI events one-by-one.
+&gt; 
+&gt; Here's the code if somebody is interested (it's using CFFI and the
+&gt; _lib object is a wrapper for the JACK API):
+&gt; 
+&gt; 
+&gt;     def incoming_midi_events(self):
+&gt;         event = self._event
+&gt;         buf = _lib.jack_port_get_buffer(
+&gt;             self._ptr, self._client.blocksize)
+&gt;         for i in range(_lib.jack_midi_get_event_count(buf)):
+&gt;             err = _lib.jack_midi_event_get(event, buf, i)
+&gt;             # TODO: proper error handling if this ever happens:
+&gt;             assert not err, err
+&gt;             yield event.time, _ffi.buffer(event.buffer, event.size)
+&gt; 
+&gt; 
+&gt; As you can see, I didn't check the return value of
+&gt; jack_midi_event_get(), I just added an "assert" statement hoping that
+&gt; somebody would report it if the call to jack_midi_event_get() would
+&gt; ever fail.
+&gt; 
+&gt; I didn't hear anything for a long time, but recently I got a bug
+&gt; report where the assertion was violated:
+&gt; https://github.com/spatialaudio/jackclient-python/issues/54
+&gt; 
+&gt; This shows that jack_midi_event_get() can raise an error, even if I
+&gt; check with jack_midi_get_event_count() beforehand.
+&gt; 
+&gt; My question is now: how should I react to this error?
+
+For JACK1 error is only returned if midi_event_index &gt;= midi_event_count [1].
+
+For JACK2 the same is true; additionally it can fail if the MIDI port buffer is
+invalid (whatever that means...) [2].
+
+[1] https://github.com/jackaudio/jack1/blob/master/libjack/midiport.c#L96
+[2] https://github.com/jackaudio/jack2/blob/master/common/JackMidiAPI.cpp#L67
+
+&gt; 
+&gt; Shall I ...
+&gt; 
+&gt; * discard the current event and continue reading further events?
+&gt; 
+&gt; * discard the current and all following events in this block?
+&gt; 
+&gt; * raise an error?
+&gt; 
+&gt; * do something else?
+
+Well, there is no valid event, so ignore it ?
+
+&gt; 
+&gt; Can I guarantee that no incoming MIDI events get lost?
+&gt; 
+
+MIDI events can only get lost while multiplexed down from multiple ports into
+one (and the latter can not take them all), iirc.
+
+&gt; Another related question: what error code is supposed to be returned?
+&gt; The documentation
+&gt; (http://www.jackaudio.org/api/group__MIDIAPI.html#ga838c794bd1451bfd47edde1c7cd1ff4f)
+&gt; mentions ENODATA, but according to my bug report, ENOBUFS (-105) was
+&gt; returned.
+&gt; 
+&gt; Is this a bug in JACK or an omission in the documentation?
+
+It is in the documentation, that it can fail [3].
+
+[3] http://jackaudio.org/api/group__MIDIAPI.html#ga838c794bd1451bfd47edde1c7cd1ff4f
+
+&gt; 
+&gt; I don't know which JACK version was used, the OS was Ubuntu 18.04 LTS 64 bits.
+&gt; 
+&gt; cheers,
+&gt; Matthias
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1532789817.21574_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1532872787.19673_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1532802150.3977_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1532802150.3977_0.ltw:2,&nbsp;&lt;d77f2499-f98a-fb79-bba2-a54169c0c02e at open-music-kontrollers dot ch&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,52 @@
+Date:        Sat, 26 Dec 2015 11:29:26 +0100
+From:        Hanspeter Portner  <[hidden] at airpost dot net>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: John Emmas Re: [Jack-Devel] jack dsp load calculation (1451122710.11331_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack dsp load calculation
+
+On 26.12.2015 10:38, John Emmas wrote:
+> Something occurred to me while tucking into my breakfast this morning...
+> 
+> On 23/12/2015 15:35, Robin Gareus wrote:
+>> Short spikes, which are in most cases the cause for xruns, are simply
+>> ignored in the calculation: For them to show up [...] the spike must
+>> be in the last 32 jack-cycles. [...] Most control applications only
+>> update the value every second or so.
+>>
+> 
+> Of course!  If users are hearing xruns without them showing up in the
+> DSP figure, this must be where the problem lies.  And it won't get
+> solved by changing the calculation algorithm.  Removing the averaging
+> would simply introduce a new set of problems without addressing the
+> underlying issue (i.e. that the client is updating too infrequently).
+> 
+> I wondered if Jack might have any other means of notifying a client when
+> an xrun occurs?  (i.e. apart from returning a load count of 100)?  Let's
+> say that clients (Ardour/Mixbus or whatever) could get notified about
+> xruns using a callback function.  There'd then be a simple solution. 
+> Instead of just querying the DSP reading once every second, clients
+> could use a strategy like this (which would still work - even if only
+> used once every second):-
+> 
+>       if ( the_client->got_notified_about_an_xrun() ) {
+>             //  We know that an xrun occurred since we last checked
+>             //  the CPU load - so do something to accommodate that.
+> 
+>             //  and then reset the notification flag
+>             reset_the_xrun_notification_flag ();
+>       } else {
+>             //  No xrun was encountered - so we can update normally...
+>             update_cpu_load ();
+>       }
+> 
+> Is there anything like that already available.?
+
+Sure, that's what 'jack_set_xrun_callback' [1] is for.
+
+[1]
+http://jackaudio.org/api/group__ClientCallbacks.html#ga08196c75f06d9e68f9a3570dfcb1e323
+
+1451125775.14242_0.ltw:2,a <567E6C06.1020001 at airpost dot net>
+________________________________________________________________________________
+

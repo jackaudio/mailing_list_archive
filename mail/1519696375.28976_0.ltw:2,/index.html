@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Why can I only select 512 samples?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Why can I only select 512 samples?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1519597037.29404_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1519702342.1611_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1519696375.28976_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 26 Feb 2018 19:52:24 -0600 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>lowkeyoutlaw
+<a href='../1519326178.12039_0.ltw:2,/index.html'>Re: [Jack-Devel] Why can I only select 512 samples? </a></td></tr>
+</table>
+<pre>
+On Thu, February 22, 2018 1:02 pm, lowkeyoutlaw wrote:
+&gt; The actual driver was hard to come by, and is no longer supported. The
+&gt; driver on the site is actually ASIO4ALL, which works well, but ties up all
+&gt; audio system wide. I use an alternative ASIO from Image line/FL Studio
+&gt; called FL Studio ASIO, of course. It works a bit better than ASIO4ALL.
+&gt; Even if i use ASIO4ALL i get the same results.
+
+The startup command for jackd.exe needs to know the correct driver name to
+use when starting.  If you use the FL Studio ASIO driver, does it have FL
+Studio ASIO as the driver name?
+On the jack on windows page it shows the full command to use, typically
+set as a shortcut.
+You will be able to see the output better if you open a command prompt and
+paste in the command there:
+"C:\Program Files\Jack\jackd.exe" -R -S -d portaudio -d "ASIO::ASIO4ALL v2"
+
+If you don't want to use ASIO4ALL then you need to change the string
+"ASIO::ASIO4ALL v2" to whatever matches your actual driver name.
+As shown on that same web page you can get the list of available drivers
+with the l (lower case L) option:
+"C:\Program Files\Jack\jackd.exe" -d portaudio -l
+
+I suspect may show a different name for the FL Studio driver.
+
+This is the full set of options for the portaudio backend.  You can give
+them as extra arguments after the "-d portaudio" argument.  Don't put them
+before, jackd will try to interpret them directly and probably print an
+error about options not applying, make sure you put -d portaudio on the
+command line, then any settings that need to be set for that backend
+driver.
+
+   PORTAUDIO BACKEND PARAMETERS
+       -c --channel
+              Maximum number of channels (default: all available hardware
+channels)
+
+       -i --channelin
+              Maximum number of input channels (default: all available
+hardware channels)
+
+       -I --input-latency
+              Extra input latency (frames) (default: 0)
+
+       -o --channelout
+              Maximum number of output channels (default: all available
+hardware channels)
+
+       -O --output-latency
+              Extra output latency (frames) (default: 0)
+
+       -C --capture
+              Whether or not to capture (default: true)
+
+       -P --playback
+              Whether or not to playback (default: true)
+
+       -D --duplex
+              Capture and playback (default: true)
+
+       -r --rate
+              Sample rate (default: 48000)
+
+       -p --period
+              Frames per period (default: 1024). Must be a power of 2.
+
+       -n --name
+              Driver name (default: none)
+
+       -z --dither
+              Dithering mode (default: none)
+
+&gt; I'm going to try this again right now while I'm typing.
+&gt; -First, I opened the Jack Control Panel &amp; set the buffer/latency to 1024
+
+Not sure what you are calling the Jack Control Panel, but if it is what I
+suspect it is the application you use to  make connections while jackd is
+running, I have never heard that the Jack Control application can change
+jackd startup parameters.
+
+&gt; -Second, I opened Jack PortAudio. I don't see any place on it to change
+&gt; any settings. It's just a command window.
+
+If you followed the jack on windows page to setup the Jack PortAudio
+shortcut then you set the command line in the shortcut, that is where you
+change settings, by changing the command line executed by the shortcut.
+
+&gt; I just realised a couple days ago that this works without
+&gt; The Control Panel running.
+
+Yes, the shortcut you setup for jackd will start jackd, the control panel
+application is just so you can make connections between applications if
+you have applications which are not jack native and so do not provide any
+way inside the application to make connections.
+
+I'm not sure about jackrouter, the application which provides ASIO
+interfaces into the jack audio ports.  You may need to check
+JackRouter.ini and make sure there is not a setting for buffer size there.
+ I think JackRouter should get its buffer size from the jack server
+though, so start by running jackd from a command shell so you can make
+sure that buffer size is actually getting passed to jack.  I think it
+should be something like this, possibly with the driver name changed to
+match your FL Studio driver:
+
+"C:\Program Files\Jack\jackd.exe" -R -S -d portaudio -d "ASIO::ASIO4ALL
+v2" -p 1024
+
+There is usually a -r argument for the sample rate (e.g. 44100, 48000,
+96000).  According to the manual page it defaults to 48000, so if you
+would prefer 44100 you should also add in -r 44100 after the other
+arguments.
+In fact, if you have source material at 44100 and you are forcing MPC
+software to run at 48000 it may be doing sample rate conversion in the
+background, which will probably be a bigger CPU drain than running at 512
+instead of 1024 sample buffer size.
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1519597037.29404_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1519702342.1611_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1519696375.28976_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1519696375.28976_0.ltw:2,&nbsp;&lt;70aa6fe1854a4c07aae7d1935f82ac75.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

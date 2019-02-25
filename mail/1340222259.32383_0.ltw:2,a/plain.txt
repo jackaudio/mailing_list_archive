@@ -1,0 +1,50 @@
+Date:        Wed, 20 Jun 2012 21:57:32 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jan Kohnert Re: [Jack-Devel] jack muted but plain alsa works (1340221553.31377_0.ltw:2,a)
+Follow-Up:   Jan Kohnert Re: [Jack-Devel] jack muted but plain alsa works (1340374111.14007_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack muted but plain alsa works
+
+On Wed, Jun 20, 2012 at 09:45:37PM +0200, Jan Kohnert wrote:
+
+> Terminating jackd just after the last test and playing a song using 
+> audacity/alsa instead of audacity/jack gave me sound. 
+> Any further ideas?
+
+The usual suspects:
+
+   1. Does your application connect to the output ports? Please test
+      with mplayer -ao jack /some/file.mp3, it's known to do the right
+      thing out of the box, while audacity is known to be broken for
+      most of the year.
+
+
+   2. Is hw:2,0 really the correct interface? I suggest to use the
+      card name from /proc/asound/cards instead:
+
+adi@foh:~$ cat /proc/asound/cards 
+ 0 [PCH            ]: HDA-Intel - HDA Intel PCH
+                      HDA Intel PCH at 0xf7420000 irq 55
+ 1 [NVidia         ]: HDA-Intel - HDA NVidia
+                      HDA NVidia at 0xf7080000 irq 17
+ 2 [HDSPMxf1cd85   ]: HDSPM - RME RayDAT_f1cd85
+                      RME RayDAT S/N 0xf1cd85 at 0xf7300000, irq 18
+
+  $  jackd -d alsa -d hw:PCH
+
+
+   3. Maybe the clock setting is wrong and jackd doesn't make any
+      progress. Use $jackd -d alsa -d hw:FOO -P" to limit your jackd
+      to playback only.
+
+
+
+HTH
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1340222259.32383_0.ltw:2,a <20120620195732.GQ6396 at ltw dot loris dot tv>
+________________________________________________________________________________
+

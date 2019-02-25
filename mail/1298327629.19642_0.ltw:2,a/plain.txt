@@ -1,0 +1,98 @@
+Date:        Mon, 21 Feb 2011 23:33:26 +0100
+From:        Arnold Krille  <[hidden] at arnoldarts dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] backend switching - another way (1298325064.14546_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] backend switching - another way (1298328291.20899_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] backend switching - another way (1298339901.11363_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] backend switching - another way
+
+Hi,
+
+On Monday 21 February 2011 22:50:50 Fons Adriaensen wrote:
+> On Mon, Feb 21, 2011 at 10:17:17PM +0100, Arnold Krille wrote:
+> > On Monday 21 February 2011 19:53:03 Fons Adriaensen wrote:
+> > > I've been musing for a long time over the idea 'what if Jack ports
+> > > were persistent' ? In other words, if they could exists irrespective
+> > > of the application that uses them is running or not.
+> > > 
+> > > This has some far-reaching consequences of course, but there is
+> > > subset of this idea that is not as mad as it seems (IMHO).
+> > > 
+> > > ** What if physical ports were persistent ? **
+> > 
+> > I like the idea!
+> > 
+> > Still I would like to extend the question: What if there where virtual
+> > ports?
+> > 
+> > These virtual ports would be configured in a configuration(-file) if
+> > present or by the first client providing these. If no config-file was
+> > there to make the ports persitent forever, they would stay as long as
+> > jack is running, regardless of the backend actually in use.
+> I don't see much difference between your 'virtual' ports and the
+> 'persistent' ones I proposed.
+
+You seemed to limit your persistent ports to hardware-ports. I like to remove 
+the distinction between backends and clients and thus between hardware and 
+software ports. And I think that virtual/persitent ports can be benefitial to 
+other apps/use-cases as well as for abstracting the actual hardware/backend.
+
+> > I would very much like to remove the distinction between "clients" and
+> > "backends". After all a traditional client (be it a separate process or
+> > an in- server-client) is just a client that is capable of free-wheeling.
+> 
+> There is a fundamental difference: the backend is what you wait for
+> to start a cycle, it's the first to be read and the last to be written.
+
+Yep, so the backend is a client that is master-clock-capable. Other then that 
+its a normal client with ports and a processing-callback. Just give it a 
+callback or something appropriate to run as master and otherwise tell it when 
+it is not running as master.
+
+> > and backend is just an in-server-client that is not (necessarily)
+> > free-wheeling capable but definitely master-clock-capable.
+> > Thinking about it, even this is not true, the "null"-backend would be the
+> > master-clock for freewheeling. Thus hardware-clients would be not-
+> > freewheeling-capable. And as long as all clients are either synced or at
+> > least have resampling-capabilites (for unsynced hardware-clients), there
+> > is no difference between clients and backends...
+> 
+> Freewheeling is an option. The 'default' backend (used when the official
+> one goes away without notice) should be the dummy one with the same sample
+> rate and period as the real one it replaces.
+> 
+> > Some benefits of this would be:
+> >  - Several backends running at the same time (like
+> >  alsa-on-the-pci-soundcard,
+> > 
+> > alsa-on-usb-soundcard and firewire).
+> I don't see how you could have more than one at any time.
+
+Given the premise that the soundcards are either all synced externally or the 
+clients/backend accessing them do resampling if needed, I don't see any reason 
+to limit jack to "run on one sounddevice only". In fact alsa_in/alsa_out and 
+the netjack[12] are already showing the need/use-case for multiple backends 
+possibly at the same time.
+
+Given the rise of network audio systems and pluggable audio devices via 
+firewire and usb, I don't see any reason why jack shouldn't allow multiple 
+backends/hardware-accessing clients at the same time. And the only thing that 
+distinguishes as backend from a client is the ability to drive the jack-
+processing. And that doesn't justify two different code-paths from my pov.
+
+This idea is invading more deeply into the jack internals then your approach. 
+But its not changing anything for existing clients. Its only changing 
+something for existing backends. And when these backends become clients with 
+an additional feature through a defined interface, these could also be used 
+independent of the jack-flavour. So instead of threee implementations for the 
+alsa-backend, there would be one. And this one implementation would also 
+superseed the alsa_in/alsa_out apps. Sounds good to me...
+
+Have fun,
+
+Arnold
+
+1298327629.19642_0.ltw:2,a <201102212333.30437.arnold at arnoldarts dot de>
+________________________________________________________________________________
+

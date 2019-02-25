@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Race conditions in JackPosixSemaphore</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Race conditions in JackPosixSemaphore</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1356534015.10874_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1356868537.29741_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1356549746.28397_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 26 Dec 2012 20:22:08 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Max &lt;[hidden] at i-free dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Max
+<a href='../1356534015.10874_0.ltw:2,a/index.html'>[Jack-Devel] Race conditions in JackPosixSemaphore </a></td></tr>
+</table>
+<pre>
+Le 26 d&#xE9;c. 2012 &#xE0; 15:59, Max a &#xE9;crit :
+
+&gt; Hi, Jackers
+&gt;&gt; 
+&gt;&gt;   I found a race conditions in JackPosixSemaphore on client side (method ConnectInput) that can lead to open a semaphore twice or more and close it only once. As result, a semaphore descriptor leaves opened after closing  and the client app can hang up ("too more open files"). It is critical error for our apps.
+
+That would be interesting to know why your code trigger this problem. Are you opening different clients from different threads?
+
+
+&gt;&gt; The cause is that more than one thread can try to open client-side semaphore simultaneously if fSemaphore is NULL, - classic race condition.
+&gt;&gt; 
+&gt;&gt; I rewrite JackPosixSemaphore::ConnectInput using CAS (I use Linux and gcc):
+&gt;&gt; 
+&gt;&gt; // Client side : get the published semaphore from server
+&gt;&gt; bool JackPosixSemaphore::ConnectInput(const char* name, const char* server_name)
+&gt;&gt; {
+&gt;&gt;     if (fSemaphore) {
+&gt;&gt;         jack_log("JackPosixSemaphore::Connect: already connected name = %s", fName);
+&gt;&gt;         return true;
+&gt;&gt;     }
+&gt;&gt; 
+&gt;&gt;     BuildName(name, server_name, fName, sizeof(fName));
+&gt;&gt;     jack_log("JackPosixSemaphore::Connect name = %s", fName);
+&gt;&gt; 
+&gt;&gt;     while ( fSemaphore == SEM_FAILED ) {
+&gt;&gt;         sem_t * pSem = sem_open(fName, O_CREAT) ;
+&gt;&gt;         if ( pSem == SEM_FAILED ) {
+&gt;&gt;             jack_error("JackPosixSemaphore::Connect: can't connect named semaphore name = %s err = %d %s", fName, errno, strerror(errno));
+&gt;&gt;             return false;
+&gt;&gt;         }
+&gt;&gt; 
+&gt;&gt;         if ( __sync_bool_compare_and_swap( &amp;fSemaphore, SEM_FAILED, pSem )) {
+&gt;&gt;             // sem_getvalue for debugging purpose...
+&gt;&gt;             int val = 0 ;
+&gt;&gt; 
+&gt;&gt;             sem_getvalue(fSemaphore, &amp;val);
+&gt;&gt;             jack_log("JackPosixSemaphore::Connect: %s sem_getvalue=%ld", fName, val);
+&gt;&gt; 
+&gt;&gt;             return true ;
+&gt;&gt;         }
+&gt;&gt; 
+&gt;&gt;         sem_close( pSem )   ;
+&gt;&gt;     }
+&gt;&gt; 
+&gt;&gt;     jack_log("JackPosixSemaphore::Connect: already connected name = %s", fName);
+&gt;&gt;     return true ;
+&gt;&gt; }
+&gt;&gt; 
+&gt;&gt; After this patch, the race cond is disappeared and Jack stay more stable.
+&gt;&gt; Of course, instead of use gcc-specific intrinsics __sync_bool_compare_and_swap it will be better to use C++11 std::atomic to implement CAS. 
+&gt;&gt; 
+&gt;&gt; JackPosixSemaphore::Disconnect should be rewritten in that way:
+&gt;&gt; 
+&gt;&gt; // Client side: close semaphore without destroying
+&gt;&gt; bool JackPosixSemaphore::Disconnect()
+&gt;&gt; {
+&gt;&gt;     if ( fSemaphore != SEM_FAILED ) {
+&gt;&gt;         jack_log("JackPosixSemaphore::Disconnect name = %s", fName);
+&gt;&gt; 
+&gt;&gt;         while ( fSemaphore != SEM_FAILED ) {
+&gt;&gt;             sem_t * pSem = fSemaphore ;
+&gt;&gt;             if ( __sync_bool_compare_and_swap( &amp;fSemaphore, pSem, SEM_FAILED )) {
+&gt;&gt;                 if ( sem_close( pSem ) != 0 ) {
+&gt;&gt;                     jack_error( "Disconnect: can't disconnect named semaphore name = %s err = %d %s", fName, errno, strerror(errno) );
+&gt;&gt;                     return false ;
+&gt;&gt;                 }
+&gt;&gt;                 break ;
+&gt;&gt;             }
+&gt;&gt;         }
+&gt;&gt;     }
+&gt;&gt;     else {
+&gt;&gt;         jack_log("JackPosixSemaphore::Disconnect: attempt to close empty semaphore %s", fName);
+&gt;&gt;     }
+&gt;&gt;     return true ;
+&gt;&gt; }
+&gt;&gt; 
+&gt;&gt; Second problem is on the server side, JackRequestDecoder::HandleRequest. If the socket is down on client side, the HandleRequest method continues to try read a request from bad socket (of course, it reads garbage data and issues a lot of error messages) and ** try to execute ** such bad request. In some cases this can lead to crash. I patch this problem raising "bad_request" exception in read client socket and catch it in JackSocketServerChannel::Execute:
+&gt;&gt; 
+&gt;&gt;                    // Decode request
+&gt;&gt;                     } else {
+&gt;&gt;                         // Result is not needed here
+&gt;&gt;                         try {
+&gt;&gt;                             fDecoder-&gt;HandleRequest(socket, header.fType);
+&gt;&gt;                         }
+&gt;&gt;                         catch ( bad_request ) {
+&gt;&gt;                             jack_error("JackSocketServerChannel::Execute : Bad request encountered for fPollTable i = %ld fd = %ld", i, fd);
+&gt;&gt;                             ClientKill(fd) ;
+&gt;&gt;                         }
+&gt;&gt;                     }
+&gt;&gt; 
+&gt;&gt; 
+&gt;&gt; I rewrite the CheckRead macro:
+&gt;&gt; 
+&gt;&gt; #define CheckRead(req, socket)   { if (req.Read(socket) &lt;  0) { jack_error("CheckRead error %d", errno); throw bad_request() /*return -1*/; } }
+&gt;&gt; 
+&gt;&gt; and define bad_request exception:
+&gt;&gt; 
+&gt;&gt; // exception
+&gt;&gt; struct bad_request {};
+&gt;&gt; 
+&gt;&gt; 
+&gt;&gt; Best regards
+&gt;&gt;     Max Khizsinsky (aka khizmax)
+&gt;&gt;     the author of libcds.sourceforge.net, the C++ template library of lock-free data structs
+&gt;&gt; 
+&gt;&gt; PS Bugs report (http://trac.jackaudio.org) does not work (internal server error 500), so I'm writing my bug report in this dev list, sorry.
+&gt;&gt; 
+
+
+Can you possibly prepare a git patch? 
+
+Thanks.
+
+Stephane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1356534015.10874_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1356868537.29741_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1356549746.28397_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1356549746.28397_0.ltw:2,a&nbsp;&lt;B7FA197C-7C52-4372-BDF2-D4F935733DBE at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

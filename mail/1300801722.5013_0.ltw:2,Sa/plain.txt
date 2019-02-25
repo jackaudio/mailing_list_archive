@@ -1,0 +1,148 @@
+Date:        Tue, 22 Mar 2011 14:48:16 +0100
+From:        joel silvestre  <[hidden] at wanadoo dot fr>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          JACK List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] JACK2 SVN status (1300800415.2733_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] JACK2 SVN status (1300802076.5661_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK2 SVN status
+
+Le mardi 22 mars 2011 à 14:26 +0100, Stéphane Letz a écrit :
+> Le 22 mars 2011 à 12:32, joel silvestre a écrit :
+> 
+> > Le vendredi 18 mars 2011 à 16:57 +0100, Stéphane Letz a écrit :
+> >> Hi All,
+> >> 
+> >> I would like to release JACK2 1.9.7 version soon. JACK2 SVN is supposed so match latest released JACK1 0.120.1 concerning API.  I recently did some reworking on ALSA backend to facilitate code sync with JACK1 ALSA backend (since both share 99% of common code).
+> >> 
+> >> It would help if FireWire/ALSA backend and more generally the current code is tested a bit more.
+> >> 
+> >> Thanks in advance.
+> >> 
+> >> Stéphane 
+> >> 
+> > 
+> > 
+> > Hi Stéphane,
+> > 
+> > I run into problems with jack2 svn 4217, clients cannot connect anymore.
+> > Jack2 1.96 runs as usual.
+> > 
+> > Mplayer says:
+> > 
+> > Building audio filter chain for 44100Hz/2ch/s16le -> 0Hz/0ch/??...
+> > [libaf] Adding filter dummy 
+> > [dummy] Was reinitialized: 44100Hz/2ch/s16le
+> > [dummy] Was reinitialized: 44100Hz/2ch/s16le
+> > Trying preferred audio driver 'jack', options '[none]'
+> > Cannot lock down memory area (Cannot allocate memory)
+> > Cannot lock down memory area (Cannot allocate memory)
+> > Cannot lock down memory area (Cannot allocate memory)
+> > Jack: JackClient::SetupDriverSync driver sem in flush mode
+> > 
+> > 
+> > All the best,
+> > Joël
+> > 
+> 
+> 
+> There is no clear evidence that the issue is JACK related, see the line:
+> 
+> ================
+>  MPlayer crashed by bad usage of CPU/FPU/RAM.
+> ================
+> 
+> Do you have any crash log of MPlayer itself?
+> 
+> Thanks
+> 
+> Stéphane
+> 
+
+Mplayer works without jackd and works with stable jack2 1.9.6.
+
+Building audio filter chain for 44100Hz/2ch/s16le -> 0Hz/0ch/??...
+[libaf] Adding filter dummy 
+[dummy] Was reinitialized: 44100Hz/2ch/s16le
+[dummy] Was reinitialized: 44100Hz/2ch/s16le
+Trying preferred audio driver 'jack', options '[none]'
+Jack: JackClient::SetupDriverSync driver sem in flush mode
+Jack: JackPosixSemaphore::Connect jack_sem.1000_default_MPlayer [9064]
+Jack: Already connected name = MPlayer [9064]
+Jack: Clock source : system clock via clock_gettime
+Jack: JackLibClient::Open name = MPlayer [9064] refnum = 2
+Jack: JackClient::PortRegister ref = 2 name = MPlayer [9064]:out_0 type
+= 32 bit float mono audio port_index = 11
+Jack: JackClient::PortRegister ref = 2 name = MPlayer [9064]:out_1 type
+= 32 bit float mono audio port_index = 12
+Jack: JackClient::Activate
+Jack: JackClient::StartThread : period = 11609 computation = 0
+constraint = 11609
+Jack: Create non RT thread
+Jack: ThreadHandler: start
+Jack: JackClient::kActivateClient name = MPlayer [9064] ref = 2 
+Jack: JackClient::Connect src = MPlayer [9064]:out_0 dst =
+system:playback_1
+Jack: JackClient::Connect src = MPlayer [9064]:out_1 dst =
+system:playback_2
+Jack: WaitGraphChange...
+Jack: JackGraphManager::GetTotalLatency port_index = 11 total latency =
+1536
+
+
+Ardour2 reacts the same, doesn't work with jack2svn but works with jack2
+1.9.6 :
+
+$ ardour2
+Ardour 2.8.11
+   (built using 7823 and GCC version 4.4.3)
+Copyright (C) 1999-2008 Paul Davis
+Some portions Copyright (C) Steve Harris, Ari Johnson, Brett Viren, Joel
+Baker
+
+Ardour comes with ABSOLUTELY NO WARRANTY
+not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This is free software, and you are welcome to redistribute it 
+under certain conditions; see the source for copying conditions.
+theme_init() called from internal clearlooks engine
+/usr/share/themes/Human-Clearlooks/gtk-2.0/gtkrc:75: error: unexpected
+identifier `colorize_scrollbar', expected character `}'
+Chargement du fichier de configuration de l'ihm par
+défaut /usr/local/etc/ardour2/ardour2_ui_default.conf
+Chargement du fichier utilisateur de configuration
+l'ihm /home/moa/.ardour2/ardour2_ui.conf
+Loading ui configuration file /usr/local/etc/ardour2/ardour2_ui_dark.rc
+theme_init() called from internal clearlooks engine
+ardour: [INFO]: Ardour sera limité à 1024 fichiers ouverts
+chargement du fichier de configuration
+système /usr/local/etc/ardour2/ardour_system.rc
+chargement du fichier de configuration
+utilisateur /home/moa/.ardour2/ardour.rc
+ardour: [INFO]: Using SSE optimized routines
+ardour: [INFO]: recherche des protocoles de contrôle
+dans /home/moa/.ardour2/surfaces/:/usr/local/lib64/ardour2/surfaces/
+ardour: [INFO]: Protocole de contrôle Tranzport inutilisable
+ardour: [INFO]: Protocole de surface de contrôle trouvé : « Generic MIDI
+»
+powermate: Opening of powermate failed - Aucun fichier ou dossier de ce
+type
+ardour: [INFO]: Protocole de contrôle powermate inutilisable
+ardour: [INFO]: Protocole de surface de contrôle trouvé : « Mackie »
+Cannot lock down memory area (Ne peut allouer de la mémoire)
+Cannot lock down memory area (Ne peut allouer de la mémoire)
+Cannot lock down memory area (Ne peut allouer de la mémoire)
+Jack: JackClient::SetupDriverSync driver sem in flush mode
+theme_init() called from internal clearlooks engine
+/usr/share/themes/Human-Clearlooks/gtk-2.0/gtkrc:75: error: unexpected
+identifier `colorize_scrollbar', expected character `}'
+Could not attach to process.  If your uid matches the uid of the target
+process, check the setting of /proc/sys/kernel/yama/ptrace_scope, or try
+again as the root user.  For more details,
+see /etc/sysctl.d/10-ptrace.conf
+ptrace: Opération non permise.
+/home/moa/8701: Aucun fichier ou dossier de ce type.
+No stack.
+
+1300801722.5013_0.ltw:2,Sa <1300801696.2997.34.camel at zordi2>
+________________________________________________________________________________
+

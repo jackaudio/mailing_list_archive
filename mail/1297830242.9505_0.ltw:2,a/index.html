@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] buffer size callback, revisit</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] buffer size callback, revisit</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297798899.8215_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297830719.9890_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297830242.9505_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 16 Feb 2011 05:22:09 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> hermann </span> &lt;[hidden] at web dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jack O'Quin &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Jack O'Quin
+<a href='../1297798899.8215_0.ltw:2,a/index.html'>Re: [Jack-Devel] buffer size callback, revisit </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Jack O'Quin
+<a href='../1297830719.9890_0.ltw:2,a/index.html'>Re: [Jack-Devel] buffer size callback, revisit </a></td></tr>
+</table>
+<pre>
+Am Dienstag, den 15.02.2011, 13:41 -0600 schrieb Jack O'Quin:
+&gt; On Tue, Feb 15, 2011 at 1:25 PM, Paul Davis &lt;[hidden]&gt; wrote:
+&gt; &gt; On Tue, Feb 15, 2011 at 2:22 PM, Jack O'Quin &lt;[hidden]&gt; wrote:
+&gt; &gt;
+&gt; &gt;&gt; If JACK does not, the best hope is not to change the buffer size.
+&gt; &gt;&gt; That's been the de facto solution for the past ten years or so. I
+&gt; &gt;&gt; doubt very many JACK clients ever worked correctly with this
+&gt; &gt;&gt; interface.
+&gt; &gt;
+&gt; &gt; so, if i understand correctly, you are suggesting that we simply
+&gt; &gt; convert the implementations so that the callback is always called from
+&gt; &gt; jack_activate(), and tell client authors "you should assume that its
+&gt; &gt; called from jack_activate(), though it may not be, and that's a bug in
+&gt; &gt; older versions of JACK" ?
+&gt; 
+&gt; Not exactly. The issue is complex, because one needs to look at it
+&gt; from both sides. Existing clients will want to work as best they can
+&gt; with old JACK versions. Removing the initialization code would not
+&gt; serve that purpose well, despite being subject to a race condition.
+&gt; 
+&gt; I am not against adding new, cleaner interfaces. But, let's not hold
+&gt; our breath waiting for everyone to adopt them. That takes years.
+&gt; 
+&gt; I was just asking: what's wrong with fixing the bug in the existing one?
+&gt; 
+&gt; I suspect I may have missed some earlier message where that problem
+&gt; was described already. If so, I apologize.
+
+Many jack clients cant handle buffersize changes anyway, mostly because
+the jack_set_buffer_size_callback() isn't involved.  
+
+But anyhow, clients witch handle it, and use internal buffers, have
+allocate the buffers before they called jack_activate(), so, a change in
+buffersize in between this time, leads anyway to a new allocation, when
+the client notice the change, isn't it ?  
+
+so wouldn't a call like 
+
+if (!jack_activate(jack_client))
+ if(sz != jack_get_buffer_size (jack_client)){buffersize change handle }
+
+handle the race condition without change anything in jack ?
+
+regards
+hermann
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297798899.8215_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297830719.9890_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297830242.9505_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1297830242.9505_0.ltw:2,a&nbsp;&lt;1297830129.2052.30.camel at box&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

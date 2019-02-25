@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1522105766.15768_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1522200126.2269_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1522192763.26748_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 28 Mar 2018 00:18:50 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Christopher Obbard </span> &lt;[hidden] at 64studio dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at chriscaudle dot org </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Chris Caudle
+<a href='../1522105766.15768_0.ltw:2,/index.html'>Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes </a></td></tr>
+</table>
+<pre>
+Hi Chris,
+
+Success tonight!
+
+Jack running nicely with -r4800 -p64 -n2 -s
+The softmode flag I will talk about later...
+
+
+&gt;&gt; Ah, I've been running mainline stable 4.14, applied CONFIG_PREEMPT and
+&gt;&gt; ran a cyclictest on three threads with no extra load. It was giving me
+&gt;&gt; "ok" average latency, and terrible maximum latency.
+&gt;
+&gt; That is exactly the point of the RT patches.  "Most" of the time latency
+&gt; is OK with the standard configuration options.  If you don't mind losing
+&gt; some data occasionally the standard kernel config options are probably OK.
+
+I was just pointing out the latency difference between Mainline and TI
+kernel with RT patch applied.
+
+
+&gt;&gt; This time I have a printk message of "GBLCTL write error" every few us.
+&gt;
+&gt; Every few microseconds?  I took a quick look at the McASP documentation
+&gt; and that register looks like a control register you would setup once when
+&gt; starting the driver, and then not touch it again until you had to
+&gt; reconfigure.  If it is being written more than a couple of times something
+&gt; is wrong.  It is possible that something is triggering error handling to
+&gt; kick in, it looks like that register has to be written again in certain
+&gt; cases where clock synch is lost, or possibly lost.  Without knowing more
+&gt; details of how you configured clocking and what your hardware looks like I
+&gt; can't say much more than that could be something to investigate.
+
+More digging (just put some printks into the kernel), it turns out
+this repeated GBLCTL error is actually caused by jack xruns
+automatically trying to reset the soundcard.
+
+This repeats over &amp; over while jack's softmode is enabled. This only
+happens with really tiny period values, with 256 and above it trys to
+restart the card once or twice.
+
+[  748.951772] AUDIOTEST davinci_mcasp_start stream: 0
+[  748.956704] AUDIOTEST mcasp_start_tx
+[  748.960317] AUDIOTEST davinci_mcasp_start stream: 1
+[  748.965219] AUDIOTEST mcasp_start_rx
+[  748.969932] AUDIOTEST GBLCTL write error reg: 96 val: 1
+[  748.976214] AUDIOTEST davinci_mcasp_stop stream: 0
+[  748.976420] davinci-mcasp 48038000.mcasp: Transmit buffer underflow
+[  748.987335] AUDIOTEST mcasp_stop_tx
+[  748.990847] AUDIOTEST davinci_mcasp_stop stream: 1
+[  748.995659] AUDIOTEST mcasp_stop_rx
+[  748.999212] davinci-mcasp 48038000.mcasp: unhandled rx event.
+rxstat: 0x00000104
+
+
+I think the problem is due to the following function call happening
+when Jack's started:
+
+my_driver_hw_params()
+  &gt; sets cpu output format
+  &gt; sets cpu sysclk
+  &gt; sets cpu tdm slot
+  &gt; sets codec sysclk &amp; pll path
+
+davinci_mcasp_start()
+  &gt; calls mcasp_start_tx() -- all OK
+  &gt; calls mcasp_start_rx()
+      &gt; calls mcasp_set_ctl_reg(DAVINCI_MCASP_GBLCTLR_REG, RXHCLKRST)
+-- craps out setting the receive clock. This is where the GBLCTL error
+message is coming from.
+
+This then causes an xrun in jack, calling davinchi_mcasp_stop() and
+then repeating all over again.
+
+Jack with the soft flag doesn't restart the alsa driver, so all is OK
+in the world there. Until there is a genuine xrun!
+
+I've verified the bitstream looks OK on logic analyser.
+
+Isn't software fun? :-)
+
+
+Cheers!
+
+Chris
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1522105766.15768_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1522200126.2269_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1522192763.26748_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1522192763.26748_0.ltw:2,&nbsp;&lt;CAP03XeoTsvDzDno=SCJe+tHEN4cGR6ohLE0+=hApQ+AWUrrxSw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

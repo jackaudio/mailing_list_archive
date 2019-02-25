@@ -1,0 +1,103 @@
+Date:        Sun, 11 Aug 2013 15:36:58 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Anders Tornvig <[hidden] at gmail dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] S24_3LE (1376248988.7277_0.ltw:2,)
+Follow-Up:   Anders Tornvig Re: [Jack-Devel] S24_3LE (1376252572.13005_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] S24_3LE
+
+my answer probably wasn't clear.
+
+the ability to correctly sample different frequencies is dependent only on
+sample rate.
+
+dynamic range depends on bit depth, but floating point sample formats have:
+
+   (a) the same dynamic range as signed 24 bit integer with ZERO losss of
+precision
+   (b) essentially infinite dynamic range if you are willing to live with
+some loss of precision
+
+so you don't ever gain by switching from float to 24 bit integer. you don't
+gain switching the other way, except:
+
+   * dedicated FP h/w (e.g. SSE) purposely designed to parallelize floating
+point operations
+   * if the sum of your signals exceeds 0dBFS, you don't clip in floating
+point format
+
+these are fairly significant benefits
+
+
+
+
+On Sun, Aug 11, 2013 at 3:23 PM, Paul Davis <[hidden]>wrote:
+
+> resolution has nothing to do with bit depth, only with sample rate. basic
+> signal processing theory, nyquist, etc.
+>
+>
+> On Sun, Aug 11, 2013 at 3:12 PM, Anders Tornvig <[hidden]>wrote:
+>
+>> Hi Paul, thanks for your rapid answer!
+>>
+>> Ok I see. Float if I want the jack api.
+>>
+>> The wordlengths we operate with today may make the discussion less
+>> relevant, but I don't understand the benefit of adding resolution to
+>> something which was not converted correspondingly.
+>>
+>> Say you have a low- and a high-frequency tone added together. Say the lf
+>> tone amplitude is 1000 times that of the hf tone. I happen to be only
+>> interested in the low-amplitude hf tone but the lf tone "steals" the
+>> resolution to represent it. And that resolution changes with the level of
+>> the lf tone! Am I right?
+>>
+>> With integers I know what resolution I have, no more, no less.
+>>
+>> Best, Anders
+>> Den 11/08/2013 16.03 skrev "Paul Davis" <[hidden]>:
+>>
+>>
+>>>
+>>>
+>>> On Sun, Aug 11, 2013 at 7:11 AM, Anders Tornvig <[hidden]
+>>> > wrote:
+>>>
+>>>> Dear list,
+>>>>
+>>>> I'm writing a full-duplex program (2in/2out) which will output
+>>>> something, record it as a block of data (1024-3268 samples), analyze it and
+>>>> decide what to output next. I'm on Ubuntu, at the moment with a UA-25ex USB
+>>>> audio interface, speaking S24_3LE.
+>>>>
+>>>> The Jack API looks fantastic except for one thing: I prefer working
+>>>> with integers and not float. In ALSA I can set the sample format to
+>>>> SND_PCM_FORMAT_S24_3LE and then I can give it data in that format directly,
+>>>> 3 bytes per sample per channel. On the capture side, I receive nice 24-bit
+>>>> integers.
+>>>>
+>>>
+>>> You should know that almost all audio software on almost every platform
+>>> these days using floating point. Even platforms that used to use fixed
+>>> point (e.g. protools DSP boxes) now use floating point.
+>>>
+>>> Adding a new data type to JACK is not particularly hard if it is
+>>> intended only for client-to-client communication. Adding a new data type to
+>>> JACK that involves the backends is a major undertaking.
+>>>
+>>>  You really should try to get over your attachment to integers - they
+>>> are fundamentally inappropriate for working with audio, something it has
+>>> taken the industry 10-20 years to realize but is now accepted by almost
+>>> everyone.
+>>>
+>>> --p
+>>>
+>>>
+>>>
+>
+
+1376249826.8570_0.ltw:2, <CAFa_cK=5wkYsb=Q9T0p3_D+8ZNa4Vk9pbF7QY7rMv8wDtBEBJA at mail dot gmail dot com>
+________________________________________________________________________________
+

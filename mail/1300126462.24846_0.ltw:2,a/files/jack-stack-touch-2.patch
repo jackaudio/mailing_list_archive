@@ -1,0 +1,40 @@
+Index: libjack/thread.c
+===================================================================
+--- libjack/thread.c	(revision 4191)
++++ libjack/thread.c	(working copy)
+@@ -99,6 +99,19 @@
+ #endif /* USE_CAPABILITIES */
+ }	
+ 
++static void
++jack_thread_touch_stack()
++{
++	char buf[JACK_THREAD_STACK_TOUCH];
++	int i;
++
++	for (i = 0; i < JACK_THREAD_STACK_TOUCH; i++) {
++		buf[i] = (char) (i & 0xff);
++	}
++}
++
++static void (* ptr_jack_thread_touch_stack)() = jack_thread_touch_stack;
++
+ static void*
+ jack_thread_proxy (void* varg)
+ {
+@@ -107,13 +120,8 @@
+ 	void* warg;
+ 	jack_client_t* client = arg->client;
+ 
+-	char buf[JACK_THREAD_STACK_TOUCH];
+-	int i;
++	ptr_jack_thread_touch_stack();
+ 
+-	for (i = 0; i < JACK_THREAD_STACK_TOUCH; i++) {
+-                buf[i] = (char) (i & 0xff);
+-	}
+-
+ 	if (arg->realtime) {
+ 		maybe_get_capabilities (client);
+ 		jack_acquire_real_time_scheduling (pthread_self(), arg->priority);
+

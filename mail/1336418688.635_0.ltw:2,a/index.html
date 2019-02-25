@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Very frustrating problem with JACK and exporting through mixbus</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Very frustrating problem with JACK and exporting through mixbus</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1336417199.30720_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1336418853.834_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1336418688.635_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 07 May 2012 13:24:47 -0600 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jason Jones </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Robin Gareus &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Adrian Knoth &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt;, [hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1336415314.27987_0.ltw:2,a/index.html'>Re: [Jack-Devel] Very frustrating problem with JACK and exporting through mixbus </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1336420312.3261_0.ltw:2,a/index.html'>Re: [Jack-Devel] Very frustrating problem with JACK and exporting through mixbus </a></td></tr>
+</table>
+<pre>
+&gt;
+&gt;
+&gt; Can you check the .ardour session-file that fails to export for
+&gt; automation &lt;events&gt;..&lt;/events&gt;. The data between the tags consist of two
+&gt; numbers per line
+&gt;  {time in audio-samples} {value}
+&gt;
+&gt; Here: if the time-value is non-integer (eg. I've seen 14975730.4095213)
+&gt; or if the value is out of range (negative gain or an exponential number
+&gt; e.g. 6.22672596364282e-05), export does not work and either hangs or
+&gt; contains noise.
+&gt;
+&gt; robin
+&gt;
+
+Very interesting...  I just checked the .ardour file for the same mixbus
+session which failed this morning, and found this:
+
+&lt;Region id="28280" name="VP1-5.4" start="0" length="862989"
+position="6226886" ancestral-start="0" ancestral-length="0" stretch="1"
+shift="1" first_edit="nothing" layer="3" sync-position="0"
+flags="Opaque,DefaultFadeOut,FadeIn,FadeOut" scale-gain="1"
+source-0="28228" channels="1" master-source-0="28228"&gt;
+        &lt;FadeIn active="yes"&gt;
+          &lt;AutomationList id="28281" default="1" min_yval="0" max_yval="2"
+max_xval="0" state="Off" style="Absolute"&gt;
+*            &lt;events&gt;0 1.0000000116861e-07*
+*29665 1*
+*&lt;/events&gt;*
+          &lt;/AutomationList&gt;
+        &lt;/FadeIn&gt;
+        &lt;FadeOut default="yes" active="yes"/&gt;
+        &lt;Envelope default="yes"/&gt;
+        &lt;extra&gt;
+          &lt;GUI waveform-visible="yes" envelope-visible="no"
+waveform-rectified="no" waveform-logscaled="no"/&gt;
+        &lt;/extra&gt;
+      &lt;/Region&gt;
+
+There are ~32 instances of these &lt;events&gt; tags in this file, and all of
+them contain exponential numbers.  This particular session, however, has no
+automation in it at all, that I can remember...?  Perhaps these are values
+pertaining to cross-fades?  I'll back-up this session, get rid of the
+events numbers, and see if it exports tonight.  Thank you for your
+response, Robin.
+
+--Jason
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1336417199.30720_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1336418853.834_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1336418688.635_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1336418688.635_0.ltw:2,a&nbsp;&lt;CAEv8nmAymAq-Kx7sSq_QO=CTk2dO5SzB+Taw3GbxAeG0A=4m3Q at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,44 @@
+Date:        Thu, 22 Mar 2012 10:55:18 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] Patches for jack-0.121-3 (1332255646.15592_0.ltw:2,)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] Patches for jack-0.121-3 (1332417351.4372_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Patches for jack-0.121-3
+
+Le 20 mars 2012 à 16:00, Fons Adriaensen a écrit :
+
+> On Mon, Mar 19, 2012 at 08:11:21PM -0400, Paul Davis wrote:
+>> [ DLL related changes ]
+>> 
+>> all committed and pushed to github. i've been using it all day with a
+>> variety of clients.
+> 
+> Did you include this one as well: (not included in the patches)
+> 
+> There is one more fix needed in engine.c : when the buffer
+> size is modified, engine->first_wakeup should be set. This
+> will re-init period_usecs (which will otherwise take a long
+> time to catch up), and also reset the filter coefficient for
+> the correct DLL bandwidth.
+> 
+> Ciao,
+> 
+> -- 
+> FA
+
+
+Right now I see two flags that force "re-init" of the DLL: engine->first_wakeup  and timer->reset_pending. Those flags are tested in jack_run_cycle (engine->first_wakeup || timer->reset_pending).
+
+1) "first_wakeup" is set in jack_engine_new and in jack_stop_freewheeling. 
+
+2) "reset_pending" is set in jack_engine_delay
+
+Would it make sense to keep only one flag? and set it in 4 places: first cycle, stop freewheel, XRun handling, buffer size change?
+
+Stéphane 
+
+1332410152.26558_0.ltw:2, <26DE5297-B024-494E-B705-683DCC09CE1C at grame dot fr>
+________________________________________________________________________________
+

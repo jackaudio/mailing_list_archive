@@ -1,0 +1,44 @@
+Date:        Tue, 04 Dec 2018 12:00:29 +0100
+From:        Philipp Müller  <[hidden] at googlemail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Chris Caudle Re: [Jack-Devel] How to use the BBT position information (1543930887.27624_0.ltw:2,)
+
+Subject:     [Jack-Devel] How to use the BBT position information
+
+Hi everyone,
+
+I'm having a little trouble understanding what the /beat/, /bar/, and
+/tick/ information of the JACK timebase master could be used for by a
+client. 
+
+The big advantage of supplying the JackPositionBBT information, as far
+as I understand it, is that the timebase master is able to communicate a
+change of tempo to the clients. Using the sample rate,
+/beats_per_minute/, and /ticks_per_beat/ they can change the current
+speed while transport is rolling, recalculating the tick size, and
+updating their internal frame number to not produce any jumps while
+changing tempo.
+
+But for all of this you do not need the /beat/, /bar/, and /tick/
+information. In particular, I'm looking at an implementation, which
+tries to calculate the current transport position based on these three
+values instead of just using the current frame number. This, of course,
+does not work since the ticks are (arbitrarily) coarse-graining the
+frames within a beat and the provided /tick/ is the last one passed
+during the current playback.
+
+The only case I can think of where those three information would be
+necessary is looping (/bar/ decreases). But I'm not quite sure how a
+client should react to such an event.
+
+So, did I miss an important use case of the BBT information? I certainly
+don't not want to introduce new bugs while attempting to fix the JACK
+audio driver.
+
+Greetings,
+
+Philipp
+
+1543921259.6283_0.ltw:2, <221caef6-8a8f-cf39-353a-1dc53d1d7c92 at googlemail dot com>
+________________________________________________________________________________
+

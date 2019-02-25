@@ -1,0 +1,61 @@
+Date:        Thu, 11 Feb 2016 12:48:25 -0800
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          [hidden] at jackaudio dot org
+
+Subject:     [Jack-Devel] [jackaudio/jack1] 6a6297: fix garbage keys in JackPropertyChangeCallback.
+
+  Branch: refs/heads/master
+  Home:   https://github.com/jackaudio/jack1
+  Commit: 6a629716f0f43a5a1e310f9f66035f175702afd5
+      https://github.com/jackaudio/jack1/commit/6a629716f0f43a5a1e310f9f66035f175702afd5
+  Author: Hanspeter Portner <[hidden]>
+  Date:   2015-11-25 (Wed, 25 Nov 2015)
+
+  Changed paths:
+    M jackd/engine.c
+    M libjack/client.c
+
+  Log Message:
+  -----------
+  fix garbage keys in JackPropertyChangeCallback.
+
+Issue
+-----
+JackPropertyChangeCallback returns a carbage key when removing all keys of
+a given uuid, e.g. triggered by 'jack_remove_properties(...)'.
+
+Expected
+--------
+JackPropertyChangeCallback should return a (NULL) key when removing all
+keys of a given uuid.
+
+Culprit
+-------
+'malloc' is called with key_size==0, which MAY NOT return a (NULL) pointer.
+
+Fix
+---
+Do not call 'malloc' for key_size==0.
+
+
+  Commit: b1fca754142f221313ece84a7b458f8c0261345d
+      https://github.com/jackaudio/jack1/commit/b1fca754142f221313ece84a7b458f8c0261345d
+  Author: Paul Davis <[hidden]>
+  Date:   2016-02-11 (Thu, 11 Feb 2016)
+
+  Changed paths:
+    M jackd/engine.c
+    M libjack/client.c
+
+  Log Message:
+  -----------
+  Merge pull request #29 from ventosus/fix_garbage_keys_in_JackPropertyChangeCallback
+
+fix garbage keys in JackPropertyChangeCallback.
+
+
+Compare: https://github.com/jackaudio/jack1/compare/310e3f99ded0...b1fca754142f
+
+1455223715.31865_0.ltw:2, <56bcf399f29a4_61713fbbfb0e12c025834f at hookshot-fe3-cp1-prd dot iad dot github dot net dot mail>
+________________________________________________________________________________
+

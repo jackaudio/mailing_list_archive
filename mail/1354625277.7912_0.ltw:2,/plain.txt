@@ -1,0 +1,73 @@
+Date:        Tue, 04 Dec 2012 14:47:51 +0200
+From:        Stefan Stefanov  <[hidden] at gmail dot com>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] How to start JACK with systemd (1354624045.7156_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] How to start JACK with systemd
+
+Thank you!
+
+I did it :)
+Firstly, I've installed git version if jack2 (without dbus).
+Then modified jack.service like that:
+[Unit]
+Description=JACK
+After=sound.target
+
+[Service]
+User=stefan
+ExecStart=/usr/bin/jackd -R -P 20 -d alsa -P hw:0,1 -r 96000 -p 64 -n 2
+
+[Install]
+WantedBy=multi-user.target
+
+Everything is fine now
+
+Cheers
+Stefan
+
+2012/12/4 Paul Davis <[hidden]>:
+> how about not using a dbus-enabled version of JACK, since you clearly have
+> no need for what it does ....
+>
+>
+> On Tue, Dec 4, 2012 at 4:32 AM, Stefan Stefanov <[hidden]> wrote:
+>>
+>> Hello
+>>
+>> I'm using jack2 under Archlinux.
+>> After systemd transition I cannot find a proper way to create
+>> jack.service in order to start jack as all other daemons in my system.
+>>
+>> Currently I tried with:
+>> [Unit]
+>> Description=JACK
+>> After=getty.target
+>>
+>> [Service]
+>> ExecStart=/usr/bin/jackd -R -d alsa -P hw:0,1 -r 96000 -p 64
+>>
+>> [Install]
+>> WantedBy=multi-user.target
+>>
+>> but it failed with:
+>> Failed to connect to session bus for device reservation Unable to
+>> autolaunch a dbus-daemon without a $DISPLAY for X11
+>>
+>> There is no problem to start jack manually after booting process by
+>> login into system and run jack from console.
+>>
+>> PS:
+>> 1) BTW, my system is dedicated to audio and it is headless.
+>> 2) I use automatic systemd service to auto-login after boot process.
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+>
+
+1354625277.7912_0.ltw:2, <CACbSjoUCyn15T++J__n+bHOS1P-AsrUFyCYz3BUsEZBf2HM9uw at mail dot gmail dot com>
+________________________________________________________________________________
+

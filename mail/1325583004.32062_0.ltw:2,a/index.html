@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack_frames_to_time() bug</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack_frames_to_time() bug</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325577733.26392_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325592288.14953_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325583004.32062_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 03 Jan 2012 10:30:18 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1325555162.25352_0.ltw:2,a/index.html'>[Jack-Devel] jack_frames_to_time() bug </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1325592304.14973_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack_frames_to_time() bug </a></td></tr>
+</table>
+<pre>
+I suggest that you prepare a clean patch with all you proposed "timing related changes" (for jack1 for instance)
+
+Thanks.
+
+Stephane 
+
+Le 3 janv. 2012 &#xE0; 02:40, Fons Adriaensen a &#xE9;crit :
+
+&gt; After a lot of frustration and hair-pulling trying to find a bug in
+&gt; my code it turns out I was looking for the wrong thing. 
+&gt; 
+&gt; jack_frames_to_time() returns a completely bogus result if
+&gt; the argument is before the start of the current period. 
+&gt; 
+&gt; The code is:
+&gt; 
+&gt;  return time.current_wakeup +
+&gt;            (long) rint (((double) ((long long) (frames - time.frames)) *
+&gt;                        ((long long) (time.next_wakeup - time.current_wakeup)) / ectl-&gt;buffer_size) );
+&gt; 
+&gt; and it's easy to see how it fails. Assume (frames - time.frames) is 
+&gt; supposed to be -1. Since both values are unsigned it will be 2^32-1
+&gt; and casting it to long long doesn't change that.
+&gt; 
+&gt; A correct implementation could be:
+&gt; 
+&gt;  return time.current_wakeup + 
+&gt;            (long) rint (((double) frames - (double)(time.frames)) *
+&gt;                         (time.next_wakeup - time.current_wakeup) / ectl-&gt;buffer_size);
+&gt; 
+&gt; 
+&gt; Ciao,                                        
+&gt; 
+&gt; -- 
+&gt; FA
+&gt; 
+&gt; Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+&gt; 
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325577733.26392_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325592288.14953_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325583004.32062_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1325583004.32062_0.ltw:2,a&nbsp;&lt;38008B4E-E54F-4809-8098-885570DBF553 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

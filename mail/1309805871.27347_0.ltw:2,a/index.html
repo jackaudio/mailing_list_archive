@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] mumbo jumbo on a wiki page</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] mumbo jumbo on a wiki page</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1309801665.18991_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1309807090.29730_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1309805871.27347_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 04 Jul 2011 18:57:35 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1309797740.10872_0.ltw:2,a/index.html'>[Jack-Devel] mumbo jumbo on a wiki page </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1309807310.30132_0.ltw:2,a/index.html'>Re: [Jack-Devel] mumbo jumbo on a wiki page </a></td></tr>
+</table>
+<pre>
+On Mon, Jul 04, 2011 at 12:42:06PM -0400, Paul Davis wrote:
+&gt; this wiki page:
+&gt; 
+&gt;     http://trac.jackaudio.org/wiki/WalkThrough/Dev/LatencyBufferProcess?version=5
+&gt; 
+&gt; seems filled with a lot of mumbo jumbo, and worse appears to recommend
+&gt; using locks to protect buffers used by process().
+&gt; 
+&gt; my gut feeling is to remove the entire page unless someone wants to
+&gt; step up and edit this into useful form, and without erroneous
+&gt; suggestions about locking.
+
+I agree with your sentiments about that page - too many half-truths
+and I-don't-knows. 
+
+But using locks is not by itself evil - it all depends on how
+they are used - and in some cases it seems unavoidable.
+
+I've been working on a framework that runs an arbitrary graph
+of audio 'process units' on a multi-cpu machine, and I've not
+found an efficient solution without locks. OTOH, the chance
+of contention in this case is low, if there is no contention
+everything happens in user space, and it there is it will be
+short. So using one or two more threads than you have CPUs 
+should keep them all busy.
+
+I wonder what sort of solutions others are using for this
+problem.
+
+In my case, things work as follows:
+
+* There is queue of pointers to PUs ready to run. In each
+cycle it is initially prefilled with those PUs that have
+no other dependencies except input buffers.
+* There are N threads, same priority as Jack's one, that
+read from this queue, execute the PU, and then look at
+the list of those that depend on the one just executed
+(each PU has such a list).
+* Readyness is indicated by a dependency count becoming
+zero. The first one ready will be taken by the current
+thread (this optimises chains of PUs with just one
+dependency, as e.g. in a mixer strip), any others are
+added to the queue. If no other PUs become ready the
+thread reads the next one to execute from the queue.
+
+There are two places where locks have to be taken: when
+accessing the queue, and when decrementing and checking
+the dependency count of other PUs. After some experimen-
+tation, the most efficient (and the simplest) approach
+seems to use just one lock: that of the queue. It is taken
+while checking the complete list of PUs that depend on the
+one just executed, so it also protects the dependency 
+counts. The code within the critical section is very
+fast, so the chance of contention is small.
+
+Ciao,
+
+-- 
+FA
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1309801665.18991_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1309807090.29730_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1309805871.27347_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1309805871.27347_0.ltw:2,a&nbsp;&lt;20110704185735.GA9322 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

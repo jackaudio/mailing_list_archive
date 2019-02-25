@@ -1,0 +1,56 @@
+Date:        Sun, 09 Aug 2015 08:09:48 +0200
+From:        Kjetil Matheussen  <[hidden] at gmail dot com>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] Calling jack_cycle_wait/jack_cycle_signal from a "third party" thread. (1439078187.13844_0.ltw:2,)
+Follow-Up:   Kjetil Matheussen Re: [Jack-Devel] Calling jack_cycle_wait/jack_cycle_signal from a "third party" thread. (1439138351.17597_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Calling jack_cycle_wait/jack_cycle_signal from a "third party" thread.
+
+On Sun, Aug 9, 2015 at 1:56 AM, Paul Davis <[hidden]>
+wrote:
+
+> On Sat, Aug 8, 2015 at 10:54 AM, Kjetil Matheussen
+> <[hidden]> wrote:
+> > I.e. the question is about calling jack_cycle_wait/jack_cycle_signal from
+> > a thread that is NOT created with jack_set_process_thread.
+>
+> jack_set_process_thread() does not create a thread. it provides a
+> callback that will be executed inside the (likely RT) thread that
+> libjack will create. thus, your callback has complete control of
+> thread execution, but does not control thread creation.
+>
+> you cannot use the jack_cycle_* functions from another thread.
+>
+
+Thank you very much. Is there any specific reason why you cannot
+use the jack_cycle_* functions from another thread? Because it
+appears to work perfectly, and it also works around the exception
+problem, at lest as a temporary solution until the exception problem is
+solved.
+
+I'm doing it like this:
+
+void *actual_rt_thread(void *arg){
+   set_realtime_mode();
+   while(true){
+      jack_cycle_wait();
+      ...
+      jack_cycle_signal();
+      ...
+   }
+}
+
+void *jack_rt_thread(void *arg){
+   wait_forever();
+}
+
+main(){
+  jack_set_process_thread(jack_rt_thread);
+  start_thread(actual_rt_thread);
+  ...
+}
+
+1439100599.12169_0.ltw:2, <CAC6niEJ5hT_XOcYyRY7ykcJFne-LtdCMUJYMQza=C13XQGWpkA at mail dot gmail dot com>
+________________________________________________________________________________
+

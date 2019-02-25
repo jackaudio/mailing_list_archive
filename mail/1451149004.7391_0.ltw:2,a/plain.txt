@@ -1,0 +1,47 @@
+Date:        Sat, 26 Dec 2015 17:56:37 +0100
+From:        Kjetil Matheussen  <[hidden] at gmail dot com>
+To:          Robin Gareus <[hidden] at gareus dot org>
+Cc:          JACK devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Robin Gareus Re: [Jack-Devel] jack dsp load calculation (1451148469.6978_0.ltw:2,a)
+Follow-Up:   Kjetil Matheussen Re: [Jack-Devel] jack dsp load calculation (1451167615.13888_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack dsp load calculation
+
+On Sat, Dec 26, 2015 at 5:47 PM, Robin Gareus <[hidden]> wrote:
+
+> On 12/26/2015 05:11 PM, Kjetil Matheussen wrote:
+>
+> >> On which platform is that? with JACK?
+> >>
+> >>
+> > Just calling clock_gettime(CLOCK_MONOTONIC, &time) before and
+> > after processing audio locally in Radium. CPU numbers from jack is
+> > not shown in Radium.
+> >
+>
+> Radium also runs on Windows and OSX, right?
+> Do you use glib functions or directly some low-level API?
+>
+>
+On both Windows and OSX, it will use CLOCK_MONOTONIC if it is available.
+If not, it will use mach_absolute_time() on OSX, and
+QueryPerformanceFrequency()
+on Windows. If neither of these are available, it will use tsc.
+
+(https://github.com/kmatheussen/radium/blob/master/audio/monotonic_timer.c,
+based on this code:
+http://codearcana.com/posts/2013/05/15/a-cross-platform-monotonic-timer.html
+)
+
+
+OSX/mach is trivial, but Windows is probably the reason why jack2
+> currently does what it does..
+>
+> Since Windows is not my main platform, I haven't looked at the numbers
+enough to say much about the stability of it. But I don't think I have
+noticed anything weird.
+(using Windows 7, Windows 8, and Windows 10).
+
+1451149004.7391_0.ltw:2,a <CAC6niEJRKUZaUNnQ6RaEH2uv5RBqrcvzLodH138n_Fg1+d8n8A at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] ALSA PCM multi plugin and xruns</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] ALSA PCM multi plugin and xruns</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1355235292.1966_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1355243901.16627_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1355242695.14723_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 11 Dec 2012 16:28:01 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> John Rigg </span> &lt;[hidden] at jrigg dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Devin Anderson &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1355249148.24939_0.ltw:2,/index.html'>Re: [Jack-Devel] ALSA PCM multi plugin and xruns </a></td></tr>
+</table>
+<pre>
+On Sun, Dec 09, 2012 at 05:03:57PM -0800, Devin Anderson wrote:
+&gt; On Sun, Dec 9, 2012 at 6:46 AM, John Rigg wrote:
+&gt; &gt; What code did you add to display the extra messages?
+&gt; I added:
+&gt; 
+&gt; 	if ((ret != LONG_MAX) &amp;&amp; (ret != avail)) {
+&gt; 		fprintf(stderr, "snd_pcm_multi_avail_update: sync issue: %d %d\n",
+&gt; ret, avail);
+&gt; 	}
+&gt; 
+&gt; ... to the function `snd_pcm_multi_avail_update` in
+&gt; src/pcm/pcm_multi.c of the alsa-lib package.  I added the code just
+&gt; below:
+&gt; 
+&gt; 	if (avail &lt; 0) {
+&gt; 		return avail;
+&gt; 	}
+&gt; 
+&gt; It should print data to the console when there is a difference between
+&gt; the number of frames available from one card and the number of frames
+&gt; available from another card.
+
+I added the above code to pcm_multi.c (in alsa-lib-1.0.26)
+then ran jackd using the following command:
+
+jackd -d alsa -C capture16 -P playback16 -r 44100
+
+where capture16 and playback16 are the pcm_multi devices in my .asoundrc.
+This was with two ice1712 cards, with default period size of 1024.
+
+When jackd detected no xruns it produced this message repeatedly:
+snd_pcm_multi_avail_update: sync issue: 1025 1024
+
+When jackd detected xruns it produced this message:
+snd_pcm_multi_avail_update: sync issue: 1024 0
+There appeared to be two of these messages for every xrun
+indication.
+
+Does this make sense?
+
+John
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1355235292.1966_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1355243901.16627_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1355242695.14723_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1355242695.14723_0.ltw:2,&nbsp;&lt;20121211162801.GA3126 at localhost0 dot localdomain&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

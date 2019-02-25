@@ -1,0 +1,92 @@
+Date:        Fri, 04 Mar 2011 07:40:01 -0600
+From:        Duncan Gray  <[hidden] at catraeus dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: torbenh Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2 (1299232614.13730_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2
+
+IEEE 1722 (I apologize for getting the number wrong perviously) 
+specifies the PTP that is a subset for AVB. It most definitely does not 
+have epoch in it and is not traceable to Greenwich. Don't try to use PTP 
+as a replacement for NTP. Even IEEE1588 for instruments doesn't require 
+epoch.
+
+Now we're way far afield of Jack.
+
+Duncan
+
+On 03/04/2011 03:56 AM, torbenh wrote:
+> On Thu, Mar 03, 2011 at 10:42:32PM -0600, Chris Caudle wrote:
+>> On Thu, March 3, Duncan Gray wrote:
+>>> If the NIC doesn't have one, the timestamp resolution
+>>> of a kernel PTP is one jiffy.
+>> I think Torben already pointed out that you would probably use high
+>> resolution timers, and not the jiffy based timers.
+> yeah. they have nanoseconds resolution, and the only problem is that
+> querying them takes some time. but i think we are in the order of a few
+> ns here.
+>
+> but i think its true, that the current software time stamping is jiffy
+> based. i fix that on the way, though.
+>
+>>> The AES-11 frequency accuracy (Grade-2) spec of 10 ppm for a
+>>> clock is nice, but probably won't be present in any PTP stream
+>>> from anyone I know of except Apogee.
+>> The time and instrumentation guys will definitely have better than that.
+>> You can already get PTP clocks from Symmetricom which will lock to GPS and
+>> give you long term accuracies better than 1ppb (10^-9).
+>> http://www.symmetricom.com/products/ieee-1588-ptp-solutions/
+>>
+>>> Absolute frequency is not AVB's strength. The local clock
+>>> on the motherboard, servoed to NTP will be good enough.
+>>> What application might demand such low jitter RTC?
+>> Absolute frequency accuracy and jitter are independent concepts.  There is
+>> no reason that the long term average frequency could not approach
+>> trivially close to 0 error if you are locked to a stratum 1 source such as
+>> GPS.
+>> Jitter is a more difficult issue, and you will have the same kinds of
+>> problems deriving a frame or bit clock from PTP as from Firewire.
+>> Probably worse, you will definitely need a lot of jitter attenuation on
+>> your sampling clock PLL.
+>>
+>> I think we're getting off track here, though. This is jack-devel, not
+>> network-attached-audio-equipment-devel.  Let's start with the expectation
+>> that someone else (or at least on a different mailing list) will make some
+>> hardware that uses PTP to synchronize sampling clocks, does it properly
+>> with lots of jitter attenuation, does it in a way that is AVB compliant,
+>> and has some higher level protocol that we can use, probably based on
+>> RTP/UDP/IP.
+>> At that point, JACK just has to make sure it sends groups of packets with
+>> audio samples, not too fast to overrun the buffers, not too slow to
+>> underrun the buffers.  That should be feasible with a software clock
+>> implementation, either using hardware assist in the NIC, or (hopefully)
+>> using a fully software implemented solution so that current generation
+>> hardware without explicit PTP support can be used.
+> my question about the suitability of the ptp clock to drive
+> clock_realtime is based on the fact that the kernel people do not want
+> to introduce different timebases (posix clocks) into the kernel, if
+> there are no real reasons.
+>
+> if the ptp clock, was derived from gps, and was epoch based. there is
+> actually no reason. we can just servo CLOCK_REALTIME to it, and do our
+> timing based on this.
+>
+> but if that clock was crap. (iE out of some network loudspeakers with a
+> future $10 avb chip...) i wouldnt want that to be clock_realtime.
+>
+> if we can cite the standard draft with some requirements for the clock,
+> which are unacceptable for clock_realtime, we would have a good argument
+> for maintaining the avb clock as a different timebase inside the kernel.
+>
+>> -- 
+>> Chris Caudle
+>>
+>>
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1299246018.28885_0.ltw:2,a <4D70EBB1.6060804 at catraeus dot com>
+________________________________________________________________________________
+

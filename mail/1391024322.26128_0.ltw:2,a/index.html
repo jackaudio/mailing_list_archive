@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack is broken on ARM without bogomips</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack is broken on ARM without bogomips</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1391009106.15877_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1391024851.26530_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1391024322.26128_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 29 Jan 2014 11:38:33 -0800 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Grant </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fernando Lopez-Lezcano &lt;[hidden] at ccrma dot stanford dot edu&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fernando Lopez-Lezcano
+<a href='../1390439184.29576_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack is broken on ARM without bogomips </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1391024851.26530_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack is broken on ARM without bogomips </a></td></tr>
+</table>
+<pre>
+&gt;&gt;&gt;&gt;      My gut feeling is that we should rely on a proper monotonic clock
+&gt;&gt;&gt;&gt;      instead and drop this /proc/cpuinfo parser altogether.
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; agreed 100%.
+&gt;&gt;&gt;
+&gt;&gt;&gt; In the meantime... (I'm also seeing this error on newer kernels)
+&gt;&gt;&gt;
+&gt;&gt;&gt; Would it make sense to just hardwire something in there if the existing
+&gt;&gt;&gt; tests fail? Is there something that will break if I do that? (I'm going
+&gt;&gt;&gt; to
+&gt;&gt;&gt; test that but I m asking anyway).
+&gt;&gt;
+&gt;&gt; Please share your patch if you get something working.
+&gt;
+&gt; Hi Grant,
+&gt;
+&gt; I just tried a hack. Can't be called a proper patch, I just used 1000MHz as
+&gt; the frequency - I thought that would work as, after all, the BogoMips
+&gt; numbers are, well, "bogus" anyway. At least on Pidora with 3.12.x it seems
+&gt; to start and work. Not much testing but got a sinewave going :-) Hack below
+&gt; (messages could be nicer, of course)...
+&gt;
+&gt; It would be nice to have a proper fix.
+&gt; -- Fernando
+&gt;
+&gt; --- jack-1.9.9.5/linux/JackLinuxTime.c~ 2012-12-10 01:26:57.000000000 -0800
+&gt; +++ jack-1.9.9.5/linux/JackLinuxTime.c  2014-01-22 14:39:41.000000000 -0800
+&gt; @@ -152,7 +152,9 @@
+&gt;                 if (fgets(buf, sizeof(buf), f) == NULL) {
+&gt;                         jack_error ("FATAL: cannot locate cpu MHz in "
+&gt;                                     "/proc/cpuinfo\n");
+&gt; -                       exit(1);
+&gt; +                       fclose(f);
+&gt; +                       jack_log("Using 1GHz by default");
+&gt; +                       return (jack_time_t)1000;
+&gt;                 }
+&gt;
+&gt;  #if defined(__powerpc__)
+&gt; @@ -176,6 +178,10 @@
+&gt;                 {
+&gt;                         fclose(f);
+&gt;                         return (jack_time_t)mhz;
+&gt; +               } else {
+&gt; +                       fclose(f);
+&gt; +                       jack_log("Using 1GHz by default");
+&gt; +                       return (jack_time_t)1000;
+&gt;                 }
+&gt;         }
+&gt;  }
+
+Hi Fernando, I was about to try this but I can't find JackLinuxTime.c
+in the latest version from git.  Does anyone know where this code is
+now?
+
+- Grant
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1391009106.15877_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1391024851.26530_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1391024322.26128_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1391024322.26128_0.ltw:2,a&nbsp;&lt;CAN0CFw23dcXG1A3EtxkUDHf=1LUMW=FBR-0anoDUXOJuiKYR+w at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

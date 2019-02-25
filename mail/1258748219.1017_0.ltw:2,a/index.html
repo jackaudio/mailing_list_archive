@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[LAD] LADI</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[LAD] LADI</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1249533221.24667_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1258768873.12985_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1258748219.1017_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 20 Nov 2009 22:15:20 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Nedko Arnaudov </span> &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org, [hidden] at lists dot linuxaudio dot org, [hidden] at lists dot linuxaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Rui Nuno Capela
+<a href='../1258768873.12985_0.ltw:2,a/index.html'>Re: [LAD] LADI </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Danni Coy
+<a href='../1258777090.31284_0.ltw:2,a/index.html'>Re: [LAD] LADI </a></td></tr>
+</table>
+<pre>
+After recent discussion on IRC I'm loosing faith in whether it is worth
+to contribute to linux audio session handling/management. Two reasons
+were given why it does not get testing from users. One is that what I
+did so far is not mature, has annoying bugs and I'm not wanting to fix
+them. The other one is that ladish is not giving more than users already
+have with qjackctl. Also it was mentioned that D-Bus is not what users
+find acceptable for controlling jack server.
+
+Given the almost missing feedback about LADI development from community
+members that could benefit from it, I'm not sure whether I should
+continue to contribute. Maybe I should give up on trying to make linux
+audio usable for my needs. I could also stop using computers and make
+music only by using my guitar. Because alternatives to Linux Audio
+(windows/mac) don't suit my needs. Moreover they don't have the
+potential to suit. This is why I'm contributing to Linux Audio and not
+making VST plugins or something. This anti-dbus movement is getting too
+far. If there is no user that accepts my point of view, there is no point
+of me contributing.
+
+Because it may be possible that someone has missed the whole point of my
+jackdbus and session handling effort, I'll try to explain what I find
+wrong/unacceptable in JACK (dbus-less) system as we have it now.
+
+ * JACK server tries to kill clients that are suspected to misbehave and
+   cause xruns or expose other kind of bad behaviour. This can result in
+   qjackctl (or patchage for example) being killed. IMO, killing control
+   apps is wrong. Apps that that don't process audio/midi should be
+   treated differently.
+ * When jackd is autolaunched, log messages are going to stdout/stderr of
+   the app that launched them. This is wrong, unix daemons are supposed
+   to have a log file, even if they are per-user. One of the reasons why
+   log file is a good thing to have is that it allows to analyze problem
+   post factum. This helps a lot if some misbehaviour is rarely
+   reproducable.
+ * Control apps that start the jack server through jackd know only about
+   the parameters that were known at compile time. Somewhat recent
+   example, IIRC, jack2 specific parameters (-S) and firewire options
+   missing after upgrade of jack because qjackctl does not know about
+   them. IMO, control apps should be able to query parameters for jack
+   and display the available options to user.
+ * Control apps that manage jack connections, are subject to realtime
+   constraints. IMO, this complicates control apps development for no
+   good reason. This is valid only for jack1. jack2 already uses
+   non-realtime threads for port notifications.
+ * Implementing control app requires C level program or use of specially
+   crafted bindings. It will be good if control apps could be
+   implemented with few lines of code in a scripting language as Python,
+   Ruby, Perl, etc.
+ * JACK graph (clients, ports and connections) API is badly designed and
+   is prone to race conditions. Fons talked about this problem recently
+   too.
+ * Session handling capabilities are suboptimal. Various programs lurk
+   here. I'll mention the two most popular ones: qjackctl cant
+   save/restore internal state of the programs. It also  cant save and
+   then relaunch them automatically. lash cannot manage jack
+   settings and cannot restore connections for applications that are not
+   linked against liblash. There are other problems but those are the most
+   frustrating ones.
+ * Hardware port virtualization is suboptimal. it is provided through
+   the JACK "system" client. The only reliable ports are first ones, they
+   are expected to be the main input/output. If applications wants to
+   connect to phones for example it does not know on what ports they
+   are. projects/session should be movable to other system, one with
+   different hardware setup and [extensive] reconnecting should not be
+   required.
+ * Hardware port names are not human readble. Aliases exist but are not
+   widely used for various reasons. Users should be able to name and
+   group their ports to match their hardware cable setup.
+ * JACK "system" client is used for non-hardware ports (-X seq).
+ * There is no global list of JACK enabled applications.
+ * JACK MIDI is not widely accepted. JACK AUDIO + ALSA seq appears to be
+   acceptable solution. IMO, sample accurate audio+midi is very
+   important.
+ * There is no session handling for netjack LAN setups.
+ * Session handling apps cannot restore apps to more than one X11 screen (do
+   not mix with X11 display).
+ * Patchage-like (flowcanvas based) patchbay interface is best what I've
+   seen. Unfortunately Patchage does not integrate well with other parts
+   of JACK infrastructure.
+
+As you can see, I have collected enough problems to fight. Almost all of
+these fixes need new software modules to be written or existing ones to
+be rewritten. In past years I've tried to collaborate
+with people behind JACK, LASH, Patchage and Qjackctl. At the end, I
+think that this attempt was probably wrong, with the only excepton of
+jack2 (Stephane Letz) who accepted my jackdbus development into jack2
+and we worked toghether on improving it and on the more general
+"control API" initiative. The jackdbus code, my first contribution, that
+is supposed to improve this mess was rejected by Paul Davis whom
+maintains jack1. I've got some patches accepted by Patchage`s
+author and maintainer, Dave Robillard, but they were rather cosmetic
+ones. This forced me to maintain a software branch (Dave calls it a
+fork) called lpatchage. It was supposed to be dashboard for the JACK
+system. I also actively participated in lash-0.6.x development. The only
+other developper, Juuso Alasuutari, shared some of my ideas, but at the
+end we ended with fundamental differences about how session handling
+should behave and what lash should become.
+
+As part of my LADI efforts, two people where very helpful. Marc-Olivier
+Barre and I managed to create pyjackctl, later renamed to laditools. It
+is set of minimalistic but very useful control apps for JACK, a2jmidid
+and LASH/ladish. Krzysztof Foltman helped a lot with probably the most
+complex app in the laditools suite, ladiconf.
+
+I'd like to mention people with whom collaboration, even if attempted by
+me was non-existing: Rui Nuno Capela and Bob Ham. They clearly declared
+From start that wont help for various reasons and I appreciate
+this. Because this saved my precious time of part-time contributor to
+Linux Audio.
+
+In May/June this year, Fons Andriaensen got hit by a forcibly packaged
+jackdbus (i'd call it mispackaging of jack) and started a flame war
+against D-Bus evilness. I tried to be constructive until I got message
+From the packager that dbus was forced, even given that he earlier
+stated that he explicitly enabled dbus support in that package for one
+reason or another.
+
+In June this year, it become evident that I'm not able to contribute to
+LASH anymore and that I want something else. I left the LASH project and
+started a new session manager, ladish (project page is at ladish.org).
+The first preview was released not long after. It was not yet a real
+session manager but it was able to save and restore multiple jack
+configs, a foundation for what I call "studio" in ladish. Since then
+I've implemented some more stuff and I was hoping that next preview that
+will be able to relaunch applications and restore connections between
+their jack ports will be ready by the end of this year.
+
+In recent few months, I had less time to contribute to ladish and
+development slowed. The anti-dbus statements from various people
+continued almost always without real argumentation behind them. For
+these that were complains about dbus problems in real setups, I've given
+suggestions. Almost always I got ignorace and more anti-dbus statements
+in return. Maybe what I did is really unusable by others, despite
+it being obviously usable by me. Maybe I suck at trying to help &amp; support
+people who seem to think that ladi is not that bad. Or maybe D-Bus
+is indeed evil and eats babies and I fail to understand why, even after
+I've listen to so many "arguments". Or maybe there are happy people
+using jackdbus and laditools (or even lash-0.6.x) and looking toward
+ladish. But I dont see them. If community does not share my frustration
+with problems of the JACK system I mentioned above and does not accept
+my vision that D-Bus is just the most suitable (but not perfect)
+technology for what I'm trying to achieve, then it would be better for
+everybody if I don't contribute anymore. I can detach from the community
+and I can even detach from linux and even computers.
+
+So now is the time to give your positive feedback and constructive
+critics. Don't troll and don't start another flame war unless your goal
+is to alienate me to stage of me detaching from this community. I will
+not respond to trolish and flamish mails, feel free to contact me
+with private mails if you prefer so. As I'm cross posting this mail, if
+you are subscribed to more than one of the mailing lists, please reply
+only to one of them. In order of preference, lad, lau, jack-devel. This
+should avoid discussions half-shared between lists. If they happen at
+all.
+
+This mail is not supposed to be offensive to anyone. If someone feels
+so, I declare that offense is not intentional. I don't deny the right of
+different opinion on any subject and thus I have no reason to burn
+witches.
+
+-- 
+Nedko Arnaudov &lt;GnuPG KeyID: DE1716B0&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1249533221.24667_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1258768873.12985_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1258748219.1017_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1258748219.1017_0.ltw:2,a&nbsp;&lt;87aayhdkbr.fsf at usbix dot spacelabs dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

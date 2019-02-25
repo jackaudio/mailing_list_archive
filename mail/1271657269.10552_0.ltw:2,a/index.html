@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [LAD] [Jack-Devel] distros migrating to JACK2?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [LAD] [Jack-Devel] distros migrating to JACK2?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1271630081.32766_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1271658711.12249_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1271657269.10552_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 19 Apr 2010 08:06:59 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>torbenh &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel list &lt;[hidden] at lists dot jackaudio dot org&gt;, [hidden] at lists dot linuxaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>torbenh
+<a href='../1271628243.29857_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] distros migrating to JACK2? </a></td></tr>
+</table>
+<pre>
+&gt;&gt; 
+&gt;&gt; This could all be true, but that's not the point I was talking about.
+&gt;&gt; JACK2 was planned as successor of JACK1. But at some point that changed,
+&gt;&gt; that's all ok, not the point here. But isn't it odd that this isn't
+&gt;&gt; clearly communicated with the JACK2 maintainer, why this is happened?
+&gt;&gt; That was raising questions here about the communication within the
+&gt;&gt; (highly appreciated) JACK project. 
+&gt; 
+&gt; its sort of my fault. i dont feel comfortable with the jack2 codebase.
+&gt; this partly has to do with the style used. 
+&gt; the important thing however is the class hirarchy.
+&gt; 
+&gt; i find it unacceptable that i need to add a method to 5 classes to
+&gt; implement some new api function for example.
+
+Because 3 different platform dependant communication scheme are supported : Mig generated RPC on OSX, sockets for Linux/Solaris, pipes on WIndows. And a new API has to be implemented on server and library side, thus as several places yes.
+
+Since jack2 OSX version was developed first, Mig generated RPC was tested at that time. It could probably be replaced by Posix socket code, but last time I tried if was failing (I guess they are still some subtle differences between OSX and others Posix OS concerning sockets.) 
+
+
+&gt; i end up writing a lot of boilerplate code i find useless, and 
+&gt; i really hate to write useless code.
+&gt; 
+&gt; many of the other design decisions dont make sense to me,
+
+Like what?
+
+
+&gt; and i am
+&gt; having a pretty hard time finding the relevant code fragments.
+&gt; (who would search for the servers event processing loop in the platform
+&gt; specific Communication channels ?)
+
+Because on OSX the "event processing loop" is handled in the Mig generated RPC code , so the "event processing loop" moves in the "platform specific communication channels". 
+
+If OSX specific stuff is removed, then the "event processing loop"  may go in a more generic part the code yes.
+
+&gt; 
+&gt; this makes hacking jack2 a rather unpleasant experience for me.
+&gt; since nobody pays me to work on jack and i am doing this for fun.
+&gt; i minimize hacking jack2.
+&gt; 
+&gt; yet since nobody will do the jack2 session patch i am forced again to
+&gt; work on jack2.
+&gt; 
+&gt; i wrote tschack because i wanted to try out a different approach to the
+&gt; functionality in jack2. and to understand how a parallel jack works.
+&gt; now some people who had bad experience with jack2 tried it, and it works
+&gt; for them. 
+&gt; so there is no reason to hide tschack. 
+&gt; 
+&gt; i dont see a reason to try to get stephane to reconsider his design
+&gt; decisions. it were his decisions, and he seems to be happy with them.
+&gt; my way is to start from scratch with a new c++ implementation.
+
+A Linux specific version ? (so would be simpler yes) or a multi-platform version?
+
+&gt; for me this has the benefit of not using CamelCase. which will never get
+&gt; removed from jack2 (why should it? stephane likes it)
+
+So naming convention (class, class fields...)  yes?
+&gt; 
+&gt; regarding distros move to jack2 i think its the right thing.
+&gt; i just made sure, that it will be possible to install an alternative
+&gt; jack implementation. 
+&gt; iE people had a pretty hard time installing jack2 on debian. 
+&gt; if they had just moved to jack2 without making libjack a virtual
+&gt; package, people would have problems instlling jack1 or tschack.
+&gt; now the packagers dont really want to package N versions of jack, since
+&gt; they would need to test all combinations of apps and jacks.
+&gt; 
+&gt; but as long as sombody is able to provide jack1 and tschack .debs it
+&gt; will be fine.
+&gt; packagers are happy, and other people are able to install some
+&gt; alternative.
+&gt; 
+
+I don't see (yet) any of the proposed arguments as "fundamental" critic of the jack2 design. Some improvements are certainly possible, like trying to remove this OSX specific server//client communication code, and we could agree on that. I don't think starting a new c++ implementation will improve the situation. If a Linux specific version only is developed, then we move a step back yes?. But OTOH nobody is never forced to do anything in OSS. 
+
+St&#xE9;phane
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1271630081.32766_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1271658711.12249_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1271657269.10552_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1271657269.10552_0.ltw:2,a&nbsp;&lt;EE779AAA-0873-4B8C-9EC3-EDC79D9D4629 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

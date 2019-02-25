@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] About cross-compilation of jack2 in MXE and libportaudio</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] About cross-compilation of jack2 in MXE and libportaudio</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1434318901.14305_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1434671700.15480_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1434636993.12564_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 18 Jun 2015 17:16:23 +0300 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Harry Nakos </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Tim Mayberry
+<a href='../1434671700.15480_0.ltw:2,/index.html'>Re: [Jack-Devel] About cross-compilation of jack2 in MXE and libportaudio </a></td></tr>
+</table>
+<pre>
+Hi, guys!
+
+I recently committed the entry for jack2 to the MXE cross-compiler,
+specifically version 1.9.10. One notable thing was needed and that was
+linking to flac, vorbis, vorbisenc, and ogg, dependencies that libsndfile
+had (needed for static linking). Timothy Gu of MXE suggested that a recent
+commit in jack2 utilised pkg-config for libsndfile and that would eliminate
+the need of my not-so-pretty hack. Anyway, this is not the main reason for
+this message. But any general points about cross-compilation of jack2 and
+required/suggested libraries would be nice. The main reason is portaudio.
+
+After building jack2 in MXE, I saw this in my log:
+
++ install
+/home/xnakos/Projects/mxe/usr/i686-w64-mingw32.shared/lib/libportaudio.dll.a
+(from build/windows/libportaudio.dll.a)
+
+This resulted in portaudio library, which was already built in MXE as a
+requirement for jack2, to be overwritten. I am not quite sure I understand
+the reasons for this. So I would really enjoy an explanation! In practice,
+when trying to cross-compile Hydrogen drum machine, this overwrite would
+result in linking errors such as:
+
+CMakeFiles/hydrogen-core-0.9.7.dir/objects.a(portaudio_driver.cpp.obj): In
+function `ZN6H2Core15PortAudioDriver10disconnectEv':
+portaudio_driver.cpp:107: undefined reference to `Pa_StopStream'
+portaudio_driver.cpp:114: undefined reference to `Pa_CloseStream'
+portaudio_driver.cpp:121: undefined reference to `Pa_Terminate'
+portaudio_driver.cpp:111: undefined reference to `Pa_GetErrorText'
+portaudio_driver.cpp:118: undefined reference to `Pa_GetErrorText'
+CMakeFiles/hydrogen-core-0.9.7.dir/objects.a(portaudio_driver.cpp.obj): In
+function `ZN6H2Core15PortAudioDriver7connectEv':
+portaudio_driver.cpp:71: undefined reference to `Pa_Initialize'
+portaudio_driver.cpp:75: undefined reference to `Pa_GetErrorText'
+portaudio_driver.cpp:87: undefined reference to `Pa_OpenDefaultStream'
+portaudio_driver.cpp:91: undefined reference to `Pa_GetErrorText'
+portaudio_driver.cpp:95: undefined reference to `Pa_StartStream'
+portaudio_driver.cpp:99: undefined reference to `Pa_GetErrorText'
+
+These errors are not present when linking to the original portaudio
+library. Any information would be great, because I am definitely missing a
+lot.
+
+Harry
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1434318901.14305_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1434671700.15480_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1434636993.12564_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1434636993.12564_0.ltw:2,&nbsp;&lt;CAAHsbnNQabieaOC_GusO_ww=hJAhJmOLAXXxkphtHXME7FLiNQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

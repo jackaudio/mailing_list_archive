@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] incompatible version of ffado error message</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] incompatible version of ffado error message</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1335864694.10838_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1335911921.5512_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1335911757.5475_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 02 May 2012 08:32:45 +1000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Allan Klinbail </span> &lt;[hidden] at iinet dot net dot au&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jonathan Woithe &lt;[hidden] at just42 dot net&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Adrian Knoth &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt;, [hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Allan Klinbail
+<a href='../1335911921.5512_0.ltw:2,a/index.html'>Re: [Jack-Devel] incompatible version of ffado error message </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Jonathan Woithe
+<a href='../1335927103.10239_0.ltw:2,/index.html'>Re: [Jack-Devel] incompatible version of ffado error message </a></td></tr>
+</table>
+<pre>
+On Wed, 2012-05-02 at 08:29 +1000, Allan Klinbail wrote:
+&gt; On Tue, 2012-05-01 at 09:38 +0930, Jonathan Woithe wrote:
+&gt; &gt; On Mon, Apr 30, 2012 at 03:35:54PM +0200, Adrian Knoth wrote:
+&gt; &gt; &gt; On Mon, Apr 30, 2012 at 11:26:32PM +1000, Allan Klinbail wrote:
+&gt; &gt; &gt; &gt; I've been using jack with ffado as the driver for a few years now.
+&gt; &gt; &gt; &gt; Today, after upgrading ffado to the latest svn , (then tested working).
+&gt; &gt; &gt; &gt; I then upgraded to the latest jack svn version. Following this I started
+&gt; &gt; &gt; &gt; receiving the following incompatible error message. 
+&gt; &gt; &gt; 
+&gt; &gt; &gt; You were doing it in the wrong order.
+&gt; &gt; &gt; 
+&gt; &gt; &gt; FFADO detects the jackd version at compile time. If it's a new jackd
+&gt; &gt; &gt; version supporting the new API, it switches to the new API.
+&gt; &gt; 
+&gt; &gt; Similarly, if there is no jackd installed at compile time ffado assumes that
+&gt; &gt; the jackd which will ultimately be available will support the new API.
+&gt; &gt; 
+&gt; &gt; So in Allan's case, he compiled a new FFADO against an old jack, which
+&gt; &gt; resulted in a FFADO which uses the old API.  The old jack was happy with
+&gt; &gt; this and everything worked.
+&gt; &gt; 
+&gt; 
+&gt; I tried this in a few different ways in the end .. Same result. 
+&gt; 
+&gt; 
+&gt; 
+&gt; &gt; &gt; You've just told FFADO to adjust itself to an old jackd version.
+&gt; &gt; &gt; Simply compile FFADO again.
+&gt; &gt; 
+&gt; &gt; Yep, that should work.
+&gt; &gt; 
+&gt; &gt; However, from a development point of view I'm a little surprised that the
+&gt; &gt; latest jackd didn't simply accept FFADO as it was.  The relevant line in
+&gt; &gt; current jack1 is drivers/firewire/ffado_driver.c, line 786 and following.
+&gt; &gt; 
+&gt; &gt;   if(ffado_get_api_version() &lt; FIREWIRE_REQUIRED_FFADO_API_VERSION) {
+&gt; &gt;     printError("Incompatible libffado version! ...
+&gt; &gt;   }
+&gt; &gt; 
+&gt; &gt; The same conditional is used in jack2, so the following analysis applies
+&gt; &gt; equally to that.
+&gt; &gt; 
+&gt; &gt; In Allen's case, ffado_get_api_version() would return 8 (the old version).
+&gt; &gt; FIREWIRE_REQUIRED_FFADO_API_VERSION is defined as 8, so this conditional
+&gt; &gt; *should* have failed and the "Incompatible libffado version" message should
+&gt; &gt; never have been displayed.
+&gt; &gt; 
+&gt; &gt; Oh hang on: Allan, you said "the latest jack svn version".  Did you
+&gt; &gt; literally use jack's subversion repository?  That is no longer carrying the
+&gt; &gt; latest jackd source as far as I know: if you want the latest jackd you need
+&gt; &gt; to get it using git.  This is described at
+&gt; &gt; 
+&gt; &gt;   http://jackaudio.org/download
+&gt; 
+&gt; 
+&gt; Okay, jackd was built from the "live" ebuild in the gentoo pro-audio
+&gt; repository, I would have to look at the ebuild for that to determine if
+&gt; it was taking the older svn version or the git version. 
+&gt; 
+&gt; 
+
+and there lies the problem ..
+
+DESCRIPTION="Jackdmp jack implemention for multi-processor machine"
+HOMEPAGE="http://www.grame.fr/~letz/jackdmp.html"
+
+ESVN_REPO_URI="http://subversion.jackaudio.org/jack/jack2/trunk/jackmp"
+
+LICENSE="GPL-2"
+SLOT="0"
+KEYWORDS=""
+
+ 
+
+it's using SVN.. I will report this back to the gentoo pro-audio list 
+
+
+&gt; 
+&gt; 
+&gt; &gt; 
+&gt; &gt; Look for the "JACK Source Code Repository" section about half-way down.
+&gt; &gt; 
+&gt; &gt; I don't know the state of jack's ffado driver in the old svn repository, but
+&gt; &gt; the use of the older jack code (which could be in an unstable intermediate
+&gt; &gt; state with respect to ffado driver updates) may explain the symptoms
+&gt; &gt; described.
+&gt; &gt; 
+&gt; &gt; Regards
+&gt; &gt;   jonathan
+&gt; 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1335864694.10838_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1335911921.5512_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1335911757.5475_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1335911757.5475_0.ltw:2,a&nbsp;&lt;1335911565.9393.3.camel at srv3 dot little-wolf dot local&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

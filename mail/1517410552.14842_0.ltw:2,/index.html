@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1517410451.14749_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1517410594.15052_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1517410552.14842_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 31 Jan 2018 15:55:16 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Christian Affolter </span> &lt;[hidden] at purplehaze dot ch&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Kjetil Matheussen
+<a href='../1517408484.12409_0.ltw:2,/index.html'>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Thomas Brand
+<a href='../1517430228.12361_0.ltw:2,/index.html'>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device </a></td></tr>
+</table>
+<pre>
+On 31.01.2018 15:20, Kjetil Matheussen wrote:
+&gt; On Wed, Jan 31, 2018 at 3:08 PM, Christian Affolter
+&gt; &lt;[hidden] &lt;mailto:[hidden]&gt;&gt; wrote:
+&gt; 
+&gt;     On 31.01.2018 11:42, Kjetil Matheussen wrote:
+&gt;     &gt; On Wed, Jan 31, 2018 at 11:29 AM, Christian Affolter
+&gt;     &gt; &lt;[hidden] &lt;mailto:[hidden]&gt;
+&gt;     &lt;mailto:[hidden] &lt;mailto:[hidden]&gt;&gt;&gt;
+&gt;     wrote:
+&gt;     &gt;
+&gt;     &gt;
+&gt;     &gt;&#xA0; &#xA0; &#xA0;Yes, it's a proprietary driver and I don't have access to the source
+&gt;     &gt;&#xA0; &#xA0; &#xA0;code. I could contact the vendor and ask if they observed the same or a
+&gt;     &gt;&#xA0; &#xA0; &#xA0;similar issue already.
+&gt;     &gt;&#xA0; &#xA0; &#xA0;However, I'm wondering what arecord and jackd-dummy/alsa_in are doing
+&gt;     &gt;&#xA0; &#xA0; &#xA0;different compared to jackd-alsa.
+&gt;     &gt;
+&gt;     &gt;
+&gt;     &gt; Sorry if this is not relevant (I'm not quite following what's
+&gt;     &gt; happening), but could
+&gt;     &gt; it be that the difference can be explained by different alsa paremeters set
+&gt;     &gt; by arecord and jack? Have you tried to run "arecord -L" and find the most
+&gt;     &gt; low-level device to record from (which jack probably uses).
+&gt;     &gt;
+&gt;     &gt; For instance by running something like "arecord -D iec958:CARD=M2496,DEV=0"&#xA0;
+&gt;     &gt; (my soundcard).
+&gt;     &gt;
+&gt;     &gt; If that is the case, then it's probably the default alsa device that
+&gt;     &gt; does something magic
+&gt;     &gt; when accessing a more low-level device.
+&gt; 
+&gt;     I ran both, arecord and jackd with hw:0 initially. I re-ran the capture
+&gt;     again with "arecord -D default:CARD=Axia ...", which didn't make any
+&gt;     difference (the recording sounds correct).
+&gt; 
+&gt;     For the record, here is the ALSA capture PCM and device list:
+&gt; 
+&gt; 
+&gt; Maybe jack will work if you give it the same parameters that arecord
+&gt; uses. I.e. compare
+&gt; the content of &#xA0;/proc/asound/card0/pcm0p/sub0/hw_params (or a similarly
+&gt; named file)
+&gt; when running arecord and when running jack.
+&gt; 
+&gt; Also, maybe it works to record in jack if you change audio from "duplex"
+&gt; to "capture only".
+
+BINGO and thank you so much for this pointer!
+
+If I start jackd in capture-only mode with only two channels, the
+capturing finally works as expected:
+
+jackd -d alsa -d hw:0 -C -i 2
+
+Interestingly, the different period size of 4096 vs. 1024 doesn't seems
+to have any impact (I first tried to run with -p 4096 as well).
+
+Below are the HW parameters of the ALSA device, during different states.
+
+# hw_params during arecord
+cat /proc/asound/card0/pcm0c/sub0/hw_params
+
+access: RW_INTERLEAVED
+format: S32_LE
+subformat: STD
+channels: 2
+rate: 48000 (48000/1)
+period_size: 4096
+buffer_size: 16384
+
+
+# hw_params during jackd -d alsa -d hw:0
+# jackd -d alsa
+cat /proc/asound/card0/pcm0c/sub0/hw_params
+
+access: MMAP_INTERLEAVED
+format: S32_LE
+subformat: STD
+channels: 8
+rate: 48000 (48000/1)
+period_size: 1024
+buffer_size: 2048
+
+
+# hw_params during jackd -d alsa -d hw:0 -C -i 2
+cat /proc/asound/card0/pcm0c/sub0/hw_params
+
+access: MMAP_INTERLEAVED
+format: S32_LE
+subformat: STD
+channels: 2
+rate: 48000 (48000/1)
+period_size: 1024
+buffer_size: 2048
+
+
+
+Thank you everyone for your valuable help!
+Chris
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1517410451.14749_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1517410594.15052_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1517410552.14842_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1517410552.14842_0.ltw:2,&nbsp;&lt;2be79759-b389-8650-5150-d4202f8f19c1 at purplehaze dot ch&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

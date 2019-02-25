@@ -1,0 +1,110 @@
+Date:        Fri, 28 Feb 2014 14:12:00 +0100
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: [hidden] at danieletorelli dot net [Jack-Devel] jack-trauma for audio over IP (1392913042.13419_0.ltw:2,RSa)
+Follow-Up:   [hidden] at danieletorelli dot net Re: [Jack-Devel] jack-trauma for audio over IP (1393601788.27584_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack-trauma for audio over IP
+
+On 02/20/14 17:17, [hidden] wrote:
+
+Hi!
+
+> I'd like to share with who's interested a small JACK client I wrote
+> with my friend and colleague Andrea Lusuardi and called JACK Trauma,
+> in order to hear more opinions and possibly improve it.
+>
+> It's all here: https://bitbucket.org/torelizer/jack-trauma or also
+> https://github.com/torelizer/jack_trauma
+
+OK, you've asked for opinions, here my thoughts:
+
+1. It's the (n+1)th implementation. There are plenty of UDP streamers
+    around, like jack.udp, gstreamer, jack_stdout+netcat and many more.
+
+2. Your software doesn't care about audio clocks. Unless you make
+    sure the clocks stay in sync, you'll overrun/underrun at some point.
+    netjack is better in this regard.
+
+3. Your software only supports legacy protocols. We have 2014, AF_INET
+    is no longer sufficient.
+
+4. Low code quality. Sorry, but this is "My first C program with network
+    I/O"-level. Particularly:
+
+#define UDPLITE_SEND_CSCOV  10
+#define UDPLITE_RECV_CSCOV  11
+#define SOL_UDPLITE  136
+#define IP_DONTFRAG 1
+
+Apparently, you're developing on some outdated machine where none of
+these symbols is defined. The correct approach would be
+
+#ifndef SOL_UDPLITE
+#define SOL_UDPLITE  136
+#endif
+
+for each of the symbols. Your definition of IP_DONTFRAG is wrong. As
+you've just learned, it gives you a conflict on FreeBSD. It accidentally
+works on Linux, but the proper way for IPv4 is as follows:
+
+/* IP_MTU_DISCOVER values */
+#define IP_PMTUDISC_DONT                0       /* Never send DF frames */
+#define IP_PMTUDISC_WANT                1       /* Use per route hints  */
+#define IP_PMTUDISC_DO                  2       /* Always DF            */
+#define IP_PMTUDISC_PROBE               3       /* Ignore dst pmtu      */
+/* Always use interface mtu (ignores dst pmtu) but don't set DF flag.
+  * Also incoming ICMP frag_needed notifications will be ignored on
+  * this socket to prevent accepting spoofed ones.
+  */
+#define IP_PMTUDISC_INTERFACE           4
+
+All defined in /usr/include/in.h. For IPv6, things are a bit different,
+just read /usr/include/in6.h.
+
+
+Even your usage function is wrong:
+
+int print_help_and_quit(){
+     printf("\nUsage: jacknet2 [OPTIONS]\n\n");
+     ..
+     exit(0);
+}
+
+Firstly, your program is called "jack_trauma", not "jacknet2" according
+to your Makefile. You normally just reference argv[0] there to make sure
+the output is consistent with the actual binary name.
+
+Then, usage information must not go to stdout, but stderr to ease
+scripting. That said, the usual approach would be
+
+     fprintf(stderr, "%s foobar\n", argv[0]);
+
+Then, the proper exit code for incorrect invocation must not be zero. So
+maybe exit(1).
+
+And finally, exit() does not return, hence print_help_and_quit() doesn't
+return, so "int" should be "void".
+
+
+I saw a couple of memcpy() invocations. Depending on the data size, this
+might be the correct approach, however, with bigger arrays, it might
+make sense to use IO-vectors (see sendmsg()) instead. You'll have to do
+benchmarks to find out.
+
+
+I didn't bother to read the rest of your code, but from what I've seen
+and listed above, it's pretty clear that it's nowhere near a usable
+solution, yet. Personally, I don't see any additional benefit over
+existing stuff, so I'd rather spend my time on something else, but
+that's totally up to you.
+
+For now, let's agree you don't try to sell it to everybody who comes
+along and asks for network audio, OK?
+
+
+Cheers
+
+1393593133.13100_0.ltw:2,a <53108B20.5010002 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

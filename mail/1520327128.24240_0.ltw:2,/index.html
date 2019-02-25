@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] libjack.so and libjackserver.so bug</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] libjack.so and libjackserver.so bug</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1520146872.29927_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1520327708.25156_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1520327128.24240_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 06 Mar 2018 10:04:55 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Christoph Kuhr </span> &lt;[hidden] at web dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Filipe Coelho
+<a href='../1520327708.25156_0.ltw:2,/index.html'>Re: [Jack-Devel] libjack.so and libjackserver.so bug </a></td></tr>
+</table>
+<pre>
+Hi *,
+
+I observed some strange behavior of libjack and libjackserver.
+
+If I have a multiprocessing application with one jack server fork and 
+one jack client fork, jack_client_open crashs.
+
+Here the backtrace:
+#0&#xA0; __strcmp_ssse3 () at ../sysdeps/x86_64/multiarch/../strcmp.S:174
+#1&#xA0; 0x00007f83dddb803f in jack_find_driver_descriptor(_JSList*, char 
+const*) () from /usr/local/lib/libjackserver.so.0
+#2&#xA0; 0x00007f83dddb9ef8 in Jack::JackServerGlobals::Init() () from 
+/usr/local/lib/libjackserver.so.0
+#3&#xA0; 0x00007f83dddb64f8 in jack_client_open_aux(char const*, JackOptions, 
+JackStatus*, __va_list_tag*) () from /usr/local/lib/libjackserver.so.0
+#4&#xA0; 0x00007f83dddb67b1 in jack_client_open () from 
+/usr/local/lib/libjackserver.so.0
+#5&#xA0; 0x0000000000414f04 in talker_Process (arguments=0x63f680 
+&lt;arguments&gt;) at ../src/net/avb/talker/talker_process.c:395
+#6&#xA0; 0x000000000042d487 in avbruntime (arguments=0x63f680 &lt;arguments&gt;) at 
+../src/avbruntime.c:644
+#7&#xA0; 0x000000000042e888 in main (argc=11, argv=0x7ffebee6f678) at 
+../src/main.c:144
+
+
+The interesting thing is, jack_client_open keeps crashing if I remove 
+all the jack server code.
+
+It was neccessary to remove the -ljackserver linker option as well, 
+because the client code linked against libjackserver.so instead of 
+libjack.so.
+
+This means it is not possible to have a jack server and a jack client in 
+a single multiprocessing application.
+
+
+BR,
+Ck
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1520146872.29927_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1520327708.25156_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1520327128.24240_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1520327128.24240_0.ltw:2,&nbsp;&lt;efc451a7-1a9c-88c7-5832-26ac25b2eca6 at web dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

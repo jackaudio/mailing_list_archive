@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] ARM: Alignment, Atomicity</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] ARM: Alignment, Atomicity</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1384046504.4084_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1384082652.24299_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1384053858.23977_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 10 Nov 2013 03:23:48 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Kaspar Bumke </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+Hey all,
+
+so after some further investigation I can report that the reason I was
+encountering alignment traps on some version of jackd1 and not on
+others was because the ones that were working were compiled with "-O0"
+and the broken ones with other optimisation levels (versions compiled
+with -O1,2,3 &amp; s encounter alignment traps). Defining the
+POST_PACKED_STRUCTURE as empty did not seem to help.
+
+Any insights into why this would be, whether this could be a problem,
+even with versions compiled with -O0  and what needs to be done to fix
+it are appreciated. Given that undefining the POST_PACKED_STRUCTURE
+did not help I guess it bears further investigation into where this is
+occurring. I had started to investigate this but set -O0 along with -g
+and suddenly my problem had disappeared. I have another go soon. I
+guess it is also possible that this is a bug in gcc's optimisation?
+
+After having spent considerable time watching the make output text
+scroll by during repeated compiles I actually started to read it (!)
+and noticed the warnings about atomicity from
+config/cpu/generic/atomicity.h [1].
+
+Are atomic functions in this case not used? Are they needed? Could I
+copy the operations jack2 seems to use for ARM [2] to jack1?
+
+Thanks in advance for any thoughts and insights.
+
+Ciao,
+
+Kaspar
+
+[1]https://github.com/jackaudio/jack1/blob/master/config/cpu/generic/atomicity.h#L23
+[2]https://github.com/jackaudio/jack2/blob/master/linux/JackAtomic_os.h#L75
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1384046504.4084_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1384082652.24299_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1384053858.23977_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1384053858.23977_0.ltw:2,a&nbsp;&lt;CAB+dmjhYUA61WgF2B6o3h=nuZ8T0j-bCHanwE2naur3POKbnFQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

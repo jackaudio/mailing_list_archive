@@ -1,0 +1,52 @@
+Date:        Wed, 13 Sep 2017 00:15:55 +0200
+From:        David Kastrup  <[hidden] at gnu dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: David Kastrup [Jack-Devel] -d firewire -X alsaraw fails? (1505251001.5179_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] -d firewire -X alsaraw fails?
+
+David Kastrup <[hidden]> writes:
+
+> jackd -d firewire -X alsaraw -r 96000 -p 512
+>
+> port_name "firewire_pcm:0005950400400fc2_midi 0_in" already exists
+> driver: cannot register port for firewire_pcm:0005950400400fc2_midi 0_in
+> Cannot attach audio driver
+> JackServer::Open failed with -1
+> no message buffer overruns
+> Failed to open server
+>
+> Uh, port already exists?  The Firewire ports are not visible from Alsa
+> (I have blacklisted snd_dice since it does not play well with the
+> Alesis io|14) and there just is (seq and raw, respectively):
+>
+> dak@lola:/usr/local/tmp/lilypond$ aplaymidi -l
+>  Port    Client name                      Port name
+>  14:0    Midi Through                     Midi Through Port-0
+>  20:0    UM-4                             UM-4 MIDI 1
+>  20:1    UM-4                             UM-4 MIDI 2
+>  20:2    UM-4                             UM-4 MIDI 3
+>  20:3    UM-4                             UM-4 MIDI 4
+> dak@lola:/usr/local/tmp/lilypond$ amidi -l
+> Dir Device    Name
+> IO  hw:1,0,0  UM-4 MIDI 1
+> IO  hw:1,0,1  UM-4 MIDI 2
+> IO  hw:1,0,2  UM-4 MIDI 3
+> IO  hw:1,0,3  UM-4 MIDI 4
+>
+> but those have nothing to do with the jackd error (right?).  So jackd
+> somehow gets in a loop or something?
+
+Ok, so it's rather
+
+jackd  -X alsarawmidi -d firewire -r 96000 -p 512
+
+but you wouldn't know from looking at the manual page.  So what's with
+the useless error message and the useless manual page?
+
+-- 
+David Kastrup
+
+1505254574.8572_0.ltw:2, <87d16vimw4.fsf at fencepost dot gnu dot org>
+________________________________________________________________________________
+

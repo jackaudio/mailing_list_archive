@@ -1,0 +1,61 @@
+Date:        Fri, 11 Jan 2013 13:46:43 +0100
+From:        Dominique Michel  <[hidden] at vtxnet dot ch>
+To:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+
+Subject:     [Jack-Devel] JACK and CGroup
+
+2 questions regarding CGroup and JACK.
+
+1) It was a discussion it was some months ago regarding CGroup. Work
+for a patch to jack that will make CGroup aware of all the process
+running in jack was started. What is the status of this patch and can
+we expect to see it in jack in some future?
+
+2)  # cat /proc/sys/kernel/sched_rt_runtime_us
+give me 950000 and
+# cat /proc/sys/kernel/sched_rt_period_us
+give me 1000000
+
+The difference is 50000. According to the kernel documentation, the
+kernel need this time to insure that the non rt task will run reliably.
+
+With this setup:
+
+namespace {
+	cpu = /;
+}
+
+group rtaudio {
+	perm {
+		task {
+			uid = root;
+			gid = audio;
+		}
+		admin {
+			uid = root;
+			gid = root;
+		}
+	}
+	cpu {
+		cpu.rt_runtime_us = 950000;
+	}
+}
+
+I get a rtaudio real-time group. But the kernel do also have some
+real-time tasks. That imply that both rtaudio and the kernel will share
+exactly the same amount of time for their real-time tasks. So for the
+question. Will such a setup interfere with the real-time tasks of the
+kernel?
+
+Or with other words, is it better to have a cpu.rt_runtime_us value of
+900000 or something like that?
+
+Ciao,
+Dominique
+
+-- 
+"We have the heroes we deserve."
+
+1357908393.15893_0.ltw:2,a <20130111134643.3e5036bd at tuxstudio>
+________________________________________________________________________________
+

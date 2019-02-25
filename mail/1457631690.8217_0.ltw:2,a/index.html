@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Netjack crashes, alignment broken recently</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Netjack crashes, alignment broken recently</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1457558555.7989_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1457694363.16240_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1457631690.8217_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 10 Mar 2016 18:41:19 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Xavier Mendez </span> &lt;[hidden] at jmendeth dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Filipe Coelho
+<a href='../1457694363.16240_0.ltw:2,a/index.html'>Re: [Jack-Devel] Netjack crashes, alignment broken recently </a></td></tr>
+</table>
+<pre>
+Just compiled the latest jackd2, and when using Netjack both manager and 
+driver crash after sending parameters. I traced back to this change from 
+02f74a659, which modifies the network parameter struct:
+
+--- a/common/JackNetTool.h
++++ b/common/JackNetTool.h
+@@ -94,9 +94,9 @@ namespace Jack
+-        char fName[JACK_CLIENT_NAME_SIZE];
+-        char fMasterNetName[JACK_SERVER_NAME_SIZE];
+-        char fSlaveNetName[JACK_SERVER_NAME_SIZE];
++        char fName[JACK_CLIENT_NAME_SIZE+1];
++        char fMasterNetName[JACK_SERVER_NAME_SIZE+1];
++        char fSlaveNetName[JACK_SERVER_NAME_SIZE+1];
+
+That extra byte for the NUL terminator breaks the alignment, and somehow 
+causes some ints to be sent as little-endian:
+
+     Sample rate : 12288000 frames per second
+     Period size : 131072 frames per period
+
+Reverting the three lines seems to resolve the problem. I don't really 
+see the use for having the NUL terminator go through the network...
+
+What do you think?
+Xavi
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1457558555.7989_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1457694363.16240_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1457631690.8217_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1457631690.8217_0.ltw:2,a&nbsp;&lt;56E1B1BF.5090300 at jmendeth dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

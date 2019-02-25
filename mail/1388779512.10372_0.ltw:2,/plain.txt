@@ -1,0 +1,108 @@
+Date:        Fri, 03 Jan 2014 15:04:58 -0500
+From:        David Santamauro  <[hidden] at gmail dot com>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] ardour3, netjack, bandwidth, xruns (1388747464.2891_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] ardour3, netjack, bandwidth, xruns
+
+On 01/03/2014 06:13 AM, Stéphane Letz wrote:
+> Try to change the "mtu" value on slave side, using "jumbo" frames on GB network, like
+>
+> jackd -d net -M  9000
+
+If I need to ...
+
+This problem was a difficult one to diagnose. As it turns out, I think 
+I've pinpointed it to the combination usage of PulseAudio and google-chrome.
+
+I have been running the PulseAudio JACK sink/source from day one without 
+problems but very recently installed google-chrome. The only time I get 
+any kind of xruns is when google-chrome is open and as it turns out, 
+quite exaggerated (as reported below) with net manager.
+
+After a few trial and errors, I realized that closing chrome quieted the 
+xruns. So I have 4 midi-out ports (16 channels each) connected over the 
+network returning 48 audio channels. I haven't exercised it completely, 
+but connection is clean without xruns... so far so good.
+
+David
+
+
+>
+> Stéphane
+>
+> Le 1 janv. 2014 à 17:42, David Santamauro <[hidden]> a écrit :
+>
+>>
+>> Hi,
+>>
+>> Happy new year ... if this isn't the appropriate list, direct to the
+>> right one, thanks.
+>>
+>> I've started creating my orchestral template using ardour3 (on the
+>> master) and a slave. When I reach a certain number of tracks the xruns
+>> start piling up.
+>>
+>> Master message(s):
+>> Wed Jan  1 07:15:08 2014: NetMaster : overloaded, skipping receive from
+>> 'nslave01'
+>>
+>> ... does this mean the master is overloaded?
+>>
+>> The specs:
+>>   - master is an 8-core/16GB RAM
+>>   - slave is 4-core/16GB RAM
+>>
+>> Goal is to use windows orchestral VSTi(s) whose required 'dongle' is on a windows machine.
+>>
+>>   ardour3:midi-track-1 => slave:midi-input-1
+>>   slave:audio-out-1    => ardour3:audio-track-in-1
+>>   slave:audio-out-2    => ardour3:audio-track-in-2
+>>
+>> Pretty simple, actually, but I'd like 48 channels of audio to come back from the slave.
+>>
+>> Both have Gb network interfaces and both are connected to a Gb switch.
+>>
+>> ardour3 does take CPU slices but the master load avg is ~ 85% idle and
+>> DSP load < 20%.
+>>
+>> Viewing network traffic using iptraf, I see total usage in the 45Mb/s
+>> (4% utilization) range for both master and slave -- clearly room to
+>> spare so I'm assuming there is some other bottleneck somewhere.
+>>
+>> I guess the questions are:
+>>
+>>   - are there hard limits on the number of tracks that can be used when
+>> using using jack over the network?
+>>
+>>   - Is there a formula to figure out this out, e.g., is there a
+>> relationship between the size of the jack graph and data per cycle?
+>>
+>>   - Are there settings (network or for jack_load netmanager) that would
+>> help this situation?
+>>
+>> Both master and slave jackd versions are the same:
+>>
+>> $ jackd -V
+>> jackdmp 1.9.9.5
+>>
+>> I've read this [1] and it appears there are two modes: sync and async.
+>> I'll try toggling this and see what happens.
+>>
+>> ... but any other help would be appreciated.
+>>
+>> David
+>>
+>> [1] http://trac.jackaudio.org/wiki/WalkThrough/User/NetJack2
+>>
+>>
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+
+1388779512.10372_0.ltw:2, <52C717EA.2050201 at gmail dot com>
+________________________________________________________________________________
+

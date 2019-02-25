@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] BUG REPORT : Overflow of XRUNs after a certain time.</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] BUG REPORT : Overflow of XRUNs after a certain time.</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1338332743.15060_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1338369281.7744_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338362921.4108_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 30 May 2012 09:28:31 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> aCOSwt </span> &lt;[hidden] at orange dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>John Rigg
+<a href='../1338298131.21496_0.ltw:2,/index.html'>Re: [Jack-Devel] BUG REPORT : Overflow of XRUNs after a?certain?time </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1338369281.7744_0.ltw:2,/index.html'>Re: [Jack-Devel] BUG REPORT : Overflow of XRUNs after a certain time. </a></td></tr>
+</table>
+<pre>
+&gt; Looks like the problem is associated with raw MIDI.
+&gt; 
+&gt; I have jackd running on my test system without the -Xraw option. It has
+&gt; now run well past the point where the lockup occurred with -Xraw, without
+&gt; any problem.
+
+I confirm this. Which seems indeed logical as the problem occurs with no 
+client recorded apart from the MIDI ports.
+
+Meanwhile, I am tracing the problem and would be grateful if someone familiar 
+with jack's code could confirm :
+
+a/ The XRUN messages as reported in the OP are printed by :
+- [engine.c] jack_run_one_cycle
+- because engine -&gt; spare_usecs &lt;= delayed_usecs
+
+b/ The only occurrence of a call to jack_run_one_cycle is within :
+- [engine.c] jack_run_cycle
+
+c/ The only occurrence of a call to jack_run_cycle is the normal return of :
+- [alsa_driver.c] alsa_driver_run_cycle
+
+d/ The only place in which the delayed_usecs variable used in a/ is set is :
+- [alsa_driver.c] alsa_driver_wait when called by the alsa_driver_run_cycle 
+procedure.
+
+Regards,
+
+aCOSwt
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1338332743.15060_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1338369281.7744_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338362921.4108_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1338362921.4108_0.ltw:2,&nbsp;&lt;201205300928.31410.acoswt at orange dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

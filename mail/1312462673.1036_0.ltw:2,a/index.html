@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Alignment (again)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Alignment (again)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1312451302.15759_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1312466019.8260_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1312462673.1036_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 04 Aug 2011 07:57:34 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Gabriel Beddingfield </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Sampo Savolainen &lt;[hidden] at iki dot fi&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Sampo Savolainen
+<a href='../1312450426.14704_0.ltw:2,a/index.html'>Re: [Jack-Devel] Alignment (again) </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Gabriel Beddingfield
+<a href='../1312466019.8260_0.ltw:2,a/index.html'>Re: [Jack-Devel] Alignment (again) </a></td></tr>
+</table>
+<pre>
+On 08/04/2011 04:33 AM, Sampo Savolainen wrote:
+&gt; I would be very surprised if malloc() returned pointers that are not
+&gt; 4-byte aligned.
+
+Looks like either my memory failed more... or they've changed eglibc.  I 
+just ran a test on Ubuntu 11.04 (which uses eglibc) and it always 
+returns 8-byte aligned pointers.
+
+However... I'm pretty sure I've seen 1-byte alignment in the past.  :-/
+
+ &gt; Are you running vectorized code? x86 SIMD (SSE) vector
+&gt; instructions require 16-byte aligned data pointers. This is a more
+&gt; likely source for the segfaults.
+
+True... but in this case the problem was observed while running tests on 
+the jack_ringbuffer with floats and -O3.  I found a related bug report 
+for GCC:
+
+     http://gcc.gnu.org/bugzilla/show_bug.cgi?id=49413
+
+But now that I think of it... the problem with jack_ringbuffer is 
+actually pretty fundamental.
+
+Suppose you allocate a ringbuffer of size N (where N is a power of 2). 
+The storage space is (N-1).  So even if you start with an aligned 
+pointer... when you wrap around it will no longer be aligned. :-/
+
+-gabriel
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1312451302.15759_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1312466019.8260_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1312462673.1036_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1312462673.1036_0.ltw:2,a&nbsp;&lt;4E3A973E.4040302 at gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,101 @@
+Date:        Tue, 09 Apr 2013 20:45:13 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          "J. Liles" <[hidden] at gmail dot com>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: J. Liles Re: [Jack-Devel] Graph callback and client state (1365530461.5281_0.ltw:2,)
+Follow-Up:   Harry van Haaren Re: [Jack-Devel] Graph callback and client state (1365536001.12113_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Graph callback and client state
+
+You can never be sure that ports returned by jack_get_ports are always valid: some of them could perfectly be removed/renamed between the call to jack_get_ports and their actual use later one. So I don't think filtering the ports is better. The API is not perfect if this area. Be prepared to have jack_connect possibly fail.
+
+Stéphane
+
+
+Le 9 avr. 2013 à 20:00, J. Liles <[hidden]> a écrit :
+
+> 
+> As the author of a connection manager which may encounter this issue (JACKPatch), I would be happy if jack_get_ports() never listed any ports that jack_connect() would fail to connect for no apparent reason!
+> 
+> On Sat, Mar 23, 2013 at 8:37 AM, Pawel <[hidden]> wrote:
+> Paul, Stephane - I know you are busy, but can you just refer to my idea ? I can make patches for Jack[12], please only tell me - is my idea is OK ?
+> 
+> Once again - my idea is to just "hide" ports owned by inactive clients (in jack_get_ports).
+> 
+> ??
+> 
+> --
+> Pawel
+> 
+> Dnia Czwartek, 7 Marca 2013 09:11 Pawel <[hidden]> napisał(a)
+> > Well ? Are you see any problem / risk in approach where jack_get_ports will just "hide" inactive ports (.. or ports owned by inactive clients, whatever ;-)
+> >
+> > --
+> > Pawel
+> >
+> > Dnia Piątek, 1 Marca 2013 15:00 Pawel <[hidden]> napisał(a)
+> > > Dnia Piątek, 1 Marca 2013 14:26 Stéphane Letz <[hidden]> napisał(a)
+> > > >
+> > > > Le 1 mars 2013 ? 14:05, Pawel <[hidden]> a écrit :
+> > > >
+> > > > > Hi,
+> > > > >
+> > > > > I made small test app for test inactive port connection issue. I just tested Jack2 and it is also affected by this problem.
+> > > > >
+> > > > > When you execute it , you can observe that Jack server say:
+> > > > > Cannot connect ports owned by inactive clients: "TEST" is not active
+> > > > >
+> > > > > .. while jack_get_ports still see it. Both Jack1 and Jack2 are affected.
+> > > > >
+> > > > > Please found it in attachment.
+> > > > >
+> > > > > I have two ideas:
+> > > > > 1) jack_connect should return some predefined king of error (like EEXISTS)
+> > > > > ... or ..
+> > > > > 2) jack_get_ports shouldn't return inactive ports (this is more reliable IMHO).
+> > > >
+> > > > This is no "inactive" ports but rather "inactive" applications.
+> > > OFC .. this was shorthand - inactive app have inactive ports .. it matter how we call such ports ?
+> > >
+> > > > >
+> > > > > Compile:
+> > > > > gcc -g -o test test.c -ljack
+> > > > >
+> > > > > Regards
+> > > > > Pawel
+> > > > >
+> > > > I'm not sure we can "afford" to change this kind of behavior, since this may break a lot of existing clients.
+> > > >
+> > > > Stéphane
+> > >
+> > > My first suggestion was "safe way" it doesn't break anything, but second is IMHO more correct.
+> > >
+> > > There would be also "jack_client_is_active" call for connect managers (for mark inactive ports).
+> > >
+> > > Pawel
+> > >
+> > >
+> > >
+> > > 
+> > > Jack-Devel mailing list
+> > > [hidden]
+> > > http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> >
+> >
+> >
+> > 
+> > Jack-Devel mailing list
+> > [hidden]
+> > http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> 
+> 
+> 
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> 
+
+1365533133.8685_0.ltw:2,a <5D356696-69B5-4AAA-9B05-7BB653E77E87 at grame dot fr>
+________________________________________________________________________________
+

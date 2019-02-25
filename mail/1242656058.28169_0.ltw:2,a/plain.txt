@@ -1,0 +1,54 @@
+Date:        Mon, 18 May 2009 17:13:19 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Fons Adriaensen <[hidden] at kokkinizita dot net>
+Cc:          Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>, JACK Developers <[hidden] at jackaudio dot org>
+In-Reply-To: Fons Adriaensen Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments (1242653847.25726_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments (1242657984.740_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments
+
+Fons Adriaensen <[hidden]> writes:
+
+> On Mon, May 18, 2009 at 12:15:10PM +0300, Nedko Arnaudov wrote:
+>
+>> libjack does not start jack server if JackNoStartServer is
+>> specified. This behaviour is same for both jackd autolaunching and dbus
+>> jack server starting through activation. Presense of the jackdbus
+>> process *DOES NOT MEAN* that jack server is started. It looks like fair
+>> game to me.
+>
+> This is definitely *not* true. Presence of the 'jackdbus auto'
+> daemon results in a jackd starting whenever qjackctl is
+> started, and the author of that app has already reported
+> that qjackctl explicitly requests no autostart when trying
+> to become a jack client.
+
+Fons I think we can both read C code, right?
+
+From posix/JackPosixServerLaunch.cpp, line 166:
+
+static int start_server(const char* server_name, jack_options_t options)
+{
+    if ((options & JackNoStartServer) || getenv("JACK_NO_START_SERVER")) {
+        return 1;
+    }
+
+#if defined(JACK_DBUS)
+    return start_server_dbus(server_name);
+#else
+....
+    jackd fork/exec stuff
+....
+
+
+
+presence of process with "jackdbus auto' commandline those not mean that
+*server* is started. This is the dbus service, not the jack server
+running.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: DE1716B0>
+
+1242656058.28169_0.ltw:2,a <873ab2ijnk.fsf at usbix dot spacelabs dot org>
+________________________________________________________________________________
+

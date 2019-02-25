@@ -1,0 +1,28 @@
+Date:        Sun, 03 Mar 2013 22:06:03 +0100
+From:        Ruslan N. Marchenko  <[hidden] at ruff dot mobi>
+To:          [hidden] at lists dot jackaudio dot org, [hidden] at jackaudio dot org
+In-Reply-To: Ruslan N. Marchenko [Jack-Devel] [PATCH 0/4] Multicast interface selection (1360531851.20603_0.ltw:2,)
+Follow-Up:   Ruslan N. Marchenko Re: [Jack-Devel] Multicast interface selection + IPv6 support (1363299234.15518_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [PATCH 0/4] Multicast interface selection
+
+Hi there,
+
+I've opened a new pull request with a bit reworked interface selection and IPv6 support commits.
+
+Interface selection: slaves could be bound only to single interface so option 'all' for them not applicable.
+IPv6 - I've tried to implement the socket in most transparent way to avoid uplevel changes however there are fundamental obstacles: Multicast with IPv6 is not interoperable, hence changes in class usage are inevitable.
+The major point now is that socket should be probed before usage. With unicast addresses this will happen automaticallu once sufficient information is available (address/port). With multicast we cannot rely on delayed probe hence socket should be probed as soon as we got address data - before or together with NewSocket call.
+
+One bug in GLIBC socket implementation was revealed during the work, which resulted in patch submission to glibc upstream and ugly _workaround_ in the UnixSocket implementation. The outcome of the bug (without a kludge) will result in addressless passive probe (bind to any on localhost when no adddress was specified explicitly) using IPv4 family even when v6 is available, so the kludge just blindly reorders the result.
+
+Other than that - you can use https://launchpad.net/~rufferson/+archive/snd if interested in testing.
+
+The branch is under https://github.com/rufferson/jack2/tree/netjack-dev.
+
+Regards,
+Ruslan
+
+1362344776.3365_0.ltw:2,a <20130303210603.GA14326 at ruff dot mobi>
+________________________________________________________________________________
+

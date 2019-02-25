@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1493309311.26207_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1493675927.19352_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1493330599.15681_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 27 Apr 2017 17:02:55 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Frodo Jedi &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Chris Caudle
+<a href='../1493675927.19352_0.ltw:2,a/index.html'>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2 </a></td></tr>
+</table>
+<pre>
+On Wed, April 26, 2017 6:24 pm, Frodo Jedi wrote:
+&gt; Actually, my goal is that of sending audio from the board to
+&gt; other connected devices, for the moment I am using a mac,
+&gt; it could be another pc with linux or windows.
+
+Jack is designed with the idea that the audio hardware controls all data
+flow, since that is really the final location that the data has to either
+get to the output device (D/A converter, S/PDIF output, etc.), or is sent
+by the input device (A/D converter).  In jack terms what you are
+describing is that the odroid would be sent to multiple master devices. 
+You either have to disconnect from one master and connect to another each
+time you want to send audio to a different device, or you have to use a
+bridge software to bridge between different jack master clock domains. The
+jack walk-through that you linked to previously shows using the
+audioadapter plugin for that, the zita-nj and zita-jn bridges work better.
+
+&gt;  I will try zita but my main goal is to use netjack2.
+
+You should be very clear whether your goal is to use netjack2, or whether
+your goal is to send audio from your odroid to various other devices. If
+your goal is to use netjack2 you should pick a connection topology that
+matches the expectations of the jack design.
+
+If your goal is actually to send audio from the odroid to various other
+devices, then you should use whatever tool is most appropriate for the
+job.  If you need audio to be sent to multiple other devices with audio
+hardware using jack, then zita bridge is probably what you need if you are
+using jack.  Whether you should even be using jack is a separate question.
+
+Is this a studio or audio production type setup?  Because if you are just
+trying to setup distributed home audio then something like Logitech Media
+Server and squeezebox lite software may be better suited for what you are
+trying to do.
+
+&gt; I am going for a wired connection first, with the final aim to
+&gt; test netjack2 over wifi, and compare the wired and wireless
+&gt; behaviours  under various conditions.
+
+Don't have high expectations for jack over WiFi.  Jack is designed around
+low latency connections, and WiFi generally cannot sustain reliably low
+latency connections.  There is work going on to get there, but unless you
+have been following along with the bufferbloat and "make Wi-Fi fast" work
+and are running bleeding edge drivers you are probably going to hit
+latency spikes that will cause problems for jack.  You can have fun
+figuring that out once wired connections are working OK.
+
+
+&gt; The odroid board (configured as master in the first case)
+&gt; has a beheringer soundcard perfectly working, I can record
+&gt; and listen audio using it. So I should be able to use the
+&gt; odroid + soundcard configuration as a master, and the
+&gt; mac as a slave. Right?
+
+Yes, presumably.  Just to be clear, those terms mean you would have
+something like Ardour running on the mac producing audio data, and the
+data would be sent to the odroid which would play the audio through the
+behringer/speakers.
+
+&gt; Ok, but my goal is to have a networked configuration where
+&gt; the linux odroid system broadcast audio to various connected devices.
+
+With the various connected devices each having audio hardware and speakers
+connected?  Then you will need bridge software such as audioadapter or
+zita-njb and zita-jnb loaded to cross between the clock domains (since
+each separate audio hardware will have its own sample clock running
+independently and you don't have a way to synchronize all the clocks).
+
+&gt; My understanding is that the odroid must be the master and
+&gt; all the other devices receiving and reproducing the audio
+&gt; signal must be the slave. Am I wrong?
+
+You are wrong.  In the jack terminology, the device with the fixed clock,
+i.e. the audio hardware device, must control the flow of data, in other
+words must be the master.
+In the case of multiple devices playing out the audio you have in jack
+terminology multiple masters, so you have to bridge between the masters.
+
+Just for the sake of  completeness, there is a way to do what you thought
+you wanted, used in studio and broadcast facilities, but it requires all
+the audio playback devices to have the ability to synchronize their audio
+clocks to a centralized clocking signal used for the entire studio or
+broadcast facility.  Traditionally that was done by distributing a
+synchronization signal to each piece of equipment used, more recently it
+can be done by using IEEE 1588v2 "Precision Time Protocol" to synchronize
+the local clock of each device over Ethernet.  That is a fairly
+sophisticated setup, suffice to say that if you had equipment that could
+do that you would already know how to set it up correctly, so that
+topology does not apply here.
+
+Jackd may not be the tool best suited for your use.  Do you actually need
+low latency and the patch bay style features of jack?  If you just want to
+be able to play audio from a central server to various audio playback
+devices which do not need to be synchronized at the audio frame level then
+some type of whole house audio design may be better suited to what you
+want than jack, which is designed specifically for low latency audio
+production use.  Either Logitech Media Server with squeezebox lite
+instances as I mentioned, or an Icecast server running on the odroid and
+VLC or something similar running on the other machines to pull the audio
+they want.  That is the answer to a question you did not ask, just wanted
+to mention it for completeness, since you have asked about getting netjack
+running but it is not clear from some of your questions whether that is
+really what would best serve your end goal (assuming your end goal really
+is some arrangement of playing audio, and contrary to what you wrote
+earlier running netjack2 is not actually a goal in itself).
+
+&gt;&gt; You are giving a unicast address as the argument for the
+&gt;&gt; multicast address
+&gt; I don't have the setup right now, I will re-test tomorrow,
+&gt; but if  I correctly remember, I used the address 192.168.117.129 (which
+is the static address I gave to the mac) because simply
+&gt; using jackd -R -d net (which takes the default) did not work.
+
+I'll have to try myself later.  My machines have multiple network
+interfaces, which makes multicast setup a little tricky, I have to
+remember how to tell the kernel which interface should be listening for
+multicast, might take me a while to get that working properly.  But a
+little worrying that the documentation does not seem to match the behavior
+of the software.
+
+
+&gt; Master: (mac OSX Sierra 10.12.4)
+&gt;
+&gt; sh-3.2# jackd -R -d coreaudio -Cno -Pyes
+
+Note that I'm not sure that the -C and -P arguments actually take a yes or
+no value.  There were no error messages complaining, so maybe that is OK. 
+The documentation seems vague and I don't have a mac to verify the
+coreaudio driver behavior.  See below...
+
+&gt; jackdmp 1.9.11
+&gt; Copyright 2001-2005 Paul Davis and others.
+&gt; Copyright 2004-2016 Grame.
+&gt; jackdmp comes with ABSOLUTELY NO WARRANTY
+&gt; This is free software, and you are welcome to redistribute it
+&gt; under certain conditions; see the file COPYING for details
+&gt; JACK server starting in realtime mode with priority 10
+&gt; self-connect-mode is "Don't restrict self connect requests"
+&gt; Separated input = 'Built-in Microphone'
+&gt; Separated output = 'Built-in Output'
+&gt; Input channel = 0 ==&gt; JACK input port = 0
+&gt; Input channel = 1 ==&gt; JACK input port = 1
+
+That seems to indicate that there are two input channels, so the -Cno did
+not seem to do anything.  Maybe just leave off the -C altogether and have
+only -P.
+Since you have only mentioned playing audio and not capturing audio, the
+goal was to get the master configured for playback only to simplify the
+configuration as much as possible.
+
+&gt; JACK output port = 0 ==&gt; output channel = 0
+&gt; JACK output port = 1 ==&gt; output channel = 1
+&gt; CoreAudio driver is running...
+&gt; Starting Jack NetManager
+&gt; Listening on '225.3.19.154:19000'
+&gt; Sending parameters to ...
+
+&gt; Can't set net buffer sizes : Invalid argument
+&gt; SetParams error...
+&gt; Can't init new NetMaster...
+
+If I am interpreting that correctly, the message indicates that the
+netjack driver could not start correctly.
+
+&gt; Slave: (debian linux odroid board)
+&gt; Initializing connection with ucas-MacBook-Pro-9.local...
+
+So the odroid was able to detect that the MacBook was running netjack.
+Possibly all the later error messages are because the MacBook is not
+giving reasonable responses due to whatever caused the earlier messages
+about not being able to set the net buffer sizes.
+
+&gt; Any suggestion?
+
+The walk-through guide says this form will print more information:
+ jack_load netmanager -i "-h"
+
+Try that and see if there is useful information printed about the number
+of channels which can be used, or the optimum period size for your system.
+
+My suspicion after looking more closely is that this message:
+&gt; Can't set net buffer sizes : Invalid argument
+
+Is that the audio parameters set force the netjack driver into attempting
+to use invalid settings.  That message comes from this location in
+JackNetInterface.cpp:
+
+        try {
+
+            // audio net buffers
+            if (fParams.fSendAudioChannels &gt; 0) {
+                fNetAudioCaptureBuffer =
+AudioBufferFactory(fParams.fSendAudioChannels, fTxData);
+                assert(fNetAudioCaptureBuffer);
+            }
+
+            if (fParams.fReturnAudioChannels &gt; 0) {
+                fNetAudioPlaybackBuffer =
+AudioBufferFactory(fParams.fReturnAudioChannels, fRxData);
+                assert(fNetAudioPlaybackBuffer);
+            }
+
+        } catch (exception&amp;) {
+            jack_error("NetAudioBuffer on master allocation error...");
+return false;
+        }
+
+        // set the new buffer size
+        if (SetNetBufferSize() == SOCKET_ERROR) {
+            jack_error("Can't set net buffer sizes : %s",
+StrError(NET_ERROR_CODE));
+            goto error;
+        }
+
+        return true;
+
+    error:
+        FreeNetworkBuffers();
+        return false;
+    }
+
+
+So it appears that the jack side was able to set the buffer size with no
+exception, but then after attempting to use that information to set the
+network buffer size the network API gave an error.
+
+I just looked back at your first email and that message was not present. 
+In the first configurations you explicity gave the -p128 -n2 parameters,
+you did not show that in your most recent command output.  Perhaps you
+introduced a new problem.
+Typically when jackd starts it prints the sample rate, the sample format
+(number of bits used), and the number of samples per frame and frames per
+period.  I do not see  that in the most recent output you showed.
+Did you truncate any output from the jackd messages, or did jackd really
+not print out the buffer size information?
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1493309311.26207_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1493675927.19352_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1493330599.15681_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1493330599.15681_0.ltw:2,a&nbsp;&lt;4026ef58359d23f20cd817ef96d6548f.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

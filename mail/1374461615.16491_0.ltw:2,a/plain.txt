@@ -1,0 +1,53 @@
+Date:        Sun, 21 Jul 2013 21:53:28 -0500
+From:        karthik poduval  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+
+Subject:     [Jack-Devel] Question about Jack-2's synchronization
+
+Hi All,
+
+I added a couple of logs to JackFifo class printing the calls made along
+with issuing process thread id. Please refer to a log excerpt below,
+questions follow:-
+
+
+   1137 [2]TimedWait for refnum-2 time-2147483647, pid[3453]
+   1138 [2]Signal for refnum-2 pid[3444]
+   1139 [2]Wait for refnum-2 pid[3453]
+   1140 [2]Signal for refnum-0 pid[3453]
+   1141 [2]Signal for refnum-1 pid[3453]
+   1142 [2]TimedWait for refnum-2 time-2147483647, pid[3453]
+
+
+1. How come I am not seeing a Wait call made for refnum 0 and 1, although
+there is a Signal call being made. Below is how I expected it to work,
+please correct my understanding on how the synchronization works.
+
+driver thread (Signal refnum-2, Wait refnum-0)
+client thread (Signal refnum-0, Wait refnum-2)
+driver thread (Signal refnum-2, Wait refnum-0)
+client thread (Signal refnum-0, Wait refnum-2)
+.....
+.....
+
+where driver thread is at refnum-0 and client thread is at refnum-2. I am
+running the client app after starting the server with alsa backend.
+
+2. Why is there a call to Wait (1139) and then another call to
+TimedWait(1142) for refnum-2 Wouldn't the call to the first invoked Wait
+put the thread(3453) to sleep ?
+
+Thanks in Advance.
+
+-- 
+Regards,
+Karthik Poduval
+
+P.S. To give a bigger picture I am trying to add the audio processing
+threads of JACK under the control of a custom scheduler built using the
+(HGS) hierarchical group scheduling framework developed by University of
+Kansas (http://www.ittc.ku.edu/kusp/).
+
+1374461615.16491_0.ltw:2,a <CAFP0Ok_eWBKvP3whUDZc1BG2D33PQTVgsQ+7Epd4HeuhQjUMHQ at mail dot gmail dot com>
+________________________________________________________________________________
+

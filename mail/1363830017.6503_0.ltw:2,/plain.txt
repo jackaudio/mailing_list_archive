@@ -1,0 +1,111 @@
+Date:        Thu, 21 Mar 2013 03:39:56 +0200
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Alexey Chernov <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Alexey Chernov [Jack-Devel] Jack2 waf build error (1363382743.15907_0.ltw:2,a)
+Follow-Up:   4ernov Re: [Jack-Devel] Jack2 waf build error (1363854085.4521_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] Jack2 waf build error (1363864663.12109_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack2 waf build error
+
+Alexey Chernov <[hidden]> writes:
+
+> Hello,
+> I decided to update my Jack2 version and faced a strange error when building 
+> version 1.9.9.5 (also there with latest git master):
+>
+> ./waf build
+> Waf: Entering directory `/usr/src/packages/jack/jack2/build'
+> make[1]: Entering directory `/usr/src/packages/jack/jack2/build'
+> Traceback (most recent call last):
+>   File 
+> "/usr/src/packages/jack/jack2/.waf-1.6.11-30618c54883417962c38f5d395f83584/waflib/Scripting.py", 
+> line 97, in waf_entry_point
+>     run_commands()
+>   File 
+> "/usr/src/packages/jack/jack2/.waf-1.6.11-30618c54883417962c38f5d395f83584/waflib/Scripting.py", 
+> line 151, in run_commands
+>     run_command(cmd_name)
+>   File 
+> "/usr/src/packages/jack/jack2/.waf-1.6.11-30618c54883417962c38f5d395f83584/waflib/Scripting.py", 
+> line 143, in run_command
+>     ctx.execute()
+>   File 
+> "/usr/src/packages/jack/jack2/.waf-1.6.11-30618c54883417962c38f5d395f83584/waflib/Scripting.py", 
+> line 345, in execute
+>     return execute_method(self)
+>   File 
+> "/usr/src/packages/jack/jack2/.waf-1.6.11-30618c54883417962c38f5d395f83584/waflib/Build.py", 
+> line 98, in execute
+>     self.execute_build()
+>   File 
+> "/usr/src/packages/jack/jack2/.waf-1.6.11-30618c54883417962c38f5d395f83584/waflib/Build.py", 
+> line 101, in execute_build
+>     self.recurse([self.run_dir])
+>   File 
+> "/usr/src/packages/jack/jack2/.waf-1.6.11-30618c54883417962c38f5d395f83584/waflib/Context.py", 
+> line 128, in recurse
+>     user_function(self)
+>   File "/usr/src/packages/jack/jack2/wscript", line 337, in build
+>     bld.add_subdirs('common')
+>   File 
+> "/usr/src/packages/jack/jack2/.waf-1.6.11-30618c54883417962c38f5d395f83584/waflib/Context.py", 
+> line 128, in recurse
+>     user_function(self)
+>   File "/usr/src/packages/jack/jack2/common/wscript", line 277, in build
+>     create_jack_process_obj(bld, 'netmanager', 'JackNetManager.cpp', 
+> serverlib)
+>   File "/usr/src/packages/jack/jack2/common/wscript", line 27, in 
+> create_jack_process_obj
+>     process.includes = ['.'] + env_includes + ['jack', '..']
+> UnboundLocalError: local variable 'env_includes' referenced before assignment
+>
+> Here's my configure command and its output:
+> ./waf configure --prefix=/usr --firewire --alsa --debug
+> Setting top to                           : /usr/src/packages/jack/jack2 
+> Setting out to                           : /usr/src/packages/jack/jack2/build 
+> Checking for 'g++' (c++ compiler)        : /usr/bin/g++ 
+> Checking for 'gcc' (c compiler)          : /usr/bin/gcc 
+> Checking for header samplerate.h         : yes 
+> Checking for header samplerate.h         : yes 
+> Checking for header sndfile.h            : yes 
+> Checking for program pkg-config          : /usr/bin/pkg-config 
+> Checking for 'celt' >= 0.5.0             : yes 
+> Checking for library readline            : yes 
+> Checking for 'celt' >= 0.11.0            : yes 
+> Checking for 'opus' >= 0.9.0             : not found 
+>
+> ==================                      
+> JACK 1.9.10 svn revision will checked and eventually updated during build
+> Build with a maximum of 64 JACK clients
+> Build with a maximum of 768 ports per application
+> Install prefix                           :  /usr 
+> Library directory                        :  /usr/lib 
+> Drivers directory                        :  /usr/lib/jack 
+> Build debuggable binaries                :  yes 
+> C compiler flags                         :  ['-O3', '-march=core2', '-mssse3', 
+> '-Wall', '-g'] 
+> C++ compiler flags                       :  ['-O3', '-march=core2', '-mssse3', 
+> '-Wall', '-g'] 
+> Linker flags                             :  ['-g'] 
+> Build doxygen documentation              :  no 
+> Build Opus netjack2                      :  no 
+> Build with engine profiling              :  no 
+> Build with 32/64 bits mixed mode         :  no 
+> Build standard JACK (jackd)              :  yes 
+> Build D-Bus JACK (jackdbus)              :  no 
+> Autostart method                         :  classic
+>
+> Python version is 2.7.2. Could you please help me with the issue?
+
+Do you try to build on linux? env_includes should be set if IS_MACOSX
+IS_LINUX or IS_SUN is set in bld.env. I suspect that neither of these is
+set and this is resulting in env_includes use throwing the
+UnboundLocalError exception.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1363830017.6503_0.ltw:2, <87wqt14jkj.fsf at arnaudov dot name>
+________________________________________________________________________________
+

@@ -1,0 +1,120 @@
+Date:        Thu, 18 Jun 2009 18:21:05 +0200
+From:        Lennart Poettering  <[hidden] at 0pointer dot de>
+To:          [hidden] at lists dot jackaudio dot org, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>
+In-Reply-To: [hidden] at gmx dot de Re: [LAD] [Jack-Devel] jack2's dbus name (1245336473.22396_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [LAD] [Jack-Devel] jack2's dbus name (1245347529.14855_0.ltw:2,a)
+Follow-Up:   Nedko Arnaudov Re: [LAD] [Jack-Devel] jack2's dbus name (1245438548.11894_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] jack2's dbus name
+
+On Thu, 18.06.09 16:09, [hidden] ([hidden]) wrote:
+
+> > I think org.jackaudio.service should be fine. I don't think this
+> > automatic logic needs to work on non-D-Bus jack builds. As I see it
+> > you don't need to make any changes on jack for this to work. All I
+> > need is the guarantee that by the time the service name is registered
+> > on the bus jack is fully accessible. Otherwise we had a race here: if
+> > PA looks for the org.jackaudio.service name to appear on the bus and
+> > then imemdiately connects to it while jack isn't fully accessible yet
+> > PA would fail.
+> 
+> the existence of org.jackaudio.service object does not guarantee,
+> that jackd is connectable.
+
+I'd consider that brokeness in Jack then. Taking the name on the bus
+sould be the last step during initialization. Otherwise you'll always
+be in racy situations where clients try to talk to JACK while JACK is
+only half-way initialized.
+
+> 
+> i guess we need a signal, which tells that a server has been started,
+> but i leave this to the dbus guys.
+
+Nope. That is the wrong approach.
+
+> my primary concern is to have the pa jack backend fixed. 
+> lennart himself said its a TOY. and it really is.
+
+Aha.
+
+> i dont really understand why it works, but its pretty broken, for
+> sure.
+
+Aha.
+
+> static int jack_process(jack_nframes_t nframes, void *arg) {
+>     struct userdata *u = arg;
+>     unsigned c;
+>     jack_nframes_t frame_time;
+>     pa_assert(u);
+> 
+>     /* We just forward the request to our other RT thread */
+> 
+>     for (c = 0; c < u->channels; c++)
+>         pa_assert_se(u->buffer[c] = jack_port_get_buffer(u->port[c], nframes));
+> 
+>     frame_time = jack_frame_time(u->client);
+> 
+>     pa_assert_se(pa_asyncmsgq_send(u->jack_msgq, PA_MSGOBJECT(u->sink), SINK_MESSAGE_RENDER, &frame_time, nframes, NULL) == 0);
+>     return 0;
+> }
+> 
+> 
+> it needs to be decoupled using a ringbuffer.
+
+Uh? That is actually what happens. 
+
+This is a bit more complex than you might think. Jack's thread
+management is very unflexible and insists on controlling the entire
+thread life cycle, only calling into client code in very few
+occasions. This is a bit too limited for PA which needs better control
+on the RT loops so that it can properly priorize/order the work it
+needs to do in it. To work around that I decided to run two RT
+threads, one where PA does its own RT looping, and the one jack
+controls. The latter then simply relays the process requests
+synchronously to the former. This of course comes at the cost of a
+needless context switch, however both threads are RT. The normal PA RT
+loop thread communicates lock-free and asynchronously with the rest of
+the PA code.
+
+Yes, having to work around JACK's API like this is certainly not
+nice. But aside from the extra context switch this shouldn't be too
+bad.
+
+Of course it would great if JACK would be more flexible with its RT
+loop handling. What I am missing is basically a way to
+asynchronously/lock-free trigger execution of a callback function in
+the RT loop at a suitable place. By a "suitable place" I mean that the
+RT loop delays execution of this callback until a time where its
+impact would be minimal, i.e. right after a completed process() and a
+quick verification that the next process() cycle is still a bit away.
+
+Why does pa need those callbacks? In contrast to JACK we need to be
+able to modify our pipelines during playback without having that cause
+drop-outs in any way. To accomplish that updates to pipeline related
+data structures that need to be accessed by the RT loop are as far as
+possible done in the main thread, however usually the last remaining
+bit for activating those changes is left for the RT loop to do itself,
+asynchronously and only when it can be sure that nothing else needs to
+be done. That way we can have those data structures implemented
+lock-free without really having to implement them with all that
+lock-free complexity.
+
+> and maybe pulse should be running with a higher blocksize than jack ?
+
+PA does not use fixed block sizes. We always use the largest chunk
+sizes the applications pass to us and break them up into smaller
+pieces only when really necessary. We really try our best not having
+to touch/convert/split/copy user supplied PCM data if we don't have
+to.
+
+Lennart
+
+-- 
+Lennart Poettering                        Red Hat, Inc.
+lennart [at] poettering [dot] net
+http://0pointer.net/lennart/           GnuPG 0x1A015CC4
+
+1245342112.31614_0.ltw:2,a <20090618162104.GA2593 at tango dot 0pointer dot de>
+________________________________________________________________________________
+

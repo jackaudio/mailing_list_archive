@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] A lot of Xrun Callbacks ... really xruns?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] A lot of Xrun Callbacks ... really xruns?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1340107626.23692_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1340123662.31861_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1340117136.28585_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 19 Jun 2012 14:45:12 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Krause, Mathias </span> &lt;[hidden] at xse dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Rigg
+<a href='../1340184974.3608_0.ltw:2,a/index.html'>Re: [Jack-Devel] A lot of Xrun Callbacks ... really xruns? </a></td></tr>
+</table>
+<pre>
+Hello,
+
+in the meantime, i did some cyclictest with the kernel ... but i do not think, the issue is somewhere there (audio plays fine, as i don't hear any oft hat xruns).
+
+Cyclictest reports:
+/tmp/cyclictest -a -t -n -p99
+# /dev/cpu_dma_latency set to 0us
+policy: fifo: loadavg: 4.82 5.10 5.01 2/892 2435
+
+T: 0 ( 2434) P:99 I:1000 C:  62916 Min:     12 Act:   22 Avg:   28 Max:     310
+T: 1 ( 2435) P:99 I:1500 C:  41944 Min:     13 Act:   19 Avg:   31 Max:     298
+
+Anyway ... I just start jackd ... and after a while, I count the xrun_callback in a jack_client.
+After 3 Minutes of running jackd (without any audio playing) I got already 500 xruns reported.
+
+Jackd log says a lot of:
+Jack: fPollTable i = 1 fd = 10
+Jack: JackRequest::Notification
+Jack: JackEngine::NotifyClient: no callback for event = 3
+Jack: ALSA XRun wait_status = 0
+Jack: JackEngine::NotifyClient: no callback for event = 3
+Jack: JackEngine::NotifyClient: no callback for event = 3
+Jack: fPollTable i = 2 fd = 11
+
+I also enabled
+                echo 3 &gt; /proc/asound/card0/pcm0p/xrun_debug
+for all the cards, but that does not report ANY single xrun.
+
+I also tried to start with -P to disable "capture" ... but that does not change anything.
+
+Any hints?
+
+Regards,
+Mathias
+
+
+Von: Paul Davis [mailto:[hidden]]
+Gesendet: Mittwoch, 13. Juni 2012 13:28
+An: Krause, Mathias
+Cc: [hidden]
+Betreff: Re: [Jack-Devel] WG: A lot of Xrun Callbacks ... really xruns?
+
+
+On Wed, Jun 13, 2012 at 7:14 AM, Krause, Mathias &lt;[hidden]&lt;mailto:[hidden]&gt;&gt; wrote:
+Hello,
+
+in the meantime I did a lot of tests, but didn't get any further...
+Sometimes, I start my system and these xrun callbacks happen 3 times every second.
+Sometimes, I restart the system, and no xruns are reported to my client.
+
+Are there any hints?
+
+
+you should by using the cyclic latency test (google it). forget JACK for the time being and focus on the kernel's own latency testing tools.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1340107626.23692_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1340123662.31861_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1340117136.28585_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1340117136.28585_0.ltw:2,a&nbsp;&lt;74BB536895EF064DB2A9580AD0E95B7506BC43 at XSRWWSEX01 dot xse dot local&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

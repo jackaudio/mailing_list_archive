@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Non-blocking I/O in process callback</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Non-blocking I/O in process callback</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1448890078.32712_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1448893816.7601_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1448892031.4036_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 30 Nov 2015 15:00:21 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Xavier Mendez </span> &lt;[hidden] at jmendeth dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Robin Gareus &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1448890078.32712_0.ltw:2,/index.html'>Re: [Jack-Devel] Non-blocking I/O in process callback </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1448893816.7601_0.ltw:2,/index.html'>Re: [Jack-Devel] Non-blocking I/O in process callback </a></td></tr>
+</table>
+<pre>
+El 30/11/15 a les 14:27, Robin Gareus ha escrit:
+&gt; On 11/30/2015 12:11 PM, Xavier Mendez wrote:
+&gt;&gt; Hello,
+&gt;&gt;
+&gt;&gt; I'm wondering whether it's safe to do non-blocking reads or writes from
+&gt;&gt; inside the process callback.
+&gt;&gt;
+&gt;&gt;  From what I've seen, non-blocking I/O doesn't cause the process to go
+&gt;&gt; into blocked state, and the realtime scheduler should not switch to
+&gt;&gt; another process. But the documentation doesn't seem to allow them:
+&gt;&gt;
+&gt;&gt;&gt; [...] it cannot call functions that might block for a long time. This
+&gt;&gt;&gt; includes all I/O functions (disk, TTY, network), [...]
+&gt;&gt;
+&gt;&gt; So, is it safe to use non-blocking I/O in the process callback?
+&gt;&gt;
+&gt;
+&gt; On which platform?
+
+This is going to run on UNIX-like systems, mostly Linux, and I'm 
+programming in C/C++.
+
+&gt; The short answer is:
+&gt;
+&gt;    "If you don&#x2019;t know how long it will take, don't do it." [1]
+&gt;
+&gt; All i/o involve syscalls, and then it depends what the kernel does for
+&gt; the specific system call(s). Asynchronous I/O usually involves signals
+&gt; at some point which makes it not safe to use.
+
+I wasn't very specific, let me clarify: I'm only going to do some
+read(2) or write(2) syscalls on an FD which has O_NONBLOCK set.
+AFAIK these don't involve signals...
+
+&gt; Some implementation also
+&gt; involve mutexes to avoid resource conflicts. You'll have to check the
+&gt; standard-lib and kernel source for the system that you target.
+
+Hmm... Are mutexes a problem if the FD is used exclusively from the 
+process callback?
+
+&gt; All moot anyway. Proper software needs to do error-handling and doing
+&gt; that in a rt-callback is out of the question. So you need a non-realtime
+&gt; thread anyway and if you have that you can directly do i/o there.
+
+Error handling is not a problem here, if those syscalls fail I'll simply 
+deactivate the JACK client.
+
+&gt; anyway, using a ringbuffer to decouple i/o is trivial: e.g.
+&gt; https://github.com/jackaudio/example-clients/blob/master/capture_client.c
+
+Thanks for the advice, I'm currently using ringbuffers + worker threads 
+but being able to do this I/O directly in process() would simplify the 
+code considerably. I'll consider it, though.
+
+Thank you for your help,
+Xavi
+
+&gt; best,
+&gt; robin
+&gt;
+&gt;
+&gt; [1]
+&gt; http://www.rossbencina.com/code/real-time-audio-programming-101-time-waits-for-nothing
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1448890078.32712_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1448893816.7601_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1448892031.4036_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1448892031.4036_0.ltw:2,&nbsp;&lt;565C5675.6010205 at jmendeth dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

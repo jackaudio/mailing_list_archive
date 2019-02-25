@@ -1,0 +1,90 @@
+Date:        Thu, 02 Jan 2014 21:32:11 +0100
+From:        Lucio Crusca  <[hidden] at sulweb dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Dominique Michel Re: [Jack-Devel] routing alsa through jack (1388280323.27449_0.ltw:2,)
+Follow-Up:   Dominique Michel Re: [Jack-Devel] routing alsa through jack (1388705438.30262_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] routing alsa through jack
+
+In data domenica 29 dicembre 2013 02:44:08, Dominique Michel ha scritto:
+> > $ cat /etc/modprobe.d/alsa-base.conf
+> 
+> > # autoloader aliases
+> > install sound-slot-0 /sbin/modprobe snd-card-0
+> 
+> I don't have that part. I don't even know what this is.
+
+Never mind, that's kmod stuff, it doesn't hurt, it only defines aliases.
+
+> > # Cause optional modules to be loaded above generic modules
+> > install snd /sbin/modprobe --ignore-install snd && { /sbin/modprobe
+> > --quiet snd-ioctl32 ; /sbin/modprobe --quiet snd-seq ; : ; }
+> > install snd-rawmidi /sbin/modprobe --ignore-install snd-rawmidi && {
+> > /sbin/modprobe --quiet snd-seq-midi ; : ; }
+> > install snd-emu10k1 /sbin/modprobe --ignore-install snd-emu10k1 && {
+> > /sbin/modprobe --quiet snd-emu10k1-synth ; : ; }
+> 
+> I don't have that part either. And don't know what this is.
+
+same as above
+
+> 
+> > # Keep snd-pcsp from beeing loaded as first soundcard
+> > options snd-pcsp index=-2
+> > # Keep snd-usb-audio from beeing loaded as first soundcard
+> > options snd-usb-audio index=-2
+> > # Prevent abnormal drivers from grabbing index 0
+> > options bt87x index=-2
+> > options cx88_alsa index=-2
+> > options snd-atiixp-modem index=-2
+> > options snd-intel8x0m index=-2
+> > options snd-via82xx-modem index=-2
+> 
+> See above.
+
+That's default Debian stuff for some modules that should never be loaded at 
+index 0. It doesn't interfere since I have none of the corresponding hardware 
+(even if I had, I still don't want my soundcard to load at index 0 anyway).
+
+> 
+> Also, I have the following lines at the end:
+> 
+> # Set this to the correct number of cards.
+> options snd cards_limit=4
+
+mine is at the top with limit=3, because I have 3 soundcards (loopback, Intel 
+HDA and HDMI).
+
+> > $ cat $HOME/.asoundrc
+> > #------------------------------------------------------
+> > # hardware 0,0 : used for ALSA playback
+> > pcm.loophw00 {
+> > 
+> >   type hw
+> >   card Loopback
+> >   device 0
+> >   subdevice 0
+> >   format S32_LE
+> >   rate 48000
+> > 
+> > }
+> 
+> I don't have that part
+> [...]
+
+Ok I edited my .asoundrc following your suggestions but nothing changed. The 
+problem is that when jackd starts, it grabs the soundcard and other programs 
+coming after it find the soundcard locked:
+
+$ alsa_out -j ploop -dploop -q 1 &
+$ alsa_in -j cloop -dcloop -q 1 &
+$ ps ax | grep jack
+10569 ?        SLsl   0:00 /usr/bin/jackd -T -ndefault -T -d alsa
+
+$ aplay /usr/share/sounds/alsa/Front_Center.wav 
+ALSA lib pcm_dmix.c:1022:(snd_pcm_dmix_open) unable to open slave
+aplay: main:722: audio open error: Device or resource busy
+
+1388694751.12807_0.ltw:2, <8224251.NU2ADz7MeS at fx>
+________________________________________________________________________________
+

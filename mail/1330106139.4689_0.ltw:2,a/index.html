@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack1 version jack2 public headers comparison</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack1 version jack2 public headers comparison</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1330105507.3609_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1330200628.23770_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1330106139.4689_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 24 Feb 2012 18:55:23 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at linutronix dot de </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>[hidden] at linutronix dot de
+<a href='../1330105025.2827_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack1 version jack2 public headers comparison </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>[hidden] at linutronix dot de
+<a href='../1330200628.23770_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack1 version jack2 public headers comparison </a></td></tr>
+</table>
+<pre>
+Le 24 f&#xE9;vr. 2012 &#xE0; 18:36, [hidden] a &#xE9;crit :
+
+&gt; On Fri, Feb 24, 2012 at 11:41:33AM -0500, Paul Davis wrote:
+&gt;&gt; We're starting the merge of the header files used by all
+&gt;&gt; implementations of JACK, following setting up several git repositories
+&gt;&gt; that make this possible.
+&gt;&gt; 
+&gt;&gt; This is a review of the differences between the header files, initally
+&gt;&gt; done by Stephane, with new comments by me ...
+&gt;&gt; 
+&gt;&gt; 
+&gt;&gt;&gt; control.h  :
+&gt;&gt;&gt; 
+&gt;&gt;&gt; New :
+&gt;&gt;&gt; =====
+&gt;&gt;&gt; 
+&gt;&gt;&gt; /** Driver types */
+&gt;&gt;&gt; typedef enum
+&gt;&gt;&gt; {
+&gt;&gt;&gt;    JackMaster = 1,     /**&lt; @brief master driver */
+&gt;&gt;&gt;    JackSlave               /**&lt; @brief slave driver */
+&gt;&gt;&gt; } jackctl_driver_type_t;
+&gt;&gt;&gt; 
+&gt;&gt;&gt; jackctl_driver_type_t
+&gt;&gt;&gt; jackctl_driver_get_type(
+&gt;&gt;&gt;        jackctl_driver_t * driver);
+&gt;&gt; 
+&gt;&gt; Seems like a reasonable addition, especially since its specifically
+&gt;&gt; only for the control API.
+&gt; 
+&gt; yup. fine with me.
+&gt; 
+&gt;&gt; 
+&gt;&gt;&gt; Reworked :
+&gt;&gt;&gt; ==========
+&gt;&gt;&gt; 
+&gt;&gt;&gt; /jackctl_sigmask_t *
+&gt;&gt;&gt; jackctl_setup_signals(
+&gt;&gt;&gt;    unsigned int flags);
+&gt;&gt;&gt; 
+&gt;&gt;&gt; void
+&gt;&gt;&gt; jackctl_wait_signals(
+&gt;&gt;&gt;    jackctl_sigmask_t * signals);
+&gt;&gt; 
+&gt;&gt; can you or nedko explain the need for this change? again, since its
+&gt;&gt; for the control API the issue is not that significant but i recall
+&gt;&gt; that this part of the API attracted some significant criticism from
+&gt;&gt; torben.
+&gt; 
+&gt; This stuff is not necessary.
+&gt; the signal handling is an implementation detail, and should be hidden
+&gt; below the control api.
+&gt; 
+&gt; jack1 controlapi.c is doing it correctly. 
+&gt; please switch jack2 to doing the same thing.
+
+I don't see the difference in the code... Can you explain more?
+
+
+&gt; 
+&gt; 
+&gt;&gt; 
+&gt;&gt;&gt; 
+&gt;&gt;&gt; Reworked :
+&gt;&gt;&gt; ==========
+&gt;&gt;&gt; 
+&gt;&gt;&gt; jackctl_server_start/jackctl_server_close reworked in a jackctl_server_open/jackctl_server_start/jackctl_server_stop/jackctl_server_close
+&gt;&gt; 
+&gt;&gt; seems reasonable, though what's the justification?
+&gt;&gt; 
+&gt;&gt;&gt; New :
+&gt;&gt;&gt; =====
+&gt;&gt;&gt; 
+&gt;&gt;&gt; int
+&gt;&gt;&gt; jackctl_driver_params_parse(
+&gt;&gt;&gt;    jackctl_driver_t * driver,
+&gt;&gt;&gt;    int argc,
+&gt;&gt;&gt;    char* argv[]);
+&gt;&gt; 
+&gt;&gt; seems reasonable and sensible.
+&gt; 
+&gt; why is that sensible ?
+&gt; what does jack dbus need commandline parsing for, to configure a driver
+&gt; ?
+&gt; 
+&gt; commandline parsing is special to jackd implementation, and doesnt
+&gt; belong here.
+&gt; 
+&gt; big NAK from me.
+
+
+This is not strictly necessary, can be moved in jackd code.
+
+&gt; 
+&gt; 
+&gt;&gt; 
+&gt;&gt;&gt; =========================================================================================
+&gt;&gt;&gt; 
+&gt;&gt;&gt; jack.h :
+&gt;&gt;&gt; 
+&gt;&gt;&gt; New :
+&gt;&gt;&gt; =====
+&gt;&gt;&gt; 
+&gt;&gt;&gt; void
+&gt;&gt;&gt; jack_get_version(
+&gt;&gt;&gt;    int *major_ptr,
+&gt;&gt;&gt;    int *minor_ptr,
+&gt;&gt;&gt;    int *micro_ptr,
+&gt;&gt;&gt;    int *proto_ptr) JACK_OPTIONAL_WEAK_EXPORT;
+&gt;&gt;&gt; 
+&gt;&gt;&gt; 
+&gt;&gt;&gt; const char *
+&gt;&gt;&gt; jack_get_version_string() JACK_OPTIONAL_WEAK_EXPORT;
+&gt;&gt;&gt; 
+&gt;&gt;&gt; ==&gt; not really used? Should they be removed?
+&gt;&gt; 
+&gt;&gt; i am opposed to any such API in JACK. providing version information
+&gt;&gt; like this encourages bad/stupid/unnecessary behaviour by developers.
+&gt;&gt; as the docs for automake describe, if you're interested in whether or
+&gt;&gt; not a particular feature exists in something you want to use, test for
+&gt;&gt; the *feature* not some arbitrary version number.
+&gt;&gt; 
+&gt;&gt;&gt; int jack_get_client_pid (const char *name) JACK_OPTIONAL_WEAK_EXPORT;
+&gt;&gt; 
+&gt;&gt; needed for?
+&gt; 
+&gt; needed for ladish used by jackdbus.
+&gt; we should add it to jack1. 
+&gt; 
+&gt; however, this should really have jack_client_t as parameter too.
+&gt; or jackctl_server_t 
+&gt; in jack1 we need access to engine struct, to implement it.
+&gt; 
+&gt; 
+&gt; 
+&gt; 
+&gt;&gt; 
+&gt;&gt;&gt; jack_port_type_id_t jack_port_type_id (const jack_port_t *port) JACK_OPTIONAL_WEAK_EXPORT;
+&gt;&gt; 
+&gt;&gt; needed for?
+&gt; 
+&gt; i dont remember. 
+&gt; there should only be one canonical port type representation.
+&gt; i dont like it.
+&gt; 
+
+
+St&#xE9;phane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1330105507.3609_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1330200628.23770_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1330106139.4689_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1330106139.4689_0.ltw:2,a&nbsp;&lt;AEBF3AF0-3672-47F3-8559-DF7C02968F4B at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

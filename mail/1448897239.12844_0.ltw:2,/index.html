@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Non-blocking I/O in process callback</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Non-blocking I/O in process callback</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1448893816.7601_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1448897800.13485_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1448897239.12844_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 30 Nov 2015 10:26:57 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Robin Gareus &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1448893816.7601_0.ltw:2,/index.html'>Re: [Jack-Devel] Non-blocking I/O in process callback </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Xavier Mendez
+<a href='../1448899333.14924_0.ltw:2,/index.html'>Re: [Jack-Devel] Non-blocking I/O in process callback </a></td></tr>
+</table>
+<pre>
+On Mon, Nov 30, 2015 at 9:30 AM, Robin Gareus &lt;[hidden]&gt; wrote:
+
+&gt; ow can you know that no other process is using the same file?
+&gt;
+&gt; I have not checked the underlying implementation, but I can easily
+&gt; imagine that there are locks in the kernel.
+&gt;
+
+more than one. there are filesystem-level locks even if you avoid per-file
+locks.
+
+
+&gt;
+&gt; &gt; Thanks for the advice, I'm currently using ringbuffers + worker threads
+&gt; &gt; but being able to do this I/O directly in process() would simplify the
+&gt; &gt; code considerably. I'll consider it, though.
+&gt;
+
+you absolutely should NOT do this. even if it works for you under some
+conditions, it is absolutely the wrong design. no  matter how you try to do
+it, you are moving all the data to disk from inside the process callback.
+non-blocking (or even async) I/O might obscure the basic problem with doing
+this, but obscuring it is all that it does. please don't do this.
+
+
+&gt; On a different note: check async i/o performance first. Paul may chime
+&gt; in later, I recall that he benchmarked single-threaded, thread-polls and
+&gt; async i/o for Ardour at some point and opted for the first.
+&gt;
+
+i recently re-tested this, and amazingly continued to find that with at
+least one test case (serially-written files, each 10MB, written
+round-robin), the multithreaded version was slower than the single-threaded
+one. multithreaded simulates non-blocking I/O by working around the defects
+in the async I/O API available for linux and OS X. i don't want to be too
+emphatic about this, because it needs more evaluation with different test
+cases, but it was really quite suprising to me that even that case didn't
+show improvement over the single-threaded, blocking case.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1448893816.7601_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1448897800.13485_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1448897239.12844_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1448897239.12844_0.ltw:2,&nbsp;&lt;CAFa_cKnROPaNmodxp5DpsUxm=G4zFGJkaN8c-1N1mnhqA+gUbQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

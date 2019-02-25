@@ -1,0 +1,60 @@
+Date:        Mon, 21 Feb 2011 22:17:17 +0100
+From:        Arnold Krille  <[hidden] at arnoldarts dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fons Adriaensen [Jack-Devel] backend switching - another way (1298314398.28958_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] backend switching - another way (1298325064.14546_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] backend switching - another way
+
+Hi,
+
+On Monday 21 February 2011 19:53:03 Fons Adriaensen wrote:
+> I've been musing for a long time over the idea 'what if Jack ports
+> were persistent' ? In other words, if they could exists irrespective
+> of the application that uses them is running or not.
+> 
+> This has some far-reaching consequences of course, but there is
+> subset of this idea that is not as mad as it seems (IMHO).
+> 
+> ** What if physical ports were persistent ? **
+
+I like the idea!
+
+Still I would like to extend the question: What if there where virtual ports?
+
+These virtual ports would be configured in a configuration(-file) if present or 
+by the first client providing these. If no config-file was there to make the 
+ports persitent forever, they would stay as long as jack is running, 
+regardless of the backend actually in use.
+
+I would very much like to remove the distinction between "clients" and 
+"backends". After all a traditional client (be it a separate process or an in-
+server-client) is just a client that is capable of free-wheeling. And a 
+backend is just an in-server-client that is not (necessarily) free-wheeling 
+capable but definitely master-clock-capable.
+Thinking about it, even this is not true, the "null"-backend would be the 
+master-clock for freewheeling. Thus hardware-clients would be not-
+freewheeling-capable. And as long as all clients are either synced or at least 
+have resampling-capabilites (for unsynced hardware-clients), there is no 
+difference between clients and backends...
+
+Some benefits of this would be:
+ - Several backends running at the same time (like alsa-on-the-pci-soundcard, 
+alsa-on-usb-soundcard and firewire).
+ - Clients defining the "master-out" ports to provide some studio-monitoring-
+control before actually sending the data to whatever hardware there is.
+ - Of course persistent setups independant of the actual hardware. (Like 
+switching from playing-to-usb to playing-to-firewire to suspend to playing-on-
+network depending on available hardware. And don't forget the intermediate 
+step of playing-to-file...)
+ - Effect-switching on the fly: Define a virtual port "Reverb" and run jack-rack 
+with appropriate effects. Then switch that to some IR without reconnecting 
+ports or changing (ardour-/qtractor-/bla-)sessions.
+
+Have fun,
+
+Arnold
+
+1298323061.12525_0.ltw:2,a <201102212217.21211.arnold at arnoldarts dot de>
+________________________________________________________________________________
+

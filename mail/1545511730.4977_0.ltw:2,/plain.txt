@@ -1,0 +1,69 @@
+Date:        Sat, 22 Dec 2018 21:48:21 +0100
+From:        Jörn Nettingsmeier  <[hidden] at stackingdwarves dot net>
+To:          Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Chris Caudle Re: [Jack-Devel] Some observations re Jack and systemd (1545426553.10488_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Some observations re Jack and systemd
+
+On 12/21/18 10:08 PM, Chris Caudle wrote:
+> On Fri, December 21, 2018 2:24 pm, JÃ¶rn Nettingsmeier wrote:
+>> Example service file:
+>>
+>> [Unit]
+>> Description=JACK Audio Connection Kit
+>> After=sound.target
+>> After=ntp.service
+>> After=time-sync.target
+>> Before=jackd.target
+>> Requires=jackd.target
+> 
+> 
+> I assume your service file would be jackd.service, can you explain how the
+> requires jackd.target works?  I am familiar with service files, but only
+> vaguely have seen target in reference to systemd (mostly in using
+> runlevel3.target or runlevel5.target as replacement for old init commands
+> to change runlevel).
+> 
+
+To be honest, I don't have a full understanding yet. Looking at the 
+behaviour of standard targets of the distro has helped me, and there's 
+man systemd.special.
+
+The quick summary is this:
+A target itself knows nothing and does nothing interesting.
+
+Mine looks like:
+[Unit]
+Description=jackd sound server target
+After=sound.target jackd.service
+Requires=sound.target jackd.service
+
+So all it does is it needs other things, _and_ they need to happen 
+first, hence the duplication in After= and Requires=.
+(It took me a while to understand that for systemd, "Requires=" doesn't 
+mean it has to be there when this unit is started, only that it will be 
+activated eventually...)
+
+My jackd.target knows it can only become active after the sound.target 
+is reached and the jackd.service is active.
+
+The semantics I gleaned from man systemd.special are these:
+
+For a "passive" target like this, only the provider(s) of the necessary 
+services should pull it in (in systemd lingo, this means "Requires=" or 
+at least "Wants="). In this case, that's jackd.service.
+Other services that need jack.target to be reached should not pull it 
+in, but only order themselves after it (using "After=").
+
+
+-- 
+Jörn Nettingsmeier
+Tuinbouwstraat 180, 1097 ZB Amsterdam, Nederland
+Tel. +49 177 7937487
+
+Meister für Veranstaltungstechnik (Bühne/Studio), Tonmeister VDT
+http://stackingdwarves.net
+
+1545511730.4977_0.ltw:2, <81aa19a2-5c14-e1be-dd48-5bac679323e7 at stackingdwarves dot net>
+________________________________________________________________________________
+

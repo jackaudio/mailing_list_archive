@@ -1,0 +1,49 @@
+Date:        Mon, 19 Mar 2012 15:07:24 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] Patches for jack-0.121-3 (1332168222.31610_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Patches for jack-0.121-3 (1332202306.21607_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Patches for jack-0.121-3
+
+On Mon, Mar 19, 2012 at 10:43:34AM -0400, Paul Davis wrote:
+> Am I right that the presence of jack_get_cycle_times() should lead us
+> to deprecate jack_last_frame_time() or at best make its implementation
+> use jack_get_cycle_times()? otherwise it seems that we're just
+> cluttering the API unnecessarily .. comments?
+
+It's somewhat easier to use than jack_get_cycle_times(), and
+for many clients it could be all they need. 
+Since the implementation is basically just one function call
+implementing it by using jack_get_cycle_times() would actually
+complicate rather than simplify it.
+The only gripe I have with jack_last_frame_time() is that it's
+such a misnomer...
+
+One real improvement could be to ensure that copying the timer
+information (involving the 'ugly hack') is done only once in
+each cycle by caching the result at the client side. The copy
+would then need to be marked as invalid at the start of each
+cycle.
+
+
+There is one more fix needed in engine.c : when the buffer
+size is modified, engine->first_wakeup should be set. This
+will re-init period_usecs (which will otherwise take a long
+time to catch up), and also reset the filter coefficient for
+the correct DLL bandwidth.
+
+
+Ciao,
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+
+1332169661.32542_0.ltw:2,a <20120319150724.GB26430 at linuxaudio dot org>
+________________________________________________________________________________
+

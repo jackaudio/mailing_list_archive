@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Connecting alsa-loopback to jack</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Connecting alsa-loopback to jack</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1342600686.20923_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1342633214.5356_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1342625055.24952_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 18 Jul 2012 18:19:48 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Dominique Michel </span> &lt;[hidden] at vtxnet dot ch&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>James Warden
+<a href='../1342600686.20923_0.ltw:2,a/index.html'>Re: [Jack-Devel] Connecting alsa-loopback to jack </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Jan Kohnert
+<a href='../1342633214.5356_0.ltw:2,a/index.html'>Re: [Jack-Devel] Connecting alsa-loopback to jack </a></td></tr>
+</table>
+<pre>
+Le Wed, 18 Jul 2012 01:37:56 -0700 (PDT),
+James Warden &lt;[hidden]&gt; a &#xE9;crit :
+
+&gt; Hi there,
+&gt; 
+&gt; A shame my WIKI page disappeared. 
+
+After the disappearance, I wrote something plus or minus similar, and
+in my bad English, into the gentoo pro-audio overlay's wiki:
+http://proaudio.tuxfamily.org/wiki/index.php?title=DAW_Digital_Audio_Workstation#Using_an_ALSA_Loopback_device_and_JACK_alsa_in.2Falsa_out_clients
+
+The text explanation is shorter than what you wrote, but hopefully, the
+code for the configuration must be very similar.
+
+Dominique
+
+&gt; I believe that Mark Constable was
+&gt; the maintainer of the unofficial ALSA WIKI site. IIRC, he told me
+&gt; some time ago that he could eventually drop the site. I hope there is
+&gt; some sort of backup because I took some time a while back to update
+&gt; it with more optimization tricks.
+&gt; 
+&gt; Mark, if you read this, could you give the list a clue as to what
+&gt; happened to your WIKI site ?
+&gt; 
+&gt; Thanks.
+&gt; 
+&gt; J.
+&gt; 
+&gt; 
+&gt; 
+&gt; ________________________________
+&gt;  From: aCOSwt &lt;[hidden]&gt;
+&gt; To: [hidden] 
+&gt; Sent: Wednesday, July 18, 2012 9:49 AM
+&gt; Subject: Re: [Jack-Devel] Connecting alsa-loopback to jack
+&gt;  
+&gt; This is my asound.conf inspired from some thread in LinuxMusicians :
+&gt; 
+&gt; ==========================================
+&gt; [note 1 : The following line is not compulsory for the redirection to
+&gt; work ] defaults.pcm.rate_converter "samplerate_best"
+&gt; 
+&gt; [note 2 : Alsa default is to be concerned because many jack-unaware
+&gt; packages output on the sole Alsa Default. (Adobe-Flash being an
+&gt; example) ]
+&gt; 
+&gt; pcm.!default{
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; type plug
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; slave.pcm "aduplex"
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; hint{
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; show on
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; description "Alsa Default"}}
+&gt; 
+&gt; pcm.aduplex{
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; type asym
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; playback.pcm "amix"
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; capture.pcm "asnoop"}
+&gt; 
+&gt; pcm.amix{
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; type dmix
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; ipc_key 219345
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; slave{
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; pcm "hw:Loopback,0,0"
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; format S32_LE
+&gt; 
+&gt; [note 3 : You absolutely want to adjust the three following values
+&gt; according to your # Jack instance sampling rate and tests you'll have
+&gt; completed on your system.]
+&gt; 
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; period_size 512
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; buffer_size 16384
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; rate 44100}}
+&gt; 
+&gt; pcm.asnoop{
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; type dsnoop
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; ipc_key 219346
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; slave.pcm "hw:Loopback,0,1"}
+&gt; 
+&gt; pcm.ploop{
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; type plug
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; slave.pcm "hw:Loopback,1,1"}
+&gt; 
+&gt; pcm.cloop{
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; type dsnoop
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; ipc_key 219348
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; slave{
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; pcm "hw:Loopback,1,0"
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; format S32_LE
+&gt; 
+&gt; [note : idem note 3]
+&gt; 
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; period_size 2048
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; buffer_size 8192
+&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; rate 44100}}
+&gt; 
+&gt; [note 4 : Of course, you will adapt the values given as ipc_key to
+&gt; your system. I mean, choosing values that won't ever be used by other
+&gt; programs you run. ]
+&gt; =========================================
+&gt; In addition to this, you must create jack permanent clients =&gt; create
+&gt; a script named for example Loop2Jack :
+&gt; 
+&gt; 
+&gt; /usr/bin/alsa_out -j ploop -dploop -q 1 2&gt;&amp;1 1&gt; /dev/null &amp;
+&gt; /usr/bin/alsa_in -j cloop -dcloop -q 1 2&gt;&amp;1 1&gt; /dev/null &amp;
+&gt; sleep 1
+&gt; jack_connect cloop:capture_1 system:playback_1
+&gt; jack_connect cloop:capture_2 system:playback_2
+&gt; jack_connect system:capture_1 ploop:playback_1
+&gt; jack_connect system:capture_1 ploop:playback_2
+&gt; exit 0
+&gt; ==========================================
+&gt; You'll then ensure that this script is executed after jackd's startup.
+&gt; Launch it manually or, if you use qjackctl there is an option field
+&gt; for allowing this as part of the setup/options page.
+&gt; 
+&gt; Having (I hope so) helped you to do what you wish, I must tell that
+&gt; having used this facility myself, I came to realize that I was
+&gt; nothing but stupid. As a matter of fact, I think we can state that
+&gt; nowadays, the applications not jack-aware are consumer grade
+&gt; applications playing medias of relatively poor audio quality.
+&gt; You will have additionally noticed that the dmix plugin was used in
+&gt; the asound.conf with a rather huge buffer that will have the
+&gt; consequence to add some significant latency.
+&gt; Why then, would you want to bother you real-time-low-latency sound
+&gt; server with this sort of sound ?
+&gt; Because your jackd might almost probably be "wired" to your best
+&gt; quality sound device, why would you want &lt;=22Khz samples from your
+&gt; speech-synth, Skype, DE's sound notifier... to be driven to this
+&gt; device ? Worse ! Why would you want these sounds of somehow random
+&gt; occurrence to spuriously pollute your precious 24bits &gt;=96KHz
+&gt; recording ?
+&gt; 
+&gt; OK then, of course this is nothing but an opinion from my personal
+&gt; experience. I only suggest you wonder before bothering too much.
+&gt; 
+&gt; Regards,
+&gt; 
+&gt; aCOSwt
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+
+-- 
+"We have the heroes we deserve."
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1342600686.20923_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1342633214.5356_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1342625055.24952_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1342625055.24952_0.ltw:2,a&nbsp;&lt;20120718181948.2bf0fbcd at tuxstudio&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,243 @@
+Date:        Tue, 02 Jul 2013 01:29:21 +0930
+From:        Ron  <[hidden] at debian dot org>
+To:          Robin Gareus <[hidden] at gareus dot org>, [hidden] at bugs dot debian dot org
+Cc:          Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>, [hidden] at jackaudio dot org, Debian Multimedia Maintainers <[hidden] at lists dot alioth dot debian dot org>
+In-Reply-To: Robin Gareus Re: Bug#686777: netjack2 + opus custom modes + debian (1372670150.10938_0.ltw:2,a)
+Follow-Up:   Robin Gareus Re: Bug#686777: netjack2 + opus custom modes + debian (1372815076.12808_0.ltw:2,)
+Follow-Up:   Robin Gareus Bug#686777: netjack2 + opus custom modes + debian (1372815199.13428_0.ltw:2,)
+
+Subject:     Bug#686777: netjack2 + opus custom modes + debian
+
+On Mon, Jul 01, 2013 at 11:15:10AM +0200, Robin Gareus wrote:
+> On 06/30/2013 03:11 AM, Ron wrote:
+> 
+> > My understanding of the background prior to that is that Robin had some
+> > discussion with some of the developers at FOMS, who at the time suggested
+> > the custom modes probably would be appropriate for the use described to
+> > them.
+> 
+> correct. derf aka Tim Terriberry in this case.
+
+Right, and it was Tim who ran through the math in the IRC discussion to
+point out that this might not have been the best suggestion after all.
+
+> > The custom modes are not interoperable with anything else, nor are they
+> > a part of the codec standard, but they do exist in the code for people
+> > with very specialised needs in 'closed' applications, where the need for
+> > oddball frame sizes strongly outweighs any other considerations of
+> > interoperability, or codec performance (the latter being both in the
+> > sense of processing resources *and* more importantly audio quality).
+> 
+> jack in particular was one of the use-cases for opus-devs to justify
+> custom modes.
+
+Greg was probably the one who most often raised oddball cases that might
+use this, but even he was now scratching his head somewhat at what you
+are actually trying to achieve with using it for netjack as you are.
+
+Which is why I wanted to try to get to the bottom of your rationale here.
+
+> > My understanding at present is that the primary (only?) reason that
+> > netjack is using custom modes is so that it can use 64 sample frames
+> > which shaves ~1ms of latency off the usual 2.5ms (120 sample) minimum
+> > frame size for normal opus modes.  We didn't quite get to the bottom
+> > of all of that before Robin had to leave, so at present my only
+> > understanding of the reason for that is that "pro audio equipment"
+> > can operate with lower latencies than normal sound cards which makes
+> > this desirable.
+> 
+> not quite.
+> 
+> netjack is using opus custom modes so that jack can use the same
+> period-size across the complete jack system.
+
+What gets to pick the period here?  Even custom modes still limit you to
+some discrete number of choices, it isn't continuously variable, so there
+will surely still be cases where some part of the system needs to adapt
+to suit other parts if this is to be true, won't there?
+
+> Adding buffering on either side (sender + receiver) to align jack + opus
+> buffers will always result in additional latency.
+> 
+> For large jack buffersizes or long-distance communication that
+> additional latency may be negligible, but it still is more latency.
+
+You realise that we are talking about a latency that is equivalent to
+moving your head approximately 15 inches from your speakers, right?
+
+Or in the case of a 'jam session', two players standing about a foot
+from each other ...  with their instruments held a foot from each
+others chins.  If they are any further apart than that, in the same
+room, then the latency difference that you are worrying over here
+becomes insignificant by comparison.
+
+If they stand a guitar length apart and put headphones on, even the
+normal mode of opus will get the sound to their ears faster than the
+air between them would.
+
+It doesn't take large buffer sizes or long distances to make this
+negligible.  We're not talking coarse yak hairs here, it's the finest
+angora.
+
+> Furthermore, aligning non-audio jack-data (transport + MIDI) with sample
+> accuracy to those opus-audio-buffers is far from trivial.
+
+Elastic stores really are trivial.  So I'm still not really sure what
+showstopper complexity you are worried about there.
+
+
+> > What I still don't understand though is why if you are using Pro audio
+> > equipment the degradation in audio quality that this would bring (which
+> > is significant) would be acceptable for that use? 
+> 
+> a) because some users demand it :)
+
+What exactly are users demanding here?  They surely aren't demanding that
+members of the band stand on each others toes and play their guitars with
+their teeth.  If they want to use oxygen free copper that's fine, but what
+_real_ gain are they demanding to get here?  That's the important question
+we need to answer.
+
+> b) because celt is no longer available on most distros
+
+It arguably should have never been available on them in the first place :)
+But that was a learning experience for us too!
+
+> low, fixed latency is most important.
+> 
+> There are countless solutions for high-quality streaming - where latency
+> and jitter is irrelevant, but basically only netjack that provides
+> synchroneous low latency.
+
+You can still have low latency with standard opus modes.  If you take one
+small step toward your speaker it can even be lower than the custom mode
+you are currently using :)
+
+> > Which basically makes the question become: "If you are using Pro audio
+> > equipment and ~1ms of latency does make a difference to you, then
+> > wouldn't a lossless transport mode be more appropriate for that anyway?"
+> 
+> on a LAN, yes lossless. Over Wifi it may make sense to compress lossy to
+> accommodate more channels.
+
+On WIFI it's pointless to talk about even the highest latency modes of
+opus being a problem.  The potential (and common) latencies there are
+orders of magnitude larger.
+
+> On WAN there are e.g. remote jam-sessions,
+> phone relays, live monitoring,.. - none of which requires high quality,
+> but all require fixed low latency.
+
+And these are all _exactly_ the applications that the normal modes of
+opus were specifically designed for.  They are point 1. of the chartered
+objectives for the standardisation work that took place.
+
+> > The upstream developers have reaffirmed that they definitely do not
+> > want to enable the custom modes by default in what they release, so
+> > even if we do override that here for the .debs, there'll still be a
+> > question of our compatibility with other distros and users.
+> 
+> yes, the solution for that would be to add opus as git-submodule to jack
+> and statically link netjack against it. That'd also accommodate windows,
+> OSX and *BSD builds of jackd.
+
+Until someone links an application to both jack and another lib using the
+normal opus builds.  At which point kaboom?
+
+Doing this correctly and safely really isn't easier than a simple elastic
+store that lets you adapt any frame size to any other.  Or than just
+picking 2.5ms as your minimum latency for lossy modes.
+
+
+> >  - Can jack really make a case for needing this in a way that actually
+> >    delivers real benefits to jack users.  (Robin has said that this is
+> >    also 'complicated', but I still don't fully understand why yet).
+> 
+> see above. Sample-sync alignment with other data-types is not easy.
+
+Is is, really.  You can write a trivial wrapper around the normal opus
+I/O methods iff you really need to adapt to something < 2.5ms.  But it's
+still not clear what less than 2.5ms gains you except poorer audio and
+higher bitrates.
+
+> Asynchronous (buffered) communication is orthogonal to everything else
+> in jack. It will likely be rejected upstream. jack does not aim to do
+> everything. JACK tries to address 95% and do that right and not care
+> about the last 5% edge-cases.
+
+An elastic store does not make this asynchronous.
+
+> On top of of that, there are currently no volunteers to implement
+> "vanilla opus" on netjack2 (and also no volunteer to implement that in
+> netjack1). I was scratching my own itch with netjack2+opus. works for me.
+
+Well, there's currently no volunteers to make building with the custom
+modes sane and compatible between distros either.  And I'm pretty sure
+that fixing netjack would be easier than that.
+
+Scratching your own itch is fine, but we're talking here about what is
+suitable for a distro release.  And one way or another, what you've
+currently got is going to need some work to be suitable for that.
+
+> The only case for non-custom modes would be:
+>  1) interoperability with other opus apps
+>  2) higher quality encoding
+> 
+> (1) is never going to work out. netjack consists of N audio-channels, M
+> midi-channels. Both include per-port latencies (min,max). And netjack
+> also comprises transport information (timecode, tempo, bar-beat-tick,
+> audio-frames per video-frame, etc). It is not a data stream that will be
+> consumed by non-jack.
+
+And it's also not incompatible with using an elastic store.  I'd be kind
+of surprised if at least some parts of this chain don't already have one,
+whether that is in your code or not.
+
+> (2) if a user chooses lossy encoding s/he does not really care about
+> quality anyway. jack's main features is no-copy zero-latency with local
+> clients, being able to include remote clients on the network that align
+> sample-sync and respond reliably is the main use-case.
+
+You can't have either of no-copy or zero-latency if you're going through
+a windowed codec as your transport stream.  Laws of physics and all that.
+You can still however care about quality.  Opus at just ~128kbs is pretty
+much transparent for all but the hardest audio, to even the best of ears.
+But not with 1.3ms packets.  If a user cares about lossy, then they have
+more to gain from the bitrate improvement which would come with this than
+from an imperceptible change in the latency.
+
+All the ideals you have here are wonderful, and I don't want to discourage
+you from them, or limit you in any real way from achieving them to the
+closest degree that you can.
+
+But I am asking you to do the (fairly simple) math to quantify the _actual_
+gains which people might see, and explain how they justify the extra work,
+complexity, and potential for real problems that they will cost.
+
+
+If all you're left with at the end of that is "this was easier to port
+from what we did for celt", then that really is the bug we should be fixing
+and it really shouldn't be hard to fix it, or nearly as ugly as any of the
+alternatives that I'm seeing so far, once everything is added up.
+
+
+I'm not taking any options off the table here yet, but the more we talk
+about this, the less I see what tangible advantage the custom modes are
+really giving you here.  They really are meant only for the most oddball
+of exceptions, and what you're doing here really isn't that sort of odd.
+At least from what I'm able to understand from your descriptions so far.
+
+I'm willing to accept I'm missing something here still, but I'd like to
+know what it is before we open a can of worms we can't close, only to
+find out that we really never needed to at all.
+
+
+  Cheers,
+  Ron
+
+-- 
+To unsubscribe, send mail to [hidden].
+
+1372694609.5981_0.ltw:2,a <20130701155920.GM14785 at audi dot shelbyville dot oz>
+________________________________________________________________________________
+

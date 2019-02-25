@@ -1,0 +1,120 @@
+Date:        Sun, 28 Aug 2011 18:22:25 -0600
+From:        Dan Swain  <[hidden] at gmail dot com>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Dan Swain Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1314462065.27152_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1315317438.15864_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea
+
+So, while we continue the discussion as to which hardware to go with for
+this project, I've been looking into the code with my minimal knowledge of
+C. Given my lack of experience, I wanted to clarify that I'm looking at the
+right elements of the JACK code, and whether I need to refer to these parts
+at all if I'm only creating the relevant data.
+
+The central point of my investigations has been on netjack_packet.c - from
+JACK1. The first 518 lines seem to show what I want to be looking at, if
+indeed I need to be that JACK-specific!
+
+I've been reading up on UDP, and having the FPGA write data into UDP packets
+would be quite simple I'd imagine, given the simplified structure of a UDP
+packet compared to, say, TCP.
+
+This is where I need the advice of those who are experienced with the inner
+workings of netJACK:
+
+If JACK sends uncompressed audio, is it in a particular format (WAV or raw
+PCM)?
+
+Assuming that both the master and slave are connected to each other and no
+further identification needs to be made, what data does JACK send along with
+that audio data?
+
+At more of an opinion level, if I were to use this for our 8-channel system,
+would each channel be dealt with in separate packets (series processing), or
+should one packet send data from all eight channels (parallel processing)?
+
+Again, if I have missed the scope of anything hear, please let me know, and
+I'll do some more relevant research - this is still very new to me, as you
+can probably tell :-)
+
+Thanks for your help!
+
+Dan
+On Sat, Aug 27, 2011 at 10:20 AM, Dan Swain <[hidden]> wrote:
+
+> I've been reading the manual for the Altera DE1 board, and given its
+> expense, would it be worth looking into finding a used one to work with on
+> this project? I appears to have two clock sources of its own (27 and 50MHz),
+> and the expansion connectors would provide me with (more than enough) the
+> inputs we'd require to connect from the ADC. Maybe, if the clocks on the dev
+> board are good enough, we could use those in our project-specific version of
+> the circuit.
+>
+> It also has an array of LEDs and 7-segment displays, so there's the option
+> of programming activity lights and numerical read-outs (for the sample rate,
+> for example) further down the line.
+>
+> I keep watching youtube videos on the Quartus software, and it looks more
+> and more appealing to program this way. I suppose I need to start saving up!
+>
+> However, there is also the Xilinx-based board that Jeri recommended to me
+> in the first instance (the Avenet LX9 micro board) is a lot cheaper, but
+> because everyone has been discussing mainly the Altera products, I've not
+> looked into their feasibility, and whether they would be more or less
+> difficult to work with than the Cyclone boards. Their cost is less, so it's
+> still something I've been considering.
+>
+> I'll continue to look for sources on good clock sources, but thanks
+> everyone so far for the discussions and the experience!
+>
+> Dan
+>
+>
+> On Thu, Aug 18, 2011 at 11:40 AM, Fons Adriaensen <[hidden]>wrote:
+>
+>> On Wed, Aug 17, 2011 at 12:41:00PM +0200, Jeroen Van den Keybus wrote:
+>>
+>> > In fact, my idea was to use one of the FPGA analog PLLs with slow loop
+>> > setting to lock onto the
+>> > jittery (but not as jittery as the sync packets) DPLL output. So I will
+>> be
+>> > using the FPGA analog PLL as a VCO.
+>> >
+>> > The main question remains whether or not the PLL will be able to
+>> properly
+>> > lock on a DPLL output signal that is - indeed - fairly jittery. That
+>> > probably calls for an experiment.
+>>
+>> That indeed remains to be seen. You can probably make it lock, the
+>> question is what BW it requires.
+>>
+>> Anyway creating a master sample clock from low frequency sync
+>> messages using a PLL is not easy. But since you have the computing
+>> power of an FPGA at your disposal there are alternatives in the
+>> form of open-loop solutions.
+>>
+>> Put a timestamp (using the current clock) on the sync messages,
+>> unwrap any modulo on the time stamps and perform a linear
+>> regression on a few hundred of them - this is equivalent to
+>> filtering in a PLL but doesn't have the stability problems
+>> as it is open loop. Repeat for each incoming sync packet,
+>> low-pass filter the result to drive a VC(X)O.
+>>
+>> Ciao,
+>>
+>> --
+>> FA
+>>
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>>
+>
+>
+
+1314577369.15178_0.ltw:2,RSa <CABhkv4OfKZ-foHYwmQrOBEDZoQK-kEriY2NmiXYMTkmmnrAsyA at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,49 @@
+Date:        Mon, 11 Jan 2016 17:05:17 +0100
+From:        Hanspeter Portner  <[hidden] at airpost dot net>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Benjamin Henrion Re: [Jack-Devel] dumping MIDI events to a logfile (1452525101.26579_0.ltw:2,a)
+Follow-Up:   Benjamin Henrion Re: [Jack-Devel] dumping MIDI events to a logfile (1452528926.32246_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] dumping MIDI events to a logfile
+
+On 11.01.2016 16:11, Benjamin Henrion wrote:
+> On Mon, Jan 11, 2016 at 3:56 PM, Paul Davis <[hidden]> wrote:
+>> You have to connect jack_midi_dump to the relevant MIDI port(s). You can
+>> start JACK using qjackctl or cadence, and then use their connection dialogs.
+>> You could use jack_connect. There are other ways too.
+>>
+>> You could also use gmidimon :)
+> 
+> I also tried to hook an FTDI in 5V on the MIDI out connector in
+> 31250bps, I could only see the FE or FC (depending if I would add a
+> resistor) MIDI messages, and the keyboard would behave differently as
+> plugged in with the USB:
+> 
+> https://pastee.org/27xc8
+> 
+> I thought sniffing midi was easier...
+
+If you just want to sniff the raw MIDI transferred via USB, why not simply use amidi [1]?
+There's no need to fiddle with/route via JACK here, imho.
+
+Get the alsa MIDI hardware name for 'UMONE'
+	export HW=$(amidi -l | grep UMONE | head -n 1 | gawk '{print $2}')
+
+Dump to console:
+	amidi -p ${HW} -d
+
+Dump to file:
+	amidi -p ${HW} -r my_dump.rawmidi
+
+[1] http://alsa.opensrc.org/Amidi
+
+If you want to sniff USB MIDI in terms of the raw USB packets,
+I'd recommend wireshark [2]. You'll need support for usbmon [3] in the kernel and
+the module being loaded (sudo modprobe usbmon).
+
+[2] https://www.wireshark.org/
+[3] https://www.kernel.org/doc/Documentation/usb/usbmon.txt
+
+1452528328.30572_0.ltw:2,a <5693D2BD.7040804 at airpost dot net>
+________________________________________________________________________________
+

@@ -1,0 +1,103 @@
+Date:        Wed, 02 May 2012 08:32:45 +1000
+From:        Allan Klinbail  <[hidden] at iinet dot net dot au>
+To:          Jonathan Woithe <[hidden] at just42 dot net>
+Cc:          Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>, [hidden] at lists dot jackaudio dot org
+In-Reply-To: Allan Klinbail Re: [Jack-Devel] incompatible version of ffado error message (1335911921.5512_0.ltw:2,a)
+Follow-Up:   Jonathan Woithe Re: [Jack-Devel] incompatible version of ffado error message (1335927103.10239_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] incompatible version of ffado error message
+
+On Wed, 2012-05-02 at 08:29 +1000, Allan Klinbail wrote:
+> On Tue, 2012-05-01 at 09:38 +0930, Jonathan Woithe wrote:
+> > On Mon, Apr 30, 2012 at 03:35:54PM +0200, Adrian Knoth wrote:
+> > > On Mon, Apr 30, 2012 at 11:26:32PM +1000, Allan Klinbail wrote:
+> > > > I've been using jack with ffado as the driver for a few years now.
+> > > > Today, after upgrading ffado to the latest svn , (then tested working).
+> > > > I then upgraded to the latest jack svn version. Following this I started
+> > > > receiving the following incompatible error message. 
+> > > 
+> > > You were doing it in the wrong order.
+> > > 
+> > > FFADO detects the jackd version at compile time. If it's a new jackd
+> > > version supporting the new API, it switches to the new API.
+> > 
+> > Similarly, if there is no jackd installed at compile time ffado assumes that
+> > the jackd which will ultimately be available will support the new API.
+> > 
+> > So in Allan's case, he compiled a new FFADO against an old jack, which
+> > resulted in a FFADO which uses the old API.  The old jack was happy with
+> > this and everything worked.
+> > 
+> 
+> I tried this in a few different ways in the end .. Same result. 
+> 
+> 
+> 
+> > > You've just told FFADO to adjust itself to an old jackd version.
+> > > Simply compile FFADO again.
+> > 
+> > Yep, that should work.
+> > 
+> > However, from a development point of view I'm a little surprised that the
+> > latest jackd didn't simply accept FFADO as it was.  The relevant line in
+> > current jack1 is drivers/firewire/ffado_driver.c, line 786 and following.
+> > 
+> >   if(ffado_get_api_version() < FIREWIRE_REQUIRED_FFADO_API_VERSION) {
+> >     printError("Incompatible libffado version! ...
+> >   }
+> > 
+> > The same conditional is used in jack2, so the following analysis applies
+> > equally to that.
+> > 
+> > In Allen's case, ffado_get_api_version() would return 8 (the old version).
+> > FIREWIRE_REQUIRED_FFADO_API_VERSION is defined as 8, so this conditional
+> > *should* have failed and the "Incompatible libffado version" message should
+> > never have been displayed.
+> > 
+> > Oh hang on: Allan, you said "the latest jack svn version".  Did you
+> > literally use jack's subversion repository?  That is no longer carrying the
+> > latest jackd source as far as I know: if you want the latest jackd you need
+> > to get it using git.  This is described at
+> > 
+> >   http://jackaudio.org/download
+> 
+> 
+> Okay, jackd was built from the "live" ebuild in the gentoo pro-audio
+> repository, I would have to look at the ebuild for that to determine if
+> it was taking the older svn version or the git version. 
+> 
+> 
+
+and there lies the problem ..
+
+DESCRIPTION="Jackdmp jack implemention for multi-processor machine"
+HOMEPAGE="http://www.grame.fr/~letz/jackdmp.html"
+
+ESVN_REPO_URI="http://subversion.jackaudio.org/jack/jack2/trunk/jackmp"
+
+LICENSE="GPL-2"
+SLOT="0"
+KEYWORDS=""
+
+ 
+
+it's using SVN.. I will report this back to the gentoo pro-audio list 
+
+
+> 
+> 
+> > 
+> > Look for the "JACK Source Code Repository" section about half-way down.
+> > 
+> > I don't know the state of jack's ffado driver in the old svn repository, but
+> > the use of the older jack code (which could be in an unstable intermediate
+> > state with respect to ffado driver updates) may explain the symptoms
+> > described.
+> > 
+> > Regards
+> >   jonathan
+> 
+
+1335911757.5475_0.ltw:2,a <1335911565.9393.3.camel at srv3 dot little-wolf dot local>
+________________________________________________________________________________
+

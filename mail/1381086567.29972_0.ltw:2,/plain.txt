@@ -1,0 +1,30 @@
+Date:        Sun, 06 Oct 2013 21:09:14 +0200
+From:        Kristian Amlie  <[hidden] at amlie dot name>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Kristian Amlie Re: [Jack-Devel] Shared memory and static variables (1380212658.25573_0.ltw:2,)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Shared memory and static variables (1381087391.30468_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Shared memory and static variables
+
+After a lot of debugging it turns out that the static variables are not
+the cause of my problem. The fix was much simpler.
+
+But the exercise was not completely in vain. I did find one small issue
+in Jack that has a very straightforward fix. Basically a lock is not
+released in the case of an error. For jackd this never causes an issue
+since it exits immediately afterwards, but Jack2DSSI may need to call
+the function a second time if the first call fails and the unreleased
+lock causes it to hang.
+
+You will find the patch attached. I hope it can go into Jack.
+
+PS! Nice work on the 0.124 release!
+
+-- 
+Kristian
+* Attachment: '1381086567.29972_0.ltw:2,/files/0001-Make-sure-shm-lock-always-gets-released-in-jack_regi.patch'
+content-type: text/x-patch
+
+1381086567.29972_0.ltw:2, <5251B55A.8070306 at amlie dot name>
+________________________________________________________________________________
+

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] how often should one call jack_port_get_latency_range()</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] how often should one call jack_port_get_latency_range()</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1310564105.13627_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1310565715.17007_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1310565577.16569_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 13 Jul 2011 15:57:55 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK Mailing List &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1310564105.13627_0.ltw:2,a/index.html'>Re: [Jack-Devel] how often should one call jack_port_get_latency_range() </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1310565715.17007_0.ltw:2,a/index.html'>Re: [Jack-Devel] how often should one call jack_port_get_latency_range() </a></td></tr>
+</table>
+<pre>
+On 07/13/2011 03:34 PM, Paul Davis wrote:
+&gt; On Wed, Jul 13, 2011 at 9:30 AM, Robin Gareus &lt;[hidden]&gt; wrote:
+&gt;&gt; G'day!
+&gt;&gt;
+&gt;&gt; I have a JACK client with a single audio-input-port (no output). This
+&gt;&gt; input is used to parse Linear-Time-Code. For synchronization the
+&gt;&gt; application needs to know the capture-latency of said audio-port.
+&gt;&gt;
+&gt;&gt; So the question is: how often should the application call
+&gt;&gt; jack_port_get_latency_range() ?
+&gt;&gt;
+&gt;&gt; Currently it does so in every process_callback.
+&gt;&gt;
+&gt;&gt; Is this the correct solution?
+&gt; 
+&gt; no.
+&gt; 
+&gt;&gt; The overhead may be minimal, but still it feels somewhat wrong to poll
+&gt;&gt; it during every process() cycle. Is there a callback that can be
+&gt;&gt; subscribed to to get notified of changes to port-latencies?
+&gt; 
+&gt; From the documentation of jack_set_latency_callback():
+&gt; 
+&gt;  * Tell the Jack server to call @a latency_callback whenever it
+&gt;  * is necessary to recompute the latencies for some or all
+&gt;  * Jack ports.
+
+From the same documentation:
+
+  | Clients that meet any of the following conditions do NOT need to
+  | register a latency callback:
+  |
+  |  * have only input ports
+  |  * ..
+
+All of the criteria are matched in my app (xjadeo), but it's somewhat
+misleading as these criteria are only concerned with the client
+_setting_ the latency.
+
+It would be helpful to mention that this callback can also be used to
+query it.
+
+On that note: In which order is this callback executed?
+Can one query the jack_port_get_latency_range() from within this
+callback? - It seems possible that some clients may not yet have updated
+their latency when the callback is invoked in some other client.
+
+Is this correct?
+
+If so a client only interested in querying the latency should set a flag
+in in the latency_callback function and [later] query the new port
+latency during the process_callback IFF this flag is set, right?
+
+ciao,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1310564105.13627_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1310565715.17007_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1310565577.16569_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1310565577.16569_0.ltw:2,a&nbsp;&lt;4E1DA463.2060308 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

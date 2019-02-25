@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357603637.17666_0.ltw:2,S/index.html'>Prev</a></td><td><a href='../1357636957.30945_0.ltw:2,Sa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357632649.25030_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 08 Jan 2013 08:10:33 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> John Emmas </span> &lt;[hidden] at tiscali dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK List &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Chris Caudle
+<a href='../1357602068.15335_0.ltw:2,Sa/index.html'>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) </a></td></tr>
+</table>
+<pre>
+On 7 Jan 2013, at 23:40, Chris Caudle wrote:
+
+&gt; 
+&gt; The documentation for the Microsoft compiler points out that if you pack
+&gt; your data structures, you may need to use the _unaligned attribute when
+&gt; accessing the struct to let the compiler know that extra code needs to be
+&gt; generated to handle the unaligned data.  The _unaligned directive does
+&gt; nothing on some platforms, but adds the additional code on platforms where
+&gt; it is needed.
+&gt; 
+&gt; [...]
+&gt; 
+&gt; GCC does not seem to have the equivalent of the _unaligned directive, so
+&gt; on platforms which can not handle unaligned access, either the programmer
+&gt; must add the additional required code by hand, or avoid packing structures
+&gt; in ways which cause unaligned access.
+&gt; 
+
+Yes, that's exactly right Chris.  What we know now (but didn't know back then) is that some compilers don't perform automatic re-alignment.  I think this is telling us that we'll need to adopt a hybrid approach, with different strategies for different platforms.
+
+For example, I'm 99% certain that JACK_ALIGN won't work with MSVC - not even if we can solve the sizeof() issue.  It'll work if we only use it for data types whose size happens to be a power of 2.  But if we ever needed to implement (for example) a 'jack_long_double' type, JACK_ALIGN would fall over (in fact, that should probably be checked for gcc too).  In any event, it's debatable whether JACK_ALIGN is even needed on Windows, where 1-byte packing alone seems to be sufficient (unless Stephane knows different).  Up to now, 1-byte packing seems to be delivering 32-bit / 64-bit compatibility for us, although the acid test will come when we build a 64-bit version of Mixbus.
+
+Admittedly hybrid, platform-dependent approaches are ugly but I think this is one situation where it's entirely justified.
+
+
+On 8 Jan 2013, at 00:06, Nedko Arnaudov wrote:
+
+&gt; 
+&gt; As for msvc vs gcc on jack2 for windows... You also may have problem
+&gt; with the C++ standard library. I bet they are incompatible.
+&gt; 
+
+Yes, they are incompatible but I think we've largely addressed those issues.  This time last year, Stephane and I had to do a lot of work to eliminate situations where MSVC was trying release memory which gcc had allocated etc.  I think that's all covered now (famous last words!)
+
+John
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357603637.17666_0.ltw:2,S/index.html'>Prev</a></td><td><a href='../1357636957.30945_0.ltw:2,Sa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357632649.25030_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1357632649.25030_0.ltw:2,a&nbsp;&lt;0FE54F17-F860-41A7-A061-4AC177F921B2 at tiscali dot co dot uk&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

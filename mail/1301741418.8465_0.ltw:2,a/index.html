@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] NetOne driver in JACK2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] NetOne driver in JACK2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1301716130.12219_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1301747858.20745_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1301741418.8465_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 02 Apr 2011 12:49:46 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> torbenh </span> &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1301659924.17949_0.ltw:2,a/index.html'>[Jack-Devel] NetOne driver in JACK2 </a></td></tr>
+</table>
+<pre>
+On Fri, Apr 01, 2011 at 02:11:31PM +0200, St&#xE9;phane Letz wrote:
+&gt; Hi Torben and jack-dev community.
+&gt; 
+&gt; I received some bugs report (crash in server with "jackd -d netone"), like:
+&gt; 
+&gt; 	&#x2022; NetOne driver started
+&gt; 	&#x2022; AutoConfig Override !!!
+&gt; 	&#x2022; MTU is set to 1400 bytes
+&gt; 	&#x2022; Cannot read socket fd = 10 err = Interrupted system call
+&gt; 	&#x2022; [Thread 0xb0862b70 (LWP 6381) exited]
+&gt; 	&#x2022; NotifyClient fails name = exaile.py event = 18 val1 = 1 val2 = 0
+&gt; 	&#x2022; netxruns... duration: 11ms
+&gt; 	&#x2022; jackd: ../common/JackEngine.cpp:932: int Jack::JackEngine::PortConnect(int, jack_port_id_t, jack_port_id_t): Assertion `ref &gt;= 0' failed.
+&gt; 
+&gt; 
+&gt; 	&#x2022; jof@studio:~$ jack_netsource -c 120 -n 3 -H 192.168.1.13
+&gt; 	&#x2022; notification: uint decode error
+&gt; 	&#x2022; Connected :-)
+&gt; 	&#x2022; netjack: at frame 000085 -&gt; total netxruns 1  (1%) queue time= 23221
+&gt; 	&#x2022; notification: uint decode error
+&gt; 	&#x2022; notification: uint decode error
+&gt; 	&#x2022; notification: uint decode error
+&gt; 	&#x2022; notification: uint decode error
+&gt; 	&#x2022; notification: uint decode error
+&gt; 	&#x2022; notification: uint decode error
+&gt; 	&#x2022; notification: uint decode error
+&gt; 	&#x2022; notification: uint decode error
+&gt; 	&#x2022; notification: uint decode error
+&gt; 	&#x2022; notification: uint decode error
+&gt; 	&#x2022; notification: uint decode error
+&gt; 	&#x2022; notification: uint decode error
+&gt; 	&#x2022; ^C*** glibc detected *** jack_netsource: double free or corruption (!prev): 0x09bd4830 ***
+&gt; 	&#x2022; ======= Backtrace: =========
+&gt; 	&#x2022;
+
+the uint decode error is a celt error.
+That generally happens, when celt versions dont match.
+(This is basically the case why i didnt bother to support later celt
+ versions, adi and me came to the conclusion, that distros should ship 
+ celt-0.7 until celts bitstream was frozen)
+
+celt-0.11 is tagged with a "soft freeze" of the bitstream.
+So maybe celt-0.12 is going to have a real freeze.
+
+
+&gt; 
+&gt; The last thing I did (before jack 1.9.7 release) was to synchronize NetJack1 code from JACK1 to JACK2, hoping I did that correctly (basically updating netjack.h,c  and netjack_packet,h,c)
+&gt; 
+&gt; Reviewing the code I see:
+&gt; 
+&gt;  - using  exit(1); in netjack.c instead of properly returning a proper error.
+
+gonna try to fix that. But it only happens when malicious Packets are
+sent. (its basically just some sanity checks on the autoconfig values)
+
+In jack1 exiting at that point was sensible.
+But with backend switching in place its probably bad.
+
+&gt; 
+&gt; - CELT : celt_mode_create should be matched with celt_mode_destroy. My feeling is that this is not done everywhere it should (especially in JackNetOneDriver.cpp)
+&gt; 
+&gt; This is certainly not the cause of the bugs, but I think this should be fixed (along the "jack_netsource: double free or corruption")n before going anywhere else.
+
+without a valgrind dump, i dont know, where the corruption happens.
+and since celt is seeing a broken bitstream, i suspect its a celt bug.
+(that needs to be fixed too, but maybe it already is in later versions)
+
+i need infos which celt versions are used, or a proper valgrind dump.
+
+&gt; 
+&gt; Could you please have a look? 
+&gt; 
+&gt; or if not Torben someone else?
+&gt; 
+&gt; Thanks.
+&gt; 
+&gt; St&#xE9;phane
+&gt; 
+&gt; 
+&gt; 
+&gt; 
+
+-- 
+torben Hohn
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1301716130.12219_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1301747858.20745_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1301741418.8465_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1301741418.8465_0.ltw:2,a&nbsp;&lt;20110402104946.GB20002 at siel dot b&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

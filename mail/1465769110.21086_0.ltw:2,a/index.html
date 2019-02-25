@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] fractional frame rates for alsa_in and alsa_out</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] fractional frame rates for alsa_in and alsa_out</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1465642838.12897_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1465846457.31417_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1465769110.21086_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 13 Jun 2016 00:04:30 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Markus Grabner </span> &lt;[hidden] at w42 dot at&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1465846457.31417_0.ltw:2,a/index.html'>Re: [Jack-Devel] fractional frame rates for alsa_in and alsa_out </a></td></tr>
+</table>
+<pre>
+	Hi!
+
+A while ago I initiated work on a Linux driver for Line6 devices (now under sound/usb/line6 in the Linux kernel tree). Some of these devices have weird sample rates (39062.5Hz, derived from the 10MHz USB clock divided by 256). The alsa_in and alsa_out jack clients are convenient tools to use such Line6 devices together with more standardized hardware operating at, e.g., 48kHz. However, alsa_in only supports integer sample rates, and even after a couple of minutes, alsa_in doesn't detect the correct resampling factor 1.2288 (48000/39062.5), but still reports the initial approximated value 1.228816 (48000/39062). Admittedly, the error isn't too big, but is larger than the error of high-quality crystal oscillators. And, after all, why use an approximation if we know better?
+
+I modified alsa_in and alsa_out such that they accept a sample rate in floating point format (command line option "-r") and query the fractional sample rate from the ALSA driver to compute the initial estimation of the resampling factor (see attached patch).
+
+What do you think about this patch?
+
+        Kind regards,
+                Markus
+
+<a href='files/0001-using-fractional-sample-rate.patch' target='_blank'>* Attachment: '0001-using-fractional-sample-rate.patch'</a>
+content-type: text/x-patch
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1465642838.12897_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1465846457.31417_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1465769110.21086_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1465769110.21086_0.ltw:2,a&nbsp;&lt;1821963.6Sb3eEYRbK at mark&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

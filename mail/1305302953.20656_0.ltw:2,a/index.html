@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK thread priorities on different OSes (Was: Installers for Jack 1.9.8...)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK thread priorities on different OSes (Was: Installers for Jack 1.9.8...)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305274281.5520_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1305304843.22688_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1305302953.20656_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 13 May 2011 18:08:49 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Tommaso Cucinotta </span> &lt;[hidden] at sssup dot it&gt; </td></tr>
+<tr><td class='col1'>To</td><td>David Nielson &lt;[hidden] at comcast dot net&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>David Nielson
+<a href='../1305181257.3144_0.ltw:2,a/index.html'>[Jack-Devel] JACK thread priorities on different OSes (Was: Installers for Jack 1.9.8...) </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1305304843.22688_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK thread priorities on different OSes (Was: Installers for Jack 1.9.8...) </a></td></tr>
+</table>
+<pre>
+Il 12/05/2011 08:20, David Nielson ha scritto:
+&gt; On 05/12/2011 12:13 AM, St&#xE9;phane Letz wrote:
+&gt;&gt;
+&gt;&gt; - concerning OSX: as I said there is no priority setting in the RT 
+&gt;&gt; class. But this is more "reservation" like approach, Basically a 
+&gt;&gt; period, a "uninteruptible computation grain", and a "constraint" 
+&gt;&gt; (which is basically equals to the period.
+
+For what it matters, this kind of model is the same that we need to 
+exploit the deadline-based scheduler we're experimenting on Linux 
+(presented during the last LAC): we identified the resource requirements 
+of jackd and all of the involved client threads, in terms of how much 
+computation-time is needed every period, and we've set-up parameters 
+into the scheduler accordingly.
+AFAICS, currently this fComputation value is set-up statically to a 
+random value ("500*1000"), or sometimes computed in a way I hope 
+somebody can explain:
+
+   driver-&gt;fEngineControl-&gt;fComputation = 
+driver-&gt;fEngineControl-&gt;fPeriod * driver-&gt;fComputationGrain;
+
+Perhaps there's a chance to reuse a part of this deadline-based work on 
+Linux also for setting up some more meaningful values on OS-X. However, 
+that needs to be crossed with info about what the kernel actually does 
+with those parameters. With Linux, that was easy: the whole set of 
+threads were getting (at least) that required computation-time every period.
+
+&gt;&gt; Periodic tasks (like the audio ones) have to defines their period, 
+&gt;&gt; MIDI task don"t need that (period = 0).
+
+Probably I don't know much about how MIDI is coming in the loop: when 
+are MIDI clients "polled" by Jack, as compared to the periodic main 
+audio cycle ?
+If I have both a MIDI-enabled and an audio-enabled client, let's say a 
+synthesizer (MIDI inputs and audio outputs), then does it have now 2 
+jack threads (one activated for processing MIDI the other for audio) ?
+
+Thanks,
+
+     T.
+
+-- 
+Tommaso Cucinotta, Computer Engineering PhD, Researcher
+ReTiS Lab, Scuola Superiore Sant'Anna, Pisa, Italy
+Tel +39 050 882 024, Fax +39 050 882 003
+http://retis.sssup.it/people/tommaso
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305274281.5520_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1305304843.22688_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1305302953.20656_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1305302953.20656_0.ltw:2,a&nbsp;&lt;4DCD5791.4050202 at sssup dot it&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

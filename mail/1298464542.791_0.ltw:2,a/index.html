@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] backend switching - another way</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] backend switching - another way</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298454729.13120_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298486827.12080_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298464542.791_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 23 Feb 2011 13:35:23 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Arnold Krille </span> &lt;[hidden] at arnoldarts dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1298314398.28958_0.ltw:2,a/index.html'>[Jack-Devel] backend switching - another way </a></td></tr>
+</table>
+<pre>
+On Monday 21 February 2011 19:53:03 Fons Adriaensen wrote:
+&gt; Hello all,
+&gt; 
+&gt; I've been musing for a long time over the idea 'what if Jack ports
+&gt; were persistent' ? In other words, if they could exists irrespective
+&gt; of the application that uses them is running or not.
+&gt; 
+&gt; This has some far-reaching consequences of course, but there is
+&gt; subset of this idea that is not as mad as it seems (IMHO).
+&gt; 
+&gt; ** What if physical ports were persistent ? **
+
+Here is a practical(?) and maybe less intrusive implementation idea to achieve 
+this:
+
+What if we dropping names for ports and just give them a unique identifier upon 
+creation issued by jack(server), like an uuid. And the the names the users see 
+are all aliases. Of course the number of aliases per port should then be 
+unlimited or at least in the range of 2^7. And then when registering an alias 
+for a port (which might fail if that alias is already defined for another 
+port), an extra argument or alias-property defines if the alias is a persitent 
+one. Persitant aliases then live on as dumb zero-producing, backhole-consuming 
+ports when the registered port doesn't exist anymore and can be reclaimed by 
+the next app/client/backend when registering that alias.
+
+Aliases are already in jack, making them (virtually) unlimited and dropping 
+the primary name for ports should be rather unintrusive. And allowing many 
+aliases for ports should also not affect performance, as the aliases are only 
+used in non-rt context for connections and gui, once the connection is 
+registered the actual unique-identifier of the port is used in the rt thread 
+and if that unique identifier is a simple int or long, its definitely faster for 
+access than comparing char* strings...
+
+Have fun,
+
+Arnold
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298454729.13120_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298486827.12080_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298464542.791_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1298464542.791_0.ltw:2,a&nbsp;&lt;201102231335.28180.arnold at arnoldarts dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

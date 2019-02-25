@@ -1,0 +1,34 @@
+Date:        Mon, 02 May 2011 13:16:43 +0200
+From:        Tim Blechmann  <[hidden] at klingt dot org>
+To:          [hidden] at jackaudio dot org
+Follow-Up:   Paul Davis Re: [Jack-Devel] jack threads (1304335408.19547_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack threads
+
+>> if so, is there a way to determine if the thread init callback is called from
+>> the real-time jack thread? i want my thread init function called only from
+>> the main thread.
+> 
+> this isn't an option and it isn't the current purpose of the callback.
+> it was created to handle systems where any thread might need to be
+> "registered" or have some setup done with it before it can run its
+> normal work function. there's no model of identifying the thread in
+> any way. 
+
+atm i am doing it manually:
+if (jack_client_thread_id(self->client) == pthread_self())
+   do_something();
+
+> i think this would be a mistake too, because it would mean
+> that if thread semantics changed in the future, your code would likely
+> break (imagine a future in which libjack initiates N "realtime"
+> threads and not just 1, for example).
+
+well, if you change any part of the API, code will break, if it relies on the 
+old semantic ...
+
+tim
+
+1304335047.19259_0.ltw:2,a <ipm3qr$8md$1 at dough dot gmane dot org>
+________________________________________________________________________________
+

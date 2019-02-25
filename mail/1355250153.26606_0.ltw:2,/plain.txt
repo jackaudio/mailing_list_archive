@@ -1,0 +1,53 @@
+Date:        Tue, 11 Dec 2012 10:22:27 -0800
+From:        Devin Anderson  <[hidden] at gmail dot com>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355249726.25885_0.ltw:2,)
+Follow-Up:   Paul Davis Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355250356.26879_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] ALSA PCM multi plugin and xruns
+
+Hi Paul,
+
+On Tue, Dec 11, 2012 at 10:15 AM, Paul Davis <[hidden]> wrote:
+
+>> In the long term, I don't think this is the best way to solve this
+>> issue.  The multi device is inherently broken because of the
+>> assumption that only one card needs to be polled.  I think a better
+>> way to solve this problem would be to write a new JACK driver that
+>> aggregates the cards itself (no multi device), and waits until I/O is
+>> available on both cards.
+>
+>
+> jackd  [ ... args ... ] -d alsa -d hw:FIRST &
+> alsa_in [ ... args ] -d hw:SECOND &
+> alsa_out [ ... args ] -d hw:SECOND &
+>
+> [ .. repeat as needed]
+>
+> much more general than your brief summary, since alsa_in/alsa_out will
+> resample as necessary, thus not requiring that the devices share a sample
+> clock.
+
+It's my understanding that `alsa_in` and `alsa_out` add some latency,
+which means that sound card that JACK is synced to and the sound card
+that the alsa-in/out clients use aren't quite in sync.
+
+> now of course, if the devices are synced then none of this would be
+> necessary. if they are synced and ALSA gets things things wrong, the ALSA
+> needs fixing.
+
+What about cases where the word clock sync of a sound card isn't quite
+as tight as it should be?  Does ALSA have control over that?
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+psinsights - http://psinsights.googlecode.com/
+synthclone - http://synthclone.googlecode.com/
+
+1355250153.26606_0.ltw:2, <CAG7zqTr-Mi4bFViTL09=x9JypFM2ipE6J4p_HTLyN26GT7YNFg at mail dot gmail dot com>
+________________________________________________________________________________
+

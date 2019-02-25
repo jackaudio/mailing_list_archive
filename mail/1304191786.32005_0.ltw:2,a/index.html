@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4356) for Windows 64 and 32 bits</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4356) for Windows 64 and 32 bits</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1304170021.11479_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1304191978.32286_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1304191786.32005_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 30 Apr 2011 20:28:55 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Peter L Jones </span> &lt;[hidden] at drealm dot info&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Devin Anderson
+<a href='../1304100574.6913_0.ltw:2,a/index.html'>Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4356) for Windows 64 and 32 bits </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1304191978.32286_0.ltw:2,a/index.html'>Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4356) for Windows 64 and 32 bits </a></td></tr>
+</table>
+<pre>
+Hi Devin,
+
+http://dino.drealm.info/peter/jacklogs.7z contains:
+jack-128-latency.log	- latency test for jackd run with -p 128
+jackd-128.log		- jackd log for above
+jack-latency.log	- latency test for jackd run without -p 128
+jackd.log		- jackd log for above
+
+Hope that's some help!
+
+Cheers,
+
+-- Peter
+
+On 29/04/2011 19:08, Devin Anderson wrote:
+&gt; On Fri, Apr 29, 2011 at 2:09 AM, Peter L Jones &lt;[hidden]&gt; wrote:
+&gt; 
+&gt;&gt; I tried using the alias names (e.g. "winmme:AudioFire4 MIDI:in2") and QJackCtl
+&gt;&gt; showed the latency tester connecting to the ports.  However, it refused to run
+&gt;&gt; the test, just sitting at "Waiting for connections ..." until I hit Ctrl-C.
+&gt;&gt; Any ideas on that?
+&gt; 
+&gt; Not really.  I don't have a Windows machine. :(  I assume that a
+&gt; semaphore isn't signaling correctly.
+&gt; 
+&gt;&gt; Anyway, here are the latest results.  It's a bit of a mixed bag compared with
+&gt;&gt; the earlier test (4340 version).  Average latency is down, average jitter is
+&gt;&gt; up.  My AudioFire4 is the only device on my Firewire bus and it's using the
+&gt;&gt; latest Windows 7 Echo Audio driver.
+&gt; 
+&gt; Can you run JACK in verbose mode and send me the output of JACK?  I've
+&gt; inserted debugging code around the MIDI output timer calls so that I
+&gt; can figure out if the timer is the source of the jitter on Windows.
+&gt; 
+&gt; What I find most interesting is that this result:
+&gt; 
+&gt;&gt; Reported out-port latency: 11.61-12.63 ms (512-557 frames)
+&gt;&gt; Reported in-port latency: 11.61-12.63 ms (512-557 frames)
+&gt;&gt; Average latency: 45.98 ms (2028.04 frames)
+&gt;&gt; Lowest latency: 32.13 ms (1417 frames)
+&gt;&gt; Highest latency: 61.53 ms (2714 frames)
+&gt;&gt; Peak MIDI jitter: 29.41 ms (1297 frames)
+&gt;&gt; Average MIDI jitter: 6.10 ms (268.63 frames)
+&gt; 
+&gt; ... and this result:
+&gt; 
+&gt;&gt;&gt; Reported out-port latency: 2.67-3.67 ms (128-176 frames)
+&gt;&gt;&gt; Reported in-port latency: 2.67-3.67 ms (128-176 frames)
+&gt;&gt;&gt; Average latency: 43.34 ms (2080.89 frames)
+&gt;&gt;&gt; Lowest latency: 30.98 ms (1528 frames)
+&gt;&gt;&gt; Highest latency: 68.25 ms (3195 frames)
+&gt;&gt;&gt; Peak MIDI jitter: 37.27 ms (1667 frames)
+&gt;&gt;&gt; Average MIDI jitter: 3.81 ms (166.13 frames)
+&gt; 
+&gt; ... have similar latency and jitter values, but have completely
+&gt; different reported in-port and out-port latency values, meaning that
+&gt; you ran JACK with two different period-size/period-count/sample-rate
+&gt; combinations, and yet the MIDI latency was still about the same, which
+&gt; means there's something that's not changing with regards to latency.
+&gt; I can think of a few possibilities:
+&gt; 
+&gt; 1.) The timer code could be erroneous.  If I can see the JACK output
+&gt; in verbose mode, then I can take steps in figuring out if this is the
+&gt; problem.
+&gt; 
+&gt; 2.) The timer resolution could be off.  The code attempts to set the
+&gt; timer resolution to the lowest possible available resolution, but
+&gt; Windows is not very good at doing things in realtime.  One possible
+&gt; solution to this problem would be to explicitly set the process
+&gt; priority.  I've talked a bit with St&#xE9;phane about this.  Seeing the
+&gt; output of JACK in verbose mode will help me figure out if this is the
+&gt; problem.
+&gt; 
+&gt; If this is the problem, then I can investigate the usage of other
+&gt; Windows timing mechanisms.  Windows has a lot of different timers, but
+&gt; it's not always clear which timers work well and which ones don't.
+&gt; Right now, the code uses a "waitable timer", but it could use a queue
+&gt; timer.  The multimedia timers are marked as obsolete for whatever
+&gt; reason, though a lot of multimedia code still appears to use them.
+&gt; 
+&gt; 3.) The offset I'm computing for received MIDI events could be off.
+&gt; The WinMME library has this weird convention whereby it resets a
+&gt; millisecond counter to 0 somewhere inside 'midiInStart', and all
+&gt; received MIDI events then have a timestamp computed, which is
+&gt; basically a millisecond offset to the time that the millisecond
+&gt; counter was reset.  Unfortunately, there's no way to figure out what
+&gt; the absolute time was when the counter was reset in 'midiInStart',
+&gt; what the counter is at any time, and how much time passes between the
+&gt; time that the driver "timestamps" the MIDI event, and the time that
+&gt; the MIDI in callback is called with the message itself.  It's *very*
+&gt; frustrating.
+&gt; 
+&gt; I've seen a few different schemes that attempt to solve this problem.
+&gt; The scheme I'm using increases latency a bit, but *should* cause 0
+&gt; jitter, which I think is more important than a bit of latency.
+&gt; 
+&gt; 4.) The timing of the WinMME driver could be off.  This is the
+&gt; worst-case scenario, as there's absolutely nothing that can be done
+&gt; about this.
+&gt; 
+&gt; Anyway, if you (or anyone reading this) could send me the verbose
+&gt; output, then I can get started on figuring out the problem.
+&gt; 
+&gt; Thank you for all of your help thus far.  I appreciate it a lot. :)
+&gt; 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1304170021.11479_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1304191978.32286_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1304191786.32005_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1304191786.32005_0.ltw:2,a&nbsp;&lt;iphnu0$l7b$1 at dough dot gmane dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

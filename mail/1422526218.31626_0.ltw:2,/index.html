@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Dispersing MIDI messages: one to multiple</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Dispersing MIDI messages: one to multiple</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1422526212.31608_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1422535932.16006_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1422526218.31626_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 29 Jan 2015 11:08:34 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Marjan Mrak </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1422541181.25254_0.ltw:2,/index.html'>Re: [Jack-Devel] Dispersing MIDI messages: one to multiple </a></td></tr>
+</table>
+<pre>
+Hello all,
+
+I have following question:
+
+I have developed JACK MIDI client, which grabs midi messages from MIDI
+keyboard on one port, and disperses it according to:
+
+* if message is controlled message (functional button was pressed on MIDI
+keyboard), it's changed to "volume control" and to certain channel and
+transmited
+* if message is "key up" or "key down", it's dispersed to channels from 1
+to 4.
+
+It works, but if I am using it, totaly at random sound output "hangs" for
+like 10th of second.
+
+I suspect my code is the problem. I would just like someone to examine it -
+perhaps I am doiung something wrong here.
+
+Or is there a better way to "disperse" one MIDI message to several channels?
+
+I tried to find more detailed description of API than official docs (which
+is... basic, I'd say), but no luck.
+
+Thanks for any help or assistance in advanced!
+
+Following is my processing callback:
+
+static int process(jack_nframes_t nframes, void *arg)
+{
+    int res = 0;
+    int i;
+    int j;
+
+    //unsigned char* buffer;
+    unsigned char jbuffer[3];
+
+    void* port_buf = jack_port_get_buffer(output_port, nframes);
+
+    //get events
+    void* in_port_buf = jack_port_get_buffer(input_port, nframes);
+    jack_nframes_t n = jack_midi_get_event_count(in_port_buf);
+
+    jack_midi_clear_buffer(port_buf);
+
+    if(n==0)
+        return 0;
+
+    jack_midi_event_t jev;
+
+
+    if(verb == 1)
+        printf("%i: Data arrived!\n", cnt);
+
+    for(i = 0;i&lt;n;i++){
+
+        res = jack_midi_event_get(&amp;jev,in_port_buf,i);
+        if(res == 0){
+            if(verb == 1){
+                printf("Got event, %i bytes!\n",(int) jev.size);
+                for(j=0;j&lt;jev.size;j++)
+                    printf("%i: %i\n",j,jev.buffer[j]);
+            }
+        } else{
+            if(verb == 1)
+                printf("ERROR getting event!\n");
+            return 0;
+        }
+
+
+        //transmit data
+        cnt++;
+        //buffer = jack_midi_event_reserve(port_buf, i, 3);
+
+
+        //controll to MIDI channel 1!
+        if(jev.buffer[0] == 176 &amp;&amp; jev.buffer[1] == 97){
+            if(verb == 1)
+                printf("MUTE CONTROL CH1 sent\n");
+            //first button: set mute register on channel 1
+            //buffer[0] = 176;
+            //buffer[1] = 7;
+            //buffer[2] = jev.buffer[2];
+            jbuffer[0] = 176;
+            jbuffer[1] = 7;
+            jbuffer[2] = jev.buffer[2];
+            res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+        }
+
+        else if(jev.buffer[0] == 176 &amp;&amp; jev.buffer[1] == 96){
+            if(verb == 1)
+                printf("MUTE CONTROL to CH2 sent\n");
+            //second button: set mute register on channel 2
+            //buffer[0] = 177;
+            //buffer[1] = 7;
+            //buffer[2] = jev.buffer[2];
+            jbuffer[0] = 177;
+            jbuffer[1] = 7;
+            jbuffer[2] = jev.buffer[2];
+            res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+        }
+
+        else if(jev.buffer[0] == 176 &amp;&amp; jev.buffer[1] == 66){
+            if(verb == 1)
+                printf("MUTE CONTROL CH3 sent\n");
+            //third button: set mute register on channel 3
+            //buffer[0] = 176;
+            //buffer[1] = 7;
+            //buffer[2] = jev.buffer[2];
+            jbuffer[0] = 178;
+            jbuffer[1] = 7;
+            jbuffer[2] = jev.buffer[2];
+            res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+        }
+
+        else if(jev.buffer[0] == 176 &amp;&amp; jev.buffer[1] == 67){
+            if(verb == 1)
+                printf("MUTE CONTROL to CH4 sent\n");
+            //fourth button: set mute register on channel 4
+            //buffer[0] = 177;
+            //buffer[1] = 7;
+            //buffer[2] = jev.buffer[2];
+            jbuffer[0] = 179;
+            jbuffer[1] = 7;
+            jbuffer[2] = jev.buffer[2];
+            res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+        }
+
+        else if(jev.buffer[0] == 176 &amp;&amp; jev.buffer[1] == 64){
+            if(verb == 1)
+                printf("MUTE CONTROL to CH5 sent\n");
+            //fifth button: set mute register on channel 5
+            //buffer[0] = 177;
+            //buffer[1] = 7;
+            //buffer[2] = jev.buffer[2];
+            jbuffer[0] = 180;
+            jbuffer[1] = 7;
+            jbuffer[2] = jev.buffer[2];
+            res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+        }
+
+        else if(jev.buffer[0] == 176 &amp;&amp; jev.buffer[1] == 65){
+            if(verb == 1)
+                printf("MUTE CONTROL to CH6 sent\n");
+            //sixth button: set mute register on channel 6
+            //buffer[0] = 177;
+            //buffer[1] = 7;
+            //buffer[2] = jev.buffer[2];
+            jbuffer[0] = 181;
+            jbuffer[1] = 7;
+            jbuffer[2] = jev.buffer[2];
+            res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+        }
+
+        else if(jev.buffer[0] == 176 &amp;&amp; jev.buffer[1] == 7){
+            if(verb == 1)
+                printf("MUTE CONTROL to CH7 sent\n");
+            //seventh button: set mute register on channel 7
+            //buffer[0] = 177;
+            //buffer[1] = 7;
+            //buffer[2] = jev.buffer[2];
+            jbuffer[0] = 182;
+            jbuffer[1] = 7;
+            jbuffer[2] = jev.buffer[2];
+            res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+        }
+
+        else if(jev.buffer[0] == 176 &amp;&amp; jev.buffer[1] == 10){
+            if(verb == 1)
+                printf("MUTE CONTROL to CH8 sent\n");
+            //eighth button: set mute register on channel 8
+            //buffer[0] = 177;
+            //buffer[1] = 7;
+            //buffer[2] = jev.buffer[2];
+            jbuffer[0] = 183;
+            jbuffer[1] = 7;
+            jbuffer[2] = jev.buffer[2];
+            res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+        }
+
+
+
+
+        else if((jev.buffer[0]&amp; 0xF0) == 128 || (jev.buffer[0]&amp; 0xF0) ==
+144){
+            //note key, pass through
+            if(verb == 1)
+                printf("SOUND PASSED-THROUGH\n");
+            //notes; let them pass
+            //buffer[0] = jev.buffer[0];
+            //buffer[1] = jev.buffer[1];
+            //buffer[2] = jev.buffer[2];
+            jbuffer[0] = jev.buffer[0];  //CH1
+            jbuffer[1] = jev.buffer[1];
+            jbuffer[2] = jev.buffer[2];
+            res = jack_midi_event_write(port_buf, jev.time , jbuffer, 3);
+            jbuffer[0] = jev.buffer[0] + 1; //CH2
+            jbuffer[1] = jev.buffer[1];
+            jbuffer[2] = jev.buffer[2];
+            res = jack_midi_event_write(port_buf, jev.time , jbuffer, 3);
+            jbuffer[0] = jev.buffer[0] + 2; //CH3
+            jbuffer[1] = jev.buffer[1];
+            jbuffer[2] = jev.buffer[2];
+            res = jack_midi_event_write(port_buf, jev.time , jbuffer, 3);
+            jbuffer[0] = jev.buffer[0] + 3; //CH4
+            jbuffer[1] = jev.buffer[1];
+            jbuffer[2] = jev.buffer[2];
+            res = jack_midi_event_write(port_buf, jev.time , jbuffer, 3);
+        }
+
+        //res = jack_midi_event_write(port_buf, i, jev.buffer, 3);
+        //res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+
+
+    }
+
+    return 0;
+
+}
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1422526212.31608_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1422535932.16006_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1422526218.31626_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1422526218.31626_0.ltw:2,&nbsp;&lt;CADOWEz_Zh0eEC7TbBEKSFFcShPaZ_JRh_59fHP2XY5F_Fg_5EQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

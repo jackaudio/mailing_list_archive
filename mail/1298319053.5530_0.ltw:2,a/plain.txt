@@ -1,0 +1,94 @@
+Date:        Mon, 21 Feb 2011 21:10:24 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: torbenh Re: [Jack-Devel] backend switching - another way (1298315882.31761_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] backend switching - another way (1298326046.16479_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] backend switching - another way
+
+On 02/21/2011 08:17 PM, torbenh wrote:
+> On Mon, Feb 21, 2011 at 06:53:03PM +0000, Fons Adriaensen wrote:
+>> Hello all,
+>>
+>> I've been musing for a long time over the idea 'what if Jack ports
+>> were persistent' ? In other words, if they could exists irrespective
+>> of the application that uses them is running or not.
+>>
+>> This has some far-reaching consequences of course, but there is 
+>> subset of this idea that is not as mad as it seems (IMHO).
+>>
+>> ** What if physical ports were persistent ? **
+>>
+>> More in detail:
+>>
+>> * The number of physical ports and their names are configured
+>>   by the user. Names are chosen according to the function a
+>>   port has in the user's setup, e.g. stereo-monitor-L or R.
+>>
+>> * When a backend is started, the inputs and outputs it provides
+>>   are mapped to the existing persistent ports, again as configured
+>>   by the user for any particular hardware.
+>>
+>> * These configurations are stored of course, no need to repeat
+>>   this work if nothing changes.
+
+A very cool and tempting concept.
+
+This is some something i've wanted to have since years.. :-)
+
+> we need to add code to parse/write/change the port mapping.
+> all drivers need to be changed (its not deep, but the change would be
+> pretty big. 
+> 
+> pretty similar behaviour can be obtained with a session handler.
+> if i understand paul correctly, he does not like to have this complexity
+> in jackd.
+>>
+>>
+>> This would allow:
+>>
+>> * To switch backends without any app being aware of it.
+>>
+>> * A backend to go away (USB or firewire being unplugged)
+>>   without fatal consequences. Just replug it or replace 
+>>   it by another one. No need to restart or rewire anything
+>>   else.
+>>
+>> * To have sessions that are *really* portable, depending only
+>>   on the availability of some common set of persistent ports.
+>>   E.g. Ardour's master and/or auditioner would connect to the
+>>   right ports no matter what they are.
+>>
+>> Comments / flames invited.
+>>
+>> Ciao,
+
+Pondering possible implementations: this will open pandora's box (again).
+
+Conceptually it seems somewhat backwards but realistically I'm with
+Torben: it's not JACK's job and a session-manager could do the trick
+(emulate persistent ports). The downside: session-manager fragmentation.
+To avoid that, a common session-manager would need to be included with
+all implementations of jackd..
+
+
+Another implementation would introduce a middle-layer for mapping
+physical ports between the engine and the back-ends:
+To outline the idea:
+	On the jack-client side: physical-ports are always persistent (they're
+actually virtual-ports).
+	On the server-side: jackd transparently maps these
+persistent-(virtual)ports to real physical I/O in the backend. Clients
+can neither see nor access the real physical "ports".
+	This variant would not require any changes to the backend(s), nor
+introduce a new port-type. AFAIK It could even be implemented as a
+in-process client without requiring any changes to JACK. However the
+complexity of parsing configuration, and mapping ports is still an issue.
+
+prepared for more flames\wenlightenment.
+Cheers!
+robin
+
+1298319053.5530_0.ltw:2,a <4D62C6B0.1030905 at gareus dot org>
+________________________________________________________________________________
+

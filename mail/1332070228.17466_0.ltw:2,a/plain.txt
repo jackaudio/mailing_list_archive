@@ -1,0 +1,64 @@
+Date:        Sun, 18 Mar 2012 12:30:05 +0100
+From:        Dénes Almási  <[hidden] at rudanium dot org>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] Syntax errors in common/JackNetDriver.cpp, compiling with --profile (1332070814.17776_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] Syntax errors in common/JackNetDriver.cpp, compiling with --profile (1332071142.18043_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Syntax errors in common/JackNetDriver.cpp, compiling with --profile
+
+Hi!
+
+Sorry, I did not find a bug tracker for jack so I will post it here:
+
+In jack2's source that can be downloaded from jackaudio.org, if I 
+compile
+with --profile, there are 3 syntax errors in common/JackNetDriver.cpp:
+
+./common/JackNetDriver.cpp: In member function 'virtual int
+Jack::JackNetDriver::Read()':
+./common/JackNetDriver.cpp:512:112: error: expected ')' before ';' 
+token
+./common/JackNetDriver.cpp:527:112: error: expected ')' before ';' 
+token
+./common/JackNetDriver.cpp: In member function 'virtual int
+Jack::JackNetDriver::Write()':
+./common/JackNetDriver.cpp:558:116: error: expected ')' before ';' 
+token
+
+I made a small patch which should fix the problem. I attach it to this
+message. (patch made with diff -Nuarp original modified > patch, I am
+not an expert in patches yet)
+
+Dennis--- common/JackNetDriver.cpp	2011-12-19 12:54:02.000000000 +0100
++++ JackNetDriver.cpp	2012-03-18 12:23:37.203330748 +0100
+@@ -509,7 +509,7 @@ namespace Jack
+         DecodeSyncPacket();
+ 
+ #ifdef JACK_MONITOR
+-        fNetTimeMon->Add((float(GetMicroSeconds() - fRcvSyncUst) / float(fEngineControl->fPeriodUsecs) * 100.f);
++        fNetTimeMon->Add((float)(GetMicroSeconds() - fRcvSyncUst) / (float)(fEngineControl->fPeriodUsecs) * 100.f);
+ #endif
+         //audio, midi or sync if driver is late
+         int res = DataRecv();
+@@ -524,7 +524,7 @@ namespace Jack
+         JackDriver::CycleTakeBeginTime();
+ 
+ #ifdef JACK_MONITOR
+-        fNetTimeMon->Add((float(GetMicroSeconds() - fRcvSyncUst) / float(fEngineControl->fPeriodUsecs) * 100.f);
++        fNetTimeMon->Add((float)(GetMicroSeconds() - fRcvSyncUst) / (float)(fEngineControl->fPeriodUsecs) * 100.f);
+ #endif
+ 
+         return 0;
+@@ -555,7 +555,7 @@ namespace Jack
+         }
+ 
+ #ifdef JACK_MONITOR
+-        fNetTimeMon->AddLast((float(GetMicroSeconds() - fRcvSyncUst) / float(fEngineControl->fPeriodUsecs) * 100.f);
++        fNetTimeMon->AddLast((float)(GetMicroSeconds() - fRcvSyncUst) / (float)(fEngineControl->fPeriodUsecs) * 100.f);
+ #endif
+ 
+         //sync
+
+1332070228.17466_0.ltw:2,a <12a96cb94936ebfdc9219f64e0c090b4 at rudanium dot org>
+________________________________________________________________________________
+

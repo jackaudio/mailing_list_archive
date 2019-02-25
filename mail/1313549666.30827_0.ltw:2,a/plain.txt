@@ -1,0 +1,60 @@
+Date:        Tue, 16 Aug 2011 20:53:33 -0600
+From:        Dan Swain  <[hidden] at gmail dot com>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1313519247.3714_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea
+
+On Tue, Aug 16, 2011 at 12:27 PM, Fons Adriaensen <[hidden]>wrote:
+
+> On Mon, Aug 15, 2011 at 11:03:15PM +0200, Jeroen Van den Keybus wrote:
+>
+> > It think this may eventually end up by you generating a square wave
+> > synchronous to the Jack server sync packets, and feeding that signal back
+> > (externally - FPGA PLL inputs are always dedicated inputs) into one of
+> the
+> > FPGA PLLs to generate MCLK. Beware that the square wave will really need
+> to
+> > be 'good' in a sense that simply clocking the FPGA PLL with sync pulses
+> will
+> > not do (too low a frequency - too much jitter). Therefore you will need a
+> > digital PLL (= VHDL file) first. Beware that clock generation in this
+> > fashion isn't common at all (let alone recommended), but since it would
+> save
+> > so much trouble processing the data, I think it's worth trying...
+>
+> I seriously doubt if you can get a sampling clock with the required
+> low jitter using the FPGA's digital PLLs. The next thing to look at
+> would be an external VCXO module to generate the master clock, with
+> the loop closed by digital filtering in the FPGA followed by an
+> analog lowpass driving the VCXO. Lock range for VCXOs is small but
+> it should be enough to cover typical sound card frequency
+>
+> Ciao,
+>
+> --
+> FA
+>
+>
+My thought too was to use a circuit away from the FPGA - and a VCXO sounds
+like a viable approach. Would it also be possible to have one clock as the
+master for the entire system? I was googling and came across one of the
+basic LM567 circuits...but for this project I'm sure that there is too much
+'tolerance' in an IC like that.
+
+As for Jeroen's approach in terms of having the FPGA just generate the data
+that's needed for JACK...I'm not sure why I wasn't thinking of it that way!
+A lot of things fell into place in my head when this was mentioned, so I've
+started looking at the netsource.c file from the JACK source code (JACK1 for
+now) to begin to understand how the packets are sent and received. For the
+JACK programmers - based around this file, what other parts of the source
+code should I be looking at?
+
+Thanks everyone,
+
+Dan
+
+1313549666.30827_0.ltw:2,a <CABhkv4PVsa-HFCHAnovhT7nCpkxV_EksuJqmMTn7oAkzUE0Wxw at mail dot gmail dot com>
+________________________________________________________________________________
+

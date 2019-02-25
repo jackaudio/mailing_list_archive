@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Very low latency audio</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Very low latency audio</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1379688134.19455_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1379701116.2547_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1379688931.19989_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 20 Sep 2013 10:55:24 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"Mann, Eric" &lt;[hidden] at intel dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt;, John Reed &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Mann, Eric
+<a href='../1379688134.19455_0.ltw:2,/index.html'>Re: [Jack-Devel] Very low latency audio </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>David Nielson
+<a href='../1379701116.2547_0.ltw:2,/index.html'>Re: [Jack-Devel] Very low latency audio </a></td></tr>
+</table>
+<pre>
+i should have said "burst transfer" which is pretty much all you want to
+use for low audio i think.
+
+interrupts are a totally separate issue. *something* has to wake user space
+periodically to initiate audio data generation/processing, and i'm not
+aware of how you would do that without an interrupt from something (whether
+it is an hrtimer or the audio interface is not really relevant).
+
+
+On Fri, Sep 20, 2013 at 10:42 AM, Mann, Eric &lt;[hidden]&gt; wrote:
+
+&gt;  Maybe I&#146;m mis-understanding the device, but you can generally do &lt; 64
+&gt; byte DMA transfers over PCIe &#133; they are called partials. They aren&#146;t
+&gt; particularly efficient from a bus and memory utilization perspective ..
+&gt;  you start to see the inefficiency as you approach back-to-back transfers
+&gt; -&gt; 1 usec (at least on current CPUs &#133; some 6+ yr old laptop its probably in
+&gt; the 10-20 usec area &#133; close to a 48KHz sample rate &#133; ).****
+&gt;
+&gt; ** **
+&gt;
+&gt; The current state of the art for low-latency **anything** is to avoid
+&gt; interrupts (as an interrupt itself is ~1-2 usec of processing latency) &#150;
+&gt; either in-kernel (e.g. 3.11&#146;s low-latency sockets) or in user space.****
+&gt;
+&gt; ** **
+&gt;
+&gt; Eric Mann / Intel Networking Division****
+&gt;
+&gt; ** **
+&gt;
+&gt; *From:* [hidden] [mailto:
+&gt; [hidden]] *On Behalf Of *Paul Davis
+&gt; *Sent:* Friday, September 20, 2013 6:58 AM
+&gt; *To:* John Reed
+&gt; *Cc:* JACK
+&gt; *Subject:* Re: [Jack-Devel] Very low latency audio****
+&gt;
+&gt; ** **
+&gt;
+&gt; note that the lower limit for PCI burst transfer is 64 bytes, which means
+&gt; that if you are only schlepping around two channels worth of 16 bits each,
+&gt; you need 16 samples minimum to be able to launch a DMA transfer.
+&gt;
+&gt; obviously higher channel counts reduce or eliminate this problem.****
+&gt;
+&gt; ** **
+&gt;
+&gt; On Fri, Sep 20, 2013 at 8:35 AM, John Reed &lt;[hidden]&gt; wrote:*
+&gt; ***
+&gt;
+&gt; Hello,****
+&gt;
+&gt; ** **
+&gt;
+&gt; On my netbook, I was able to start jackd with****
+&gt;
+&gt; jackd -P62 -dalsa -dhw:0 -r44100 -p16 -n2****
+&gt;
+&gt; but the hardware driver didn't support -p8 or -p4.****
+&gt;
+&gt; ** **
+&gt;
+&gt; -p16 already requires a lot of fast interrupts, so I assume that to use
+&gt; this reliably, I would have to be very careful about setting all of the
+&gt; kernel switches, etc.****
+&gt;
+&gt; ** **
+&gt;
+&gt; Is there any hope for getting -p8 or -p4 working, even if I have to write
+&gt; my own custom device driver? Or has anyone done any work in connecting
+&gt; xenomai to jack? Would I be better off writing a xenomai application and
+&gt; then find a way to connect it to an ALSA driver directly?****
+&gt;
+&gt; ** **
+&gt;
+&gt; Cheers,****
+&gt;
+&gt; John****
+&gt;
+&gt;
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org****
+&gt;
+&gt; ** **
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1379688134.19455_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1379701116.2547_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1379688931.19989_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1379688931.19989_0.ltw:2,&nbsp;&lt;CAFa_cKmMw-zfzbjE7KmxGHxerVFnpWHwHS0rCbojhe2ivhG-kA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

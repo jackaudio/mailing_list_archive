@@ -1,0 +1,36 @@
+Date:        Wed, 20 Apr 2011 08:39:49 -0500
+From:        Gabriel M. Beddingfield  <[hidden] at gmail dot com>
+To:          Dan Muresan <[hidden] at gmail dot com>
+Cc:          Jack-Devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Dan Muresan Re: [Jack-Devel] non-callback API (1303301688.5149_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] non-callback API (1303307861.17743_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] non-callback API
+
+On Wed, 20 Apr 2011, Dan Muresan wrote:
+
+> OK. Actually process() taking too long would be equivalent to the code
+> between cycle_wait() and cycle_signal() taking too long, right?
+> Instead I'm asking about the other half -- the code between
+> cycle_signal() and cycle_wait() taking too long.
+
+It would be equivalent to doing the extra work (taking the 
+extra time) at the beginning of your process() -- i.e. the 
+same thing.  You'll zombie.
+
+From the time that jack signals you to the time that you 
+signal jack... that's the critical time.  If you take too 
+long, you will cause xruns and you're client may be 
+disconnected (zombie).
+
+Strictly speaking, cycle_wait() is irrelevent.  Jack will 
+signal you whether you call that function or not. 
+cycle_wait() mostly keeps you from jumping the gun.  But if 
+you're not ready when jack signals you... that time counts 
+against you.
+
+-gabriel
+
+1303306811.15827_0.ltw:2,a <alpine.DEB.1.10.1104200831090.11102 at localhost dot localdomain>
+________________________________________________________________________________
+

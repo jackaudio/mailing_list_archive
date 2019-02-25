@@ -1,0 +1,200 @@
+Date:        Tue, 29 Dec 2009 14:40:59 +0100
+From:        rosea grammostola  <[hidden] at gmail dot com>
+To:          Cc:          [hidden] at lists dot linuxaudio dot org, [hidden] at lists dot jackaudio dot org, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>
+In-Reply-To: Nedko Arnaudov [LAD] [ANN] LADI Session Handler - Preview 2 (1262075004.22829_0.ltw:2,a)
+
+Subject:     Re: [LAD] [ANN] LADI Session Handler - Preview 2
+
+Nedko Arnaudov wrote:
+> The second milestone is reached and result is a tarball that brave souls
+> may want to download and try. It can start apps and restore their
+> connections. Level 1 apps are supported.
+>
+> Beware that no apps have implemented level 1 yet. If non-level-1 app is
+> started at level 1, it will probably quit on save, because the default
+> signal handler for SIGUSR1 terminates the process.
+>
+> This preview also features a2jmidid support. Run the a2j script as an
+> app in the studio.
+>
+> This is a beta quality software, use it with double caution.
+>
+> I would like to thank the early adopters and especially Frank Kober for
+> their help with testing the git ladish code and for the valuable
+> suggestions they gave.
+>
+> Build will produce three operational components:
+>  * ladishd - The daemon, a D-Bus service
+>  * gladish - GTK GUI interface
+>  * ladish_control - Command-line interface
+>
+> In the tarball you will also find bundled:
+>  * flowcanvas-0.6.0
+>  * LADI Tools (svn version)
+>  * a2jmidid-6 (contains the a2j script for use in ladish)
+>  * jack2 from the ladi branch
+>
+> The jack2 ladi branch contains fixes for two important issues:
+>  * Race that causes connection restore to fail sometimes during studio
+>    startup (http://ladish.org/ticket/28)
+>  * A deadlock on studio start (http://ladish.org/ticket/35)
+>
+> Hopefully, these fixes with be in the next jack2 release (1.9.5).
+>
+> The jack2 ladi branch also contains the no-self-connect changeset that
+> adds new engine option, for disabling self connect of apps. Default
+> value for this option is to allow self connections.
+>
+> Make sure to configure jack2 with --dbus (and maybe with --classic too).
+>
+> Download:
+> http://ladish.org/download/ladish-0.2.tar.bz2
+> http://ladish.org/download/ladish-0.2.tar.bz2.sig
+>
+> Homepage: http://ladish.org/
+> Roadmap: http://ladish.org/roadmap
+>
+> ---------------------------------------------------------------------
+> LADI Session Handler or simply ladish is a session management system
+> for JACK applications on GNU/Linux. Its aim is to allow you to have
+> many different audio programs running at once, to save their setup,
+> close them down and then easily reload the setup at some other
+> time. ladish doesn't deal with any kind of audio or MIDI data itself;
+> it just runs programs, deals with saving/loading (arbitrary) data and
+> connects JACK ports together. It can also be used to move entire
+> sessions between computers, or post sessions on the Internet for
+> download.
+>
+> Project goals:
+>  * Save and restore sets of JACK (audio and MIDI) enabled
+>    applications.
+>  * Provide JACK clients with virtual hardware ports, so projects can
+>    be transfered (or backups restored) between computers running
+>    different hardware and backups. 
+>  * Don't require session handling library to be used. There is no need
+>    of such library for restoring connections between JACK clients.
+>  * Flow canvas based GUI. Positions of elements on the canvas are
+>    saved/restored.
+>  * Allow clients to use external storage to save its state. This
+>    includes storing internal state to non-filesystem place like memory
+>    of a hardware synth. This also includes storing client internal
+>    state (client project data) in a way that is not directly bound to
+>    ladish project. 
+>  * Import/export operations, as opposed to save/load. Save/load
+>    operate in current system and may cause saving data outside of
+>    project itself (external storage). Import/export uses/produces
+>    "tarball" suitable for transferring session data over network to
+>    other computer or storing it in a backup archive.
+>  * Hierarchical or tag-based organization of projects.
+>  * List of JACK applications. Applications are always started through
+>    ladish to have restored runtime environment closer to one existed
+>    before project save.
+>  * Distributed studio - network connected computers. Netjack
+>    configuration is part of the studio and thus is saved/restored.
+>  * Collaborate with the X11 window manager so window properties like
+>    window position, virtual desktop and screen (multimonitor) are
+>    saved/restored.
+>
+>   
+
+Hi all,
+
+I must admit I was skeptical  about  Ladish, after the  disappointing 
+progress of LASH and the jackdbus debate on LAD. By accident I got an 
+conversation with Nedko on IRC and being in an 'tweak-mode' I was so 
+'stupid' to try ladish, not knowing what to expect really cause the 
+website couldn't make that clear to me at that point. But also with in 
+mind that an Session Handler is what Linux needs if you want to work 
+'the modular way'.
+
+Since I met Linux it has been an debate, whether the modular approach on 
+Linux is good or bad. It became obvious to me that technical spoken 
+there where advantages for sure, and after I did see the JACK design 
+presentation on jackaudio.org I found it a intelligent concept, which 
+could especially be useful in an open source community, where it seems 
+to be harder for people to spend a lot of time on a big 'all-in-one-app' 
+or to work together like you can do within a company. So an approach 
+where developer A works on an 'one-task-one-tool-app' for task Y and 
+developer B is working on a 'one-task-one-tool-app' for task X, and 
+being able to connect one tool with another, looked like it was the best 
+way to gain success when working as an community.
+
+But, all though striving hard to proof wrong, the disadvantage of the 
+modular approach was hard to tackle. Launching all apps and settings 
+manually again and again. Especially till approximately one year ago, 
+when I was less capable of configuring my system for RT properly and 
+when the RT kernels where not as good as they are now, and JACK was 
+shutting down more often then the recent JACK2, it was really bad often. 
+Just launched four apps with their settings, made some sounds and then
+"jack shuts down unexpectedly", end of party, restart party. Being busy 
+for 15minuts to get it all back again...
+
+With an session handler like Ladish, I feel the modular approach gets 
+another chance. It could fulfill the potential of the modular approach, 
+the-one-task-one-tool, the unix philosophy. It makes working on Linux 
+beneficial again in certain areas compared to other OS. I'm not saying 
+an 'all-in-one-app' with plugins is not good. No I like that to, but 
+with the LinuxAudio infrastructure at the moment in mind, it is a 'must' 
+to be able to work both ways. Now (there are no LV2 plugins of Hydrogen, 
+ams, etc. soon) but also in the future.
+
+After some testing (I decided to compile jack2 from git and ladi branch 
+with --dbus and --classic so I was able to use both jackdbus and jackd. 
+) I  must say that I'm enthusiastic about Ladish. It does make working 
+the modular way on Linux far more pleasurable already. It launches apps 
+automatically with in a studio and restores the connections. As a 
+'tester' I found  the support excellent via IRC (#ladi at freenode). I 
+had some Debian related issues and they where fixed within an hour. 
+Fixes where quick not only for ladish but also for the laditools and 
+a2jmidid (I build them all from git). Also the devs are open to 
+suggestions and critique.
+
+I really can recommend everyone with a bit of Linux experience to try it 
+out! I think Ladish is especially useful for the 'Light' music musicians 
+(pop, rock, dance etc.). It is not necessarily the best session  
+handling approach for everyone though. I can imagine  that projects  who 
+work with a very stable set of tools (openoctave for example) , could 
+equally benefit from some kind of  scripting  solution, like the 
+openoctave project is using already. But when I think about the 
+discussion on LAU about 'fast composing tools' by Atte and Ken, I really 
+think Ladish could be great for that kind of projects. It could even be 
+a alternative to Renoise, when launching tools like Aldrin/ Epichord, 
+Lv2rack, fst/vsthost, jack-mixer together in a 'studio' in Ladish (just 
+an example). Why not sit around the table with some people who have the 
+same goals and make those apps work perfectly together with each other 
+and are doing the things you want in your workfow (the openoctave 
+approach)? The same is true for the discussion about 'Ableton live 
+alternative on Linux' imo.
+
+I'm not saying Ladish is already there. There has been a firm debate 
+about the good and the bad of jackdbus on LAD (which I don't want to do 
+over again in this thread ;) ). It doesn't seems to be totally clear 
+what are actually the benefits or disadvantages of jackdbus, what are 
+myths about jackdbus and what not... So I think another benefit of 
+having more testers, users and developers involved in Ladish, is that 
+you can influence the development of Ladish a bit and that the community 
+can point to, and solve some problems if they are there (btw the 
+developers are not necessarily sticking with jackdbus for ever, it seems 
+to be the best choice atm and we have to see how it develops). Another 
+point later in it's development is the implementation of level 1 and 
+higher in other apps (http://ladish.org/wiki/levels). How could this be 
+done as easy and good as possible and how can apps implement Ladish support?
+
+At least I go further with testing and enjoying the features of Ladish 
+for my workflow. I hope more people (users and developers) will join to 
+test, stimulate and criticize it. If Ladish succeed it will be a major 
+breakthrough for LinuxAudio and especially the users imho.
+
+
+Happy new year! :)
+
+\r
+
+
+
+
+ 
+
+1262094167.21169_0.ltw:2,a <4B3A06EB.2010109 at gmail dot com>
+________________________________________________________________________________
+

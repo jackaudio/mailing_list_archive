@@ -1,0 +1,50 @@
+Date:        Tue, 28 Jan 2014 11:30:41 -0600
+From:        franklyn berry  <[hidden] at mindspring dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] howto: jackdbus && jack_control (1390931894.4369_0.ltw:2,)
+Follow-Up:   Adrian Knoth Bug#728710: [Jack-Devel] howto: jackdbus && jack_control (1390932046.4609_0.ltw:2,)
+
+Subject:     [Jack-Devel] howto: jackdbus && jack_control
+
+<powerpc: ubuntu 12.04; opus-1.1; jack-1.9.9.5; ffado-2.1>
+
+I can start 'jackdbus' manually with the 'auto' parameter, and it reliably reports
+'no message buffer overruns" 3 times, and sits awaiting input. The ./log/jack/jackdbus.log
+files confirms this start, reporting its driver settings and "Listening"...; 
+but 'jack_control status' shows  status is 'stopped' -- even while the log and input 
+buffer confirm otherwise.
+
+Any attempt to attach a client <e.g. 'jack_control start'> bus errors and core dumps 
+jackdbus immediately; with no subsequent report to the jackdbus.log. 
+
+The client exits with this dbus error:
+    DBus exception: org.freedesktop.DBus.Error.NoReply: 
+    Message did not receive a reply (timeout by message bus)
+
+Is there some parameter I can define in the source that will turn on more aggressive reporting
+in the log file? 
+
+I have used dbus-monitor to verify that jackdbus and jack_control have each registered with dbus,
+and seem to have specified their respective methods. Some sort of transaction ID, e.g. 1.874816
+for jackdbus and 1.874817 for jack_control have been assigned. I'm aware of 'tools' that can 
+help me verify whether dbus isn't calling the proper method,  but am still hunting. Advice
+sought. it seems like jack_control must not be receiving its callbacks from dbus, or the
+callbacks are specifying the wrong method, somehow. Just a guess.
+
+I've searched through jackdbus.c and .h and not found anything helpful. I've only set a minimum
+set of parameters using jack_control, mostly driver params. I've tried 'dummy' driver as well
+as 'firewire'.
+
+I've also tried other clients <alsa_in, jack_test, etc> , with the same results: 'no server
+running' unless I start jackdbus by hand; and core dump at execution, with subsequent 'no
+server' reporting by any surviving client.
+
+The only jack_control documentation I can find is the wiki:
+<http://trac.jackaudio.org/wiki/WalkThrough/User/jack_control> 
+which is just a copy of the help file.
+
+--frankb
+
+1390930247.2397_0.ltw:2, <21029775.1390930242096.JavaMail.root at elwamui-karabash dot atl dot sa dot earthlink dot net>
+________________________________________________________________________________
+

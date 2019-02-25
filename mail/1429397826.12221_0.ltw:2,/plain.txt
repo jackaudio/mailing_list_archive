@@ -1,0 +1,92 @@
+Date:        Sun, 19 Apr 2015 01:56:55 +0300
+From:        Athanasios Silis  <[hidden] at gmail dot com>
+To:          Len Ovens <[hidden] at ovenwerks dot net>
+Cc:          Linux Audio User <[hidden] at lists dot linuxaudio dot org>, Developers JACK <[hidden] at lists dot jackaudio dot org>
+
+Subject:     Re: [Jack-Devel] [LAU] running jackd from rc.local
+
+Hi Len,
+i am using ubuntu studio.
+the pc i refer to is used for audio processing and routing primarily - it
+is a jack client server.
+so without any user intervention apart from powering it ON , it gets audio
+through ethernet from the jack master, processes it and sends it out
+through its local soundcards.
+on occasions I want to log on and use this computer for local audio
+capturing and / or playback. so jack would ideally run independent of a
+user session. Having said that, I usually don't need to log out and back
+in, I tend to lock the system as I am a single user. no need to deal with
+multiple user case now.
+
+I use a locally compiled jack2 version without dbus support because I had a
+version mismatch between windows and linux jack.
+some audio applications (namely calf) need an X server so in my custom
+startup scripts I start a vnc session as well.
+
+The problem as I understand it is that after log on, pam.d elevates logged
+in user's privileges to access hardware. The main problem is that
+alsa_(in|out) is can not grab the local soundcards... and I do not know
+what could be the conflict. people over at jack-devel mailing list said it
+could bea number of things like pulseaudio or lightdm....
+
+there seems  to be a conflict or ideologies because some one suggests I
+make a system init script and another says jack is not designed to run as a
+system service.
+
+Personally, I think that jack is indeed not designed as a system service,
+but I could be wrong. what is more a jack run as root, would never be
+available to applications that I would start as a user. is that so?
+
+I think I replied to everything :)
+
+On Sat, Apr 18, 2015 at 6:01 PM, Len Ovens <[hidden]> wrote:
+
+> On Sat, 18 Apr 2015, Athanasios Silis wrote:
+>
+>  Hi Len,
+>> unfortunately the .desktop file is not good for me.
+>> it is only run after I have logged in, whereas I want my script to be
+>> started as
+>> me, but before I log in.
+>> Is there a way to achieve that, without resorting to autologin ?
+>>
+>
+> OK, perhaps a full description of what you are trying to acheive would
+> help. little bits of info I think I have put together include:
+>  - You will be using a DE at some point.
+>  - You want to be able to access jack after logging in as well as before
+>  - jack is still to be used only by one user
+>  - jack2 is prefered?
+>  - what would jack be doing while logged out I don't know
+>  - should jack continue to run after logout?
+>         (that is do you normally logout and in)
+>  - Is most of the running done by script anyway and loggin in is used
+> mostly for other things besides audio? Can all audio stuff be done by
+> command line?
+>  - will jack be used as a device for pulseaudio...
+>  - will pulse run at all? if so will it ever touch the same device as jack
+> has?
+>  - is your machine using sysv init, systemd, upstart? (upstart is going
+> away BTW, leaving one to wonder about the future of MIR)
+>
+> As Jeremy has already suggested have you tried:
+>
+> export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
+> jack_control start
+>
+> in the script run by your su user?
+>
+> --
+> Len Ovens
+> www.ovenwerks.net
+>
+>
+> 
+> Linux-audio-user mailing list
+> [hidden]
+> http://lists.linuxaudio.org/listinfo/linux-audio-user
+>
+
+1429397826.12221_0.ltw:2, <CADgchnteVP79dwpRycL8p_zJfhLMCu_GPB3B1bGgW8--yiZ3xw at mail dot gmail dot com>
+________________________________________________________________________________
+

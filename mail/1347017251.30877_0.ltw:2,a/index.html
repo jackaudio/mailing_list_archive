@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1347004157.10039_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1347023207.8506_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1347017251.30877_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 07 Sep 2012 13:27:19 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>"[hidden] at lists dot jackaudio dot org Developers" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1346699168.28514_0.ltw:2,a/index.html'>[Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1347023207.8506_0.ltw:2,a/index.html'>Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources </a></td></tr>
+</table>
+<pre>
+On 09/03/2012 09:05 PM, St&#xE9;phane Letz wrote:
+&gt; See: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=674651
+&gt; 
+&gt; Anybody interested to work on that?
+
+Funny, I had not seen this email when starting work on it :)
+Anyway, there are two problems:
+
+1) opus_encode() will not always result in a fixed length.
+ In particular if the input is silent or if the bitrate is large,
+fCompressedSizeByte will be less than the max possible.
+
+To work arount this I use the first 4 bytes of the actual payload to
+transmit the fCompressedSizeByte per channel - I have not yet committed
+that patch.
+
+Would this be the way to go? Any better alternatives?
+
+
+2) netjack currently uses opus-custom. the debian package does not [yet]
+include that (see http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=686777).
+
+This issue has spawned quite some discussion on IRC #opus.
+
+In short: non-custom (aka normal) opus modes will only work on
+buffersizes 120, 240,.. samples (motivated by 5ms phone latency).
+Power-of-two and block-sizes &lt; 120 samples do requires custom modes.
+
+Although most agree that nejack is a valid use-case for opus
+custom-modes, upstream is reluctant to enable custom-modes by default,
+because it breaks interoperability and the concern is that many people
+will use them to lazily port their celt (which used power-of-two
+blocksizes) code.
+
+A drawback from custom-mode is that compression is not as good as it can
+be (it has not been optimized). It was suggested to have netjack use
+normal modes if custom is not available.
+
+This would work in general but require buffering inside jackd and add
+additional latency.. I'm somewhat reluctant to go that way. Comments?
+
+best,
+robin
+
+PS. The initial work on this was done for netjack2 only. Once the dust
+has settled, updating netjack1/netone will be easy.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1347004157.10039_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1347023207.8506_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1347017251.30877_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1347017251.30877_0.ltw:2,a&nbsp;&lt;5049DA17.80206 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

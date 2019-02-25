@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Netjack crashes, alignment broken recently</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Netjack crashes, alignment broken recently</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1457700595.28311_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1457704755.1719_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1457704165.1105_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 11 Mar 2016 14:43:05 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Xavier Mendez </span> &lt;[hidden] at jmendeth dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Adrian Knoth &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt;, [hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Adrian Knoth
+<a href='../1457700595.28311_0.ltw:2,a/index.html'>Re: [Jack-Devel] Netjack crashes, alignment broken recently </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1457704755.1719_0.ltw:2,a/index.html'>Re: [Jack-Devel] Netjack crashes, alignment broken recently </a></td></tr>
+</table>
+<pre>
+El 11/03/16 a les 13:49, Adrian Knoth ha escrit:
+&gt; On 03/11/16 12:50, Xavier Mendez wrote:
+&gt;
+&gt;&gt;&gt; It would be better to understand why changing the  data structure
+&gt;&gt;&gt; (which is used both side of the connection&#x2026; ) caused the crash. Are
+&gt;&gt; And then, instead of the expected 00 00 00 01 for fSendAudioChannels,
+&gt;&gt; we have 00 00 00 00 01, which suggests the compiler has added a byte
+&gt;&gt; of padding to align the int? I don't know.
+&gt;
+&gt; I didn't closely look into this, but I guess this is what's happening:
+&gt;
+&gt; https://github.com/jackaudio/jack2/blob/8b8be738805ae1c5fe3688a49fd696a9f080b59e/common/jack/systemdeps.h#L123
+&gt;
+&gt;
+&gt; has
+&gt;
+&gt; #if defined(__arm__) || defined(__ppc__) || defined(__powerpc__)
+&gt;      #undef POST_PACKED_STRUCTURE
+&gt;      #define POST_PACKED_STRUCTURE
+&gt; #endif /* __arm__ || __ppc__ || __powerpc__ */
+&gt;
+&gt; which disables
+&gt;
+&gt;     #define POST_PACKED_STRUCTURE __attribute__((__packed__))
+&gt;
+&gt; on the Raspberry (since it's ARM), but not on the amd64.
+
+Ah! That seems to explain everything...
+
+&gt; We then have
+&gt;
+&gt;      struct _session_params
+&gt;      {
+&gt;          char fPacketType[8];                        //packet type
+&gt; ('param')
+&gt;          uint32_t fProtocolVersion;                  //version
+&gt;          int32_t fPacketID;                          //indicates the
+&gt; packet type
+&gt;          char fName[JACK_CLIENT_NAME_SIZE+1];          //slave's name
+&gt;          char fMasterNetName[JACK_SERVER_NAME_SIZE+1]; //master hostname
+&gt; (network)
+&gt;          char fSlaveNetName[JACK_SERVER_NAME_SIZE+1];  //slave hostname
+&gt; (network)
+&gt;          uint32_t fMtu;                              //connection mtu
+&gt;          uint32_t fID;                               //slave's ID
+&gt;          uint32_t fTransportSync;                    //is the transport
+&gt; synced ?
+&gt;          int32_t fSendAudioChannels;                 //number of
+&gt; master-&gt;slave channels
+&gt;          int32_t fReturnAudioChannels;               //number of
+&gt; slave-&gt;master channels
+&gt;          int32_t fSendMidiChannels;                  //number of
+&gt; master-&gt;slave midi channels
+&gt;          int32_t fReturnMidiChannels;                //number of
+&gt; slave-&gt;master midi channels
+&gt;          uint32_t fSampleRate;                       //session sample rate
+&gt;          uint32_t fPeriodSize;                       //period size
+&gt;          uint32_t fSampleEncoder;                    //samples encoder
+&gt;          uint32_t fKBps;                             //KB per second for
+&gt; CELT encoder
+&gt;          uint32_t fSlaveSyncMode;                    //is the slave in
+&gt; sync mode ?
+&gt;          uint32_t fNetworkLatency;                   //network latency
+&gt;      } POST_PACKED_STRUCTURE;
+&gt;
+&gt; from
+&gt;
+&gt; &lt;https://github.com/jackaudio/jack2/blob/master/common/JackNetTool.h#L91&gt;
+&gt;
+&gt;
+&gt; Since we're talking arm&lt;-&gt;amd64 here, alignment and/or byte ordering
+&gt; is different. Been there in 2004 for powerpc&lt;-&gt;i386&lt;-&gt;amd64, but forgot
+&gt; most of it. ;)
+&gt;
+&gt; JACK_CLIENT_NAME_SIZE+1 is most likely the absolute minimum, since we
+&gt; need the space, at least on the host. Not on-wire, though (see (3)
+&gt; below).
+ &gt;
+&gt; Options that might work:
+&gt;
+&gt; (1) Reorder the struct and put char fName, fMasterNetName and
+&gt; fSlaveNetName to the end, thus cheating a bit on the alignment issues.
+&gt; The resulting strings would most likely be crippled. Just as a first
+&gt; test. Or let's not do this, see (2) instead.
+&gt;
+&gt; (2) Instead of +1, add +8. Since JACK_CLIENT_NAME_SIZE==64 and
+&gt; JACK_SERVER_NAME_SIZE==256, we'd be on 8-byte boundaries. This is a
+&gt; trivial fix that doesn't rely on (1). Please try and report back.
+&gt;
+&gt; (3) Define a wire-format that doesn't rely on POST_PACKED_STRUCTURE but
+&gt; absolute offsets. Probably not too much work, just get the alignment
+&gt; right and remove POST_PACKED_STRUCTURE from all on-wire structs. Use
+&gt; union and byte positions instead.
+&gt;
+&gt; (4) In conjunction with (3), use pahole(1) to clean up the codebase.
+&gt; Investigate if dropping POST_PACKED_STRUCTURE entirely is possible.
+&gt;
+&gt;
+&gt; 3+4 are obviously heavy, so I'd go for (2) for now and see if it fixes
+&gt; the problem.
+&gt;
+&gt;
+&gt; There's another dirty alternative: if you don't want to add +8, your
+&gt; only other minimally invasive option is to add +0, effectively reverting
+&gt; the commit. For this to work, all write access to the three char fields
+&gt; must make sure not to overrun the array and if in doubt drop the last
+&gt; character in favour of the terminating NUL byte. It's error-prone and
+&gt; should probably only be done via setter functions.
+
+That's what I had in mind when I made the PR. As you said it'd be error 
+prone so yeah, I'd vote for (2), at least for now.
+
+&gt; Again, my gut feeling from just looking at the struct is that adding +8
+&gt; is a quick, safe and moderately clean solution. But don't publically
+&gt; quote me on that. ;)
+&gt;
+&gt; Disclaimer: it's been more than a decade now that I last dealt with that
+&gt; stuff. Take everything above with a grain of salt.
+&gt;
+&gt;
+&gt;
+&gt; HTH
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1457700595.28311_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1457704755.1719_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1457704165.1105_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1457704165.1105_0.ltw:2,a&nbsp;&lt;56E2CB69.6080701 at jmendeth dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

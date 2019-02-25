@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] zinaddsubfx, jackd and Linux mint no sound</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] zinaddsubfx, jackd and Linux mint no sound</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1507047851.7090_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1507219292.18577_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1507147576.12442_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 04 Oct 2017 15:06:01 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Joe Frey
+<a href='../1507047851.7090_0.ltw:2,/index.html'>[Jack-Devel] zinaddsubfx, jackd and Linux mint no sound </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Joe Frey
+<a href='../1507219292.18577_0.ltw:2,/index.html'>Re: [Jack-Devel] zinaddsubfx, jackd and Linux mint no sound </a></td></tr>
+</table>
+<pre>
+On Tue, October 3, 2017 11:23 am, Joe Frey wrote:
+&gt; qsynth to work fine. When I start zinaddsubfx(jack) I can make midi
+&gt; connections in qjackctl ALSA tab and I see the meters move in
+&gt; zinaddsubfx. On the audio tab in qjackctl I do not see zinaddsubfx
+&gt; listed and cannot make the audio connections.
+&gt; If I start zinaddsubfx(ALSA) I see this program on the qjackctl audio
+&gt; tab but not on the ALSA tab in qjackctl and cannot make midi connections.
+
+I believe you have reported your results backwards.
+If you start the ALSA version of ZynAddSubFX you will see the MIDI ports
+of Zyn show up in the ALSA tab of qjackctl, but no audio ports because you
+started the ALSA version.
+
+If you start the JACK version of ZynAddSubFX you will see audio output
+ports in the audio tab of qjackctl, and the MIDI ports of Zyn in the MIDI
+tab.  There will be no MIDI ports listed in the ALSA tab because you
+started the jack version, so only jack MIDI ports will be available.
+If you have jackd version 1 family on your system, you do not need to load
+anything additional.  If you have jackd version 2 family on your system,
+you should make sure to install a2jmidid (ALSA to JACK MIDI daemon) if it
+is not already installed, and in your qjackctl Options tab select the
+"Execute script after Startup" checkbox and in the command line enter:
+/usr/bin/a2jmidid -e &amp;
+
+To make sure the MIDI daemon stops after stopping jackd also check the
+"Execute script on Shutdown" checkbox, and in that command line enter:
+killall a2jmidid
+
+The a2jmidid daemon will bridge between ALSA MIDI devices and jack MIDI
+devices so you can for example connect a hardware MIDI controller to Zyn.
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1507047851.7090_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1507219292.18577_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1507147576.12442_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1507147576.12442_0.ltw:2,&nbsp;&lt;eb47c22b9f7a179fc636a4a50c61c99a.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

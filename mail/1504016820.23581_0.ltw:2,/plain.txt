@@ -1,0 +1,36 @@
+Date:        Tue, 29 Aug 2017 16:24:58 +0200
+From:        Malik Costet  <[hidden] at malikc dot neomailbox dot net>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Thomas Brand Re: [Jack-Devel] Jack server keeps playing sound after client disconnetcs (1504006439.9914_0.ltw:2,)
+Follow-Up:   Ralf Mattes Re: [Jack-Devel] ?==?utf-8?q? Jack server keeps playing sound after client disconnetcs (1504020058.28412_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Jack server keeps playing sound after client disconnetcs
+
+On 2017-08-29 13:31, Thomas Brand wrote:
+> If It plays forever now that's indeed strange.
+> Can you describe the sound? Is it "normal", like a song that just
+> continues normally or more like crackle, arbitrary buffer data? Where does
+> that data come from if the client is dead? Where do the clients get their
+> data to put to jack? Do you see any remains of a dead client in the
+> system?
+
+Correct me if I'm wrong: jack_client has a process callback that it
+registers with jackd, which invokes it and expects a 0 status code
+indicating that it should continue playing the buffers, right? I mean,
+that data structure resides (or at least exists) in jackd's program
+space, right?
+
+Could it be that if jackd misses the client's disconnect, it keeps
+invoking that callback, but because the client isn't there any more, the
+status code automatically stays 0 and hence it carries on rendering and
+re-rendering that buffer indefinitely?
+
+If that's the case, it might have been a better idea to use non-zero
+status codes to indicate continue; although it's likely too late to
+change that.
+
+M.
+
+1504016820.23581_0.ltw:2, <d64dc799-6b21-d249-2154-cfcce3f54938 at malikc dot neomailbox dot net>
+________________________________________________________________________________
+

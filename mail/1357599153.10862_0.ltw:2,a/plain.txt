@@ -1,0 +1,94 @@
+Date:        Mon, 07 Jan 2013 22:52:23 +0000
+From:        John Emmas  <[hidden] at tiscali dot co dot uk>
+To:          JACK List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357597795.8865_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)
+
+Some interesting ideas there Adrian.  I feel sure that they key to solving this problem is to realise that packing (in particular) need not be identical on the different platforms.
+
+It's very late here tonight and my brain is past its bedtime - but I think some good ideas have come out of this discussion.
+
+John
+
+
+On 7 Jan 2013, at 22:29, Adrian Knoth wrote:
+
+> On 01/07/2013 10:58 PM, John Emmas wrote:
+> 
+>> Historically (as Paul described earlier) struct packing was a way of
+> [..]
+>> penalty in changing a compiler's default packing alignment.  This is
+> [..]
+>> cases).  To me, this suggests that if JACK_ALIGN is working on that
+>> particular compiler, it's most likely a happy accident.
+> 
+> I read "struct packing", "packing alignment" and "alignment".
+> 
+> We should not mix terminology. Let's have a look at
+> 
+>   http://gcc.gnu.org/onlinedocs/gcc-4.7.0/gcc/Type-Attributes.html
+> 
+> It says:
+> 
+>  aligned (alignment)
+>  This attribute specifies a minimum alignment (in bytes) for variables
+>  of the specified type.
+> 
+> Helpful in the 32/64bit case. Maybe also for gcc/MSVC.
+> 
+> For packing:
+> 
+>   packed
+>   This attribute, attached to struct or union type definition,
+>   specifies that each member (other than zero-width bitfields) of the
+>   structure or union is placed to minimize the memory required.
+> 
+> This would work for 32/64 and gcc/MSVC on x86, since it supports
+> unaligned access, but breaks ARM. One could argue at great length what
+> "minimize" means, but apparently, it means "as small as (im)possible,
+> never mind the alignment requirements".
+> 
+> 
+> And then, there is another possibly helpful attribute:
+> 
+>   ms_struct
+>   gcc_struct
+>   If packed is used on a structure, or if bit-fields are used it may be
+>   that the Microsoft ABI packs them differently than GCC would normally
+>   pack them. Particularly when moving packed data between functions
+>   compiled with GCC and the native Microsoft compiler (either via
+>   function call or as data in a file), it may be necessary to access
+>   either format. Currently -m[no-]ms-bitfields is provided for the
+>   Microsoft Windows X86 compilers to match the native Microsoft
+>   compiler.
+> 
+> 
+> So this leaves us with the following options:
+> 
+>   a) use aligned and provide the proper alignment size OR
+>   b) use packed and disable it on ARM
+>   c) use ms_struct on gcc Win x86
+> 
+> 
+> Robin provided a patch for b) which may or may not break arm64. We have
+> an almost working patch for a) if we hardcode sizeof(double) in the MSVC
+> case. AFAIK, we haven't explored c).
+> 
+> If c) turns out to be working, one could combine it with a), leave
+> sizeof() to gcc-non-Windows and everybody is happy.
+> 
+> 
+> And now arm the compilers and figure out what's actually working. ;)
+> 
+> 
+> 
+> Cheers
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1357599153.10862_0.ltw:2,a <753BDF60-6721-4FD7-8E08-B620D323C419 at tiscali dot co dot uk>
+________________________________________________________________________________
+

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Segmentation fault using jackctl_server_start</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Segmentation fault using jackctl_server_start</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1319287263.23839_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1319297467.7784_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1319294271.1617_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 22 Oct 2011 16:37:29 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Royi Freifeld &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Royi Freifeld
+<a href='../1319297467.7784_0.ltw:2,a/index.html'>Re: [Jack-Devel] Segmentation fault using jackctl_server_start </a></td></tr>
+</table>
+<pre>
+Latest SVN is actually 1.9.8. The API has changed.
+
+St&#xE9;phane 
+
+Le 22 oct. 2011 &#xE0; 14:37, Royi Freifeld a &#xE9;crit :
+
+&gt; I have installed 1.9.7 and now it's doing nothing, and it seems that the API hasn't changed...
+&gt; I'm stuck
+&gt; 
+&gt; On Thu, Oct 20, 2011 at 8:04 PM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+&gt; It seems that you are using an old version of control API.
+&gt; 
+&gt; Try with latest SVN tree (http://jackaudio.org/download)
+&gt; 
+&gt; St&#xE9;phane
+&gt; 
+&gt; 
+&gt; Le 20 oct. 2011 &#xE0; 19:35, Royi Freifeld a &#xE9;crit :
+&gt; 
+&gt; &gt; I have managed to narrow it down to the part where I set the server to be real-time. I know that real-time mode is the default but I wonder why didn't it work??
+&gt; &gt; In the .cpp file:
+&gt; &gt; line 221-222 is where I set the realtime status
+&gt; &gt; set_parameter method is line 188
+&gt; &gt; jackctl_get_parameter is a function I created, not one of  the control API (line 95).
+&gt; &gt;
+&gt; &gt; The testing main function :
+&gt; &gt; #include &lt;unistd.h&gt;
+&gt; &gt; int main()
+&gt; &gt; {
+&gt; &gt;   JackServerManager* jsm = new JackServerManager();
+&gt; &gt;   jsm-&gt;start_server();
+&gt; &gt;   sleep(30);
+&gt; &gt;   jsm-&gt;stop_server();
+&gt; &gt;   delete jsm;
+&gt; &gt; }
+&gt; &gt;
+&gt; &gt; The program crashes after trying to run jackctl_server_start on line 70. When I remove lines 221-222 It works.
+&gt; &gt;
+&gt; &gt; Thnx
+&gt; &gt;
+&gt; &gt; On Thu, Oct 20, 2011 at 2:34 PM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+&gt; &gt; Can you send your code?
+&gt; &gt;
+&gt; &gt; Thanks.
+&gt; &gt;
+&gt; &gt; St&#xE9;phane
+&gt; &gt;
+&gt; &gt; Le 19 oct. 2011 &#xE0; 16:24, Royi Freifeld a &#xE9;crit :
+&gt; &gt;
+&gt; &gt; &gt; I need to configure the server and connect unknown number of clients to it.
+&gt; &gt; &gt; Once everything is connected and running, nothing is changed until some stop button is pressed. I can stop all clients and send a close command (jackctl_server_stop), and basically exit the program.
+&gt; &gt; &gt; Can I do it differently, without using the control API?
+&gt; &gt; &gt;
+&gt; &gt; &gt; On Wed, Oct 19, 2011 at 4:02 PM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+&gt; &gt; &gt; Why are you using the control API (which jackctl_server_start is port of) in the first place?
+&gt; &gt; &gt;
+&gt; &gt; &gt; St&#xE9;phane
+&gt; &gt; &gt;
+&gt; &gt; &gt; Le 19 oct. 2011 &#xE0; 15:54, Royi Freifeld a &#xE9;crit :
+&gt; &gt; &gt;
+&gt; &gt; &gt; &gt; It's not a client and JackNoStartServer is passed to each new client being opened.
+&gt; &gt; &gt; &gt; I must configure the server before creating and connecting any client
+&gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; On Wed, Oct 19, 2011 at 2:35 PM, Adrian Knoth &lt;[hidden]&gt; wrote:
+&gt; &gt; &gt; &gt; On Wed, Oct 19, 2011 at 02:26:18PM +0200, Royi Freifeld wrote:
+&gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; &gt; Hey all,
+&gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; Hi!
+&gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; &gt; I'm developing an application using JACK (alsa as backend).
+&gt; &gt; &gt; &gt; &gt; After setting all parameters, the jackctl_server_start function is being
+&gt; &gt; &gt; &gt; &gt; called, the JACK outputs:
+&gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; Is it a client? If so, there's no need to explicitly start the server,
+&gt; &gt; &gt; &gt; you can always assume it is running.
+&gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; And if not, jack_client_open() would start the server unless
+&gt; &gt; &gt; &gt; JackNoStartServer is passed.
+&gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; Cheers
+&gt; &gt; &gt; &gt; 
+&gt; &gt; &gt; &gt; Jack-Devel mailing list
+&gt; &gt; &gt; &gt; [hidden]
+&gt; &gt; &gt; &gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt;
+&gt; &gt; &gt; &gt; --
+&gt; &gt; &gt; &gt; Carpe Diem
+&gt; &gt; &gt; &gt; 
+&gt; &gt; &gt; &gt; Jack-Devel mailing list
+&gt; &gt; &gt; &gt; [hidden]
+&gt; &gt; &gt; &gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt; &gt; &gt;
+&gt; &gt; &gt;
+&gt; &gt; &gt;
+&gt; &gt; &gt;
+&gt; &gt; &gt; --
+&gt; &gt; &gt; Carpe Diem
+&gt; &gt;
+&gt; &gt;
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; --
+&gt; &gt; Carpe Diem
+&gt; &gt;
+&gt; &gt; &lt;JackServerManager.hpp&gt;&lt;JackServerManager.cpp&gt;
+&gt; 
+&gt; 
+&gt; 
+&gt; 
+&gt; -- 
+&gt; Carpe Diem
+&gt; 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1319287263.23839_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1319297467.7784_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1319294271.1617_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1319294271.1617_0.ltw:2,a&nbsp;&lt;3BBA1945-7AC3-4459-BBE8-39B218B14442 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,79 @@
+Date:        Wed, 12 Feb 2014 10:35:28 +1100
+From:        Matt Flax  <[hidden] at flatmax dot org>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] high sample rates cause unknown client xruns (1392154679.6277_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] high sample rates cause unknown client xruns (1392165585.23367_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] high sample rates cause unknown client xruns
+
+On 12/02/14 08:37, Paul Davis wrote:
+>
+>
+>
+> On Tue, Feb 11, 2014 at 3:48 PM, Matt Flax <[hidden] 
+> <mailto:[hidden]>> wrote:
+>
+>     On 12/02/14 01:29, Paul Davis wrote:
+>>
+>>
+>>
+>>     On Tue, Feb 11, 2014 at 1:38 AM, Matt Flax <[hidden]
+>>     <mailto:[hidden]>> wrote:
+>>
+>>         Hi there,
+>>
+>>         I am experiencing problems with high sample rates when using
+>>         jack.
+>>
+>>         Whilst the driver is more then capable of reading data at
+>>         high sample rates, it seems that the client falls over when
+>>         it tries to interact.
+>>
+>>
+>>     you haven't stated the buffer size you're using (in units of
+>>     samples and msecs). what you're describing seems entirely like
+>>     what would be expected to happen when you require better
+>>     scheduling latency characteristics than either your kernel or
+>>     apps can deliver.
+>>
+>     I have tested with various period sizes, number of periods and so
+>     on. Whilst the driver doesn't indicate any xruns, the client does.
+>     What is your interpretation ?
+>
+>
+> i don't have one. the only error message I've seen thus far is:
+>
+>
+> $ jack_rec -f /dev/null -B 2048 -d 1 system:capture_1 system:capture_2
+> disk thread finished
+> jackrec failed with 977 overruns.
+>  try a bigger buffer than -B 2048.
+>
+> I don't know the insides of jack_rec well enough to know what those 
+> messages mean. Did you try "a bigger buffer than -B 2048" ?
+
+I feel the same as you regarding jack_rec, not really sure what it is 
+doing internally.
+
+Yes, the information above was me running on a very grunty desktop CPU 
+... when I execute on the ARM core, the number of overruns are 
+insurmountable (1e5 or 1e6) ... even when extending to 32768 buffer 
+sizes ... I think there is a second order sad face profile in execution 
+efficiency vs. block (buffer) size ... surely the performance keeps 
+improving as you increase the buffer size until you reach the page size 
+? I would imagine that once you increase across the page size boundary 
+the performance starts to decrease again... hence the sad face, with the 
+best performance at the top of the curve.
+
+I also tried going direct into netjack, in an effort to ensure that what 
+was in memory stayed in memory ... this is because I did notice that 
+writing to an actual file using jack_rec, rather then /dev/null was far 
+far slower ... consequently the concept of piping out over a gigabit 
+socket seemed a nice option ... alas, no success using netjack.
+
+Matt
+
+1392161967.18286_0.ltw:2,a <52FAB3C0.9000907 at flatmax dot org>
+________________________________________________________________________________
+

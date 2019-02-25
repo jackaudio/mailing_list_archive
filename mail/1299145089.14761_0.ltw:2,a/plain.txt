@@ -1,0 +1,198 @@
+Date:        Thu, 03 Mar 2011 10:37:38 +0100
+From:        torbenh  <[hidden] at gmx dot de>
+To:          Duncan Gray <[hidden] at catraeus dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Duncan Gray Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2 (1299120493.17780_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2
+
+On Wed, Mar 02, 2011 at 08:47:33PM -0600, Duncan Gray wrote:
+> 
+> 
+> On 03/02/2011 04:18 AM, torbenh wrote:
+> >On Tue, Mar 01, 2011 at 07:50:17PM -0600, Duncan Gray wrote:
+> >>
+> >>On 02/28/2011 09:45 PM, torbenh wrote:
+> >>>On Mon, Feb 28, 2011 at 07:59:01PM -0600, Duncan Gray wrote:
+> >>>>I sat on the IEEE1788 standards committee when we were working on
+> >>>>the timing portion of the spec and the beginning of the
+> >>>>zeroconf-like discovery protocols.
+> >>>>
+> >>>>To implement AVB, the intention (as far as Jack would be concerned)
+> >>>>would be to get a NIC card that will most definitely implement the
+> >>>>timing protocol. A consumer app that only does streaming is the
+> >>>>"killer app"; and that was the only concern of Broadcom and Marvell
+> >>>>-- who were major participants. This does not concern itself with
+> >>>>latency, but rather with delivery. These apps stream with virtual
+> >>>>timing from disk. Then the reproduce to iPods that will recover
+> >>>>timing as cheaply as possible to achieve robust buffering with
+> >>>>fairly low jitter playback.
+> >>>i dont really understand this.
+> >>>you mean streaming from harddisk to multiple endpoints,
+> >>>all playing phase synced ?
+> >>Yes
+> >>>with soundcards that generate their own clocks, and dont allow for rate
+> >>>control ?
+> >>No. ... SRC would be needed for these
+> >>>if one allows 3ms of diff, we can do this with netjack for quite some
+> >>>time. 3ms is not relevant for comsumer applications imo.
+> >>3 ms of difference is not a rate difference, only time difference.
+> >>Time difference grows unbounded for a frequency difference between
+> >>the source and the sink. There will be a jitter buffer xrun at a
+> >>periodic rate for that situation.
+> >i wasnt talking about rate differences.
+> >the resampling happens in the alsa_out module.
+> >anyways.... lets talk avb.
+> Okeedokee (pardon my american slang.)
+> >>>>The anticipated audio app (consumer or pro) is that a VERY SPECIAL
+> >>>>Audio NIC would be created that would buffer the stream and present
+> >>>>it to the hardware with a strict-timed interrupt and look like an
+> >>>>audio card. That card has an analog Phase-Locked-Loop controlled by
+> >>>>the AVB (which is a derivative of IEEE 1588) and the timing
+> >>>>information in the stream control of IEEE 1788.
+> >>>you mean an audio nic in a computer ?
+> >>>or in the embedded audio soundcard ?
+> >>>
+> >>Can be done either way. The anticipated case would be a NIC that has
+> >>an appearance that looks like a sound card. Otherwise,
+> >>(conceptually, not designed AFAIK) the timestamped 1788 packets
+> >>could be sent to a soundcard to implement PTP's PLL.
+> >i dont see a need for a NIC that looks like a soundcard.
+> >
+> This **was** the anticipated use case. I have been spoiled by pro
+> audio. I am dis-satisfied if the clock jitter is worse than 500 ps.
+> 50 ps RMS was my goal and no kernel-timed PLL will ever get there.
+> Furthermore, the nature of the kernel jitter statistics hides the
+> real excursions to some extent. Peak vs. RMS ... Peak is what leads
+> to the audible effects. But, this is way down in the noise for
+> sensible humans. The ability to hear this only shows in an extremely
+> clean listening environment. I'm splitting hairs, so you might want
+> to take my input a little guardedly.
+> 
+> Once again ... AVB was designed for this very accurate timing
+> domain, the anticipated case was to have a PLL directly in the NIC
+> to derive a word clock.
+
+yeah. but you only need this accuracy in somthing that actually emits
+samples at the wordclock rate.
+a computer, thats only supposed to send an RTP stream, which should be
+played with a latency of a few ms doesnt need picosecond accuracy.
+
+
+> >>>>Such NICs will become available on a very long schedule, and a
+> >>>>company called Lab-X can point you to vendors leading the way.
+> >>>>Perhaps someone from the Jack core crew should speak to Lee Minich
+> >>>>at Lab-X about a push to open some for driver work. There is also an
+> >>>>industry alliance for AVB, AVnu (Akin to the dreaded Firewire
+> >>>>industry alliance.)
+> >>>well... there seems to be some silicon out there....
+> >>>ptp patches seem to be ready for mainlining. and will probably hit the
+> >>>tip tree soon.
+> >>>http://www.spinics.net/lists/arm-kernel/msg116310.html
+> >>>
+> >>>with a reasonably good ptp timer in the kernel.
+> >>>this is all easy stuff.
+> >>>
+> >>REALLY GLAD to see that the PHYTER has made it into the source tree.
+> >>I am amazed that it has gone this quickly.
+> >its not inside the source tree yet. but i think it will be there soon.
+> >
+> >>Kernel PLLs, however, will have lots of jitter. Once again, consumer
+> >>will be OK (maybe some surging and low-freq noise like USB externals
+> >>I know.) The adaption from a PTP aware PHY to allow paced pay-out of
+> >>packets to D/As or to allow a D/A to drive the PTP as a master is
+> >>brilliant. Without a PLL-able sound card, though, SRC must be done
+> >>the hard way, in software.
+> >not if that soundcard is the only one, and the ptp master clock.
+> True. But be careful of the word master clock. This is a reserved
+> word in the PTP dictionary and can only be the physical Ethernet bit
+> clock in the NIC. The soundcard interrupt can then be a 1788 Stream
+> master clock carried within the PTP framework.
+> >
+> >my real question is now is: does the assumption holds, that the ptp master
+> >clock can also serve as CLOCK_REALTIME ?
+> 
+> The PTP clocks are definitely only for relative timing. Their
+> roll-over was intended to be longer than days, for equipment design
+> convenience reasons, but were not designed to be UTC epoch based.
+> IEEE 1588, the grandfather of PTP, is designed to have an epoc
+> application and so you will find those extra fields over in that
+> spec. Given the low jitter of PTP, as a CLOCK_REALTIME, for most RTC
+> applications which I have used over the years, that accuracy would
+> be like polishing a brick. If it's convenient to derive a RTC from a
+> PTP counter, by correlating with some NTP stack, then go for it. But
+> the warning there is that the PTP clock is not traceable to NTP so
+> it will diverge from NTP time without the same kind of periodic
+> reinforcement that NTP sub-systems typically demand.
+
+i dont want to do that. its just that kernel people seem to have
+rejected the idea of a software ptp clock, because they considered
+clock_realtime to be this software clock.
+
+with your statement, i have a case for the need of a software clock, i
+think. 
+
+
+> 
+> If you wanted to drive the other way, have an NTP stack inform a PTP
+> Master node of UTC to tweak its frequency, then you would have done
+> the little brother of what the Telephony industry has done with its
+> Rubidium clocks reinforced by GPS tracking.
+> >the current kernel patches allow for accessing ptp clocks inside network
+> >cards. but there is no software clock yet. so in the software case ptpd
+> >will end up servoing CLOCK_REALTIME. i dont think that is desired, and
+> >there should be a software ptp clock too, if the NIC doesnt have one.
+> >
+> 
+> If the NIC doesn't have one, the timestamp resolution of a kernel
+> PTP is one jiffy. This would be disaster in trying to correlate a
+> sound card's interrupts to that kernel PTP. Remember that PTP
+> critically depends on timestamps which are precisely at the leading
+> edge of an Ethernet frame; whereas many NICs post their received
+> frames whenever they get around to it. This would allow 4 ms of
+> uncertainty in the timestamp of the PTP probe/response sequences
+> from kernel resolution alone. PTP demands 40 ns of accuracy at a
+> minimum. Most PTP clock nodes could fail to converge a grandmaster
+> with that much jitter (best guess.)
+
+you are assuming, that the target machine actually has a
+soundcard. my use-case here is that i want to connect some laptop to an
+AVB site, and be able to use the AVB infrastructure from this laptop.
+
+i only need an accuracy which is of the order of the desired latency.
+
+if that machine cant be a grandmaster... well... then thats the case.
+i am pretty confident, that i can extract a clock under most conditions
+in a LAN.
+(i have a clock servo that can lock with 128 samples of jitter on the
+timestamps (its a bit expensive in terms of cpu, but it works))
+
+> 
+> Do you know of software-only PTP clocks anywhere? Broadcom and
+> Marvell have implemented NIC & switch/server chips which have very
+> fast ARM processors in the silicon to service the PTP timestamps
+> before the end of an Ethernet frame has even fully arrived inside
+> the MAC. Hard-Real-Time Assembly programming, I assume.
+> 
+> The AES-11 frequency accuracy (Grade-2) spec of 10 ppm for a clock
+> is nice, but probably won't be present in any PTP stream from anyone
+> I know of except Apogee. Absolute frequency is not AVB's strength.
+> The local clock on the motherboard, servoed to NTP will be good
+> enough. What application might demand such low jitter RTC?
+> 
+> Otherwise, high-resolution timing will require a whole new subsystem.
+
+there is hrtimer :)
+
+> 
+> I guess don't understand you desired link between PTP and CLOCK_REALTIME.
+
+i dont desire it.
+
+
+-- 
+torben Hohn
+
+1299145089.14761_0.ltw:2,a <20110303093738.GD4903 at siel dot b>
+________________________________________________________________________________
+

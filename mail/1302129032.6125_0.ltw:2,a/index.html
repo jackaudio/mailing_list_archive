@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Call for testing of MIDI Drivers in JACK 2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Call for testing of MIDI Drivers in JACK 2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302125494.31153_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302135613.18740_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302129032.6125_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 06 Apr 2011 15:30:01 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at charityfinders dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt;, St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1302135613.18740_0.ltw:2,a/index.html'>Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1302163086.24701_0.ltw:2,a/index.html'>Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Clemens Ladisch
+<a href='../1302241297.12956_0.ltw:2,a/index.html'>Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1303080124.23336_0.ltw:2,a/index.html'>Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2 </a></td></tr>
+</table>
+<pre>
+Over the past few weeks, St&#xE9;phane and I have been overhauling the code
+for the MIDI drivers in JACK 2.  This includes the Linux FFADO driver,
+the Mac CoreMIDI driver, the Windows WinMME driver, and a new Linux
+'alsarawmidi' slave driver that can run alongside other master drivers
+(i.e. FFADO).  The new code is now in JACK 2 SVN, and will probably be
+officially released with JACK 1.9.8.
+
+I'm interested in getting feedback on the new drivers, and refining
+the code before JACK 1.9.8 is released.  I'd like to know how the
+drivers work with all sorts of hardware, and with lots of different
+JACK configurations.  In particular, I'd like to get data about MIDI
+latency and (more importantly) jitter that occurs with different
+setups.  To this end, I've written a program that's distributed as an
+example client with JACK 2 named `jack_midi_latency_test` that I'll
+talk about in a moment.
+
+If you run JACK 2 from SVN, have a JACK compatible MIDI interface, and
+are interested in helping out, here's what you can do:
+
+1.) Start JACK in a terminal.  If you're using the CoreMIDI, WinMME,
+or alsarawmidi drivers, then use the '-X' switch to specify
+'coremidi', 'winmme', or 'alsarawmidi' respectively.  For example:
+
+    jackd --sync -P70 -Xalsarawmidi -ddummy
+
+2.) Plug a MIDI cable into a MIDI out port and a MIDI in port on your
+MIDI interface.  On a separate terminal, run `jack_midi_latency_test`.
+ Usage:
+
+devin@development:~/sandbox$ jack_midi_latency_test --help
+Usage: jack_midi_latency_test [options] out-port-name in-port-name
+
+        -h, --help              print program usage
+        -m, --message-size=size set size of MIDI messages to send
+        -s, --samples=n         number of MIDI messages to send
+        -t, --timeout=seconds   wait time before giving up on message
+
+In my tests with the 'alsarawmidi' driver, I've been using the
+following command line:
+
+    jack_midi_latency_test -m 3 -s 8192 -t 5 "system:ESI M8U XL MIDI 4
+out" "system:ESI M8U XL MIDI 4 in"
+
+Make sure that the out-port-name and the in-port-name match the names
+corresponding to the ports where you just plugged in your MIDI cable.
+:)
+
+3.) Send me the results.  I'd like to know the name of your MIDI
+interface, the protocol it uses to communicate with your computer
+(USB, PCI, etc.), and the results of `jack_midi_latency_test`.  Also,
+let me know if your system isn't configured for realtime.
+
+Here's an example of what I'd like to see:
+
+----------
+
+MIDI interface: ESI M8U XL (USB)
+JACK command: jackd --sync -P70 -Xalsarawmidi -ddummy
+
+devin@development:~/sandbox$ jack_midi_latency_test -m 3 -s 8192 -t 5
+"system:ESI M8U XL MIDI 4 out" "system:ESI M8U XL MIDI 4 in"
+Reported out-port latency: 21.31-21.31 ms (1023-1023 frames)
+Reported in-port latency: 21.31-21.31 ms (1023-1023 frames)
+Average latency: 44.48 ms (2131.46 frames)
+Lowest latency: 43.93 ms (2105 frames)
+Highest latency: 45.35 ms (2173 frames)
+Peak MIDI jitter: 1.42 ms (68 frames)
+Average MIDI jitter: 0.25 ms (11.46 frames)
+
+Jitter Plot:
+0.0 - 0.1 ms: 1701
+0.1 - 0.2 ms: 1660
+0.2 - 0.3 ms: 1513
+0.3 - 0.4 ms: 1626
+0.4 - 0.5 ms: 1549
+0.5 - 0.6 ms: 140
+0.6 - 0.7 ms: 2
+0.8 - 0.9 ms: 1
+
+Latency Plot:
+43.9 - 44.0 ms: 225
+44.0 - 44.1 ms: 795
+44.1 - 44.2 ms: 813
+44.2 - 44.3 ms: 715
+44.3 - 44.4 ms: 871
+44.4 - 44.5 ms: 849
+44.5 - 44.6 ms: 823
+44.6 - 44.7 ms: 857
+44.7 - 44.8 ms: 767
+44.8 - 44.9 ms: 830
+44.9 - 45.0 ms: 610
+45.0 - 45.1 ms: 35
+45.1 - 45.2 ms: 1
+45.3 - 45.4 ms: 1
+
+Messages sent: 8192
+Messages received: 8192
+
+----------
+
+(Note: The peak jitter above is the difference between the highest
+latency and the lowest latency.  The jitter plot is created using the
+differences between the individual latency of each message, and the
+overall average latency.  If you see a bug in the latency test
+program, please let me know so I can fix it.)
+
+If you have more than on MIDI interface and/or want to test with
+multiple JACK configurations, then that would be awesome and totally
+appreciated.
+
+As of now, I've tested the 'alsarawmidi' driver with an Edirol UM-1S
+USB and an ESI M8U XL, and the FFADO driver with an Edirol FA-101.
+St&#xE9;phane has tested the CoreMIDI driver with his E-Magic MT4, and the
+WinMME with the Maple Virtual MIDI cable driver.
+
+I (nervously) look forward to your feedback. :)
+
+Thanks in advance,
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302125494.31153_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302135613.18740_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302129032.6125_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1302129032.6125_0.ltw:2,a&nbsp;&lt;BANLkTi=COogwJ0sf8TgqLnktV+8Fdw2hzA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,68 @@
+Date:        Thu, 22 Mar 2012 13:31:36 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] Patches for jack-0.121-3 (1332417351.4372_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Patches for jack-0.121-3
+
+Le 22 mars 2012 à 12:55, Fons Adriaensen a écrit :
+
+> On Thu, Mar 22, 2012 at 10:55:18AM +0100, Stéphane Letz wrote:
+> 
+> 
+>> Right now I see two flags that force "re-init" of the DLL: engine->first_wakeup  and timer->reset_pending. Those flags are tested in jack_run_cycle (engine->first_wakeup || timer->reset_pending).
+>> 
+>> 1) "first_wakeup" is set in jack_engine_new and in jack_stop_freewheeling. 
+>> 
+>> 2) "reset_pending" is set in jack_engine_delay
+>> 
+>> Would it make sense to keep only one flag? and set it in 4 places: first cycle, stop freewheel, XRun handling, buffer size change?
+> 
+> I didn't remove 'reset_pending' because I wasn't sure if 
+> 'first_wakeup' could be used from the context that sets
+> 'reset_pending'. The 'pending' part suggested something
+> asynchronous, i.e. this flag implicitly being used as a
+> sema in combination with some mutexes.
+> 
+> Apart from that there could be just one flag.
+> 
+> But you really want the 'perfect' way, there could be more.
+> There are 3 things to initialise:
+> 
+> 1. next_wakeup (to the current wakeup time, as the DLL will run)
+> 2. period_usecs
+> 3. filter_omega
+> 
+> 'First cycle' and 'buffer size change' should set them all.
+> For 'xrun' and 'end of freewheeling', just setting (1) is
+> enough, as the current value of (2) would be more accurate
+> than the initial one, and (3) is a constant.
+
+OK, but the thing is that  'end of freewheeling' event happens outside of the audio RT thread. 
+
+Right now JACK2 "set them all" in case of  : 'First cycle', 'buffer size change', and  'end of freewheeling' (since actually the audio driver is restarted and get back in the "First cycle'" case).
+
+In JACK2,  Xrun case can be possibly do " just setting (1)". I'll change that.
+
+> 
+> There are two other matters to consider/check.
+> 
+> For the first, see the comments near the end of jack_run_cycle();
+
+Ok for JACK1, JACK2 does that for "each callback" (real one or emulated one  with a thread + blocking backend)
+> 
+> The second concerns Jack1 only IIRC. If a cycle is skipped, 
+> the DLL should be run anyway. Jack1-0.121.3 did the right
+> thing and I don't think the patches affect this. But it's
+> worth checking.
+> 
+> Ciao.
+> 
+OK for JACK1 possibly, JACK2 does not have this issue.
+
+Stéphane
+
+1332419512.5586_0.ltw:2, <786B68C4-6049-4448-9F25-C6314B3C23D9 at grame dot fr>
+________________________________________________________________________________
+

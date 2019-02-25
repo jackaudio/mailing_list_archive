@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK thread priorities on different OSes (Was: Installers for Jack 1.9.8...)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK thread priorities on different OSes (Was: Installers for Jack 1.9.8...)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305302953.20656_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1305307076.24783_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1305304843.22688_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 13 May 2011 18:40:17 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Tommaso Cucinotta &lt;[hidden] at sssup dot it&gt;, Devin Anderson &lt;[hidden] at charityfinders dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Tommaso Cucinotta
+<a href='../1305302953.20656_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK thread priorities on different OSes (Was: Installers for Jack 1.9.8...) </a></td></tr>
+</table>
+<pre>
+Le 13 mai 2011 &#xE0; 18:08, Tommaso Cucinotta a &#xE9;crit :
+
+&gt; Il 12/05/2011 08:20, David Nielson ha scritto:
+&gt;&gt; On 05/12/2011 12:13 AM, St&#xE9;phane Letz wrote:
+&gt;&gt;&gt; 
+&gt;&gt;&gt; - concerning OSX: as I said there is no priority setting in the RT class. But this is more "reservation" like approach, Basically a period, a "uninteruptible computation grain", and a "constraint" (which is basically equals to the period.
+&gt; 
+&gt; For what it matters, this kind of model is the same that we need to exploit the deadline-based scheduler we're experimenting on Linux (presented during the last LAC): we identified the resource requirements of jackd and all of the involved client threads, in terms of how much computation-time is needed every period, and we've set-up parameters into the scheduler accordingly.
+&gt; AFAICS, currently this fComputation value is set-up statically to a random value ("500*1000"), or sometimes computed in a way I hope somebody can explain:
+&gt; 
+&gt;  driver-&gt;fEngineControl-&gt;fComputation = driver-&gt;fEngineControl-&gt;fPeriod * driver-&gt;fComputationGrain;
+
+Well you are actually looking at JackCoreAudioDriver and this specific line is completely "experimental" and to say the truth, not used at all.
+
+Here is the situation :
+
+-  all periodic OSX RT threads are supposed to have a "period" and a "constraint" (which is actually the same value than "period" in all examples I've seen...), The "computation" value describe an "uninterruptible time slice" the RT thread will be allowed to use. (this is somewhat different from what you may find in Apple documentation, but is the result of discussion with Apple CoreAudio guys I had in past years)
+
+Then this "uninterruptible time slice" is used to control correct thread interleaving, but in a quite ad-hoc manner at least for CoreAudio RT threads. Basically in CoreAudio they use a different "computation " value for the different buffer sizes with the following mapping:
+
+64 frames ==&gt; 500 usec
+128 frames ==&gt; 300 usec
+256 frames up to 4096 ==&gt; 100 usec
+
+So the point is : a thread with a larger buffer size can afford to be interrupted often by another RT thread, (so lower computation value) but a thread with lover buffer size can't or lest often (so higher computation value)
+
+For MIDI thread (CoreMIDI ones), again a very ad-hoc way : period = 0 computation = 250 constraint = 500
+
+- audio RT client threads (the one started by libjack) take the values that are read in the server CoreAudio backend thread, so same value for all audio RT threads
+
+- in dummy and net drivers, the values are setup "manually" (And I've just checked that the code is actually incorrect in SVN, I'll fix that ASAP)
+
+&gt; 
+&gt; Perhaps there's a chance to reuse a part of this deadline-based work on Linux also for setting up some more meaningful values on OS-X. However, that needs to be crossed with info about what the kernel actually does with those parameters. With Linux, that was easy: the whole set of threads were getting (at least) that required computation-time every period.
+
+I don't see how the  period,  computation,  constraint , parameters can be used in a similar manner. There is not real notion of "reserved time slice" so to say.
+
+
+&gt; 
+&gt;&gt;&gt; Periodic tasks (like the audio ones) have to defines their period, MIDI task don"t need that (period = 0).
+&gt; 
+&gt; Probably I don't know much about how MIDI is coming in the loop: when are MIDI clients "polled" by Jack, as compared to the periodic main audio cycle ?
+
+The point of audio/MIDI thread correct interleaving is on driver side (so in server process): audio and MIDI runs in different thread. I think Devin can explain better his design.
+
+&gt; If I have both a MIDI-enabled and an audio-enabled client, let's say a synthesizer (MIDI inputs and audio outputs), then does it have now 2 jack threads (one activated for processing MIDI the other for audio) ?
+&gt; 
+No there is single thread on client side: MIDI events are aligned on a given audio frame, but have to be handled in the same RT thread.
+
+Stephane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305302953.20656_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1305307076.24783_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1305304843.22688_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1305304843.22688_0.ltw:2,a&nbsp;&lt;3C35B251-022D-407E-BC88-97438BE98F6B at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

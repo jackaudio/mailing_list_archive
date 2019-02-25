@@ -1,0 +1,68 @@
+Date:        Wed, 29 Jan 2014 11:38:33 -0800
+From:        Grant  <[hidden] at gmail dot com>
+To:          Fernando Lopez-Lezcano <[hidden] at ccrma dot stanford dot edu>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Fernando Lopez-Lezcano Re: [Jack-Devel] jack is broken on ARM without bogomips (1390439184.29576_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] jack is broken on ARM without bogomips (1391024851.26530_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack is broken on ARM without bogomips
+
+>>>>      My gut feeling is that we should rely on a proper monotonic clock
+>>>>      instead and drop this /proc/cpuinfo parser altogether.
+>>>>
+>>>> agreed 100%.
+>>>
+>>> In the meantime... (I'm also seeing this error on newer kernels)
+>>>
+>>> Would it make sense to just hardwire something in there if the existing
+>>> tests fail? Is there something that will break if I do that? (I'm going
+>>> to
+>>> test that but I m asking anyway).
+>>
+>> Please share your patch if you get something working.
+>
+> Hi Grant,
+>
+> I just tried a hack. Can't be called a proper patch, I just used 1000MHz as
+> the frequency - I thought that would work as, after all, the BogoMips
+> numbers are, well, "bogus" anyway. At least on Pidora with 3.12.x it seems
+> to start and work. Not much testing but got a sinewave going :-) Hack below
+> (messages could be nicer, of course)...
+>
+> It would be nice to have a proper fix.
+> -- Fernando
+>
+> --- jack-1.9.9.5/linux/JackLinuxTime.c~ 2012-12-10 01:26:57.000000000 -0800
+> +++ jack-1.9.9.5/linux/JackLinuxTime.c  2014-01-22 14:39:41.000000000 -0800
+> @@ -152,7 +152,9 @@
+>                 if (fgets(buf, sizeof(buf), f) == NULL) {
+>                         jack_error ("FATAL: cannot locate cpu MHz in "
+>                                     "/proc/cpuinfo\n");
+> -                       exit(1);
+> +                       fclose(f);
+> +                       jack_log("Using 1GHz by default");
+> +                       return (jack_time_t)1000;
+>                 }
+>
+>  #if defined(__powerpc__)
+> @@ -176,6 +178,10 @@
+>                 {
+>                         fclose(f);
+>                         return (jack_time_t)mhz;
+> +               } else {
+> +                       fclose(f);
+> +                       jack_log("Using 1GHz by default");
+> +                       return (jack_time_t)1000;
+>                 }
+>         }
+>  }
+
+Hi Fernando, I was about to try this but I can't find JackLinuxTime.c
+in the latest version from git.  Does anyone know where this code is
+now?
+
+- Grant
+
+1391024322.26128_0.ltw:2,a <CAN0CFw23dcXG1A3EtxkUDHf=1LUMW=FBR-0anoDUXOJuiKYR+w at mail dot gmail dot com>
+________________________________________________________________________________
+

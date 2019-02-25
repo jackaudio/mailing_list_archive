@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JackTransport vs VST ppqPos</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JackTransport vs VST ppqPos</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1368658522.14796_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1368709457.32654_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1368692594.19456_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 16 May 2013 04:23:01 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Pawel &lt;[hidden] at wp dot pl&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+JACK cannot compute BBT based times. So i am not sure what you are
+proposing. Would it be more clear if I read the patch? (I have limited
+computing capabilities right now, so I haven't looked at it).
+
+
+On Thu, May 16, 2013 at 12:39 AM, Pawel &lt;[hidden]&gt; wrote:
+
+&gt; Is there any good reason to not sync BBT with frames ?
+&gt;
+&gt; I made patch for jack_transport example client (actually it remove some
+&gt; unnecessary code ;-)
+&gt;
+&gt; ... but I just realized that there is always one way for compute BBT - so
+&gt; Jack should do this by self, and master client should change these values:
+&gt;                 pos-&gt;beats_per_bar = time_beats_per_bar;
+&gt;                 pos-&gt;beat_type = time_beat_type;
+&gt;                 pos-&gt;ticks_per_beat = time_ticks_per_beat;
+&gt;                 pos-&gt;beats_per_minute = time_beats_per_minute;
+&gt;
+&gt;
+&gt; What do you think ?
+&gt;
+&gt; P.
+&gt;
+&gt; Dnia &#x15A;roda, 15 Maja 2013 10:59 Paul Davis &lt;[hidden]&gt;
+&gt; napisa&#x142;(a)
+&gt; &gt; ticks are intentionally integral, following a tradition that has
+&gt; developed in most (all?) MIDI sequencers over the last 20 years. the
+&gt; program defines N ticks per beat. 1 tick is the smallest absolute unit of
+&gt; musical time expressible with this series of time units - there is no
+&gt; concept of 0.5 ticks. typical values for ticks per beat are 1920, 3840 and
+&gt; so on - numbers with huge numbers of integer factors so that all common
+&gt; musical beat subdivisions can be expressed *without* floating point and
+&gt; with absolute precision. it is true that at the implementation level, this
+&gt; type of design is tricky to get right - you must be very, very careful with
+&gt; rounding. but it is not an accident that this is uint32_t and no value for
+&gt; "ticks" visible to a caller should ever be non-integral.
+&gt; &gt;
+&gt; &gt; On Wed, May 15, 2013 at 12:31 AM, Pawel &lt;[hidden]&gt; wrote:
+&gt; &gt; &gt; Dnia Niedziela, 12 Maja 2013 11:45 St&amp;eacute;phane Letz &lt;[hidden]&gt;
+&gt; napisa&#x142;(a)
+&gt; &gt; &gt; &gt;
+&gt; &gt; &gt;  &gt; Le 9 mai 2013 ? 03:22, Pawel &lt;[hidden]&gt; a &amp;eacute;crit :
+&gt; &gt; &gt;  &gt;
+&gt; &gt; &gt;  &gt; &gt; Hi,
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; I discover strange problem while improving JackTransport support
+&gt; in FSTHost.
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; Most VST plugins while trying to synchronize with host usually
+&gt; ask for such things:
+&gt; &gt; &gt;  &gt; &gt; 1) tempo ( == jack_pos.beats_per_minute)
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; 2) ppqPos - which I understand like "current quarter note" ==
+&gt; current jack_pos.beat.
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; 3) barStartPos .. ok, this one is not a subject in this case ;-)
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; 4) samplePos == jack_pos.frame
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; 5) sampleRate == jack_pos.frame_rate
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; The problem is which pppPos. There are two ideas how to compute
+&gt; this:
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; 1) Using BBT (which should be a preferred option here, right ?)
+&gt; &gt; &gt;  &gt; &gt; double ppqBar = (jp.bar - 1) * jp.beats_per_bar;
+&gt; &gt; &gt;  &gt; &gt; double ppqBeat = jp.beat - 1;
+&gt; &gt; &gt;  &gt; &gt; double ppqTick = (double) jp.tick / jp.ticks_per_beat;
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; ppqPos = ppqBar + ppqBeat + ppqTick;
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; 2) Using sample rate / current frame / tempo - this is a standard
+&gt; way in VST world. We count how much samples is in quarter note (beat) ..
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; double ppq = jp.frame_rate * 60 / jp.beats_per_minute;
+&gt; &gt; &gt;  &gt; &gt; ppqPos = jp.frame / ppq;
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; The problem is that .. this second counter "hurry" (sorry can't
+&gt; find better word for this issue in english ;-)
+&gt; &gt; &gt;  &gt; &gt; I made really simple , example app for observe this issue - it is
+&gt; included in FSTHost repository:
+&gt; &gt; &gt;  &gt; &gt; http://sourceforge.net/p/fsthost/code/HEAD/tree/trunk/jt-test.c
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; Frame: 0013314048 | Bar: 0068 | Beat: 3 | Tick: 1680 | CBFF:
+&gt; 277.38 | CBFBBT: 270.88
+&gt; &gt; &gt;  &gt; &gt; Frame: 0013410304 | Bar: 0069 | Beat: 1 | Tick: 1600 | CBFF:
+&gt; 279.38 | CBFBBT: 272.83
+&gt; &gt; &gt;  &gt; &gt; Frame: 0013506048 | Bar: 0069 | Beat: 3 | Tick: 1500 | CBFF:
+&gt; 281.38 | CBFBBT: 274.78
+&gt; &gt; &gt;  &gt; &gt; Frame: 0013602304 | Bar: 0070 | Beat: 1 | Tick: 1420 | CBFF:
+&gt; 283.38 | CBFBBT: 276.74
+&gt; &gt; &gt;  &gt; &gt; Frame: 0013698560 | Bar: 0070 | Beat: 3 | Tick: 1340 | CBFF:
+&gt; 285.39 | CBFBBT: 278.70
+&gt; &gt; &gt;  &gt; &gt; Frame: 0013794304 | Bar: 0071 | Beat: 1 | Tick: 1240 | CBFF:
+&gt; 287.38 | CBFBBT: 280.65
+&gt; &gt; &gt;  &gt; &gt; Frame: 0013890560 | Bar: 0071 | Beat: 3 | Tick: 1160 | CBFF:
+&gt; 289.39 | CBFBBT: 282.60
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; Please look that after a while CBFF &gt; CBFBBT, and trend is that
+&gt; difference will grow. I tested this with either Hydrogen and jack_transport
+&gt; as master. The funny thing is that - when I skip location to for example in
+&gt; jack_transport:
+&gt; &gt; &gt;  &gt; &gt; jack_transport&gt; stop
+&gt; &gt; &gt;  &gt; &gt; jack_transport&gt; locate 0
+&gt; &gt; &gt;  &gt; &gt; jack_transport&gt; locate 51111111
+&gt; &gt; &gt;  &gt; &gt; jack_transport&gt; play
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; CBFF and CBFBBT back to normal (almost) .. aha - so we know that
+&gt; formulas are good - and problem is in Jack.
+&gt; &gt; &gt;  &gt; &gt; Frame: 0051936967 | Bar: 0271 | Beat: 2 | Tick: 1184 | CBFF:
+&gt; 1082.02 | CBFBBT: 1081.62
+&gt; &gt; &gt;  &gt; &gt; Frame: 0052033223 | Bar: 0271 | Beat: 4 | Tick: 1104 | CBFF:
+&gt; 1084.03 | CBFBBT: 1083.58
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; This was tested only with Jack2 (1.9.8 and 1.9.9.5).
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; Any ideas ?
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt; &gt; Best Regards
+&gt; &gt; &gt;  &gt; &gt; Pawel / Xj
+&gt; &gt; &gt;  &gt; &gt;
+&gt; &gt; &gt;  &gt;
+&gt; &gt; &gt;  &gt;
+&gt; &gt; &gt;  &gt; JACK does not do anything regarding those values: the timebase
+&gt; master *client* is responsible to update extended position information,
+&gt; counting beats, timecode, etc. (see :
+&gt; http://jackaudio.org/files/docs/html/transport-design.html)
+&gt; &gt; &gt;  &gt;
+&gt; &gt; &gt;  &gt; I don't see any specific issues here on OSX testing either with
+&gt; jack_transport or Ardour as timebase master (well I see CBFBBT value
+&gt; staying the same while CBFF moving with jack_transport  at very low tempo
+&gt; like 1 or 2)
+&gt; &gt; &gt;  &gt;
+&gt; &gt; &gt;  &gt; Can you try with Ardour also?
+&gt; &gt; &gt;  &gt;
+&gt; &gt; &gt;  &gt; St&amp;eacute;phane
+&gt; &gt; &gt;  Thanks for answer Stephane.
+&gt; &gt; &gt;  Meantime I dig a little and I think that found a reason of this
+&gt; issue, If you look on this line from transport.c (jack_transport example
+&gt; client):
+&gt; &gt; &gt;  pos-&gt;tick += nframes * pos-&gt;ticks_per_beat * pos-&gt;beats_per_minute /
+&gt; (pos-&gt;frame_rate * 60);
+&gt; &gt; &gt;
+&gt; &gt; &gt;  IMHO it mean "how many ticks are in current period". If nframes is
+&gt; 256 and frame rate is 96k  and BPM is 5 (or less) you got 0.928798 ... but
+&gt; pos-&gt;tick is uint32_t .. so you actually got 0 ;-). OFC this is related to
+&gt; your settings and that's way YMMV. Well ... in some cases jack_transport
+&gt; will not push BBT at all ;-)
+&gt; &gt; &gt;
+&gt; &gt; &gt;  The problem is in Transport design itself - because BBT master works
+&gt; always in current cycle space/context - I mean - it  doesn't look at the
+&gt; history (anyway it can't if we want to have tempo changes, right ?), and
+&gt; because ticks are uint32_t  we will have always some rounding.
+&gt; &gt; &gt;
+&gt; &gt; &gt;  The most simple way to fix this that I see is push tick to double -
+&gt; but this probably made some compatibility issues :(
+&gt; &gt; &gt;
+&gt; &gt; &gt;  Or maybe someone have better idea - maybe we can use pos-&gt;frame to
+&gt; adjust pos-&gt;tick in next frame ?
+&gt; &gt; &gt;
+&gt; &gt; &gt;  Pawel / Xj
+&gt; &gt; &gt;
+&gt; &gt; &gt;
+&gt; &gt; &gt;  
+&gt; &gt; &gt;  Jack-Devel mailing list
+&gt; &gt; &gt;  [hidden]
+&gt; &gt; &gt;  http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt; &gt;
+&gt;
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1368658522.14796_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1368709457.32654_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1368692594.19456_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1368692594.19456_0.ltw:2,&nbsp;&lt;CAFa_cKkkj3kMsVCtYAquHRqQ7KzBFpUJgUmExfTmuM0esAY_vA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

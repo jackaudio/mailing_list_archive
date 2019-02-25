@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] FFADO issues after freewheeling (was: Re: update jack from 1.9.7 to 1.9.8)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] FFADO issues after freewheeling (was: Re: update jack from 1.9.7 to 1.9.8)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1331215646.28813_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1331230851.22246_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1331216976.31062_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 08 Mar 2012 09:28:38 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1331215646.28813_0.ltw:2,a/index.html'>Re: [Jack-Devel] FFADO issues after freewheeling (was: Re: update jack from 1.9.7 to 1.9.8) </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1331672777.11451_0.ltw:2,a/index.html'>Re: [Jack-Devel] FFADO issues after freewheeling (was: Re: update jack from 1.9.7 to 1.9.8) </a></td></tr>
+</table>
+<pre>
+On Thu, Mar 8, 2012 at 9:06 AM, Fons Adriaensen &lt;[hidden]&gt; wrote:
+&gt; On Fri, Mar 09, 2012 at 12:05:41AM +1030, Jonathan Woithe wrote:
+&gt;
+&gt;&gt; FFADO isn't aware of freewheeling as such. &#xA0;However, when freewheeling is
+&gt;&gt; started the backend streaming is stopped for the reasons Paul mentioned.
+&gt;&gt; When jack is taken out of freewheeling the backend is restarted again.
+&gt;&gt; FFADO sees the stop/start cycle but doesn't know (or care) that this is
+&gt;&gt; because of freewheeling.
+&gt;
+&gt; Paul didn't give any reasons why freewheeling is implemented that way,
+&gt; and I'm somewhat surprised it is. To me the simplest way to do it
+&gt; would be:
+&gt;
+&gt; 1. The RT thread that normally calls the backend's 'wait for next cycle'
+&gt; function continues to do so, it feeds silence to the backend and discards
+&gt; any input it produces. That way even the backend would be unaware of
+&gt; freewheeling.
+&gt;
+&gt; 2. A second non-RT thread runs cycles as fast as it can, substituting
+&gt; the backend buffers by dummy ones. Only two extra buffers are required
+&gt; to do that, one (silenced) given to all clients that have system:capture
+&gt; ports connected, and one for output (which can be shared for all system:
+&gt; playback channels as it will be discarded anyway).
+&gt;
+&gt; I always imagined things worked that way...
+
+what you describe is actually more complex. it requires special
+handling of port buffers, which the current scheme(s) (multiple since
+both jack1 and jack2 do this) do not. it also requires a second thread
+which comes and goes.  the current schemes simply tell the backend
+that its freewheeling - it stops the device it is using, and simply
+wakes up the "engine" immediately that the engine returns from the
+previous "cycle" (rather than waiting for the device). almost no other
+code is required. starting and stopping devices is something that the
+backend will already have code for; the idea that such code is not
+functional if called more than once seems problematic.
+
+--p
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1331215646.28813_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1331230851.22246_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1331216976.31062_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1331216976.31062_0.ltw:2,a&nbsp;&lt;CAFa_cKn4KCiVjUgJFnS9X9b6x5Bk=j0EA7g=4r923V8RTJ+0wA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

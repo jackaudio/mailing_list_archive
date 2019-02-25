@@ -1,0 +1,68 @@
+Date:        Wed, 13 Jul 2011 15:57:55 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK Mailing List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] how often should one call jack_port_get_latency_range() (1310564105.13627_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] how often should one call jack_port_get_latency_range() (1310565715.17007_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] how often should one call jack_port_get_latency_range()
+
+On 07/13/2011 03:34 PM, Paul Davis wrote:
+> On Wed, Jul 13, 2011 at 9:30 AM, Robin Gareus <[hidden]> wrote:
+>> G'day!
+>>
+>> I have a JACK client with a single audio-input-port (no output). This
+>> input is used to parse Linear-Time-Code. For synchronization the
+>> application needs to know the capture-latency of said audio-port.
+>>
+>> So the question is: how often should the application call
+>> jack_port_get_latency_range() ?
+>>
+>> Currently it does so in every process_callback.
+>>
+>> Is this the correct solution?
+> 
+> no.
+> 
+>> The overhead may be minimal, but still it feels somewhat wrong to poll
+>> it during every process() cycle. Is there a callback that can be
+>> subscribed to to get notified of changes to port-latencies?
+> 
+> From the documentation of jack_set_latency_callback():
+> 
+>  * Tell the Jack server to call @a latency_callback whenever it
+>  * is necessary to recompute the latencies for some or all
+>  * Jack ports.
+
+From the same documentation:
+
+  | Clients that meet any of the following conditions do NOT need to
+  | register a latency callback:
+  |
+  |  * have only input ports
+  |  * ..
+
+All of the criteria are matched in my app (xjadeo), but it's somewhat
+misleading as these criteria are only concerned with the client
+_setting_ the latency.
+
+It would be helpful to mention that this callback can also be used to
+query it.
+
+On that note: In which order is this callback executed?
+Can one query the jack_port_get_latency_range() from within this
+callback? - It seems possible that some clients may not yet have updated
+their latency when the callback is invoked in some other client.
+
+Is this correct?
+
+If so a client only interested in querying the latency should set a flag
+in in the latency_callback function and [later] query the new port
+latency during the process_callback IFF this flag is set, right?
+
+ciao,
+robin
+
+1310565577.16569_0.ltw:2,a <4E1DA463.2060308 at gareus dot org>
+________________________________________________________________________________
+

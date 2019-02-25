@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] routing alsa through jack</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] routing alsa through jack</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1387898230.17025_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388085624.6739_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388045974.14857_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 26 Dec 2013 09:19:18 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Lucio Crusca </span> &lt;[hidden] at sulweb dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Dominique Michel
+<a href='../1387893938.14265_0.ltw:2,/index.html'>Re: [Jack-Devel] routing alsa through jack </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Dominique Michel
+<a href='../1388280323.27449_0.ltw:2,/index.html'>Re: [Jack-Devel] routing alsa through jack </a></td></tr>
+</table>
+<pre>
+In data marted&#xEC; 24 dicembre 2013 15:25:32, Dominique Michel ha scritto:
+
+&gt; That doesn't tell much. Can you post your configuration inclusive
+&gt; aplay -l output
+&gt; /etc/modprobe.d/sound.conf content (or whatever file is appropriated)
+&gt; lsmod | grep aloop output
+&gt; your .asoudrc content
+
+$ lspci -vv # I only use the analog one, my HDMI monitor lacks loudspeakers
+[...]
+00:14.2 Audio device: Advanced Micro Devices, Inc. [AMD/ATI] SBx00 Azalia 
+(Intel HDA) (rev 40)
+        Subsystem: ASUSTeK Computer Inc. Device 8436
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow &gt;TAbort- 
+&lt;TAbort- &lt;MAbort- &gt;SERR- &lt;PERR- INTx-
+        Latency: 32, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 16
+        Region 0: Memory at feb00000 (64-bit, non-prefetchable) [size=16K]
+        Capabilities: &lt;access denied&gt;
+        Kernel driver in use: snd_hda_intel
+[...]
+07:00.1 Audio device: Advanced Micro Devices, Inc. [AMD/ATI] Caicos HDMI Audio 
+[Radeon HD 6400 Series]
+        Subsystem: PC Partner Limited / Sapphire Technology Radeon HD 6450 1GB 
+DDR3
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx+
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast &gt;TAbort- 
+&lt;TAbort- &lt;MAbort- &gt;SERR- &lt;PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin B routed to IRQ 101
+        Region 0: Memory at fe740000 (64-bit, non-prefetchable) [size=16K]
+        Capabilities: &lt;access denied&gt;
+        Kernel driver in use: snd_hda_intel
+
+
+
+
+
+$ aplay -l
+**** List of PLAYBACK Hardware Devices ****
+card 0: Loopback [Loopback], device 0: Loopback PCM [Loopback PCM]
+  Subdevices: 1/2
+  Subdevice #0: subdevice #0
+  Subdevice #1: subdevice #1
+card 0: Loopback [Loopback], device 1: Loopback PCM [Loopback PCM]
+  Subdevices: 1/2
+  Subdevice #0: subdevice #0
+  Subdevice #1: subdevice #1
+card 1: SB [HDA ATI SB], device 0: ALC892 Analog [ALC892 Analog]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 1: SB [HDA ATI SB], device 1: ALC892 Digital [ALC892 Digital]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 2: Generic [HD-Audio Generic], device 3: HDMI 0 [HDMI 0]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+
+
+
+
+
+
+$ cat /etc/modprobe.d/alsa-base.conf
+options snd cards_limit=3
+alias snd-card-0 snd-aloop
+alias snd-card-1 snd-hda-intel
+
+options snd-aloop index=0 pcm_substreams=2
+options snd-hda-intel index=1
+
+# autoloader aliases
+install sound-slot-0 /sbin/modprobe snd-card-0
+install sound-slot-1 /sbin/modprobe snd-card-1
+install sound-slot-2 /sbin/modprobe snd-card-2
+install sound-slot-3 /sbin/modprobe snd-card-3
+install sound-slot-4 /sbin/modprobe snd-card-4
+install sound-slot-5 /sbin/modprobe snd-card-5
+install sound-slot-6 /sbin/modprobe snd-card-6
+install sound-slot-7 /sbin/modprobe snd-card-7
+# Cause optional modules to be loaded above generic modules
+install snd /sbin/modprobe --ignore-install snd &amp;&amp; { /sbin/modprobe --quiet 
+snd-ioctl32 ; /sbin/modprobe --quiet snd-seq ; : ; }
+install snd-rawmidi /sbin/modprobe --ignore-install snd-rawmidi &amp;&amp; { 
+/sbin/modprobe --quiet snd-seq-midi ; : ; }
+install snd-emu10k1 /sbin/modprobe --ignore-install snd-emu10k1 &amp;&amp; { 
+/sbin/modprobe --quiet snd-emu10k1-synth ; : ; }
+# Keep snd-pcsp from beeing loaded as first soundcard
+options snd-pcsp index=-2
+# Keep snd-usb-audio from beeing loaded as first soundcard
+options snd-usb-audio index=-2
+# Prevent abnormal drivers from grabbing index 0
+options bt87x index=-2
+options cx88_alsa index=-2
+options snd-atiixp-modem index=-2
+options snd-intel8x0m index=-2
+options snd-via82xx-modem index=-2
+
+
+
+
+
+
+$ lsmod  | grep aloop
+snd_aloop              18131  4 
+snd_pcm                79941  8 
+snd_pcm_oss,snd_aloop,snd_hda_codec_hdmi,snd_hda_codec,snd_hda_intel
+snd                    60869  27 
+snd_hda_codec_realtek,snd_pcm_oss,snd_aloop,snd_hwdep,snd_timer,snd_hda_codec_hdmi,snd_pcm,snd_seq,snd_rawmidi,snd_hda_codec,snd_hda_intel,snd_seq_device,snd_mixer_oss
+
+
+
+
+
+
+$ cat $HOME/.asoundrc
+#------------------------------------------------------
+# hardware 0,0 : used for ALSA playback
+pcm.loophw00 {
+  type hw
+  card Loopback
+  device 0
+  subdevice 0
+  format S32_LE
+  rate 48000
+}
+
+# ------------------------------------------------------
+# playback PCM device: using loopback subdevice 0,0
+# Don't use a buffer size that is too small. Some apps 
+# won't like it and it will sound crappy 
+
+pcm.amix {
+  type dmix
+  ipc_key 219345
+  slave {
+    pcm loophw00
+    period_size 4096
+    periods 2
+  }
+}
+
+# ------------------------------------------------------
+# software volume
+pcm.asoftvol {
+  type softvol
+  slave.pcm "amix"
+
+  control { name PCM }
+
+  min_dB -51.0
+  max_dB   0.0
+}
+
+# ------------------------------------------------------
+# for jack alsa_in: looped-back signal at other ends
+pcm.cloop {
+  type hw
+  card Loopback
+  device 1
+  subdevice 0
+  format S32_LE
+  rate 48000
+}
+
+# ======================================================
+# ------------------------------------------------------
+# hardware 0,1 : used for ALSA capture
+pcm.loophw01 {
+  type hw
+  card Loopback
+  device 0
+  subdevice 1
+  format S32_LE
+  rate 48000
+}
+
+# ------------------------------------------------------
+# for jack alsa_out: looped-back signal at other end
+pcm.ploop {
+  type hw
+  card Loopback
+  device 1
+  subdevice 1
+  format S32_LE
+  rate 48000
+}
+
+# ======================================================
+# ------------------------------------------------------
+# duplex device combining our PCM devices defined above
+pcm.aduplex {
+  type asym
+  playback.pcm "asoftvol"
+  capture.pcm "loophw01"
+}
+
+# ------------------------------------------------------
+# default device
+pcm.!default {
+  type plug
+  slave.pcm aduplex
+
+  hint {
+    show on
+    description "Duplex Loopback"
+  }
+}
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1387898230.17025_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388085624.6739_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388045974.14857_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1388045974.14857_0.ltw:2,&nbsp;&lt;4777588.UfCqYUO964 at fx&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

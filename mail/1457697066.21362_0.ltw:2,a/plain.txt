@@ -1,0 +1,95 @@
+Date:        Fri, 11 Mar 2016 12:50:58 +0100
+From:        Xavier Mendez  <[hidden] at jmendeth dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] Netjack crashes, alignment broken recently (1457695079.17624_0.ltw:2,)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] Netjack crashes, alignment broken recently (1457700595.28311_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Netjack crashes, alignment broken recently
+
+El 11/03/16 a les 12:17, Stéphane Letz ha escrit:
+>
+> Le 11 mars 2016 à 12:05, Filipe Coelho <[hidden]> a écrit :
+>
+>> On 10.03.2016 18:41, Xavier Mendez wrote:
+>>> Just compiled the latest jackd2, and when using Netjack both manager and driver crash after sending parameters. I traced back to this change from 02f74a659, which modifies the network parameter struct:
+>>>
+>>> --- a/common/JackNetTool.h
+>>> +++ b/common/JackNetTool.h
+>>> @@ -94,9 +94,9 @@ namespace Jack
+>>> -        char fName[JACK_CLIENT_NAME_SIZE];
+>>> -        char fMasterNetName[JACK_SERVER_NAME_SIZE];
+>>> -        char fSlaveNetName[JACK_SERVER_NAME_SIZE];
+>>> +        char fName[JACK_CLIENT_NAME_SIZE+1];
+>>> +        char fMasterNetName[JACK_SERVER_NAME_SIZE+1];
+>>> +        char fSlaveNetName[JACK_SERVER_NAME_SIZE+1];
+>>>
+>>> That extra byte for the NUL terminator breaks the alignment, and somehow causes some ints to be sent as little-endian:
+>>>
+>>>     Sample rate : 12288000 frames per second
+>>>     Period size : 131072 frames per period
+>>>
+>>> Reverting the three lines seems to resolve the problem. I don't really see the use for having the NUL terminator go through the network...
+>>>
+>>> What do you think?
+>>
+>> I can confirm this is an issue for me.
+>> The "-d net" option stopped working some time ago and I've been wondering why, that change seems to be the reason.
+>>
+>> Reverting it in both client&server makes netmanager work again.
+>>
+>>
+>> Please do a pull request against jack2's github repo.
+>> That would be the fastest way to get this fixed upstream.
+>>
+>
+> It would be better to understand why changing the  data structure (which is used both side of the connection… ) caused the crash. Are you sure the code is correctly recompiled everywhere?
+
+Yes, I cloned and compiled 7bdad4966b29 on both ends, and even made sure 
+to configure with the same options. The driver end is a Raspberry Pi 
+with Raspbian, the manager end is my laptop (x64).
+
+This is the discovery packet I get from the Pi, running "jackd -dnet -n 
+raspberrypi -C1 -P1 -i1 -o1":
+
+00000000  70 61 72 61 6d 73 00 00  00 00 00 08 00 00 00 00 
+|params..........|
+00000010  72 61 73 70 62 65 72 72  79 70 69 00 00 00 00 00 
+|raspberrypi.....|
+00000020  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+|................|
+*
+00000150  00 00 73 61 6c 61 00 00  00 00 00 00 00 00 00 00 
+|..sala..........|
+00000160  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+|................|
+*
+00000250  00 00 00 00 00 00 05 dc  00 00 00 00 00 00 00 00 
+|................|
+00000260  00 00 00 01 00 00 00 01  00 00 00 01 00 00 00 01 
+|................|
+00000270  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+|................|
+00000280  00 00 00 00 00 00 00 05                           |........|
+00000288
+
+As you can see, we have:
+
+fMtu: 00 00 00 05 (correct)
+fID: DC 00 00 00
+fTransportSync: 00 00 00 00
+
+And then, instead of the expected 00 00 00 01 for fSendAudioChannels, we 
+have 00 00 00 00 01, which suggests the compiler has added a byte of 
+padding to align the int? I don't know.
+
+> Stéphane
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+
+1457697066.21362_0.ltw:2,a <56E2B122.2070901 at jmendeth dot com>
+________________________________________________________________________________
+

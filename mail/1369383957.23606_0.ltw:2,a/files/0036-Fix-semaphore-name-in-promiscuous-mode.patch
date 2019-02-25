@@ -1,0 +1,29 @@
+From 6b993a97e5b87323e74b682638396afa436cbf5e Mon Sep 17 00:00:00 2001
+From: Luciano Montanaro <luciano.montanaro@magnetimarelli.com>
+Date: Wed, 6 Feb 2013 18:03:26 +0100
+Subject: [PATCH 36/36] Fix semaphore name in promiscuous mode
+
+---
+ dist/jackd2/src/posix/JackPosixSemaphore.cpp |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
+
+diff --git a/dist/jackd2/src/posix/JackPosixSemaphore.cpp b/dist/jackd2/src/posix/JackPosixSemaphore.cpp
+index 2c3377a..d60d86f 100644
+--- a/dist/jackd2/src/posix/JackPosixSemaphore.cpp
++++ b/dist/jackd2/src/posix/JackPosixSemaphore.cpp
+@@ -32,7 +32,11 @@ void JackPosixSemaphore::BuildName(const char* client_name, const char* server_n
+ {
+     char ext_client_name[JACK_CLIENT_NAME_SIZE + 1];
+     JackTools::RewriteName(client_name, ext_client_name);
+-    snprintf(res, size, "jack_sem.%d_%s_%s", JackTools::GetUID(), server_name, ext_client_name);
++    if (getenv("JACK_PROMISCUOUS_SERVER")) {
++	snprintf(res, size, "jack_sem.%s_%s", server_name, ext_client_name);
++    } else {
++	snprintf(res, size, "jack_sem.%d_%s_%s", JackTools::GetUID(), server_name, ext_client_name);
++    }
+ }
+ 
+ bool JackPosixSemaphore::Signal()
+-- 
+1.7.0.4
+

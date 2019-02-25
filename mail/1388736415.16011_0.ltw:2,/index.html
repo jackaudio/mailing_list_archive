@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] from alsa_[in|out] to zita</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] from alsa_[in|out] to zita</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1388733797.11700_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388747464.2891_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388736415.16011_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 03 Jan 2014 09:06:45 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Lucio Crusca </span> &lt;[hidden] at sulweb dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1388755098.14781_0.ltw:2,/index.html'>Re: [Jack-Devel] from alsa_[in|out] to zita </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Dominique Michel
+<a href='../1388762126.19924_0.ltw:2,/index.html'>Re: [Jack-Devel] from alsa_[in|out] to zita </a></td></tr>
+</table>
+<pre>
+Now I have my alsa&lt;-&gt;jack routuing working with alsa_in and alsa_out.
+I'd like to move to zita.
+
+My working script is:
+
+#--8X--------------
+jackd -R -P 95 -T -ndefault -d alsa  --period 128 --device hw:1 &amp;
+sleep 1
+
+# create the loop ALSA &lt;-&gt; JACK
+alsa_out -j ploop -dploop -q 1 &amp;
+alsa_in -j cloop -dcloop -q 1 &amp;
+
+# wait 1 second
+sleep 1
+
+# cloop ports -&gt; jack output ports 
+jack_connect cloop:capture_1 system:playback_1
+jack_connect cloop:capture_2 system:playback_2
+
+# jack input ports -&gt; ploop ports
+jack_connect system:capture_1 ploop:playback_1
+jack_connect system:capture_2 ploop:playback_2
+#--8X--------------
+
+If I replace the alsa_[in|out] lines with:
+
+zita-j2a -j ploop -v -d hw:0,1 -r 48000 -p 256 &amp;
+zita-a2j -j cloop -v -d hw:0,1 -r 48000 -p 256 &amp;
+
+or with:
+
+zita-j2a -j ploop -v -d hw:0,1 -r 48000 -p 256 -L &amp;
+zita-a2j -j cloop -v -d hw:0,1 -r 48000 -p 256 -L &amp;
+
+then I get, in both cases:
+
+$ aplay /usr/share/sounds/alsa/Front_Center.wav 
+ALSA lib pcm_direct.c:928:(snd1_pcm_direct_initialize_slave) requested or 
+auto-format is not available
+ALSA lib pcm_dmix.c:1034:(snd_pcm_dmix_open) unable to initialize slave
+aplay: main:722: audio open error: Invalid argument
+
+Please note that zita_a2j and zita_j2a do start withtout complaining:
+
+$ zita-j2a -j ploop -v -d hw:0,1 -r 48000 -p 256 
+playback :
+  nchan  : 2
+  fsamp  : 48000
+  fsize  : 256
+  nfrag  : 2
+  format : S16_LE
+capture  : not enabled
+Starting synchronisation.
+
+and similar output from zita-a2j.
+
+I guess I should play with -r and -p arguments, but I don't know what to try, 
+because when I start alsa_out I only get "selected sample format: float" and I 
+don't know how to map that format to zita arguments (assuming that's the 
+culprit).
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1388733797.11700_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388747464.2891_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388736415.16011_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1388736415.16011_0.ltw:2,&nbsp;&lt;1435864.bIUVE6dJuZ at fx&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

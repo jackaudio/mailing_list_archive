@@ -1,0 +1,41 @@
+Date:        Thu, 28 Nov 2013 22:25:53 -0800
+From:        Gabriel M. Beddingfield  <[hidden] at gmail dot com>
+To:          Fabian Schlieper <[hidden] at fabi dot me>, [hidden] at jackaudio dot org
+In-Reply-To: Fabian Schlieper [Jack-Devel] Jack on ARM with low-latency USB (1385053520.21667_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack on ARM with low-latency USB
+
+On 11/21/2013 08:17 AM, Fabian Schlieper wrote:
+> Hi everyone,
+>
+> I'm trying to build a low-latency audio processor on ODROID-X2 with an
+> external USB sound card (Behringer UCA-202).
+> I can't get jack working stable with a period size of 128 samples.
+[...snip...]
+>
+> It's running without audio glitches, but after some time (or when other USB
+> devices are heavily active) the sound gets disturbed and keeps crackling until
+> jack is restarted.
+>
+> I know I could increase the period size, but I want to have low-latency, Is
+> 128 period size even realistic with USB sound?
+
+Don't know if this relates, but...  On the OMAP4 SoC I've seen similar 
+problems with the EHCI controller with respect to audio reliability.  In 
+that set-up, the CPU has to respond to very frequent interrupts in order 
+for the controller to work properly.  This often lead to XRUNS.
+
+But at this latency, it could be *anything* causing your glitches.  Any 
+driver holding a spin lock while doing some "background" task will do 
+it.  I recommend tracing with `trace-cmd'[1] and inspecting them with 
+`kernelshark'.  If you can get a `trace-cmd' capture that includes the 
+XRUN's you'll get some clues about what is happening.
+
+-gabe
+
+[1] At the very least, do:
+     # trace-cmd record -e "sched:*" -e "irq:*"
+
+1385706375.26050_0.ltw:2, <52983371.1040101 at gmail dot com>
+________________________________________________________________________________
+

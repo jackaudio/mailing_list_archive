@@ -1,0 +1,60 @@
+Date:        Wed, 11 Sep 2013 23:42:03 +0200
+From:        Wolfgang Lorenz  <[hidden] at gmx dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] Using the callback free API with self-created RT-threads (1378911073.31237_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Using the callback free API with self-created RT-threads
+
+Am Wed, 11 Sep 2013 10:51:06 -0400
+schrieb Paul Davis <[hidden]>:
+
+> On Wed, Sep 11, 2013 at 10:33 AM, Stéphane Letz <[hidden]> wrote:
+> 
+> > The better way would be to use the JACK RT thread and implement the real
+> > code in the function given with jack_set_process_thread. (so in your case
+> > in  JackDriver::threads). This function would use the
+> >  jack_cycle_wait/jack_cycle_signal API. Then you can create additional
+> > workers threads, and add the proper synchronization mechanism between the
+> > JACK RT "master" thread at the worker threads.
+> 
+> precisely.
+
+I've run some tests, with your suggested (and the supposed, as I
+understand it) way of implementation and indeed, the jack_cycle_wait()
+call no longer blocks. I guess, that internally the timed wait returns
+after some signal is thrown at the "correct" process thread, when the
+server shuts down. Subsequently this thread is killed (and the created
+threads are left dangling around).
+
+Unfortunately, that is still not what I hoped for. After all, the thread
+creation and scheduling is already existing, working and tested in the
+project. All I'm doing is provide the driver (the equivalent to the
+JackDriver class in my example file) for the JACK connection.
+
+I've had a look at the existing ALSA driver. This one writes the output
+and then waits for a block of input samples, effectively achieving a
+two buffer latency in the system -- the same as if I would be using the
+proposed approaches from the JACK API. This should also be possible to
+achieve by writing the output buffers before calling jack_cycle_wait()
+and reading the input buffers afterwards. After all, this would kind of
+wrap the whole callback around the rest of the program. I should test
+this...
+
+Anyway, I just will have to synchronize the reading and writing stuff,
+and live with one buffer additional latency (if the above idea fails).
+It's not too bad, as the JACK driver was intended for
+easy-to-use-testing-desktop-setups (I'm making up words here... ;-) I
+hope you nevertheless know what I mean.) Production systems still will
+use the ALSA driver.
+
+
+Thanks again,
+  Wolfgang
+
+
+PS: Still, wouldn't it be good to be able to use some kind of
+    jack_cycle_timedwait(client, timeout) from foreign threads?
+
+1378935733.16567_0.ltw:2, <20130911234203.2879003e at mike>
+________________________________________________________________________________
+

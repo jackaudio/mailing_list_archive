@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [LAD] [Jack-Devel] session management API proposal, take 3 (fwd)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [LAD] [Jack-Devel] session management API proposal, take 3 (fwd)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1267797219.21185_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1269878846.13904_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1267798068.22971_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 05 Mar 2010 08:07:17 -0600 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Gabriel M. Beddingfield </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>LAD list &lt;[hidden] at lists dot linuxaudio dot org&gt;, LAU list &lt;[hidden] at lists dot linuxaudio dot org&gt; </td></tr>
+</table>
+<pre>
+All:
+
+Based on some of the recent discussions on LAD and LAU, I 
+thought it prudent to forward this message from the 
+Jack-Devel list.
+
+If you wish to continue the discussion on the the Jack 
+session management API, please do it on the Jack-Devel list. 
+Scroll down to the very bottom for a URL to the list.
+
+-gabriel
+
+---------- Forwarded message ----------
+Date: Thu, 4 Mar 2010 18:16:39 -0500
+From: Paul Davis &lt;[hidden]&gt;
+To: [hidden]
+Subject: Re: [Jack-Devel] session management API proposal, take 3
+
+[ ... chatter chatter chatter ... ]
+
+i'm on the verge of approving the API proposed by Torben for inclusion
+as part of the JACK API. I believe that it accomplishes the goal of
+leveraging an existing IPC channel (via libjack), combined with a
+minimalistic set of changes to the server and easy-to-implement
+support in clients, to provide the basis for session management at
+different levels of sophistication, depending on a user's needs.
+Torben's example showed the generation of a shell script that will
+restart the session, and this is probably the "bottom line" in terms
+of simple session management.
+
+There are still some details (below) but more importantly, I would
+like to hear from people who have concrete objections, particularly of
+the following form:
+
+    * the proposal does not address some functionality that it should address
+    * the proposal will make later, more extensive session management
+harder, more complex or impossible
+    * the proposal is nonsensical because ...
+
+As for details...
+
+I agree with the suggestion that the initial set of session events
+should include "quit".
+
+Nedko has also raised some objections to the use of a UUID, and has
+proposed a scheme based on PIDs. I personally do not understand how
+this can possibly work if JACK is to retain the ability to support
+multiple clients per process. Any scheme designed to use PIDs but
+still allow this seems to me to have to turn the PID into a UUID by
+combining it with some other information (eg. a client name). This
+doesn't seem to be semantically different from starting with a
+declaration that we use UUIDs to identify clients - how the UUIDs are
+constructed is an implementation detail.
+
+Finally, the semantics of the return codes from a session event need
+to be pinned down better, since there are circumstances where a client
+could *not* save its state without that being an error (e.g. ardour
+running with a session on read-only media). For this, I currently
+propose:
+
+     success == client believes that it will be able to restore its
+state to the current state upon a reload
+     fail = client believes that it will not (or may not) be able to
+restore its state to the current state upon a reload
+
+similar semantics will be needed for each other defined session event.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1267797219.21185_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1269878846.13904_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1267798068.22971_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1267798068.22971_0.ltw:2,a&nbsp;&lt;alpine.DEB.1.10.1003050800550.22678 at localhost dot localdomain&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] stepping down</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] stepping down</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1454254252.13451_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1454273983.25643_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1454273290.25229_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 31 Jan 2016 21:48:02 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Kjetil Matheussen </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1454247893.8989_0.ltw:2,/index.html'>Re: [Jack-Devel] stepping down </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1454273983.25643_0.ltw:2,/index.html'>Re: [Jack-Devel] stepping down </a></td></tr>
+</table>
+<pre>
+On Sun, Jan 31, 2016 at 2:44 PM, Paul Davis &lt;[hidden]&gt;
+wrote:
+
+&gt;
+&gt;
+&gt; On Sun, Jan 31, 2016 at 6:33 AM, Kjetil Matheussen &lt;
+&gt; [hidden]&gt; wrote:
+&gt;
+&gt;&gt;
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; I don't think Jack is the wrong solution for a DAW either. But Jack never
+&gt;&gt; got finished.
+&gt;&gt; It has a wonderful API, but it shouldn't be a struggle for a program to
+&gt;&gt; create a jack client
+&gt;&gt; if a jack server isn't running. (there were a lot of talk about this
+&gt;&gt; around 10 years ago,
+&gt;&gt; but the end result never became as good as it should I think).
+&gt;&gt;
+&gt;
+&gt; i am not sure what the problem is here. if the client doesn't specify
+&gt; anything, then the server will start automatically with the same parameters
+&gt; as it did last time. this has worked for years. no?
+&gt;
+&gt;
+
+Well, I've never used it. It doesn't feel safe. There is no obvious place to
+check that it does what it's supposed to.
+
+
+
+
+&gt;
+&gt;&gt; I think the first program trying to create a client also should start the
+&gt;&gt; server. Not
+&gt;&gt; just fork off a process, but actually run the server.
+&gt;&gt; And if another program wants to create a jack client, it connects to the
+&gt;&gt; first client process,
+&gt;&gt; which is the one running the server.
+&gt;&gt;
+&gt;
+&gt; this seems a bit odd to me. if the first client is really just a client,
+&gt; why would it become the server?
+&gt;
+
+If only one program produces sound, why would you also want to start a
+server?
+
+
+
+&gt; what happens when the user closes it (or otherwise resets it)?
+&gt;
+
+1. If it is the last client which is about to close, then the server closes
+as well.
+2. If you close the client running the server while other clients are
+running as well,
+then the server must be transferred to another client first, in a
+glitch-free and
+spike-free manner, of course. This functionality would both feel natural
+(the user doesn't have to think about the server concept at all), plus that
+it
+would provide an enormous number of fun and interesting programming
+challenges
+for the implementors of that functionality.
+
+
+
+&gt; that's the whole point of using a control application that exists before
+&gt; (and almost certainly after) all other clients.
+&gt;
+
+&gt;
+
+
+
+
+&gt;
+&gt;&gt; Furthermore, GUI should be built into libjack, so that you can call
+&gt;&gt; jack_open_audio_driver_configuration_gui(),
+&gt;&gt; jack_open_audio_connection_configuration_gui(),
+&gt;&gt; etc. inside your client.
+&gt;&gt;
+&gt;&gt; I know there is something called libjackserver, but how many uses it?
+&gt;&gt;
+&gt;
+&gt; libjackserver isn't what you think it is. you're thinking of the server
+&gt; API, used to start, stop and otherwise control a JACK server. it is the
+&gt; basis of jack2's dbus support, so basically everything using jack2 is using
+&gt; it. it is also present in jack1, and is also used internally there.
+&gt;
+
+&gt; libjackserver is also used *all* the time.
+&gt;
+&gt;
+Oh right, guess I knew that once though.
+
+
+
+&gt; Does it do
+&gt;&gt; all these things? How stable is it? In my opinion, there shouldn't
+&gt;&gt; be any libjackserver, or jackd program, or qjackctl, only libjack.
+&gt;&gt;
+&gt;
+&gt; this would simply lead *back* to jackd, since lots of people would want a
+&gt; program they could start in order to start jack, that would run before and
+&gt; after other clients. someone would write it, link it to libjack and it
+&gt; would become "jackd".
+&gt;
+
+But my point is that you don't need the jackd program. Every client is also
+a potential
+server (although the user doesn't know this), and since libjack provides
+functionalities for
+configuring jack the same way for all clients, jackd is not needed. This
+way we can also
+create formally specified error messages for the clients. Currently, if
+something goes
+wrong, you have to dig around in the "messages" window in qjackctl, which
+may contain
+some information that could help you make things work. It's really bad
+actually.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1454254252.13451_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1454273983.25643_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1454273290.25229_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1454273290.25229_0.ltw:2,&nbsp;&lt;CAC6niELVjSB4K7w=OvKYBhghFYcaAzLeAumBOh1MN8AivJOvXw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

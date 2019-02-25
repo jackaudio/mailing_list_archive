@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] sweet! (jack2 backend switching demo by robin gareus)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] sweet! (jack2 backend switching demo by robin gareus)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298293037.17587_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298297661.27553_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298296505.24906_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 21 Feb 2011 14:54:37 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>James Warden &lt;[hidden] at yahoo dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>James Warden
+<a href='../1298287009.8322_0.ltw:2,a/index.html'>Re: [Jack-Devel] sweet! (jack2 backend switching demo by robin gareus) </a></td></tr>
+</table>
+<pre>
+On 02/21/2011 12:16 PM, James Warden wrote:
+&gt; 
+&gt; --- On Mon, 2/21/11, Harry Van Haaren &lt;[hidden]&gt; wrote:
+&gt; 
+&gt; From: Harry Van Haaren &lt;[hidden]&gt; Subject: Re:
+&gt; [Jack-Devel] sweet! (jack2 backend switching demo by robin gareus) 
+&gt; To: Cc: "Jack devel" &lt;[hidden]&gt; Date: Monday,
+&gt; February 21, 2011, 5:31 AM
+&gt; 
+&gt; 
+&gt; 2011/2/21 J&#xF6;rn Nettingsmeier &lt;[hidden]&gt;
+&gt; 
+&gt; http://gareus.org/blog/jack2dbu
+&gt; 
+&gt; That one gives me a broken link: http://gareus.org/blog  its
+&gt; currently the first entry...
+&gt; 
+&gt; 
+&gt; Awesome work Robin, thanks for the tip. Will be testing later in the
+&gt; week! -Harry ------------
+&gt; 
+&gt; Hey, looks interesting! Can some of the internals be used for
+&gt; suspending / resuming jack based systems ?
+
+yes, http://rg42.org/wiki/jack2contol
+
+However, recent work on tschack and jack2 might be more suitable for
+handling suspend/resume, YMMV.
+
+&gt; I was thinking whether one
+&gt; could switch to the dummy backend (which would mirror the exact same
+&gt; port connectivity as the real backend is using if this dummy backend
+&gt; can be told to declare X number of fake ports), then suspend or even
+&gt; turn off the real audio device (like an RME HDSP which does not wake
+&gt; up gracefully), and then suspend the jack session. At resume time,
+&gt; the real audio device would be turned on again, the jack backend
+&gt; switching would then kick in to restore the session with this
+&gt; device.
+
+myjackctl.sh does that exactly.
+more specific: /etc/pm/sleep.d/90myjackctl.sh does it using myjackctl.sh
+
+
+
+
+Here's a few quotes from an off-list exchange with Sampo:
+
+&gt; I have one question though: what about switching between cards with
+&gt; different amounts of I/O?
+
+myjackctl.sh does not map ports. Currently it only restores the
+previous physical port-connections, but it's a simple shell script:
+change it to fit your needs.
+
+&gt; Say your RME/whatever gets disconnected and you don't want your
+&gt; entire setup to vanish. This mechanism switches you over to your
+&gt; builtin sound card, then you find the disconnected cable and plug it
+&gt; in. I'd expect to have all connections present, even those from/to
+&gt; ports that weren't available when using the internal sound card.
+
+good point. the tool that does the switch will need to remember the last
+connection state of _each_ interface. Currently it only remembers _the_
+last state - and only very briefly :)
+
+The idea is to go one step further: It should be possible to configure a
+set of transition actions for each backend-switch.
+
+&gt; Does this mechanism always switch to a "new" sound interface
+&gt; connected to the system, or does it only switch back to the original
+&gt; interface jack was started with?
+
+That is configurable.The example-commandline I posted only switches to
+THIS new device once it's connected:
+org/freedesktop/Hal/devices/usb_device_582_74_noserial_if0_sound_card_2
+and always switches to internal card when there's a DeviceError.
+
+Clearly, the whole mechanism, configuraion and setup will eventually
+become too tricky do be done by a bash-script.
+
+ciao,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298293037.17587_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298297661.27553_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298296505.24906_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1298296505.24906_0.ltw:2,a&nbsp;&lt;4D626E9D.10607 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

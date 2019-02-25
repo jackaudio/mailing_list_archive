@@ -1,0 +1,43 @@
+Date:        Thu, 18 Aug 2011 17:40:47 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Jeroen Van den Keybus <[hidden] at gmail dot com>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Jeroen Van den Keybus Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1313577688.8362_0.ltw:2,a)
+Follow-Up:   Dan Swain Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1314462065.27152_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea
+
+On Wed, Aug 17, 2011 at 12:41:00PM +0200, Jeroen Van den Keybus wrote:
+
+> In fact, my idea was to use one of the FPGA analog PLLs with slow loop
+> setting to lock onto the
+> jittery (but not as jittery as the sync packets) DPLL output. So I will be
+> using the FPGA analog PLL as a VCO.
+> 
+> The main question remains whether or not the PLL will be able to properly
+> lock on a DPLL output signal that is - indeed - fairly jittery. That
+> probably calls for an experiment.
+
+That indeed remains to be seen. You can probably make it lock, the 
+question is what BW it requires. 
+
+Anyway creating a master sample clock from low frequency sync 
+messages using a PLL is not easy. But since you have the computing
+power of an FPGA at your disposal there are alternatives in the
+form of open-loop solutions. 
+
+Put a timestamp (using the current clock) on the sync messages,
+unwrap any modulo on the time stamps and perform a linear
+regression on a few hundred of them - this is equivalent to
+filtering in a PLL but doesn't have the stability problems
+as it is open loop. Repeat for each incoming sync packet,
+low-pass filter the result to drive a VC(X)O.
+
+Ciao,
+
+-- 
+FA
+
+1313689258.19248_0.ltw:2,a <20110818174046.GA8935 at linuxaudio dot org>
+________________________________________________________________________________
+

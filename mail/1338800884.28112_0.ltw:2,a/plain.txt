@@ -1,0 +1,59 @@
+Date:        Mon, 04 Jun 2012 11:07:54 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Dominic Kaiser [Jack-Devel] jack is installed having a new problem (1338752116.11388_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack is installed having a new problem
+
+On Sun, Jun 03, 2012 at 03:35:04PM -0400, Dominic Kaiser wrote:
+
+> The reason being I have an RME interface that needs a newer version of
+> FFADO. And the only version that builds against it is the git version.
+
+This is just wrong.
+
+You don't even have to recompile jackd to use a new FFADO version.
+
+You can safely go back to your distro's jackd package (install it) and
+then do a *fresh* build of FFADO, that is, delete the entire directory
+or at least rm -rf cache/ .scons*
+
+scons will detect that you're using an "old" version of jackd and
+doesn't activate the code that requires the "new" jackd.
+
+You can even override this auto-detection and force scons to use
+whatever you want:
+
+   scons ENABLE_SETBUFFERSIZE_API_VER=false
+
+
+> So I still cannot buid jack1 I am working on that. I am running
+> Ubuntu 12.04. I have installed the packaged from repo for jack2 and
+> installed over them with the new jack build from git. PREFIX=/usr or
+> install path.
+
+You did not:
+
+> dominic@dominicLT:/usr/bin$ jackd -r -dalsa -dhw:1,0 -r44100 -p1024 -n2
+> jackdmp 1.9.8
+
+This is the packaged jackd, the git version would have presented 1.9.9.
+
+BTW, setting --prefix=/usr ist not enough anymore, Ubuntu uses
+multiarch now, so libs go to /usr/lib/x86_64-linux-gnu or whatever
+platform you use.
+
+
+> Let me know what you think,
+
+Stick to the packaged version of jackd and file a bug report against
+Ubuntu in case something doesn't work.
+
+
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1338800884.28112_0.ltw:2,a <20120604090754.GW6396 at ltw dot loris dot tv>
+________________________________________________________________________________
+

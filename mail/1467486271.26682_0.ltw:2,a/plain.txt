@@ -1,0 +1,70 @@
+Date:        Sat, 02 Jul 2016 19:04:07 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] Compiling jack2 in mixed mode (1467482657.23000_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Compiling jack2 in mixed mode
+
+On Sat, Jul 02, 2016 at 02:04:07PM -0400, Paul Davis wrote:
+
+> 4-8 core systems are more or less standard. So this only reduces the cost
+> in the best possible scenario by a factor of 4-8. In more common cases, the
+> improvement is much less.
+ 
+But in practice still significant.
+
+> > 2. Linear chains could be in the same process. In that case,
+> >    depending on implementation, you don't even need a thread
+> >    switch.
+> >
+> 
+> Actually, I misspoke - this is already implemented. Internal clients will
+> be executed in the same thread if they are part of a serial chain.
+
+But the same doesn't happen (in current Jack implementations) if you
+have a linear chain of clients in the same external process. 
+ 
+> IMO, the reality is that chaining together entirely independent signal
+> processing code is best done via plugins (internal clients, in a JACK
+> context), not processes. The clever hack that JACK represents is useful for
+> connecting small numbers of processes, but I don't believe that the design
+> should be used as an indication that process-level chains are the right way
+> to composite signal processing elements.
+
+So that leads to a two-layer design: a small number of Jack
+clients (each of which can be a separate process), and within
+each of those a second layer that runs arbitrary graphs of
+modules (which can be plugins), in multiple threads.
+
+The problem with this is that the outer layer clients are
+always run as a single blob - at the boundary between
+the two layers all dependencies are 'ANDed' together, only
+because the outer layer can't see the internal graph and
+has to assume that all outputs depend on all inputs.
+
+To avoid this, the two layers need to be aware of each other
+in some way. It's exactly this that I've been working on. 
+The internal scheduler becomes part of the user-side client
+library, and interacts with the outer one. 
+
+The result is for example that an external insert (as in
+Ardour) doesn't add latency. Of course, in pathological
+cases this can lead to more process switches. In practice
+that's quite often not the case - the process which 'calls'
+the external processor will be able to continue if it has
+independent subgraphs (as would be the case for a mixer
+with many channel strips).
+
+Ciao, 
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+
+1467486271.26682_0.ltw:2,a <20160702190407.GB113313 at linuxaudio dot org>
+________________________________________________________________________________
+

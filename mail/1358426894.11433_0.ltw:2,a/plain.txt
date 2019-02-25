@@ -1,0 +1,74 @@
+Date:        Thu, 17 Jan 2013 07:48:05 -0500
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          David Henningsson <[hidden] at canonical dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: David Henningsson Re: [Jack-Devel] debian jack/pulse support [ was : Re: JACK in Chrome !! ] (1358426034.10063_0.ltw:2,a)
+Follow-Up:   David Henningsson Re: [Jack-Devel] debian jack/pulse support [ was : Re: JACK in Chrome !! ] (1358429926.14764_0.ltw:2,a)
+Follow-Up:   Kaj Ailomaa Re: [Jack-Devel] debian jack/pulse support [ was : Re: JACK in Chrome !! ] (1358458987.27419_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] debian jack/pulse support [ was : Re: JACK in Chrome !! ]
+
+On Thu, Jan 17, 2013 at 7:33 AM, David Henningsson <
+[hidden]> wrote:
+
+> On 01/17/2013 12:57 PM, Paul Davis wrote:
+>
+>>
+>>
+>> that document includes this line:
+>>
+>> "This can be necessary for running low-latency audio without drop-outs,
+>> but is bad from a security and stability point of view, as a process
+>> running with real-time privileges can lock up the entire system
+>> completely. "
+>>
+>> this is no longer true. it is trivial to configure the amount of time
+>> that RT-scheduled tasks can consume. it can no longer be used as an
+>> explanation of why RT scheduling is problematic.
+>>
+>
+> I'm not a security expert, so excuse me if these are stupid questions,
+> but...
+>
+> First, I tried to look this up on http://jackaudio.org/linux_rt_**config<http://jackaudio.org/linux_rt_config>but I saw no such documentation.
+>
+
+from my experience to date, all distros come with this already configured
+because it is the default in the kernel. the kernel reserves a (small)
+amount of time for non RT-scheduled tasks.
+
+we also have not documented it for two additional reasons:
+
+   (1) we don't want to suggest that users should be messing with these
+kernel parameters
+   (2) confusion about cgroups, which has been made worse by different
+distributions (initially, at least) doing very different things with cgroups
+
+
+> Second, your argument seems to apply to RT scheduling only - what about
+> memlock?
+>
+
+memlock cannot cause the machine to lock up. it can cause other problems,
+but they are more akin to a swap storm than a lock up, and like RT
+scheduling, the amount that the user can lock can be finely controlled
+(though it would be nice if the syntax for the relevant files allowed
+expressions like "80%" rather than fixed amounts of space.
+
+
+> Third, if you were a maintainer of an general purpose distro, that should
+> be able to do everything from pro-audio, consumer audio, gaming, run on
+> laptops with decent battery life, to multi-user ssh and web servers and all
+> that, how do you recommend we set RT and memlock privileges for the user by
+> default?
+>
+
+at this point in time, i personally can see absolutely no reason why a
+regular user should not have access to RT scheduling or memlock if the
+kernel and PAM (or equivalent) are normally and appropriately configured.
+give the user the ability to memlock 75% of the system RAM, make sure that
+the RT scheduling parameters reserve 5% of the CPU for non-RT tasks. done.
+
+1358426894.11433_0.ltw:2,a <CAFa_cKmX0=U9v04VmBRmGafP2ObCqD8Xj+9ktWBf7sem7X_FdA at mail dot gmail dot com>
+________________________________________________________________________________
+

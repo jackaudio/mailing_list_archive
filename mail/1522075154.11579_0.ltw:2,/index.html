@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1522071652.7308_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1522091218.31304_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1522075154.11579_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 26 Mar 2018 15:38:44 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Christopher Obbard </span> &lt;[hidden] at 64studio dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at chriscaudle dot org </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Chris Caudle
+<a href='../1522071652.7308_0.ltw:2,/index.html'>Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes </a></td></tr>
+</table>
+<pre>
+Hi Chris,
+
+&gt;&gt; This is on an ARM embedded system, with a single core 1MHz processor.
+&gt;
+&gt; Is that a typo or are you really running on a 1MHz processor?  If so that
+&gt; would be a really slow clock.  That would be two orders of magnitude
+&gt; slower than most M class microcontrollers.
+
+Big typo! I am running on a TI 1GHz AM3358 processor.
+
+
+&gt;&gt; I have a custom compiled 4.14 kernel with omap2plus_defconfig with the
+&gt;&gt; following config settings:
+&gt;&gt;&gt; CONFIG_PREEMPT_VOLUNTARY=y
+&gt;
+&gt; I would not consider CONFIG_PREEMPT_VOLUNTARY appropriate for low latency
+&gt; use, and especially if you are really running a 1MHz processor.  Using the
+&gt; full RT patch set would be recommended, or at the very least
+&gt; CONFIG_PREEMPT.
+
+I've been using CONFIG_PREEMPT also in other places, I have been
+wondering whether the full RT patch will cause less throughput for the
+jack process.
+
+Both jack and my application are requesting SCHED_FIFO, I am not sure
+of the priority of the application but I am thinking of setting them
+both to 70-80.
+
+What about HZ, I currently have this set to HZ_100. Would HZ_1000 be any better?
+Currently I have CONFIG_NO_HZ_IDLE set. Would CONFIG_HZ_PERIODIC be
+any better? I doubt it, as my processor is never idle :-).
+Can you suggest any other options that may improve things?
+
+
+&gt; What audio hardware are you running?
+&gt; Are you using an ALSA driver from the current kernel tree?
+
+It's an 6-channel in, 6-channel out card with a simple ALSA driver
+written by me. The driver just binds the codecs to the CPU, nothing
+latent in there. All of the FIFO stuff is taken care of by the TI
+McASP driver.
+Currently the driver reads &amp; writes to 8 channels but two of the out
+channels are unused, I can possibly try to gain some performance here.
+
+
+&gt;&gt; $ jackd -R -P95 -dalsa -dhw:0 -r48000 -p64 -n2
+&gt;&gt;&gt; JackPosixProcessSync::LockedTimedWait error usec = 5000000 err =
+&gt;&gt;&gt; Connection timed out
+&gt;&gt;&gt; Driver is not running
+&gt;&gt;&gt; Cannot create new client
+&gt;&gt;&gt; CheckSize error size = 32 Size() = 12
+&gt;&gt;&gt; CheckRead error
+&gt;&gt;&gt; CheckSize error size = -1 Size() = 4
+&gt;&gt;&gt; CheckRead error
+&gt;&gt;&gt; CheckSize error size = 0 Size() = 12
+&gt;&gt;&gt; CheckRead error
+&gt;
+&gt;If those messages all came right at
+&gt; startup from jack it would seem that the parameters don't match something,
+&gt; but jack usually gives better error messages than that.  There were never
+&gt; any messages indicating that the requested sample rate was actually used,
+&gt; word length used, etc?
+
+Sorry, I missed out the first part of the log. The LockedTimedWait
+error came when my client tried to connect. I think it's to do with
+the Kernel scheduling.
+
+
+&gt; Missing those messages could perhaps indicate that jackd was not able to
+&gt; open the ALSA device at all.
+
+It manages to open and all performs fine at 128 frames.
+
+
+&gt;&gt; Also, with higher buffer sizes sometimes I get xruns.
+&gt;
+&gt; You are running PREEMPT_VOLUNTARY on a 1MHz processor, a more typical
+&gt; configuration for low latency use is running PREEMPT or PREEMPT_RT on an
+&gt; 1800MHz to 3000MHz processor, so it is a little bit hard to know where to
+&gt; start.
+&gt; If you are really running a 1MHz processor, there is  only time for 667
+&gt; instructions for each 32 sample buffer at 48kHz rate.  That is not very
+&gt; much for a general purpose OS.
+
+Sorry, typo'd again here!
+
+
+&gt;&gt; After enabling alsa debugging, the error is:
+&gt;&gt;&gt; ALSA: PCM: [Q] Lost interrupts?: (stream=0, delta=221,
+&gt;&gt;&gt; new_hw_ptr=181343, old_hw_ptr=181122)
+&gt;
+&gt; I would start with a better scheduler, PREEMPT or preferably PREEMPT_RT.
+&gt; The usual advice these days is that you don't really need PREEMPT_RT, but
+&gt; that is usually for someone running a multi GHz processor and running at a
+&gt; period size 256 samples or larger.  For 64 or 32 sample period size on a
+&gt; slow processor you are going to have to get aggressive with optimizing.
+
+Thanks.  This is a good starting point.
+
+Really I need to choose whether I run PREEMPT or PREEMPT_RT, I will
+probably just go for PREEMPT_RT.
+I've not had much luck with PREEMPT_RT in the past, I don't think I've
+set the priorities of interrupts properly.
+
+I think I need to chrt the soundcard IRQ highest, then JACK, then my
+application....
+AFAIK, jack already does this with the -R argument &amp; sets the
+scheduler priority to SCHED_FIFO.
+
+
+Have you got any links to information, books etc on RT patch? I've
+read a few and most just seem to discuss how to patch the kernel,
+without any real-life examples!
+
+
+Thanks again for the very useful comments,
+
+Chris
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1522071652.7308_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1522091218.31304_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1522075154.11579_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1522075154.11579_0.ltw:2,&nbsp;&lt;CAP03Xeo1L1=LAh0rBbzUKvAV+8ozuWX+0PaFnQ6mCKn2Cn2Y=w at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

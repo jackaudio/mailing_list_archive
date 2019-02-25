@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] The Situation(s) With JACK</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] The Situation(s) With JACK</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1326286419.27086_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1326289512.29625_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1326288823.28625_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 11 Jan 2012 14:33:30 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Adrian Knoth </span> &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1326285794.26703_0.ltw:2,a/index.html'>Re: [Jack-Devel] The Situation(s) With JACK </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1326289512.29625_0.ltw:2,a/index.html'>Re: [Jack-Devel] The Situation(s) With JACK </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1326307909.24671_0.ltw:2,Sa/index.html'>Re: [Jack-Devel] The Situation(s) With JACK </a></td></tr>
+</table>
+<pre>
+On 01/11/2012 01:42 PM, Paul Davis wrote:
+
+&gt; so please comment: what is the best way to put the header files that
+&gt; define the JACK API, along with the source code for the
+&gt; example+utility clients somewhere that any implementation of the API
+&gt; could use them?
+
+I'm also not a big fan of submodules. How about the following:
+
+
+    jack-common --&gt; independent repo
+      + headers --&gt; branch in jack-common with the header files
+      + tools
+      + example-clients
+      + manpages
+
+The last three are also branches of the jack-common repo.
+
+The real jackd repositories:
+
+    jackd1   --&gt; independent repo
+    jackd2   --&gt; independent repo
+
+It doesn't really matter if it's one repo with two branches or two
+repos, but I guess the latter is more convenient to use. Correct me if
+I'm wrong.
+
+The jackd developer would now and then do
+
+    $ git pull jack-common headers
+
+to update their *local copy* of header files the current trunk (master)
+is based on.
+
+Same for example-clients, tools and the lot. It's not even necessary
+those things reside on different branches, but it gives the jackd
+developer the opportunity to update example-clients, tools, headers and
+man pages individually (no idea if this is required).
+
+Coordination required: jackd1 and jackd probably need to agree on three
+or four common subdirectories in their repositories, that is, include/,
+tools/, example-clients/, man/. Not a big deal, requires some minor
+updates to the build system.
+
+
+This could all happen in parallel with the existing svn repos, if
+needed.
+
+
+Cheers
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1326286419.27086_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1326289512.29625_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1326288823.28625_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1326288823.28625_0.ltw:2,a&nbsp;&lt;4F0D8FAA.70305 at drcomp dot erfurt dot thur dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

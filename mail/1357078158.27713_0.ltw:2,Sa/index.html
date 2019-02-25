@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack2 on ARM - patch</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack2 on ARM - patch</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357074493.22172_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357078825.28695_0.ltw:2,Sa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357078158.27713_0.ltw:2,Sa'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 01 Jan 2013 23:09:09 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jeremy Jongepier </span> &lt;[hidden] at autostatic dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Jeremy Jongepier
+<a href='../1357071985.18375_0.ltw:2,Sa/index.html'>Re: [Jack-Devel] jack2 on ARM - patch </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1357127368.13372_0.ltw:2,Sa/index.html'>Re: [Jack-Devel] jack2 on ARM - patch </a></td></tr>
+</table>
+<pre>
+On 01/01/2013 09:26 PM, Jeremy Jongepier wrote:
+&gt; On 01/01/2013 06:29 PM, Robin Gareus wrote:
+&gt;&gt; Hi,
+&gt;&gt;
+&gt;&gt; jackd-1.9.10 (recent git) still crashes on ARM with a "Bus error". After
+&gt;&gt; brief discussion on #jack, Nedko pointed out that packed structures are
+&gt;&gt; still an issue. Attached patch resolves the issue. Tested working on
+&gt;&gt; armv7, cortex-A8 and A10 platform.
+&gt;&gt;
+&gt;&gt; Cheers!
+&gt;&gt; robin
+&gt;
+&gt; Now you guys rock! I'll see if I can get it running on my RPi. Would be
+&gt; awesome, then I can finally use it for something useful.
+&gt;
+&gt; Regards,
+&gt;
+&gt; Jeremy
+
+Applied patch to the source package of jackd2 available for raspbian, 
+rebuild, remounted /dev/shm and modified /etc/dbus-1/system.conf and 
+guess what? JACK with my UA-25 on my Rpi! Great, thanks again!
+
+Here's the recipe:
+
+wget 
+http://jack-audio.10948.n7.nabble.com/attachment/15962/0/jack2_armel.diff
+apt-get source jackd2
+cd jackd2-1.9.8~dfsg.4+20120529git007cdc37
+patch -p1 -i ../jack2_armel.diff
+dpkg-source --commit
+dpkg-buildpackage -rfakeroot -uc -b
+cd ..
+sudo dpkg -i 
+libjack-jackd2-0_1.9.8~dfsg.4+20120529git007cdc37-5_armhf.deb 
+jackd2_1.9.8~dfsg.4+20120529git007cdc37-5_armhf.deb
+
+Now add the following lines to /etc/dbus-1/system.conf:
+   &lt;policy user="pi"&gt;
+        &lt;allow own="org.freedesktop.ReserveDevice1.Audio1"/&gt;
+   &lt;/policy&gt;
+
+This depends on the sound device you're using, it could be different. 
+Now remount /dev/shm:
+sudo mount -o remount,size=128M /dev/shm
+
+And if you're on a headless RPi:
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
+
+Now you can fire up JACK but not in full-duplex, only capture or 
+playback, so use -C or -P. This is probably because the ethernet adapter 
+is also on the same usb bus. Maybe disabling it allows JACK to run in 
+duplex mode, haven't tried it yet.
+
+Jeremy
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357074493.22172_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357078825.28695_0.ltw:2,Sa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357078158.27713_0.ltw:2,Sa'>Index</a></td></tr>
+</table>
+<p><small>1357078158.27713_0.ltw:2,Sa&nbsp;&lt;50E35E85.6050204 at autostatic dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

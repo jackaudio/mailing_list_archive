@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] libjack.so and libjackserver.so bug</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] libjack.so and libjackserver.so bug</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1520327708.25156_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1521289507.23193_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1520328493.26046_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 06 Mar 2018 10:27:45 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Christoph Kuhr </span> &lt;[hidden] at web dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Filipe Coelho
+<a href='../1520327708.25156_0.ltw:2,/index.html'>Re: [Jack-Devel] libjack.so and libjackserver.so bug </a></td></tr>
+</table>
+<pre>
+Why is it not documented somewhere?
+
+I have both libraries working now. Just by linking against jack first 
+and afterwards against libjackserver.
+
+
+
+On 03/06/2018 10:14 AM, Filipe Coelho wrote:
+&gt; This is a known scenario.
+&gt;
+&gt; Those 2 libs share some code, but in a different way.
+&gt; A client application is never supposed to control the server.
+&gt;
+&gt; Do not link against the 2 libraries from within the same application, 
+&gt; and you'll be fine.
+&gt;
+&gt;
+&gt; On 06.03.2018 09:04, Christoph Kuhr wrote:
+&gt;&gt; Hi *,
+&gt;&gt;
+&gt;&gt; I observed some strange behavior of libjack and libjackserver.
+&gt;&gt;
+&gt;&gt; If I have a multiprocessing application with one jack server fork and 
+&gt;&gt; one jack client fork, jack_client_open crashs.
+&gt;&gt;
+&gt;&gt; Here the backtrace:
+&gt;&gt; #0&#xA0; __strcmp_ssse3 () at ../sysdeps/x86_64/multiarch/../strcmp.S:174
+&gt;&gt; #1&#xA0; 0x00007f83dddb803f in jack_find_driver_descriptor(_JSList*, char 
+&gt;&gt; const*) () from /usr/local/lib/libjackserver.so.0
+&gt;&gt; #2&#xA0; 0x00007f83dddb9ef8 in Jack::JackServerGlobals::Init() () from 
+&gt;&gt; /usr/local/lib/libjackserver.so.0
+&gt;&gt; #3&#xA0; 0x00007f83dddb64f8 in jack_client_open_aux(char const*, 
+&gt;&gt; JackOptions, JackStatus*, __va_list_tag*) () from 
+&gt;&gt; /usr/local/lib/libjackserver.so.0
+&gt;&gt; #4&#xA0; 0x00007f83dddb67b1 in jack_client_open () from 
+&gt;&gt; /usr/local/lib/libjackserver.so.0
+&gt;&gt; #5&#xA0; 0x0000000000414f04 in talker_Process (arguments=0x63f680 
+&gt;&gt; &lt;arguments&gt;) at ../src/net/avb/talker/talker_process.c:395
+&gt;&gt; #6&#xA0; 0x000000000042d487 in avbruntime (arguments=0x63f680 &lt;arguments&gt;) 
+&gt;&gt; at ../src/avbruntime.c:644
+&gt;&gt; #7&#xA0; 0x000000000042e888 in main (argc=11, argv=0x7ffebee6f678) at 
+&gt;&gt; ../src/main.c:144
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; The interesting thing is, jack_client_open keeps crashing if I remove 
+&gt;&gt; all the jack server code.
+&gt;&gt;
+&gt;&gt; It was neccessary to remove the -ljackserver linker option as well, 
+&gt;&gt; because the client code linked against libjackserver.so instead of 
+&gt;&gt; libjack.so.
+&gt;&gt;
+&gt;&gt; This means it is not possible to have a jack server and a jack client 
+&gt;&gt; in a single multiprocessing application.
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; BR,
+&gt;&gt; Ck
+&gt;&gt; 
+&gt;&gt; Jack-Devel mailing list
+&gt;&gt; [hidden]
+&gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1520327708.25156_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1521289507.23193_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1520328493.26046_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1520328493.26046_0.ltw:2,&nbsp;&lt;8fac44b4-5a84-5e99-e0c8-aa8d79be7858 at web dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

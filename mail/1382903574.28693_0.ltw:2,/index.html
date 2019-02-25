@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How to setup jack for transmission of audio from embedded system to jack equipped audio workstation?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How to setup jack for transmission of audio from embedded system to jack equipped audio workstation?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1382900038.22611_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1382903711.28876_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1382903574.28693_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 27 Oct 2013 15:52:37 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Wojciech Zabolotny &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK Developers &lt;[hidden] at jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Wojciech Zabolotny
+<a href='../1382900038.22611_0.ltw:2,/index.html'>Re: [Jack-Devel] How to setup jack for transmission of audio from embedded system to jack equipped audio workstation? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Wojciech Zabolotny
+<a href='../1382903711.28876_0.ltw:2,/index.html'>Re: [Jack-Devel] How to setup jack for transmission of audio from embedded system to jack equipped audio workstation? </a></td></tr>
+</table>
+<pre>
+given that netjack1 and alsa_in were written by the same person, you might
+want to consider that fact for a few minutes.
+
+
+On Sun, Oct 27, 2013 at 2:53 PM, Wojciech Zabolotny &lt;[hidden]&gt;wrote:
+
+&gt; Yes, indeed, I have got it running, but in fact i'm not fully
+&gt; satisfied with achieved latency.
+&gt; In fact I thinkthere may be a need for a dedicated solution, due to
+&gt; following requirements:
+&gt;
+&gt; 1. It is supposed to be a wireless guitar system, so the embedded system
+&gt; must
+&gt;    be connected via WiFi.
+&gt;  2. UDP over WiFi will almost for sure result in lost packets (due to
+&gt; collisions),
+&gt;     so I need a protocol with acknowledge (RUDP, UDP-RT or simply TCP/IP?)
+&gt; 3. At the transmitter side there is no need for buffering at all. I
+&gt; should simply
+&gt;     transmit all samples received from the ALSA driver as quickly as they
+&gt; come.
+&gt;     The buffering and synchronization should be done only on a receiver
+&gt; side.
+&gt;
+&gt; So I think, that the best way to go will be to modify the existing
+&gt; alsa_in program so that it receives samples via network...
+&gt;
+&gt; Thanks &amp; Regards,
+&gt;
+&gt; Wojtek
+&gt;
+&gt; On Sat, Oct 26, 2013 at 11:29 AM, raf &lt;[hidden]&gt; wrote:
+&gt; &gt; hello,
+&gt; &gt;
+&gt; &gt; you're close to having it work.
+&gt; &gt;
+&gt; &gt; The config on your workstation looks ok, the problem is on the embedded
+&gt; side.
+&gt; &gt;
+&gt; &gt; On the embedded system, you have to start jack with the "net" backend,
+&gt; not the alsa one.
+&gt; &gt; jackd -R -d net  (more option available)
+&gt; &gt; Doing this, the embedded system will look for a master jack which is
+&gt; started on the workstation, and create the ports for audio communication.
+&gt; &gt;
+&gt; &gt; Then to have the signal of your guitar go through the network link, you
+&gt; have to use jack_load audioadapter on the embedded system to gain access to
+&gt; the soundcard.
+&gt; &gt;
+&gt; &gt; A lot more information on this page, will help you understand better
+&gt; this configuration :
+&gt; &gt; http://trac.jackaudio.org/wiki/WalkThrough/User/NetJack2
+&gt; &gt;
+&gt; &gt; I have tried a similar setup, and it's working great ! Good luck
+&gt; &gt;
+&gt; &gt; Rapha&#xEB;l
+&gt; &gt;
+&gt; &gt; Le 26 oct. 2013 &#xE0; 00:05, Wojciech Zabo&#x142;otny a &#xE9;crit :
+&gt; &gt;
+&gt; &gt;&gt; Hi,
+&gt; &gt;&gt;
+&gt; &gt;&gt; I'm preparing a jack based wireless guitar system.
+&gt; &gt;&gt; The previous solution was based on microcontroller,
+&gt; &gt;&gt; dedicated radio link and receiver imitating USB audio card
+&gt; &gt;&gt; ( http://www.ise.pw.edu.pl/~wzab/wireless_guitar_system/ ).
+&gt; &gt;&gt; In this solution I used "alsa_in" to synchronize the input stream
+&gt; &gt;&gt; with the soundcard in the receiving audio workstation.
+&gt; &gt;&gt;
+&gt; &gt;&gt; Upgrading my system I have decided to replace the microcontroller
+&gt; &gt;&gt; based transmitter with dedicated radion link with an embedded system
+&gt; &gt;&gt; equipped with the WiFi card, and use standard WiFi card as the
+&gt; &gt;&gt; receiver in the audio workstation.
+&gt; &gt;&gt;
+&gt; &gt;&gt; I have successfully implemented the driver for CS5343/4 ADC for the
+&gt; &gt;&gt; ALSA SoC and packaged the jack2 for Buildroot.
+&gt; &gt;&gt; (
+&gt; https://groups.google.com/forum/#!topic/comp.sys.raspberry-pi/EgQAQ0DNwN4,
+&gt; &gt;&gt;  http://lists.busybox.net/pipermail/buildroot/2013-October/081087.html),
+&gt; &gt;&gt; so now I only need to integrate jack in the embedded system with jack
+&gt; in the
+&gt; &gt;&gt; workstation.
+&gt; &gt;&gt;
+&gt; &gt;&gt; And here I run into real problems.
+&gt; &gt;&gt; I'd like to have the audio workstation initialized in such a way, that
+&gt; &gt;&gt; jack is running, audio processing programs are also running and
+&gt; connected
+&gt; &gt;&gt; to jack, and the system waits for connection of the embedded system
+&gt; &gt;&gt; as an audio source.
+&gt; &gt;&gt; So I have started jack with qjackctl on my workstation. Then I should to
+&gt; &gt;&gt; create the audio input ports associated with the network server waiting
+&gt; &gt;&gt; for data stream coming from my embedded system. However I couldn't find
+&gt; &gt;&gt; any way to do it :-(.
+&gt; &gt;&gt; I've tried "jack_load netmanager", but it didn't create any ports.
+&gt; &gt;&gt; Adding the "-c" option didn't help
+&gt; &gt;&gt; (load netmanager -i "-c").
+&gt; &gt;&gt; So I've tried to run "jack netadapter", and it created additional
+&gt; &gt;&gt; capture ports.
+&gt; &gt;&gt; But now it is unclear for me, how to connect to it from my embedded
+&gt; system,
+&gt; &gt;&gt; because it seems, that now my audio workstation should be the slave...
+&gt; &gt;&gt;
+&gt; &gt;&gt; When I start jack in my embedded system:
+&gt; &gt;&gt; jackd -P41 -p512 -t10000 -dalsa -r48000 -p256 -n2 -Xseq  -Chw:0,0
+&gt; &gt;&gt; jack_load netmanager -i "-c"
+&gt; &gt;&gt;
+&gt; &gt;&gt; Nothing happens in the workstation. In the jack message window I can
+&gt; still see:
+&gt; &gt;&gt; Ringbuffer automatic adaptative mode size = 1024 frames
+&gt; &gt;&gt; NetAdapter started in sync mode without Master's transport sync.
+&gt; &gt;&gt; Waiting for a master...
+&gt; &gt;&gt;
+&gt; &gt;&gt; I don't know, is it possible to setup such a system with workstation
+&gt; &gt;&gt; waiting for connection of the embedded system?
+&gt; &gt;&gt; Should I use another protocol - e.g. netone?
+&gt; &gt;&gt; Should I write my own application imitating "alsa_in" but using
+&gt; &gt;&gt; the network connection?
+&gt; &gt;&gt;
+&gt; &gt;&gt; I'll appreciate any suggestions, explanantions or hints.
+&gt; &gt;&gt;
+&gt; &gt;&gt; TIA &amp; Regards,
+&gt; &gt;&gt; Wojtek
+&gt; &gt;&gt;
+&gt; &gt;&gt;
+&gt; &gt;&gt;
+&gt; &gt;&gt;
+&gt; &gt;&gt; "jack_load netmanager" on it.
+&gt; &gt;&gt;
+&gt; &gt;&gt; 
+&gt; &gt;&gt; Jack-Devel mailing list
+&gt; &gt;&gt; [hidden]
+&gt; &gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt; &gt;
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1382900038.22611_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1382903711.28876_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1382903574.28693_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1382903574.28693_0.ltw:2,&nbsp;&lt;CAFa_cKkUU6qn6HH3y2K91xtQKTL=vjx+pxJ0enORoOdyzMUhgw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

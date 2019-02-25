@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1347017251.30877_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1347032022.22602_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1347023207.8506_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 07 Sep 2012 15:06:28 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Robin Gareus &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>"[hidden] at lists dot jackaudio dot org Developers" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1347017251.30877_0.ltw:2,a/index.html'>Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1347032022.22602_0.ltw:2,a/index.html'>Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources </a></td></tr>
+</table>
+<pre>
+Le 7 sept. 2012 &#xE0; 13:27, Robin Gareus a &#xE9;crit :
+
+&gt; On 09/03/2012 09:05 PM, St&#xE9;phane Letz wrote:
+&gt;&gt; See: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=674651
+&gt;&gt; 
+&gt;&gt; Anybody interested to work on that?
+&gt; 
+&gt; Funny, I had not seen this email when starting work on it :)
+&gt; Anyway, there are two problems:
+&gt; 
+&gt; 1) opus_encode() will not always result in a fixed length.
+&gt; In particular if the input is silent or if the bitrate is large,
+&gt; fCompressedSizeByte will be less than the max possible.
+&gt; 
+&gt; To work arount this I use the first 4 bytes of the actual payload to
+&gt; transmit the fCompressedSizeByte per channel - I have not yet committed
+&gt; that patch.
+&gt; 
+&gt; Would this be the way to go? Any better alternatives?
+
+Seems reasonable.
+&gt; 
+&gt; 
+&gt; 2) netjack currently uses opus-custom. the debian package does not [yet]
+&gt; include that (see http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=686777).
+&gt; 
+&gt; This issue has spawned quite some discussion on IRC #opus.
+&gt; 
+&gt; In short: non-custom (aka normal) opus modes will only work on
+&gt; buffersizes 120, 240,.. samples (motivated by 5ms phone latency).
+&gt; Power-of-two and block-sizes &lt; 120 samples do requires custom modes.
+&gt; 
+&gt; Although most agree that nejack is a valid use-case for opus
+&gt; custom-modes, upstream is reluctant to enable custom-modes by default,
+&gt; because it breaks interoperability
+
+In what way?
+
+&gt; and the concern is that many people
+&gt; will use them to lazily port their celt (which used power-of-two
+&gt; blocksizes) code.
+&gt; 
+&gt; A drawback from custom-mode is that compression is not as good as it can
+&gt; be (it has not been optimized).
+
+But will it be at some point?
+
+&gt; It was suggested to have netjack use
+&gt; normal modes if custom is not available.
+&gt; 
+&gt; This would work in general but require buffering inside jackd and add
+&gt; additional latency.. I'm somewhat reluctant to go that way. Comments?
+&gt; 
+&gt; best,
+&gt; robin
+&gt; 
+&gt; PS. The initial work on this was done for netjack2 only. Once the dust
+&gt; has settled, updating netjack1/netone will be easy.
+
+I think we should clearly avoid degrading the performances (and adding code complexity with any buffering scheme..) because of this kind of reasons.  Going from CELT to Opus is not "our" choice, so we should keep pushing to keep the best we can.
+
+St&#xE9;phane
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1347017251.30877_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1347032022.22602_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1347023207.8506_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1347023207.8506_0.ltw:2,a&nbsp;&lt;86288E85-79C5-41E4-BF67-92D802C94AB8 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

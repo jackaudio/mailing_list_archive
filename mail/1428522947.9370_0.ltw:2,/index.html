@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Avoiding spinlocks in a parallel sequencer</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Avoiding spinlocks in a parallel sequencer</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1428519403.3761_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1428559319.8932_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1428522947.9370_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 08 Apr 2015 21:52:57 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Markus Seeber </span> &lt;[hidden] at spectralbird dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>[hidden] at mailueberfall dot de
+<a href='../1428509673.17938_0.ltw:2,/index.html'>[Jack-Devel] Avoiding spinlocks in a parallel sequencer </a></td></tr>
+</table>
+<pre>
+On 04/08/2015 06:14 PM, [hidden] wrote:
+&gt; Hello,
+&gt; 
+&gt; currently, I am trying to write a sequencer which should be able to contain 40 or more instances of zynaddsubfx, plus some effects. zynaddsubfx outputs data using jack, so for each zynaddsubfx, I'll add a jack client with two ports each, and a ringbuffer. These clients will simply forward zyn's output to the respective ringbuffer.
+&gt; 
+&gt; So far (using jack2 at least), we end up in a parallelized setup. The problem is that I would like the sequencer to output it's final sound via jack, too. So the sequencer gets one more jack client, which is connected to the sequencer's out ports. This client must call process() to do everything except feeding the ringbuffers, e.g.:
+&gt; 
+&gt;  * computing simple effects, like lfo generation, lfo transformation, ...
+&gt;  * sending control parameters *to* zynaddsubfx
+&gt;  * post-process zyn's audio data by reading the ringbuffers
+&gt; 
+&gt; However, the last points is an issue. If there's nothing to read, I'll need to use a spinlock to wait for zynaddsubfx. Even if that spinlock is atomic-based and lock-free (I think it should be RT safe then), this will cause many unused CPU cycles.
+&gt; 
+&gt; Does anyone have a better idea than using spinlocks?
+&gt; 
+&gt; Thanks + kind regards,
+&gt; Johannes
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt; 
+
+I try to understand your plan:
+
+simple data flow example:
+
+zynaddsubfx_1_output
+          |
+          V
+sequencer_client_1_input
+          |
+          V
+sequencer_input_ringbuffer
+          |
+          V
+(sequencer processing stuff)
+          |
+          V
+sequencer_output_ringbuffer
+          |
+          V
+sequencer_client_output
+          |
+          V
+system_client_input(hardware output)
+
+Could you explain the dataflow you are planning in some kind of...
+picture? Maybe also what you envision to happen in which thread or which
+callback? I am quite unsure how your vision for this looks like, or how
+the interface between JACK and your sequencer is supposed to behave.
+
+Do you want to do some signal processing in your sequencer or would it
+be ok to delegate this to other jack clients? (may be easier)
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1428519403.3761_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1428559319.8932_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1428522947.9370_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1428522947.9370_0.ltw:2,&nbsp;&lt;55258719.5030308 at spectralbird dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

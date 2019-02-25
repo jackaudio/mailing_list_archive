@@ -1,0 +1,56 @@
+Date:        Sat, 02 Jul 2016 09:45:48 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          "[hidden] at saepia dot net" <[hidden] at saepia dot net>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: [hidden] at saepia dot net Re: [Jack-Devel] Compiling jack2 in mixed mode (1467466613.6490_0.ltw:2,a)
+Follow-Up:   [hidden] at saepia dot net Re: [Jack-Devel] Compiling jack2 in mixed mode (1467469713.9546_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] Compiling jack2 in mixed mode (1467482292.22498_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Compiling jack2 in mixed mode
+
+On Sat, Jul 2, 2016 at 9:36 AM, [hidden] <[hidden]> wrote:
+
+> Hello
+>
+> I have recently made stress tests of Jack under load and above +/- 100
+> clients it starts to behave strange.
+>
+> Generally speaking it seem to not be designed for such use cases -  see my
+> discussion on this list  2-3 weeks ago.
+>
+
+every external JACK client implies at least 1 context switch.
+
+context switches are not free. their cost varies depending on the size of
+the working set of the process (the amount of memory touched by the
+process, notably during the JACK process() callback).
+
+they might vary from <10 usecs to as much as 500usecs (the lowest possible
+number is dependent on your CPU; the upper bound depends on the clients)
+
+100 * 100 usecs = 10msecs
+
+so, you've just used 10msecs of the time available for the process
+callback. That's enormous (quite possibly larger than the actual time
+available).
+
+JACK is quite clever, but a process-level design (i.e. context switching
+between clients) cannot scale to large numbers of clients. It would require
+entirely different OS designs (e.g. 64 bit address space with hardware
+protection rather than using an MMU) to reduce the context times to their
+bare minimum. But even then, at say 10usec per context switch, 100 clients
+is still 1 msec, which is a significant chunk of "very low latency
+settings".
+
+I don't know what you have in mind as "a replacement" but nobody who has
+worked on JACK (or related ideas) in the last decade and a half has ever
+suggested any way around this kind of limitation.
+
+Internal clients (basically, plugins) do not have this issue, since there
+is no context switch, just a thread-level switch, which is generally the
+same as a fastest-possible context switch (no MMU invalidation).  Thus, you
+can scale up better, but still not *that* high.
+
+1467467161.7077_0.ltw:2, <CAFa_cKnR5nw+7kVr52SeUcDK6P-QRUJEBqQvdEApoHNyBOVifw at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,151 @@
+Date:        Sat, 30 Jun 2012 13:16:08 +0200
+From:        Patrick Shirkey  <[hidden] at boosthardware dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: James Warden Re: [Jack-Devel] Alsa Jack Plugin (1341053800.21677_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Alsa Jack Plugin (1341055108.23648_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Alsa Jack Plugin
+
+On Sat, June 30, 2012 12:56 pm, James Warden wrote:
+> Hi,
+>
+> Just a guess, as I have not been dealing with these things for ages ...
+>
+> It could well be that the alsa-jack plugin only declares two ports ? In
+> which case you would have to expand the plugin's code to allow for more
+> than 2 ports ... :(
+>
+> But again, it's just a guess ...
+>
+
+
+Virtual devices used to be done with pcm plugin not the jack plugin.
+
+That config won't work unless the virtual ports have been exposed to jack.
+
+This should work but it's a bit old so not sure if they have changed
+anything to break it since it was originally written.
+
+====
+# create a virtual four-channel device with two sound devices:
+# This is in fact two interleaved stereo streams in
+# different memory locations, so JACK will complain that it
+# cannot get mmap-based access. see below.
+
+pcm.multi {
+        type multi;
+        slaves.a.pcm "hw:0,0";
+        slaves.a.channels 2;
+        slaves.b.pcm "hw:1,0";
+        slaves.b.channels 2;
+        bindings.0.slave a;
+        bindings.0.channel 0;
+        bindings.1.slave a;
+        bindings.1.channel 1;
+        bindings.2.slave b;
+        bindings.2.channel 0;
+        bindings.3.slave b;
+        bindings.3.channel 1;
+}
+
+# JACK will be unhappy if there is no mixer to talk to, so we set
+# this to card 0. This could be any device but 0 is easy.
+
+ctl.multi {
+        type hw;
+        card 0;
+}
+
+# This creates a 4 channel interleaved pcm stream based on
+# the multi device. JACK will work with this one.
+
+pcm.ttable {
+        type route;
+        slave.pcm "multi";
+        slave.channels 4;
+        ttable.0.0 1;
+        ttable.1.1 1;
+        ttable.2.2 1;
+        ttable.3.3 1;
+}
+# see above.
+ctl.ttable {
+        type hw;
+        card 0;
+}
+====
+
+> J.
+>
+>
+>
+> ________________________________
+>  From: Paul Davis <[hidden]>
+> To: Salvatore De Paolis <[hidden]>
+> Cc: [hidden]
+> Sent: Saturday, June 30, 2012 12:53 PM
+> Subject: Re: [Jack-Devel] Alsa Jack Plugin
+>
+>
+>
+>
+>
+> On Sat, Jun 30, 2012 at 5:17 AM, Salvatore De Paolis <[hidden]>
+> wrote:
+>
+> On Fri, 22 Jun 2012 00:00:32 +0200
+>>Salvatore De Paolis <[hidden]> wrote:
+>>
+>>> Hi, I've been following a tutorial where it shows how to set jack with
+>>> alsa.
+>>> I don't know though if is possible to have such a configuration because
+>>> it
+>>> doesn't seem to work. Only 0 and 1 seems to be working but when adding
+>>> more than 2 playback ports only the first two are emitting sound the
+>>> other
+>>> are just silently connected,
+>>>
+>>> pcm.!default {
+>>>       type plug
+>>>       slave { pcm "jack" }
+>>> }
+>>>
+>>> pcm.jack {
+>>>       type jack
+>>>       playback_ports {
+>>>               0       system:playback_1
+>>>               1       system:playback_2
+>>>               2       system:playback_3
+>>>               3       system:playback_4
+>>>       }
+>>>       capture_ports {
+>>>               0       system:capture_1
+>>>               1       system:capture_2
+>>>       }
+>>> }
+>>>
+>>> Is it a limitation of the plugin? Any hints are welcome
+>>> Regards,
+>>
+>
+> its not the wrong list. silence means that nobody knows the answer and/or
+> has the time to reply. nothing more (or less).
+>
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+
+
+--
+Patrick Shirkey
+Boost Hardware Ltd
+
+1341054977.23472_0.ltw:2,a <63857.175.39.33.120.1341054968.squirrel at boosthardware dot com>
+________________________________________________________________________________
+

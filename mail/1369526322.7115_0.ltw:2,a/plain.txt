@@ -1,0 +1,75 @@
+Date:        Sat, 25 May 2013 19:57:59 -0400
+From:        Jason Cipriani  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] Netjack - one audio source, multiple remote destinations (1369566251.13872_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Netjack - one audio source, multiple remote destinations
+
+I'm working on a project where we'd like to have a single central PC
+(running Linux, currently Ubuntu) streaming different audio streams to
+multiple other devices (Gumstix Overo, jackd 1 available, 20 devices).
+
+On the central PC, essentially 20 instances of the same audio source
+software are running, one per remote device, with the goal of streaming the
+output of each to one of the remote devices (one channel per device). The
+audio source software allows specification of a jack server name and a jack
+port name, so it is flexible wrt jack.
+
+So far I've been able to successfully stream audio to one device by:
+
+  1. On device (master): jackd -d alsa ...
+  2. On device (master): jack_netsource -H central_pc_ip
+  3. On device (master): jack_connect netjack:capture_1 system:playback_1
+  4. On PC (slave): jackd -d netone ...
+  5. On PC (slave): Start audio source software.
+
+Works great!
+
+Using the above steps, my first attempt to streaming to multiple devices
+was as follows. The main challenge is that the master plays audio, the
+slave originates audio, but a slave cannot be connected to multiple masters.
+
+  1. On device (master): Set up as above except choose a unique slave port
+number per device.
+  2. On PC (slave): Start one instance of jackd -d net per device,
+specifying the correct port number for that device, and a unique server
+name.
+  3. On PC (slave): Start one instance of audio source software per device,
+specifying the correct jackd server name.
+
+This also works great *except* there seems to be a limit to the number of
+jackd servers that can run (my limit is 8). So, this does not work, since I
+need 20.
+
+I'm not sure how to proceed. Some of my thoughts, all of which I'm stumped
+on:
+
+  * Can the limit to number of jackd servers be increased?
+  * Can the slave be set to play audio instead of the master? If so then:
+    - Control PC could be master, connected to 20 slave devices.
+    - One instance of jackd on control PC, perhaps with a different jack
+port per slave device.
+    - Each instance of audio source software connects to appropriate jack
+port on same jack server.
+  * A non-jack solution? Problem is the Gumstix devices have a very limited
+package database, and we're trying to stay off-the-shelf.
+
+Version of jackd on control PC:
+*jackdmp 1.9.8
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2011 Grame.
+*
+Version of jackd on devices:
+*jackd 0.118.0
+Copyright 2001-2009 Paul Davis, Stephane Letz, Jack O'Quinn, Torben Hohn
+and others.
+*
+I've hit my limit with research and experimentation, so I'm wondering if
+anybody on this list has any recommendations.
+
+Thank you!
+Jason
+
+1369526322.7115_0.ltw:2,a <CAF1GSthkfBPH4FPFdz_DO87o4YQzdyWTj3jgLSjOvxOBBqapFg at mail dot gmail dot com>
+________________________________________________________________________________
+

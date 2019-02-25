@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Firewire drivers in JACK: background info (was: Re: JACK on mobile)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Firewire drivers in JACK: background info (was: Re: JACK on mobile)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1382003589.3403_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1382014024.20582_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1382008404.11915_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 17 Oct 2013 21:42:59 +1030 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jonathan Woithe </span> &lt;[hidden] at just42 dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Pedro Alves &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Pedro Alves
+<a href='../1382003589.3403_0.ltw:2,/index.html'>Re: [Jack-Devel] JACK on mobile </a></td></tr>
+</table>
+<pre>
+On Thu, Oct 17, 2013 at 10:52:55AM +0100, Pedro Alves wrote:
+&gt; E.g., jack bypassing ALSA for firewire always stroke me as odd and
+&gt; indicative of possible ALSA limitations, though I'm far from an expert. 
+
+FYI there were a number of reasons why FFADO implemented its audio streaming
+system outside of the kernel (and ALSA generally).  Many of these have gone
+away over time (especially with the introduction of the new firewire stack),
+and I don't believe any of them were due to particular limits of ALSA at the
+time(*).  In hindsight it is generally accepted by FFADO developers that
+doing this was a bad idea since the timing requirements of the interfaces
+are much harder to make in userspace.  This is why we (the FFADO team) have
+a long-term goal to move the audio streaming components of FFADO into ALSA's
+PCM system, and there are already a few proof of concept implementations
+doing the rounds.
+
+I should emphasise that the decision to run with the present structure did
+not come from JACK - to my knowledge the JACK developers themselves were not
+involved in the initial decisions.  FFADO developers (and those of its
+precursor freebob) implemented the drivers independently in a userspace
+library and saw a JACK backend as the easiest way to make the firewire
+interfaces available to users - so one was written.  The consequence whereby
+ALSA applications could not make use of the interfaces was not viewed as a
+major problem at the time because the programs one would typically use with
+multichannel firewire interfaces were (and generally still are) exclusively
+JACK-based for all the usual reasons.
+
+The mixer and control side of things is separate (and is outside the scope
+of JACK and the present discussion).  Our current plan is to retain these
+components as they are since it will be awkward to accommodate the needs of
+these interfaces through the ALSA mixer API.  The control and management of
+these interface features is quite complex and therefore better suited to
+userspace rather than kernel space.  Of course time will tell.
+
+Regards
+  jonathan
+
+(*) Since I was not involved in Freebob/FFADO when these initial decisions
+    were made I could be wrong here, and if so I stand corrected.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1382003589.3403_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1382014024.20582_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1382008404.11915_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1382008404.11915_0.ltw:2,&nbsp;&lt;20131017111259.GA9004 at marvin dot atrad dot com dot au&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

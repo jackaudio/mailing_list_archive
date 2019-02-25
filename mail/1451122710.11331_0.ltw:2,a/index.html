@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack dsp load calculation</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack dsp load calculation</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1450903721.31950_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1451125775.14242_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1451122710.11331_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 26 Dec 2015 09:38:19 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> John Emmas </span> &lt;[hidden] at tiscali dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1450884943.7202_0.ltw:2,a/index.html'>[Jack-Devel] jack dsp load calculation </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Hanspeter Portner
+<a href='../1451125775.14242_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack dsp load calculation </a></td></tr>
+</table>
+<pre>
+Something occurred to me while tucking into my breakfast this morning...
+
+On 23/12/2015 15:35, Robin Gareus wrote:
+&gt; Short spikes, which are in most cases the cause for xruns, are simply
+&gt; ignored in the calculation: For them to show up [...] the spike must
+&gt; be in the last 32 jack-cycles. [...] Most control applications only
+&gt; update the value every second or so.
+&gt;
+
+Of course!  If users are hearing xruns without them showing up in the 
+DSP figure, this must be where the problem lies.  And it won't get 
+solved by changing the calculation algorithm.  Removing the averaging 
+would simply introduce a new set of problems without addressing the 
+underlying issue (i.e. that the client is updating too infrequently).
+
+I wondered if Jack might have any other means of notifying a client when 
+an xrun occurs?  (i.e. apart from returning a load count of 100)?  Let's 
+say that clients (Ardour/Mixbus or whatever) could get notified about 
+xruns using a callback function.  There'd then be a simple solution.  
+Instead of just querying the DSP reading once every second, clients 
+could use a strategy like this (which would still work - even if only 
+used once every second):-
+
+       if ( the_client-&gt;got_notified_about_an_xrun() ) {
+             //  We know that an xrun occurred since we last checked
+             //  the CPU load - so do something to accommodate that.
+
+             //  and then reset the notification flag
+             reset_the_xrun_notification_flag ();
+       } else {
+             //  No xrun was encountered - so we can update normally...
+             update_cpu_load ();
+       }
+
+Is there anything like that already available.?
+
+John
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1450903721.31950_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1451125775.14242_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1451122710.11331_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1451122710.11331_0.ltw:2,a&nbsp;&lt;567E600B.5070708 at tiscali dot co dot uk&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

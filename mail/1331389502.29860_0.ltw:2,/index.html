@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[FFADO-devel] [PATCH] initial setbufsize support for FFADO driver</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[FFADO-devel] [PATCH] initial setbufsize support for FFADO driver</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1331389462.29804_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1331445102.17286_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1331389502.29860_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 11 Mar 2012 00:54:03 +1030 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jonathan Woithe </span> &lt;[hidden] at just42 dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot sf dot net, [hidden] at linuxaudiosystems dot com </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1331547323.23046_0.ltw:2,a/index.html'>Re: [Jack-Devel] [PATCH] initial setbufsize support for FFADO driver </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1331547363.23104_0.ltw:2,a/index.html'>Re: [FFADO-devel] [Jack-Devel] [PATCH] initial setbufsize support for FFADO driver </a></td></tr>
+</table>
+<pre>
+Hi all
+
+Recent discussion about setbufsize raised the issue that the ffado driver
+does not yet support this.  Below is a patch to the jack ffado driver which
+contains a first pass at fixing this problem.  I've tested it with only one
+device (the Fireface-800, taking it from 1024 to 2048) and it seems to work. 
+It undoubtedly requires more testing (particularly the code within libffado)
+but obviously this will be made easier for end users if the jackd driver
+modifications are pushed into the official jack repo.
+
+The patch provided is against jackd 0.121.3.  It should apply cleanly to
+the latest jack source because the ffado driver hasn't changed for a
+significant length of time (certainly not in the time since 0.121.3 was
+released).
+
+This patch does have an issue though and I'm interested to hear thoughts on
+how to solve it.  It turns out that until FFADO svn rev 2078, libffado had
+no callable function which allowed the buffer size notification to be sent
+(probably because the idea of changing buffer sizes on the fly wasn't
+thought of).  To this end, such a function has been added to FFADO svn
+r2078: ffado_streaming_set_period_size().  The issue is that clearly this
+constitutes a libffado API change - a new function has been added and the
+revised jack ffado driver will not compile unless one has a sufficiently
+recent version of ffado on the system.  In light of this, what is the best
+way of proceeding?
+
+Finally, once the above issue is sorted out there's obviously a need to port
+this revised driver function into the jack2 codebase as well.  Who's
+responsibility is that these days?  Mine (which could be interesting because
+I don't run jack2 on my systems at present)?
+
+Regards
+  jonathan
+
+--- jack-audio-connection-kit-0.121.3-orig/drivers/firewire/ffado_driver.c	2011-06-09 09:24:49.000000000 +0930
++++ jack-audio-connection-kit-0.121.3/drivers/firewire/ffado_driver.c	2012-03-11 00:27:30.849870825 +1030
+@@ -675,24 +675,63 @@
+ static int
+ ffado_driver_bufsize (ffado_driver_t* driver, jack_nframes_t nframes)
+ {
+-	printError("Buffer size change requested but not supported!!!");
++	signed int chn;
+ 
+-	/*
+-	 driver-&gt;period_size = nframes;  
++	driver-&gt;period_size = nframes;  
+ 	driver-&gt;period_usecs =
+ 		(jack_time_t) floor ((((float) nframes) / driver-&gt;sample_rate)
+ 				     * 1000000.0f);
+-	*/
+-	
++
++	// Reallocate the null and scratch buffers.
++	driver-&gt;nullbuffer = calloc(driver-&gt;period_size, sizeof(ffado_sample_t));
++	if(driver-&gt;nullbuffer == NULL) {
++		printError("could not allocate memory for null buffer");
++		return -1;
++	}
++	driver-&gt;scratchbuffer = calloc(driver-&gt;period_size, sizeof(ffado_sample_t));
++	if(driver-&gt;scratchbuffer == NULL) {
++		printError("could not allocate memory for scratch buffer");
++		return -1;
++	}
++
++	// MIDI buffers need reallocating
++	for (chn = 0; chn &lt; driver-&gt;capture_nchannels; chn++) {
++		if(driver-&gt;capture_channels[chn].stream_type == ffado_stream_type_midi) {
++			// setup the midi buffer
++			if (driver-&gt;capture_channels[chn].midi_buffer != NULL)
++			        free(driver-&gt;capture_channels[chn].midi_buffer);
++			driver-&gt;capture_channels[chn].midi_buffer = calloc(driver-&gt;period_size, sizeof(uint32_t));
++		}
++	}
++	for (chn = 0; chn &lt; driver-&gt;playback_nchannels; chn++) {
++		if(driver-&gt;playback_channels[chn].stream_type == ffado_stream_type_midi) {
++		        if (driver-&gt;playback_channels[chn].midi_buffer != NULL)
++		                free(driver-&gt;playback_channels[chn].midi_buffer);
++			driver-&gt;playback_channels[chn].midi_buffer = calloc(driver-&gt;period_size, sizeof(uint32_t));
++		}
++	}
++
++	// Notify FFADO of the period size change
++	if (ffado_streaming_set_period_size(driver-&gt;dev, nframes) != 0) {
++	        printError("could not alter FFADO device period size");
++	        return -1;
++	}
++
++	// This is needed to give the shadow variables a chance to
++	// properly update to the changes.
++	sleep(1);
++
+ 	/* tell the engine to change its buffer size */
+-#if 0
+ 	if (driver-&gt;engine-&gt;set_buffer_size (driver-&gt;engine, nframes)) {
+ 		jack_error ("FFADO: cannot set engine buffer size to %d (check MIDI)", nframes);
+ 		return -1;
+ 	}
+-#endif
+ 
+-	return -1; // unsupported
++	// Other drivers (eg: ALSA) don't seem to adjust latencies via
++	// jack_port_set_latency_range() from the bufsize() callback, so we
++	// won't either.  Is this right?
++
++        return 0;
+ }
+ 
+ typedef void (*JackDriverFinishFunction) (jack_driver_t *);
+
+------------------------------------------------------------------------------
+Virtualization &amp; Cloud Management Using Capacity Planning
+Cloud computing makes use of virtualization - but cloud computing 
+also focuses on allowing computing to be delivered as a service.
+http://www.accelacomm.com/jaw/sfnl/114/51521223/
+
+FFADO-devel mailing list
+[hidden]
+https://lists.sourceforge.net/lists/listinfo/ffado-devel
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1331389462.29804_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1331445102.17286_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1331389502.29860_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1331389502.29860_0.ltw:2,&nbsp;&lt;20120310142403.GA14492 at marvin dot atrad dot com dot au&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,228 @@
+Date:        Mon, 25 Apr 2011 14:10:26 +0100
+From:        david lees  <[hidden] at ntlworld dot com>
+To:          [hidden] at lists dot jackaudio dot org
+
+Subject:     [Jack-Devel] message 7
+
+On 04/24/2011 11:06 PM, [hidden] wrote:
+> Send Jack-Devel mailing list submissions to
+> 	[hidden]
+>
+> To subscribe or unsubscribe via the World Wide Web, visit
+> 	http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> or, via email, send a message with subject or body 'help' to
+> 	[hidden]
+>
+> You can reach the person managing the list at
+> 	[hidden]
+>
+> When replying, please edit your Subject line so it is more specific
+> than "Re: Contents of Jack-Devel digest..."
+>
+>
+> Today's Topics:
+>
+>     1. gdb-ing jack apps? (Dan Muresan)
+>     2. Re: gdb-ing jack apps? (James Morris)
+>     3. Re: gdb-ing jack apps? (Dan Muresan)
+>     4. Re: gdb-ing jack apps? (Paul Davis)
+>     5. Re: gdb-ing jack apps? (Dan Muresan)
+>     6. RFC: fix for missing port registration notifications	when
+>        switching master (Nedko Arnaudov)
+>
+>
+> ----------------------------------------------------------------------
+>
+> Message: 1
+> Date: Sun, 24 Apr 2011 10:25:11 +0300
+> From: Dan Muresan<[hidden]>
+> To: [hidden]
+> Subject: [Jack-Devel] gdb-ing jack apps?
+> Message-ID:<[hidden]>
+> Content-Type: text/plain; charset=ISO-8859-1
+>
+> Hi,
+>
+> I've been unable to debug my jack app in gdb. Take the auto-server
+> case. Whenever gdb stops the program due to a signal (either ^C or a
+> segfault) an endless stream of
+>
+> subgraph starting at<client>  timed out (subgraph_wait_fd=14, status =
+> 0, state = Triggered, pollret = 0 revents = 0x0)
+>
+> gets printed, and I have to kill gdb from another shell.
+>
+> If I start the server from qjackctl, the same process crashes qjackctl.
+>
+> I've tried exiting the process thread on lost frames, but it doesn't help.
+>
+> I've seen reports of jackd and gdb on the net, so there has to be a
+> way. What could be the problem? I am of course not expecting to stop a
+> jack app and then continue, but at least I want to be able to see
+> backtraces, inspect variables etc in gdb.
+>
+> Thanks,
+> Dan
+>
+>
+> ------------------------------
+>
+> Message: 2
+> Date: Sun, 24 Apr 2011 12:05:28 +0100
+> From: James Morris<[hidden]>
+> To: Dan Muresan<[hidden]>
+> Cc: [hidden]
+> Subject: Re: [Jack-Devel] gdb-ing jack apps?
+> Message-ID:<BANLkTiku3q=HehFGT4w9r3gTjZ+HL=[hidden]>
+> Content-Type: text/plain; charset=ISO-8859-1
+>
+> On 24 April 2011 08:25, Dan Muresan<[hidden]>  wrote:
+>> Hi,
+>>
+>> I've been unable to debug my jack app in gdb. Take the auto-server
+>> case. Whenever gdb stops the program due to a signal (either ^C or a
+>> segfault) an endless stream of
+>>
+>> subgraph starting at<client>  timed out (subgraph_wait_fd=14, status =
+>> 0, state = Triggered, pollret = 0 revents = 0x0)
+>>
+>> gets printed, and I have to kill gdb from another shell.
+>>
+>> If I start the server from qjackctl, the same process crashes qjackctl.
+>>
+>> I've tried exiting the process thread on lost frames, but it doesn't help.
+>>
+>> I've seen reports of jackd and gdb on the net, so there has to be a
+>> way. What could be the problem? I am of course not expecting to stop a
+>> jack app and then continue, but at least I want to be able to see
+>> backtraces, inspect variables etc in gdb.
+> One way is to get core dumps from the app (ulimit -c unlimited) and
+> then gdb ./myapp core, and then in gdb: thread apply all bt.
+>
+> You can also use the dummy driver (instead of, for example Alsa) with
+> a long --timeout value to be able to step through the code.
+>
+> James.
+>
+>
+> ------------------------------
+>
+> Message: 3
+> Date: Sun, 24 Apr 2011 14:10:40 +0300
+> From: Dan Muresan<[hidden]>
+> To: James Morris<[hidden]>
+> Cc: [hidden]
+> Subject: Re: [Jack-Devel] gdb-ing jack apps?
+> Message-ID:<[hidden]>
+> Content-Type: text/plain; charset=ISO-8859-1
+>
+>> One way is to get core dumps from the app (ulimit -c unlimited) and
+>> then gdb ./myapp core, and then in gdb: thread apply all bt.
+> This actually works out OK, thanks. I had forgotten about core dumps.
+> I guess I can add abort() as necessary.
+>
+>> You can also use the dummy driver (instead of, for example Alsa) with
+>> a long --timeout value to be able to step through the code.
+> But I wonder what is the problem that's preventing gdb from stopping?
+> And why does jack get stuck in a loop printing "subgraph timed out"?
+> Even a poorly-behaved client shouldn't crash jack, right?
+>
+> -- Dan
+>
+>
+> ------------------------------
+>
+> Message: 4
+> Date: Sun, 24 Apr 2011 07:48:49 -0400
+> From: Paul Davis<[hidden]>
+> To: Dan Muresan<[hidden]>
+> Cc: [hidden]
+> Subject: Re: [Jack-Devel] gdb-ing jack apps?
+> Message-ID:<BANLkTik1nFP3wGo4YKeUFvrk2=[hidden]>
+> Content-Type: text/plain; charset=ISO-8859-1
+>
+> On Sun, Apr 24, 2011 at 7:10 AM, Dan Muresan<[hidden]>  wrote:
+>>> One way is to get core dumps from the app (ulimit -c unlimited) and
+>>> then gdb ./myapp core, and then in gdb: thread apply all bt.
+>> This actually works out OK, thanks. I had forgotten about core dumps.
+>> I guess I can add abort() as necessary.
+>>
+>>> You can also use the dummy driver (instead of, for example Alsa) with
+>>> a long --timeout value to be able to step through the code.
+>> But I wonder what is the problem that's preventing gdb from stopping?
+>> And why does jack get stuck in a loop printing "subgraph timed out"?
+>> Even a poorly-behaved client shouldn't crash jack, right?
+> i know that some people do seem to have problems using JACK and gdb.
+> but others (e.g. myself) never have (modulo the usual issues with not
+> running in RT mode and using a long timeout. i routinely run ardour
+> inside gdb a lot, and stop in various places without the issue you
+> describe.
+>
+> you didn't mention which version of JACK you are using - the error
+> message makes it sound like jack1, but which release?
+>
+>
+> ------------------------------
+>
+> Message: 5
+> Date: Sun, 24 Apr 2011 15:14:40 +0300
+> From: Dan Muresan<[hidden]>
+> To: Paul Davis<[hidden]>
+> Cc: [hidden]
+> Subject: Re: [Jack-Devel] gdb-ing jack apps?
+> Message-ID:<[hidden]>
+> Content-Type: text/plain; charset=ISO-8859-1
+>
+>> you didn't mention which version of JACK you are using - the error
+>> message makes it sound like jack1, but which release?
+> Yes, jackd1 -- from Ubuntu Natty (1:0.118+svn4104-1ubuntu2); jackd
+> --version reports 0.120.1
+>
+> http://packages.ubuntu.com/natty/jackd1
+>
+> -- Dan
+>
+>
+> ------------------------------
+>
+> Message: 6
+> Date: Sun, 24 Apr 2011 23:38:23 +0300
+> From: Nedko Arnaudov<[hidden]>
+> To: St?phane Letz<[hidden]>
+> Cc: [hidden]
+> Subject: [Jack-Devel] RFC: fix for missing port registration
+> 	notifications	when switching master
+> Message-ID:<[hidden]>
+> Content-Type: text/plain; charset="us-ascii"
+>
+> The issue was reported in #213 (second issue/patch):
+>
+> jackdbus' internal graph representation is not properly kept in sync
+> with the engine's graph. In particular: ports are not properly removed
+> > From the connection list when a client goes away; and ports
+> re-appearing after a "switch-master" are not being updated (Patch
+> 2/2).
+>
+> I think the proposed patch is wrong because AFAIK graph reorder is only
+> for ports present upon client activation. All following port
+> (un)registrations must cause the port registration callback to be
+> called. The proposed changeset [1] adds notification calls in the
+> Attach()/Detach() methods. The changeset is commited to a dedicated
+> branch [2]. The branch is (hopefully) a short living one with a signle
+> commit, so it makes sense to commit it directly to svn trunk (after
+> eventually rebasing it, of the svn trunk moved).
+>
+> Robin, I'd be glad if you can test&  report whether my fix works for
+> you.
+>
+> [1] http://repo.or.cz/w/jack2.git/commitdiff/55557d1f74b6d0ca80981bad9cd646d69c896e0e
+> [2] http://repo.or.cz/w/jack2.git/shortlog/refs/heads/switch-master-port-registration-notifications
+>
+
+
+> 7: all i can say is sarcasm is the lowest form of wit. i should know. many thanks,
+dave
+
+1303737054.15526_0.ltw:2,a <4DB572C2.1040008 at ntlworld dot com>
+________________________________________________________________________________
+

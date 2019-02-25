@@ -1,0 +1,96 @@
+Date:        Tue, 30 Oct 2012 10:17:26 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Jason Martyn <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jason Martyn [Jack-Devel] Introducing delay into simple_client.c (1351580380.29863_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Introducing delay into simple_client.c
+
+On 10/30/2012 07:59 AM, Jason Martyn wrote:
+> Hi everyone,
+> 
+> I'm brand new to JACK and its implementation, so please bear with me.
+> I'm looking to modify the example script simple_client.c to introduce
+> a predetermined time delay from the input to the output.  I.e.,
+> unmodified, simple_client.c simply copies the input to the output, and
+> instead, I would like to take the input, delay it by t seconds, and
+> then send it to the output.
+> 
+> To do this, I thought I would declare an array of type
+> jack_default_audio_sample_t and then store the input into that array
+> until the critical time where it should start playing it to the
+> output. The new input then overwrites the old input by cycling through
+> the array from the beginning.
+> 
+> Here's my process callback (with comments on my reasoning):
+> 
+> //Initialize counting integers
+> int i = 0;
+> int j = 0;
+> 
+> //Initialize storage array
+> jack_default_audio_sample_t *prev[200]; //Note: 200 is just a test number
+> 
+> int process (jack_nframes_t nframes, void *arg)
+> {
+>    //For the first 200 cycles, store input into array, don't output anything
+>     if (i<200){
+> 
+>         prev[i] = (jack_default_audio_sample_t *) jack_port_get_buffer
+> (input_port, nframes);
+>         i++;
+>     }
+> 
+>     //For all following cycles, play the input, starting from the
+> beginning of the array
+>     else {
+> 
+>     jack_default_audio_sample_t *out = (jack_default_audio_sample_t *)
+> jack_port_get_buffer (output_port, nframes);
+>     memcpy (out, prev[j], sizeof (jack_default_audio_sample_t) *
+> nframes); //Note: j is the new counting variable
+> 
+>    //Overwrite recently played input with new input:
+>     prev[j] = (jack_default_audio_sample_t *) jack_port_get_buffer
+> (input_port, nframes);
+>     j++;
+> 
+>    //Reset array counter to 0 when it reaches the end
+>     if (j = 200){ j = 0; } //reset j
+>     }
+> 
+> return 0;
+> }
+> 
+> If this looks way off (as in I'm missing the point of how JACK, etc.
+> works), I'd appreciate any resources that might help me get started
+> with regards to understanding how this all works.  I have gone through
+> the tutorials listed on the JACK site, and have a lot of troubles
+> trying to find anything else.
+> 
+> Regards,
+> Jason
+
+Hi Jason,
+
+welcome aboard! The issue with above code is
+    prev[i] = jack_port_get_buffer(..);
+
+The buffer returned by jack_port_get_buffer() is only valid for the
+current process cycle. You need to memcpy() that to a temp. queue.
+
+While easy in principle, things can get a bit complicated because the
+period size can change. When the delay-line buffer wraps-around and the
+delay-line buffer-size is not an exact multiple of the period-size, you
+will need two memcpy()s for writing and two for reading to make it seamless.
+
+While it's a good exercise to code that, the easiest way is to use
+libjack's ringbuffer which does exactly that:
+http://jackaudio.org/files/docs/html/ringbuffer_8h.html
+
+HTH,
+robin
+
+1351588660.7966_0.ltw:2,a <508F9B26.4000309 at gareus dot org>
+________________________________________________________________________________
+

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] multiple jack crashes in high-load VOIP environment</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] multiple jack crashes in high-load VOIP environment</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1383706566.18530_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1383779008.28917_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1383723512.23657_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 06 Nov 2013 08:38:28 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Marc Waesche &lt;[hidden] at waesche dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Marc Waesche
+<a href='../1383790606.31044_0.ltw:2,a/index.html'>Re: [Jack-Devel] multiple jack crashes in high-load VOIP environment </a></td></tr>
+</table>
+<pre>
+It would be better if you can update to latest git version, so 1.9.10 on server and library side.
+
+Then we can more easily debug the problem.
+
+St&#xE9;phane 
+
+
+Le 6 nov. 2013 &#xE0; 02:41, Marc Waesche &lt;[hidden]&gt; a &#xE9;crit :
+
+&gt; Oops!! Obviously I missed this answer from you, St&#xE9;phane. I didn't receive a notification mail for this. I saw your answer right now when I logged in into my mailinglist account. However, here my answer to your question which jackd version it is: 
+&gt; jackd -v returns 1.9.10
+&gt; The jack libary is version 1.9.9.5 as testing release included in Debian. We had to update from an older stable jack version (1.9.6) to a testing version because we needed a bugfix in version 1.9.8.
+&gt; 
+&gt; Marc
+&gt; 
+&gt; 
+&gt; &lt;First: what precise version of jackd are you using?
+&gt; 
+&gt; &lt;St&#xE9;phane 
+&gt; 
+&gt; 
+&gt; 
+&gt; 
+&gt; 
+&gt; Le 4 nov. 2013 &#xE0; 03:35, Marc Waesche &lt;
+&gt; marc at waesche.org
+&gt; &gt; a &#xE9;crit :
+&gt; 
+&gt; &gt;
+&gt;  Hi devs,
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  first of all let us express our gratitude to such a great tool like jackd!
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  One of our IT projects uses jackd in a high-load VoIP-environment, to transfer and mix audiostreams from an asterisk pbx server to a wowza flash media server. But we're currently experiencing problems with jackd, unfortunately. The issues:
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  - creating new jack ports failes
+&gt; 
+&gt; &gt;
+&gt;  - massive XRuns
+&gt; 
+&gt; &gt;
+&gt;  - jackd crashes unconditionally
+&gt; 
+&gt; &gt;
+&gt;  - jack_lsp throws errors, unconditionally
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  Some of the error messages are:
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  jack_lsp:
+&gt; 
+&gt; &gt;
+&gt;    jack_lsp: no process found
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  jackd:
+&gt; 
+&gt; &gt;
+&gt;    JackEngine::XRun: client = .... was not finished, state = Triggered
+&gt; 
+&gt; &gt;
+&gt;    JackAudioDriver::ProcessGraphAsyncMaster: Process error
+&gt; 
+&gt; &gt;
+&gt;    CheckRes error
+&gt; 
+&gt; &gt;
+&gt;    Could not write notification
+&gt; 
+&gt; &gt;
+&gt;    ClientNotify fails name = ....  notification = 1 val1 = 0 val2 = 0
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  ffmpeg client:
+&gt; 
+&gt; &gt;
+&gt;    JACK xrun
+&gt; 
+&gt; &gt;
+&gt;    Cannot open ....  client
+&gt; 
+&gt; &gt;
+&gt;    [jack @ 0x2dde120] Unable to register as a JACK client
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  Of course, jackd was being started before. Further information:
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  - Cmdline: /usr/bin/jackd -R -p 512 -d dummy -C0 -P0 -p 320 -r 16000
+&gt; 
+&gt; &gt;
+&gt;  - All servers are on the same machine
+&gt; 
+&gt; &gt;
+&gt;  - Concurrent Streams: up to 100 (but the problems occurs with even a few
+&gt; 
+&gt; &gt;
+&gt;  streams like 5 or 10)
+&gt; 
+&gt; &gt;
+&gt;  - we do not use jackdbus
+&gt; 
+&gt; &gt;
+&gt;  - jackd is started by root
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  Our internal process:
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  Asterisk is originating a call (by using a callfile) and will create two jack ports for incoming and outgoing audio. At the same time, ffmpeg is being started, creating an input jack port and sending all audio out to the wowza flash server using the rtmp protocol. Now both ports (asterisk/out and ffmpeg/in) are being connected using jack_connect. During this session, mplayer playes wav-files to tho asterisk/in port.
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  One problem is that we need to start ffmpeg in the brackground, so we have to wait some seconds before calling jack_connect, because the jack port created by ffmpeg might not to be "ready" at this time. Our current -not very intelligent- solution ist to call jack_lsp in intervals to find out, when the port is available.
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  But it seems to me, that jack_lsp does not always return the list of jack ports, and even, in some cases, crashes the jackd daemon. Could it be a multithreading-issue, or a kind of race-condition that leads to the crash?
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  Other issues we run into are the masssive xruns. Is it possible that Wowza (java software) is interfering the realtime jackd processes by acquiring too many CPU ressources? I've never seen Wowza in a "critical state", even when the xruns occur.
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  One last thing to mention:
+&gt; 
+&gt; &gt;
+&gt;  Fighting the xruns, I've tried to increase the period parameter, expecting higher latencies. Now there were no more xruns, but the audiostream was scattered/staccato.
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  For every help to solve (or localize) the described problems we are very, very thankful because we work for over a year now at this server solution and did not awaite such a technical problem at the end of the development. That problems became recognizable when we did our last tests after finishing the development. (okay, we THOUGHT we finished the development work ;)
+&gt; 
+&gt; &gt;
+&gt;  
+&gt; 
+&gt; &gt;
+&gt;  Best regards from Germany
+&gt; 
+&gt; &gt; Andreas Born &amp; Marc Waesche
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1383706566.18530_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1383779008.28917_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1383723512.23657_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1383723512.23657_0.ltw:2,&nbsp;&lt;8F945E14-1D53-4D77-855A-7EC775AEC8BD at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

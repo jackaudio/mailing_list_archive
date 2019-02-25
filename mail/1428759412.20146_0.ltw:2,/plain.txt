@@ -1,0 +1,50 @@
+Date:        Sat, 11 Apr 2015 09:36:43 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Johannes Lorenz <[hidden] at mailueberfall dot de>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Johannes Lorenz Re: [Jack-Devel] Avoiding spinlocks in a parallel sequencer (1428758453.19577_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Avoiding spinlocks in a parallel sequencer
+
+It is interesting to me that JACK can be used this way, but it certainly
+wasn't designed with this in mind. JACK was conceived as a way to route
+data between applications. Of course, it turns out that those same JACK
+ports can be used to route data within an application as well, and of
+course Ardour did this for many many years. But relying on JACK to
+construct and execute the graph is an entirely different level of relying
+on a feature of JACK that was mostly accidental. Ardour has always used its
+own algorithm and code to decide how to execute the internal processing
+elements that make up its audio graph, even when it used JACK ports to hold
+the data.
+
+I do know that some people think it is very elegant and cool that you can
+also JACK for this, and I'm glad that both the implementations of the JACK
+API are clean enough to work this way. It just isn't what it was intended
+for, it adds a little runtime cost, and if you ever decided to have private
+internal routing (i.e. not visible to the outside world via JACK), then the
+whole thing breaks down.
+
+On Sat, Apr 11, 2015 at 9:20 AM, Johannes Lorenz <
+[hidden]> wrote:
+
+> > But again, I wasn't proposing "one jack client per effect" ... I was
+> > proposing only a single JACK client per application, and NOT using JACK's
+> > audio graph capabilities within your application: you would need to
+> compute
+> > execution order yourself or use a nice library for this (not that there
+> > necessarily are any nice libraries).
+>
+> Ok, so you do not propose to use multiple clients and exploit JACK's graph
+> capabilities. Just for interest: For what (main) reason(s) didn't you
+> propose it?
+>
+> Thanks everyone for the help.
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+
+1428759412.20146_0.ltw:2, <CAFa_cK=T1+pOLMDfQiRQuczXMspG1ZKig0iAqxYYWrwVwvX+bQ at mail dot gmail dot com>
+________________________________________________________________________________
+

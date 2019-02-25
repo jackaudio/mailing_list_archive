@@ -1,0 +1,125 @@
+Date:        Tue, 31 Dec 2013 13:56:45 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Robin Gareus [Jack-Devel] [PATCH 0/3] modernizing jack-midi-dump (1388494618.17252_0.ltw:2,)
+
+Subject:     [Jack-Devel] [PATCH 1/3] midi-dump: exit cleanly, add support for absolute+relative timestamps
+
+Signed-off-by: Robin Gareus <[hidden]>
+---
+ example-clients/midi_dump.c |   50 +++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 46 insertions(+), 4 deletions(-)
+
+diff --git a/example-clients/midi_dump.c b/example-clients/midi_dump.c
+index 07963a0..092af99 100644
+--- a/example-clients/midi_dump.c
++++ b/example-clients/midi_dump.c
+@@ -1,11 +1,22 @@
+ #include <stdio.h>
++#include <string.h>
+ #include <unistd.h>
+ #include <assert.h>
+ #include <jack/jack.h>
+ #include <jack/midiport.h>
+ 
++#ifndef WIN32
++#include <signal.h>
++#endif
++
+ static jack_port_t* port;
+ 
++static int keeprunning = 1;
++static int time_format = 0;
++
++static uint64_t monotonic_cnt = 0;
++static uint64_t prev_event = 0;
++
+ static void
+ describe (jack_midi_event_t* event, char* buffer, size_t buflen)
+ {
+@@ -58,7 +69,17 @@ process (jack_nframes_t frames, void* arg)
+ 		if (r == 0) {
+ 			size_t j;
+ 
+-			printf ("%d:", event.time);
++			switch(time_format) {
++				case 1:
++					printf ("%7"PRId64":", event.time + monotonic_cnt);
++					break;
++				case 2:
++					printf ("%+6"PRId64":", event.time + monotonic_cnt - prev_event);
++					break;
++				default:
++					printf ("%4d:", event.time);
++					break;
++			}
+ 			for (j = 0; j < event.size; ++j) {
+ 				printf (" %x", event.buffer[j]);
+ 			}
+@@ -67,12 +88,18 @@ process (jack_nframes_t frames, void* arg)
+ 			printf (" %s", description);
+ 
+ 			printf ("\n");
++			prev_event = event.time + monotonic_cnt;
+ 		}
+ 	}
+ 
++	monotonic_cnt += frames;
++
+ 	return 0;
+ }
+ 
++static void wearedone(int sig) {
++	keeprunning = 0;
++}
+ 
+ int
+ main (int argc, char* argv[])
+@@ -82,8 +109,15 @@ main (int argc, char* argv[])
+ 	char const * client_name;
+ 	int r;
+ 
+-	if (argc == 2) {
+-		client_name = argv[1];
++	int cn = 1;
++
++	if (argc > 1) {
++		if (!strcmp(argv[1], "-a")) { time_format = 1; cn = 2; }
++		if (!strcmp(argv[1], "-r")) { time_format = 2; cn = 2; }
++	}
++
++	if (argc > cn) {
++		client_name = argv[cn];
+ 	} else {
+ 		client_name = default_name;
+ 	}
+@@ -108,8 +142,13 @@ main (int argc, char* argv[])
+ 		exit (EXIT_FAILURE);
+ 	}
+ 
++#ifndef WIN32
++	signal(SIGHUP, wearedone);
++	signal(SIGINT, wearedone);
++#endif
++
+ 	/* run until interrupted */
+-	while (1) {
++	while (keeprunning) {
+ 	#ifdef WIN32
+ 		Sleep(1000);
+ 	#else
+@@ -117,5 +156,8 @@ main (int argc, char* argv[])
+ 	#endif
+ 	};
+ 
++	jack_deactivate (client);
++	jack_client_close (client);
++
+ 	return 0;
+ }
+-- 
+1.7.10.4
+
+1388494629.17279_0.ltw:2, <1388494607-1336-2-git-send-email-robin at gareus dot org>
+________________________________________________________________________________
+

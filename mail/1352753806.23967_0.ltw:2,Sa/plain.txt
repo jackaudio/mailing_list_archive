@@ -1,0 +1,49 @@
+Date:        Mon, 12 Nov 2012 22:53:19 +0200
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          "[hidden] at lists dot jackaudio dot org Developers" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz [Jack-Devel] Fwd: git fails with... (1352709150.27560_0.ltw:2,Sa)
+
+Subject:     Re: [Jack-Devel] Fwd: git fails with...
+
+Stéphane Letz <[hidden]> writes:
+
+> Any idea someone?
+>
+> Thanks.
+>
+> Stephane 
+>
+> Début du message réexpédié :
+>
+>> De : Geoff Beasley <[hidden]>
+>> Date : 12 novembre 2012 02:16:04 HNEC
+>> À : [hidden]
+>> Objet : git fails with...
+>> 
+>> [243/247] cprogram: build/example-clients/midisine.c.20.o -> build/example-clients/jack_midisine
+>> [244/247] cprogram: build/example-clients/server_control.cpp.5.o -> build/example-clients/jack_server_control
+>> /usr/bin/ld: example-clients/server_control.cpp.5.o: undefined reference to symbol '__gxx_personality_v0@@CXXABI_1.3'
+>> /usr/bin/ld: note: '__gxx_personality_v0@@CXXABI_1.3' is defined in DSO /usr/lib/libstdc++.so.6 so try adding it to the linker command line
+>> /usr/lib/libstdc++.so.6: could not read symbols: Invalid operation
+>> collect2: error: ld returned 1 exit status
+>> Waf: Leaving directory `/root/CODE/jack2/build'
+>> Build failed
+>> -> task in 'jack_server_control' failed (exit status 1):
+>>    {task 3062725708: cprogram server_control.cpp.5.o -> jack_server_control}
+>> ['/usr/bin/gcc', 'example-clients/server_control.cpp.5.o', '-o', '/root/CODE/jack2/build/example-clients/jack_server_control', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-Lcommon', '-ljackserver', '-lpthread', '-lrt', '-ldl', '-lm']
+
+C++ promgrams must be linked with g++, not gcc. Frank Kober reported
+this issue on ladish mailing list. The workaround he used is:
+
+LINKFLAGS="-lm -lstdc++" ./waf configure --prefix=/usr .......
+
+The issue reproducibility seems to be affected by distro/toolchain
+version. Frank reported gcc-4.7.2 and gold linked being used.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1352753806.23967_0.ltw:2,Sa <87lie6r1a8.fsf at arnaudov dot name>
+________________________________________________________________________________
+

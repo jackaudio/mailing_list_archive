@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Stopping jack from callback</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Stopping jack from callback</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1376503900.32204_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1376570094.14660_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1376569676.14314_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 15 Aug 2013 14:27:27 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Anders Tornvig </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Harry van Haaren
+<a href='../1376570094.14660_0.ltw:2,a/index.html'>Re: [Jack-Devel] Stopping jack from callback </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1376571212.15466_0.ltw:2,a/index.html'>Re: [Jack-Devel] Stopping jack from callback </a></td></tr>
+</table>
+<pre>
+Hi all,
+
+I'm counting how many times I have been in the process_callback and I would
+like to stop immediately after the, say, 100th visit.
+
+At the moment I increment a variable and a while loop in the main function
+checks it every second. The problem is that jack keeps going to the
+callback until I check and see that the variable has gone above 100. So I
+may get into the callback 103, 114, or something else, times depending on
+my buffer length.
+
+Some code says more than a thousand lines of words:
+...
+int process (jack_nframes_t nframes, void *arg) {
+   DPOAE *dpoae = (DPOAE *)arg;
+   dpoae-&gt;m++;
+}
+...
+int main (void) {
+   ...
+   jack_set_process_callback (client, process, &amp;dpoae);
+   ...
+   while(dpoae.m&lt;100) sleep (1);
+   jack_client_close (client);
+   ...
+}
+
+And this code does _not_ do what I want. What is the right way to make it
+stop right after the 100th call of process.
+
+Best, Anders
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1376503900.32204_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1376570094.14660_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1376569676.14314_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1376569676.14314_0.ltw:2,a&nbsp;&lt;CAMeZe4HSAfHY49-L2zAvq5je+oVuDS_zdbkBXYX78wVbte1ENA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,35 @@
+Date:        Mon, 02 May 2011 09:12:17 +0100
+From:        Peter Nelson  <[hidden] at fuzzle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Timothy Godfrey [Jack-Devel] more ringbuffer challenges (1304315076.29639_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] more ringbuffer challenges
+
+On Mon, 2011-05-02 at 15:44 +1000, Timothy Godfrey wrote:
+
+> As I understand it, the ringbuffer works with bytes, and the buffer
+> pointers and count values all refer to bytes (char*). In some parts of
+> my application I have observed 'mysterious' behavior from the
+> ringbuffer like
+> 
+> if(jack_ringbuffer_get_read_space(rb) > nframes){
+>    int bytesRead = jack_ringbuffer_read(rb, somePort, nframes);
+>    print("bytesRead: %d\n", bytesRead);
+> }
+>
+> and getting "bytesRead: 100" printed out.
+
+But nframes isn't bytes, it's the number of float samples.
+You want to compare with nframes * sizeof(jack_default_audio_sample_t)
+
+> As an aside, would this situation be helped by creating a
+> parameterized ringbuffer, something like
+> jack_ringbuffer_t<jack_default_audio_sample_t>?
+
+Possibly, but then it wouldn't be a C API.
+
+Peter.
+
+1304323920.6737_0.ltw:2,a <1304323937.10707.8.camel at atropos dot lan dot fuzzle dot org>
+________________________________________________________________________________
+

@@ -1,0 +1,61 @@
+Date:        Thu, 28 Apr 2011 08:03:07 +0200
+From:        Arnold Krille  <[hidden] at arnoldarts dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Timothy Godfrey [Jack-Devel] ringbuffer problems (1303968532.19331_0.ltw:2,a)
+Follow-Up:   Tim E. Real Re: [Jack-Devel] ringbuffer problems (1303975152.32455_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] ringbuffer problems (1303975247.32630_0.ltw:2,a)
+Follow-Up:   Dylan Gleason [Jack-Devel] rtprio troubles (1303975961.1592_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] ringbuffer problems
+
+Hi,
+
+On Thursday 28 April 2011 07:28:27 Timothy Godfrey wrote:
+> The jack_ringbuffer_t documentation says
+> 
+> "The key attribute of a ringbuffer is that it can be safely accessed
+> by two threads simultaneously -- one reading from the buffer and the
+> other writing to it -- without using any synchronization or mutual
+> exclusion primitives. For this to work correctly, there can only be a
+> single reader and a single writer thread. Their identities cannot be
+> interchanged. "
+> 
+> What are the specifics of these conditions? I am writing to the
+> ringbuffer in the process() callback of my application, and I am
+> reading from the ringbuffer in the main loop. Does this count as being
+> in different threads?
+
+As the process()-callback is executed within the audio-thread jack creates for 
+you inside your application, this counts as two different threads. And its 
+exactly what the ringbuffer is created for.
+
+> For testing/education purposes, does it work to read and write to the
+> ringbuffer from within a single thread (to check that data went in
+> correctly, for example), without any other threads involved?
+
+That is also possible. The things that don't work with a lock-free ringbuffer 
+like the one in jack:
+ - Multiple writers in several threads writing to the same ringbuffer.
+ - Multiple readers in several threads reading from the same ringbuffer.
+
+> Would
+> constitute a violation of the rule, 'Their identities cannot be
+> interchanged'?
+
+This rule is there because when one thread is the reader and then another 
+thread starts reading, there is a chance that for a short time both threads 
+read. And that is not safe without locks on the ringbuffer or somewhere else. 
+(Same for writers.)
+
+> Will I run into trouble if I am mixing a c++ (jack2?) application with
+> a jack1 server?
+
+That shouldn't give you any trouble...
+
+Have fun,
+
+Arnold
+
+1303970606.23378_0.ltw:2,a <201104280803.11739.arnold at arnoldarts dot de>
+________________________________________________________________________________
+

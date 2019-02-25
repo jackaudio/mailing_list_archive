@@ -1,0 +1,63 @@
+Date:        Fri, 29 Jul 2011 16:36:08 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+
+Subject:     Re: [Jack-Devel] jack_wait extensions
+
+On Fri, Jul 29, 2011 at 01:28:12PM +0300, Nedko Arnaudov wrote:
+
+> > diff --git a/example-clients/wait.c b/example-clients/wait.c
+> > index 9150bb6..b6f77e5 100644
+> > --- a/example-clients/wait.c
+> > +++ b/example-clients/wait.c
+> > @@ -92,6 +92,7 @@ main (int argc, char *argv[])
+> >
+> >  	start_timestamp = time( NULL );
+> >
+> > +    int rc = 0;
+> >  	while(1) {
+> >  		client = jack_client_open ("wait", options, &status, server_name);
+> >  		/* check for some real error and bail out */
+> > @@ -108,6 +109,7 @@ main (int argc, char *argv[])
+> >  			}
+> >  			if( just_check ) {
+> >  				fprintf( stdout, "not running\n" );
+> > +                rc = 2;
+> >  				break;
+> >  			}
+> >  		} else {
+> > @@ -124,6 +126,7 @@ main (int argc, char *argv[])
+> >  		if( wait_timeout ) {
+> >  		       if( (time( NULL ) - start_timestamp) > wait_timeout ) {
+> >  			       fprintf( stdout, "timeout\n" );
+> > +                   rc = 3;
+> >  			       break;
+> >  		       }
+> >  		}
+> > @@ -132,5 +135,5 @@ main (int argc, char *argv[])
+> >  		sleep(1);
+> >  	}
+> >
+> > -	exit (0);
+> > +	exit (rc);
+> >  }
+> 
+> In case that you havent noticed it, your patch mixes tab and space indention.
+
+Indeed. And I haven't noticed it, but now that you mention it, the
+existing code also mixes tabs and spaces. The stuff in the wait_timeout
+block is space indented while the rest is tab indented.
+
+If there's nothing to discuss on the semantic side, let me come up with
+two new patches, one that retabs the wait_timeout section and then one
+which adds the exit code functionality.
+
+
+Cheers
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1311950186.1052_0.ltw:2,a <20110729143608.GU19500 at ltw dot loris dot tv>
+________________________________________________________________________________
+

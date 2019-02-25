@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] OS X jack midi message issues between jack and core midi</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] OS X jack midi message issues between jack and core midi</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1343936461.17368_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1343958269.2064_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1343940887.24252_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 02 Aug 2012 22:54:25 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Devin Anderson &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org, [hidden] at yahoogroups dot com </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Devin Anderson
+<a href='../1343936461.17368_0.ltw:2,a/index.html'>Re: [Jack-Devel] OS X jack midi message issues between jack and core midi </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1343958269.2064_0.ltw:2,a/index.html'>Re: [Jack-Devel] OS X jack midi message issues between jack and core midi </a></td></tr>
+</table>
+<pre>
+Le 2 ao&#xFB;t 2012 &#xE0; 21:40, Devin Anderson a &#xE9;crit :
+
+&gt; On Mon, Jul 16, 2012 at 12:00 AM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+&gt; 
+&gt;&gt; JackOSX indeed uses jack2, but building the whole stuff is a bit of
+&gt;&gt; pain... I'll try to do that and prepare a new package this week.
+&gt; 
+&gt; I got around to looking at the JACK 2 code on github.com/jackaudio,
+&gt; and I don't see the fix applied for duplicate messages that I sent
+&gt; over.  I think the fix should be applied.
+
+The patch has been applied on my private tree and is part of latest JackOSX package, but it does not seem to fix the issue.
+&gt; 
+&gt; As far as dropped messages go, I noticed that the ProcessRead() and
+&gt; ProcessWrite() calls in JackCoreMidiDriver now have TryLock() calls:
+&gt; 
+&gt;    int
+&gt;    JackCoreMidiDriver::ProcessRead()
+&gt;    {
+&gt;        int res;
+&gt;        if (Trylock()) {
+&gt;            res = (fEngineControl-&gt;fSyncMode) ? ProcessReadSync() :
+&gt; ProcessReadAsync();
+&gt;            Unlock();
+&gt;        } else {
+&gt;            res = -1;
+&gt;        }
+&gt;        return res;
+&gt;    }
+&gt; 
+&gt;    int
+&gt;    JackCoreMidiDriver::ProcessWrite()
+&gt;    {
+&gt;        int res;
+&gt;        if (Trylock()) {
+&gt;            res = (fEngineControl-&gt;fSyncMode) ? ProcessWriteSync() :
+&gt; ProcessWriteAsync();
+&gt;            Unlock();
+&gt;        } else {
+&gt;            res = -1;
+&gt;        }
+&gt;        return res;
+&gt;    }
+&gt; 
+&gt; Could this be the reason for the dropped messages?
+
+This lock was added to avoid race when the CoreMIDI setup is dynamically changed, causing the JackCoreMidiDriver::Restart function to be called. It is not happening in this specific case.
+
+So the issue still seems there...
+
+Stephane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1343936461.17368_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1343958269.2064_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1343940887.24252_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1343940887.24252_0.ltw:2,a&nbsp;&lt;9CEAF81F-C954-4CE0-A9B0-5C7BD8233227 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

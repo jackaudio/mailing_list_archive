@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack2 libsamplerate-less build is broken (+ fix proposal)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack2 libsamplerate-less build is broken (+ fix proposal)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305247886.9527_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1305302953.20656_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1305274281.5520_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 13 May 2011 10:10:56 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Nedko Arnaudov &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Nedko Arnaudov
+<a href='../1305247886.9527_0.ltw:2,a/index.html'>[Jack-Devel] jack2 libsamplerate-less build is broken (+ fix proposal) </a></td></tr>
+</table>
+<pre>
+Le 13 mai 2011 &#xE0; 02:50, Nedko Arnaudov a &#xE9;crit :
+
+&gt; Salut St&#xE9;phane and list,
+&gt; 
+&gt; jack2 fails to build if libsamplerate is not present.
+&gt; 
+&gt; libsamplerate is checked and correctly marked as missing during
+&gt; configure stage. However netlib build is still attempted:
+&gt; 
+&gt; -------------------------------------------
+&gt; [ 66/230] cxx: common/JackLibSampleRateResampler.cpp -&gt; build/default/common/JackLibSampleRateResampler_2.o
+&gt; In file included from ../common/JackLibSampleRateResampler.cpp:20:
+&gt; ../common/JackLibSampleRateResampler.h:26:24: error: samplerate.h: No such file or directory
+&gt; In file included from ../common/JackLibSampleRateResampler.cpp:20:
+&gt; ../common/JackLibSampleRateResampler.h:40: error: ISO C++ forbids declaration of 'SRC_STATE' with no type
+&gt; ../common/JackLibSampleRateResampler.h:40: error: expected ';' before '*' token
+&gt; ../common/JackLibSampleRateResampler.cpp: In constructor 'Jack::JackLibSampleRateResampler::JackLibSampleRateResampler()':
+&gt; ../common/JackLibSampleRateResampler.cpp:29: error: 'fResampler' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:29: error: 'SRC_LINEAR' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:29: error: 'src_new' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:31: error: 'src_strerror' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp: In constructor 'Jack::JackLibSampleRateResampler::JackLibSampleRateResampler(unsigned int)':
+&gt; ../common/JackLibSampleRateResampler.cpp:39: error: 'SRC_LINEAR' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:42: error: 'SRC_ZERO_ORDER_HOLD' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:45: error: 'SRC_SINC_FASTEST' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:48: error: 'SRC_SINC_MEDIUM_QUALITY' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:51: error: 'SRC_SINC_BEST_QUALITY' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:60: error: 'fResampler' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:60: error: 'src_new' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:62: error: 'src_strerror' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp: In destructor 'virtual Jack::JackLibSampleRateResampler::~JackLibSampleRateResampler()':
+&gt; ../common/JackLibSampleRateResampler.cpp:67: error: 'fResampler' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:67: error: 'src_delete' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp: In member function 'virtual void Jack::JackLibSampleRateResampler::Reset(unsigned int)':
+&gt; ../common/JackLibSampleRateResampler.cpp:73: error: 'fResampler' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:73: error: 'src_reset' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp: In member function 'virtual unsigned int Jack::JackLibSampleRateResampler::ReadResample(jack_default_audio_sample_t*, unsigned int)':
+&gt; ../common/JackLibSampleRateResampler.cpp:79: error: 'SRC_DATA' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:79: error: expected ';' before 'src_data'
+&gt; ../common/JackLibSampleRateResampler.cpp:92: error: 'src_data' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:99: error: 'fResampler' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:99: error: 'src_process' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:101: error: 'src_strerror' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp: In member function 'virtual unsigned int Jack::JackLibSampleRateResampler::WriteResample(jack_default_audio_sample_t*, unsigned int)':
+&gt; ../common/JackLibSampleRateResampler.cpp:129: error: 'SRC_DATA' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:129: error: expected ';' before 'src_data'
+&gt; ../common/JackLibSampleRateResampler.cpp:142: error: 'src_data' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:149: error: 'fResampler' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:149: error: 'src_process' was not declared in this scope
+&gt; ../common/JackLibSampleRateResampler.cpp:151: error: 'src_strerror' was not declared in this scope
+&gt; In file included from ../common/JackAudioAdapterInterface.cpp:26:
+&gt; ../common/JackLibSampleRateResampler.h:26:24: error: samplerate.h: No such file or directory
+&gt; [ 67/230] cxx: common/JackResampler.cpp -&gt; build/default/common/JackResampler_2.o
+&gt; In file included from ../common/JackAudioAdapterInterface.cpp:26:
+&gt; ../common/JackLibSampleRateResampler.h:40: error: ISO C++ forbids declaration of 'SRC_STATE' with no type
+&gt; ../common/JackLibSampleRateResampler.h:40: error: expected ';' before '*' token
+&gt; Build failed
+&gt; -&gt; task failed (err #1): 
+&gt;        {task: cxx JackAudioAdapterInterface.cpp -&gt; JackAudioAdapterInterface_2.o}
+&gt; -------------------------------------------
+&gt; 
+&gt; I've made a changeset that disables build of netlib, jack_net_slave and
+&gt; jack_net_master when libsamplerate is not available. The commit is in
+&gt; the git branch called fix-libsamplerate-less-build.
+&gt; 
+&gt; Feel free to correct/improve in that branch and remove it if it gets
+&gt; merged to master/trunk.
+&gt; 
+
+Merged back on SVN trunk.
+
+Thanks.
+
+St&#xE9;phane
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305247886.9527_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1305302953.20656_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1305274281.5520_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1305274281.5520_0.ltw:2,a&nbsp;&lt;A8E0853C-1BD2-40E7-B8D6-B6D42589D714 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,47 @@
+Date:        Sat, 12 May 2018 15:41:04 +0300
+From:        Thomas Brand  <[hidden] at trellis dot ch>
+To:          Christophe Lohr <[hidden] at cegetel dot net>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Christophe Lohr Re: [Jack-Devel] How to use jackd as a 'system-wide' server? (1526071322.23738_0.ltw:2,)
+Follow-Up:   Christophe Lohr Re: [Jack-Devel] How to use jackd as a 'system-wide' server? (1526148509.1267_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] How to use jackd as a 'system-wide' server?
+
+On Fri, May 11, 2018 23:41, Christophe Lohr wrote:
+>
+> Unfortunately there are still (other) errors in the asterisk console:
+>     -- Executing [6000@default:5] JACK("SIP/6007-00000000", "") in new
+> stack [May 11 20:30:00] WARNING[30222][C-00000000]: app_jack.c:600
+> queue_voice_frame: Tried to write 3844 bytes to the ringbuffer, but only
+> wrote 1679 [May 11 20:30:00] WARNING[30222][C-00000000]: app_jack.c:600
+> queue_voice_frame: Tried to write 3844 bytes to the ringbuffer, but only
+> wrote 0 [May 11 20:30:00] WARNING[30222][C-00000000]: app_jack.c:600
+> queue_voice_frame: Tried to write 3844 bytes to the ringbuffer, but only
+> wrote 0 ../..
+> [May 11 20:30:10] WARNING[30222][C-00000000]: app_jack.c:600
+> queue_voice_frame: Tried to write 3844 bytes to the ringbuffer, but only
+> wrote 0     -- Unregistered SIP '6007'
+
+This is just a warning. If you'd check the available size before writing
+the result would be the same.
+
+Why the ringbuffer has not enough write space can have several reasons
+from logic errors to random other reasons.
+
+However you could simply enlarge the ringbuffer capacity and see if the
+warning still appears.
+
+in app_jack.c:
+
+/* The number of frames the ringbuffers can store. The actual size is
+RINGBUFFER_FRAME_CAPACITY * jack_data->frame_datalen */
+#define RINGBUFFER_FRAME_CAPACITY 100
+
+set this to 1000 just for a test and re-compile.
+
+Greetings
+Thomas
+
+1526128954.29011_0.ltw:2, <cd774fd8837f39da2a798c5bd964219a.squirrel at ips73 dot ips dot ch>
+________________________________________________________________________________
+

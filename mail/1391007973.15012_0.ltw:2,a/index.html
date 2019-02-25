@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] About ALSA drivers for Firewire sound devices</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] About ALSA drivers for Firewire sound devices</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1390990147.17283_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1391008529.15462_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1391007973.15012_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 30 Jan 2014 00:06:02 +0900 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Takashi Sakamoto </span> &lt;[hidden] at sakamocchi dot jp&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1391008987.15830_0.ltw:2,a/index.html'>Re: [Jack-Devel] About ALSA drivers for Firewire sound devices </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Chris Goddard
+<a href='../1391009106.15877_0.ltw:2,a/index.html'>Re: [Jack-Devel] About ALSA drivers for Firewire sound devices </a></td></tr>
+</table>
+<pre>
+HI,
+
+I'm a newbie for this project. I'm a ALSA/FFADO developer and currently
+working for ALSA drivers of some firewire devices.
+
+[alsa-devel] [RFC v3] [PATCH 00/52] Enhancement for support of firewire
+devices
+http://mailman.alsa-project.org/pipermail/alsa-devel/2014-January/071820.html
+
+And call for testing in 'Linux Audio Devel':
+[LAD] Call for testing (final): ALSA driver for some firewire devices
+http://lists.linuxaudio.org/pipermail/linux-audio-dev/2014-January/034662.html
+
+The drivers have almost the same streaming functionality as FFADO has.
+The drivers are for some devices so-called 'GenericAVC', based on
+Fireworks/BeBoB/OXFORD.
+
+Currently they aren't going to be merged to upstream. i have some
+discussion about adjustment between the new drivers and related projects.
+
+At first, to PulseAudio.
+
+[pulseaudio-discuss] 'Failed to find a working profile' for firewire
+sound devices
+http://lists.freedesktop.org/archives/pulseaudio-discuss/2014-January/019685.html
+
+
+Next, to FFADO.
+http://sourceforge.net/mailarchive/forum.php?thread_name=52D8EE54.1040500%40sakamocchi.jp&amp;forum_name=ffado-devel
+
+
+Finally, to JACK... I have no issue to JACK :p
+
+JACK is still a good friend to Firewire sound devices. But I inform
+three points to you.
+
+1. Daisy-caining
+With FFADO backend, jackd can handle some firewire devices. But with
+ALSA backend, jack can't. This rule is still applied to the new drivers.
+
+When users want to use several ALSA PCM devices for firewire sound
+devices, they must write ALSA configuration with 'multi' plugin. See in
+detail:
+http://www.alsa-project.org/alsa-doc/alsa-lib/pcm_plugins.html#pcm_plugins_multi
+
+
+2. conflict between ALSA/FFADO streaming functionality
+Both starts streaming. But generally, one device can handle a pair of
+streams (in and out).  So FFADO/ALSA can conflict for streaming.
+
+To prevent this, I post a patch to FFADO. If this patch is applied, when
+at least one of connected firewire devices is streaming, jackd with
+FFADO backend fails to start streaming.
+
+[FFADO-devel] Adjustment between FFADO/ALSA for Firewire drivers
+http://sourceforge.net/mailarchive/message.php?msg_id=31856195
+
+Here I have to mention about MIDI functionality. When users use ALSA
+MIDI functionality, the new drivers also start streaming because
+firewire streaming includes both of PCM samples/MIDI messages.
+
+Some graphical JACK application such as 'patchage' displays ALSA MIDI
+ports when jackd is running. But users can't do this. Vise versa, when
+users use any ALSA MIDI ports, then jackd always failed.
+
+
+3. control for internal mixer
+The new drivers don't give this functionality. So users still need
+applications for it, like FFADO Mixer.
+
+
+Regards
+
+Takashi Sakamoto
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1390990147.17283_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1391008529.15462_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1391007973.15012_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1391007973.15012_0.ltw:2,a&nbsp;&lt;52E918DA.6020303 at sakamocchi dot jp&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

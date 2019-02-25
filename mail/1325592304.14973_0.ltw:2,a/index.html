@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack_frames_to_time() bug</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack_frames_to_time() bug</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325592288.14953_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325592631.15478_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325592304.14973_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 03 Jan 2012 12:04:56 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1325583004.32062_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack_frames_to_time() bug </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1325628273.17154_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack_frames_to_time() bug </a></td></tr>
+</table>
+<pre>
+On Tue, Jan 03, 2012 at 10:30:18AM +0100, St&#xE9;phane Letz wrote:
+
+&gt; I suggest that you prepare a clean patch with all
+&gt; you proposed "timing related changes" (for jack1
+&gt; for instance)
+
+I'd be happy to, provided someone can tell me _which_ changes
+are wanted.
+
+1. Add the functions to read current and next wakeup times
+   separately, fix jack_frames_to_time().
+
+   Options in that case:
+
+   A. Change the jack_nframes_t parameter or result of jack_frame_time(),
+      jack_frames_since_cycle_start(), jack_frames_to_time() and
+      jack_time_to_frames() to a double to preserve full precision.
+
+   B. Or add new versions keeping the current ones as deprecated.
+
+   C. Fix the anomaly in jack_frames_since_cylce_start() which
+      seems to use an unfiltered current_wakeup time, making
+      it inconsistent with the rest of the timing functions. 
+
+or
+
+2. Add an atomic accessor for all four of current_wakeup_time,
+   next_wakeup_time,  last_frame_time, and the current period
+   time estimate of the DLL. This allows the client to do all
+   calculations to full precision. Leave the other functions as
+   the are as a client wanting full precision is not required
+   to use them. Of course still fix jack_frames_to_time().
+
+   Options in that case:
+
+   A. Same as C above.
+
+As a separate but related issue I'd like to review the DLL
+code as I'm not convinced that the current implementation
+provides full precision.
+
+AFAIK, the decision is postponed until after the 'great
+unification', so I'm not really motivated to write a patch
+ATM.
+
+OTOH, fixing the bug in jack_frames_to_time() just requires
+a cut-and-paste of three lines (and testing it of course).      
+You don't need a patch to do that.
+
+Ciao,
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325592288.14953_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325592631.15478_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325592304.14973_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1325592304.14973_0.ltw:2,a&nbsp;&lt;20120103120456.GA19979 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

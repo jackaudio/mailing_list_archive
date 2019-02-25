@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] major change in jack1 MIDI handling</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] major change in jack1 MIDI handling</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1381575221.21756_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1381577919.23465_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1381577873.23446_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 12 Oct 2013 07:37:44 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Christian Schoenebeck &lt;[hidden] at crudebyte dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Christian Schoenebeck
+<a href='../1381575221.21756_0.ltw:2,/index.html'>Re: [Jack-Devel] major change in jack1 MIDI handling </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Christian Schoenebeck
+<a href='../1381590150.31010_0.ltw:2,/index.html'>Re: [Jack-Devel] major change in jack1 MIDI handling </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1381596279.2709_0.ltw:2,/index.html'>Re: [Jack-Devel] major change in jack1 MIDI handling </a></td></tr>
+</table>
+<pre>
+On Sat, Oct 12, 2013 at 6:59 AM, Christian Schoenebeck &lt;
+[hidden]&gt; wrote:
+
+&gt; Actually I don't understand the overall situation. For a while JACK2 was
+&gt; advertised by main JACK developers as (upcoming) successor of JACK1.
+
+
+We discussed this about 18 months to 2 years ago. For better or for worse,
+the people who have more recently worked on Jack1's codebase (mostly myself
+and Torben Hohn, who is now largely out of Linux audio development) are not
+really interested in working on the Jack2 codebase, and obviously Jack2 was
+started because of similar feelings regarding Jack1. Torben did in fact
+work on a new version of Jack1 that has the same click-free capabilities as
+Jack2 (Tschak) but this never landed due to some hard-to-track down bugs.
+
+To try to minimize the amount of duplicated work, a git repository (or
+rather, several git repositories) were setup on github so that things that
+could be shared between the two implementations would be shared. This
+includes headers, example clients, and utility clients. Jack1 has used
+these submodules since it landed on github, but nobody has stepped up to
+enable Jack2 to share them (Filipe/falktx recently did a couple of small
+push requests to move this along, but that is all). So this effort seems
+largely wasted at this point in time, which is frustrating.
+
+But now
+&gt; it seems like as major development efforts are once again solely put on
+&gt; JACK1.
+&gt; Were there some personal disputes that caused this? Because from technical
+&gt; point of view I cannot find good reasons to continue maintaining JACK1.
+&gt;
+
+It is more stable at lower latencies. Jack2 in sync mode has often had
+quirks that Jack1 (which only has sync mode) doesn't seem to suffer from.
+From my perspective, the major feature that Jack2 has is that it has
+Windows support and better OS X support than Jack1, and a developer
+(Stephane) who has some reason(s) to be willing to support these to some
+extent at least. It is hard to imagine who is going to bring Windows
+support to Jack1, or the many improvements and fixes in CoreAudio support
+that Stephane has added to Jack2.
+
+
+&gt; Besides some of the already mentioned major advantages of JACK2 (IIRC I
+&gt; would
+&gt; also add "lower idle CPU load" to that list), there were bugs in JACK1
+&gt; (i.e.
+&gt; dead locks) which by language &amp; design could not even happen in JACK2.
+
+
+Are there bug reports for these dead locks? I am on #jack on IRC 24/7 and I
+have not seen reports of deadlocks or lower CPU idle load for years, if
+ever. Deadlocks were a problem with Tschak, which is why it did not land.
+Jack2 continues to have problems with freewheeling from time to time.
+Neither code base is free of bugs, that is clear. Linux distributions have
+preferred Jack2 partly because the name suggests that it is the "new"
+version of JACK (which is a misunderstanding) and because of its use of
+D-Bus to integrate with PulseAudio.
+
+
+&gt; Plus,
+&gt; adding new features to JACK2 can be achieved in far less time (and higher
+&gt; quality) than adding them to JACK1.
+&gt;
+
+This is a matter of opinion. Torben and myself found the Jack2 code to be
+complex and coded in a rather different idiom of C++ than we are used to -
+there is nothing wrong with this, but it has a real world effect of meaning
+that we didn't want to work on it. I just added a whole new API to Jack1 in
+a couple of days. I didn't run into any real problems (though I can
+certainly understand that other developers may have the same kind of
+response to the Jack1 codebase that I do to Jack2's).
+
+That said, I am not particularly interested in maintaining Jack1 either,
+but would like to move forward with a new implementation that attempts to
+combine the best of both worlds. I have no idea if I (or anyone else) will
+find the time to do this. The idea would be to code something in C++,
+utilize something like boost for cross-platform portability, and re-use
+lots of code from both jack1 and jack2 while also applying some of the
+design lessons that we've learned along the way which are too fundamental
+to be usefully applied to either Jack1 or Jack2 (though they could be if
+someone was going to put in the time).
+
+My recent work on Jack1 was triggered by the "threat" that an overly
+specific new API would get added to JACK2 in spite of years of calling for
+a more generic approach (metadata). There have been discussions for several
+years about a metadata API for JACK, and significant discussion on IRC from
+time to time. An API for this has now been implemented (which also covers
+the very same overly specific API that you added for Jack on iOS). My
+implementation took account of the fact that it would be sensible to make
+it relatively easy to re-use within Jack2 (though it does require the
+fundamental addition of UUIDs for clients and ports). I have no idea
+whether anyone will ever step up to do that.
+
+Of course, the situation with netjack is even worse, so lets not go there.
+
+In summary, back when I was willing to endorse Jack2 as the successor to
+Jack1 rather than an alternate implementation (which is how it started
+life), I wasn't aware of the extent to which the different coding idioms it
+uses would block the only thing that really matters from a development
+perspective: developer involvement. Jack2 has its own development "group"
+who are happy with its code structure and who have done some great stuff
+(Devin's work on MIDI drivers is really fantastic). But there's no getting
+around the fact that for some of us, it just doesn't feel like the right
+path to do what we'd like to see happen with JACK. That isn't necessarily a
+logically defensible position, but it is reality. Jack1 has already
+vanished as the default JACK used by most people, so if you're upset about
+continued work on Jack1, rest assured that it will likely take place in
+obscurity given Linux distribution's decisions to adopt Jack2 as "jack".
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1381575221.21756_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1381577919.23465_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1381577873.23446_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1381577873.23446_0.ltw:2,&nbsp;&lt;CAFa_cKkeF2rmyYtOM1LoparayNmmtWzwkuMnfCUBDeyz_1CKDw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

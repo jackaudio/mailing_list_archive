@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack_get_sample_rate</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack_get_sample_rate</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1481651612.28901_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1481736427.9066_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1481652159.29316_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 13 Dec 2016 19:02:20 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Adrian Knoth </span> &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at notam02 dot no </td></tr>
+<tr><td class='col1'>Cc</td><td>"[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Kjetil Matheussen
+<a href='../1481622225.9707_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack_get_sample_rate </a></td></tr>
+</table>
+<pre>
+On Tue, Dec 13, 2016 at 10:43:31AM +0100, Kjetil Matheussen wrote:
+
+&gt; It just says that it configures for 22050Hz, it doesn't say whether it
+&gt; succeeded.
+
+Probably not:
+
+&gt; &gt; control open "hw:PCH,0" (No such file or directory)
+
+It's an Intel PCH (HDA) controller. I haven't looked at the specs, but
+chances are the chip cannot do 22kHz.
+
+$ cat /proc/asound/cards 
+ 0 [HDSPMxf1cd85   ]: HDSPM - RME RayDAT_f1cd85
+                      RME RayDAT S/N 0xf1cd85 at 0xef300000, irq 26
+ 1 [PCH            ]: HDA-Intel - HDA Intel PCH
+                      HDA Intel PCH at 0xef440000 irq 85
+ 2 [NVidia         ]: HDA-Intel - HDA NVidia
+                      HDA NVidia at 0xef080000 irq 36
+
+Get the number (here: 1) and then
+
+$ cat /proc/sound/card1/codec#0
+
+[..]
+  PCM:
+    rates [0x560]: 44100 48000 96000 192000
+    bits [0xe]: 16 20 24
+    formats [0x1]: PCM
+
+
+or even more direct:
+
+$ grep rates /proc/asound/card1/codec#0
+    rates [0x560]: 44100 48000 96000 192000
+    rates [0x560]: 44100 48000 96000 192000
+    rates [0x560]: 44100 48000 96000 192000
+    rates [0x560]: 44100 48000 96000 192000
+    rates [0x160]: 44100 48000 96000
+    rates [0x160]: 44100 48000 96000
+    rates [0x160]: 44100 48000 96000
+    rates [0x560]: 44100 48000 96000 192000
+
+See! No 22kHz for that chip, at least not for mine. If the card doesn't
+support it, jackd cannot configure it.
+
+Arguably, it shouldn't be able to start, but maybe that's fixed in newer
+jackd versions. (I haven't looked in years)
+
+And as others said: jack_get_sample_rate() is authoritative[0].
+
+
+Cheers
+
+[0] Some RME cards or anything with external clock sync can make the
+card run at different rates than indicated by the driver, but that's
+advanced territory and clearly not the case for Intel HDA PCH.
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1481651612.28901_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1481736427.9066_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1481652159.29316_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1481652159.29316_0.ltw:2,a&nbsp;&lt;20161213180219.GB22406 at ltw dot loris dot tv&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

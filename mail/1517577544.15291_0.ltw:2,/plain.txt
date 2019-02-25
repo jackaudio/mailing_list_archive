@@ -1,0 +1,102 @@
+Date:        Fri, 02 Feb 2018 14:18:23 +0100
+From:        Christian Affolter  <[hidden] at purplehaze dot ch>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Thomas Brand Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device (1517430228.12361_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device
+
+On 31.01.2018 21:22, Thomas Brand wrote:
+> On Wed, January 31, 2018 15:55, Christian Affolter wrote:
+>> On 31.01.2018 15:20, Kjetil Matheussen wrote:
+>>> Maybe jack will work if you give it the same parameters that arecord
+>>> uses. I.e. compare the content of
+>>>  /proc/asound/card0/pcm0p/sub0/hw_params (or a similarly
+>>> named file) when running arecord and when running jack.
+>>>
+>>> Also, maybe it works to record in jack if you change audio from
+>>> "duplex"
+>>> to "capture only".
+>>
+>> BINGO and thank you so much for this pointer!
+> 
+>>
+>>
+>> # hw_params during jackd -d alsa -d hw:0
+>> # jackd -d alsa
+>> cat /proc/asound/card0/pcm0c/sub0/hw_params
+>>
+>> access: MMAP_INTERLEAVED
+>> format: S32_LE
+>> subformat: STD
+>> channels: 8
+>> rate: 48000 (48000/1)
+>> period_size: 1024
+>> buffer_size: 2048
+>>
+> 
+> What i wonder is did you see 8 JACK system:capture ports with the above
+> configuration? 
+
+yes, there are 8 ports available:
+
+jack_lsp -c -t
+
+system:capture_1
+	32 bit float mono audio
+[...]
+system:capture_8
+	32 bit float mono audio
+system:playback_1
+	32 bit float mono audio
+[...]
+system:playback_8
+	32 bit float mono audio
+
+
+
+> It's still confusing that JACK would attach the device
+> differently. The factor 4 can probably be explained by 8 / 2 channels (?)
+> or has it do with duplex?.
+> It could be that the record just took every 4th sample. But why?
+
+I guess it has something to do with the fact, that I only have the first
+Livewire+ Destination on the Axia-ALSA driver configured (which equals
+to the first two system capture ports in jackd) to actually receive RTP
+streams from the Livewire+ network. The other 3 stereo Livewire
+Destinations (6 system capture channels) are not configured. However,
+this is just a speculation and I would have to verify that, by
+configuring more than one Livewire destinations.
+
+But anyway, it's a pretty unexpected recording behaviour. Either the
+driver shouldn't block (or whatever it's doing) or jackd would need a
+way to detect that only two of the ports are actually working, which is
+most likely outside of jackd's responsibility.
+
+
+> For future reference, this could be issued on github with these detailed
+> debug informations. It's possible that JACK can't do anything about it if
+> it's driver related. So.. up to you.
+
+I can do this, if anyone thinks that this issue might be of any help
+and/or someone is willing to spend more time to actually debug this
+within the jackd source code. On the other hand, it's kind of documented
+on the mailing list archive by now for others to find.
+
+
+>> # hw_params during jackd -d alsa -d hw:0 -C -i 2
+>> cat /proc/asound/card0/pcm0c/sub0/hw_params
+>>
+>> access: MMAP_INTERLEAVED
+>> format: S32_LE
+>> subformat: STD
+>> channels: 2
+>> rate: 48000 (48000/1)
+>> period_size: 1024
+>> buffer_size: 2048
+
+Thanks again for your help
+Chris
+
+1517577544.15291_0.ltw:2, <da4cd374-fee7-94fc-7eab-21d0bcbad159 at purplehaze dot ch>
+________________________________________________________________________________
+

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1544478843.14502_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1544479938.15387_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1544479648.15095_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 10 Dec 2018 23:06:50 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Kjetil Matheussen </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at microfx dot de </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>[hidden] at microfx dot de
+<a href='../1544478843.14502_0.ltw:2,/index.html'>[Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service </a></td></tr>
+</table>
+<pre>
+I don't know if this is the problem, but it looks like it.
+
+The problem seems to be:
+
+"jackd" needs to run by the same user as the clients.
+
+(At least that's how it was in the old days, but maybe something
+has changed since then).
+
+E.g. If the process owner of jackd is root, you can't run jack_capture
+as a  normal user.
+
+I'm also pretty sure you can run several jackd simultaneously
+on the same machine as long as each jackd is run by a different user.
+
+
+
+On Mon, Dec 10, 2018 at 10:53 PM [hidden] &lt;[hidden]&gt; wrote:
+&gt;
+&gt; Hey!
+&gt;
+&gt; Using the jack audio toolkit with my pisound DAC on a Raspberry Pi 3 which was a hassle - but I got it running with some hacks.
+&gt;
+&gt; Now for convenience I added jackd and jack_connect (to route input to output) as a service inside systemd - which works as expected. Before I could easily start jack_capture to record the input. But now it&#x2019;s not starting anymore unfortunately. I get this error:
+&gt;
+&gt; jack_capture -c 5 -mb -tm -f flac
+&gt; Cannot connect to server socket err = No such file or directory
+&gt; Cannot connect to server request channel
+&gt; jack server is not running or cannot be started
+&gt; JackShmReadWritePtr::~JackShmReadWritePtr - Init not done for -1, skipping unlock
+&gt; JackShmReadWritePtr::~JackShmReadWritePtr - Init not done for -1, skipping unlock
+&gt; &gt;&gt;&gt; jack_client_open() failed, status = 0x11
+&gt;
+&gt; I copied jack_capture also to /usr/locale/bin
+&gt;
+&gt;
+&gt; My systemd service files:
+&gt;
+&gt; jack-connect.service &#x2014;&gt; starts also jackd.service
+&gt; [Unit]
+&gt; Description=jack-connect
+&gt; Wants=jackd.service
+&gt; After=jackd.service
+&gt;
+&gt; [Service]
+&gt; Type=oneshot
+&gt; ExecStartPre=/bin/sleep 1s
+&gt; ExecStartPre=/usr/local/bin/jack_connect system:capture_2 system:playback_2
+&gt; ExecStart=/usr/local/bin/jack_connect system:capture_1 system:playback_1
+&gt;
+&gt;
+&gt; jackd.service
+&gt; [Unit]
+&gt; Description=jackd Unit
+&gt;
+&gt; [Service]
+&gt; ExecStart=/usr/local/bin/jackd -t 2000 -P 75 -d alsa -d hw:pisound -r 48000 -p 128 -n 2 -X seq -s
+&gt;
+&gt; ExecStop=/usr/bin/killall jackd
+&gt;
+&gt; Can anyone help me with this?
+&gt;
+&gt; Kind regards
+&gt; Jan
+&gt;
+&gt;
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1544478843.14502_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1544479938.15387_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1544479648.15095_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1544479648.15095_0.ltw:2,&nbsp;&lt;CAC6niEJhuyCj9=jvwZ+Nm1uhwGQ-ZSf+cCqYk_k2=9pvnJTZjg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

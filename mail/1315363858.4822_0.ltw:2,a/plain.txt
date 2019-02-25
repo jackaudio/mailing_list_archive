@@ -1,0 +1,105 @@
+Date:        Tue, 06 Sep 2011 19:49:36 -0700
+From:        ccrome  <[hidden] at gmail dot com>
+To:          Gabriel Beddingfield <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Gabriel Beddingfield Re: [Jack-Devel] Debugging Jack Clients (1315363112.4200_0.ltw:2,a)
+Follow-Up:   Gabriel Beddingfield Re: [Jack-Devel] Debugging Jack Clients (1315394788.10402_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Debugging Jack Clients
+
+On Tue, Sep 6, 2011 at 7:37 PM, Gabriel Beddingfield <[hidden]>wrote:
+
+> On 09/06/2011 01:29 PM, ccrome wrote:
+>
+>> Ah, perhaps I've found the issue.  I guess when Jack try to re-start, it
+>> reconfigures the codec.  I'm using a custom audio card that takes some
+>>
+>
+> No... it shouldn't try to reconfigure the codec.
+
+
+Huh, it's definitely touching the I2C bus.  Dunno why though.
+
+
+>
+>
+>  time to re-configure, and it seems to enter a continuous loop where it
+>> tries to configure the codec, then it gets an xrun, so it tries again.
+>>
+>
+> If this loop is happening... it's a side-effect of the Real Problem. This
+> is OMAP3, right?
+
+
+Why yes.  Yes it is.  What do you suspect the Real Problem is ?
+
+
+
+>
+>
+>         creating alsa driver ...
+>>        hw:0|hw:0|1024|2|48000|0|0|**nomon|swmeter|-|16bit
+>>        control device hw:0
+>>        configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer
+>>        = 2 periods
+>>
+>
+> Try setting larger buffers.  E.g. -p 4096 -n 4
+
+
+Will do when I get back to work.
+We're trying to keep latency very low though.
+
+
+
+>
+>
+>         # gdb client
+>>        gdb> break process
+>>        gdb> run
+>>        Starting program:
+>>        /home/caleb/mmfx/platform/**platform_beagle/puppy_driver/**
+>> jack_scripts/jack_sine
+>>
+>>        [Thread debugging using libthread_db enabled]
+>>        [New Thread 0x40a73470 (LWP 22052)]
+>>        engine sample rate: 48000
+>>        [New Thread 0x412f6470 (LWP 22055)]
+>>           ^C
+>>        Program received signal SIGINT, Interrupt.
+>>        0x401e9f44 in nanosleep () from /lib/arm-linux-gnueabi/libc.**so.6
+>>        (gdb) bad status (254) for client sine handling event (type = 8)
+>>        bad status (254) for client sine handling event (type = 8)
+>>        bad status (254) for client sine handling event (type = 8)
+>>        gdb>
+>>        gdb> continue
+>>
+>>
+>>    The callback 'process' is never called again, and the jackd_log file
+>>    is filled with alsa xruns.
+>>
+>>    Any thoughts?
+>>
+>
+> Even though you set the timeout at 50 seconds... it appears that this error
+> came because you didn't respond to an EVENT NOTIFICATION within 2 seconds.
+>  (The 2secs is not configurable.)  Event type 8 is an xrun. Did you perhaps
+> set an xrun callback?  If you did, I recommend that you disable it while
+> debugging.
+>
+
+No, I didn't intentionally set an xrun callback. I do recall that I'm using
+a deprecated jack_init api (will take a look when I get back to work).  I
+don't recall the exact function call that was deprecated.  I'll take a look.
+
+Thanks,
+  -Caleb
+
+
+
+> -gabriel
+>
+
+1315363858.4822_0.ltw:2,a <CAG5mAdyKHCFy-grERYZQgXZK5MOYnCTXX94A7zQyGwQY-eLWuA at mail dot gmail dot com>
+________________________________________________________________________________
+

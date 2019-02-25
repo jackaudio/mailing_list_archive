@@ -1,0 +1,66 @@
+Date:        Tue, 30 Jan 2018 21:00:29 +0100
+From:        Thomas Brand  <[hidden] at trellis dot ch>
+To:          Christian Affolter <[hidden] at purplehaze dot ch>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Christian Affolter Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device (1517338040.22983_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device
+
+On Tue, January 30, 2018 19:46, Christian Affolter wrote:
+> Hi Thomas,
+>
+>
+> On 30.01.2018 18:15, Christian Affolter wrote:
+>
+>> On 30.01.2018 16:23, Christian Affolter wrote:
+>>
+>>>> the alsa device could be the issue. you could try to start a dummy
+>>>> jack and add the alsa device with alsa_in to see if it makes a
+>>>> difference.
+>
+> This seems to work, the audio gets captured (and can be played)
+> correctly. Here is what I did:
+>
+> # Start jackd with the dummy backend
+> jackd -d dummy
+>
+> # Add the alsa device via alsa_in
+> alsa_in -d hw:0 -c 2
+>
+>
+> # Capture via jack_capture
+> jack_capture -b 32 -c 2 -d 10 -fn /tmp/test-jack_capture.wav \ -p
+> alsa_in:capture_1 -p alsa_in:capture_2
+>
+>
+> # Capture via jackrec
+> jackrec -f /tmp/test-jackrec.wav -d 10 -b 32 alsa_in:capture_1
+> alsa_in:capture_2
+>
+>
+>
+> What I also observed is the fact, that capturing 10 seconds
+> (jack_capture -d 10 ...) directly from the "-d alsa" jackd takes around
+> 40 seconds (real 0m40.457s) vs. 10 seconds (as one would expect) with
+> the "-d dummy" jackd (real 0m10.339s)
+>
+> So I guess we're one step closer.
+>
+>
+
+now that's an interesting find .. in theory it should not make a
+difference if jack uses alsa backend or if you attach via alsa_in but
+obviously it *does* make a difference.
+
+40 seconds is the length when played at 12k.
+4 x 8 bit also fit into 32 bit. something is fishy.
+
+>
+> Thanks a lot for your help
+> Chris
+>
+>
+
+1517342497.29163_0.ltw:2, <9cbad81f8fa46758fc64e186e7a469cb.squirrel at ips73 dot ips dot ch>
+________________________________________________________________________________
+

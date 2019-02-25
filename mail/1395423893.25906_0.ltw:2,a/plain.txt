@@ -1,0 +1,55 @@
+Date:        Fri, 21 Mar 2014 13:44:41 -0400
+From:        Yves Perron  <[hidden] at gmail dot com>
+To:          'Paul Davis' <[hidden] at linuxaudiosystems dot com>, 'John Emmas' <[hidden] at tiscali dot co dot uk>
+Cc:          'JACK devel' <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] Using Jack (1395402344.19058_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Using Jack
+
+Thank you. I made it that far indeed, the conclusion is that I'll need to
+add the HOME environment variable or add a relative path to my app. So far,
+jack_client_open doesn't want to start a server if qjackctl is not present.
+The install path C:/Program Files/Jack/jackd.exe is hardcoded also.
+
+#define JACK_LOCATION "C:/Program Files/Jack"
+
+Which is out of synch with the installer who uses C:/Program Files (x86)/.
+
+I'll keep digging.
+
+Where is $Home? 
+
+ 
+
+on windows? no idea.
+
+ 
+
+This is a perennial problem for Windows users.  I
+
+ 
+
+Well, except that it isn't, at least certainly not in this case. I was using
+handwaving terminology and made a reference towards reading the code. So i
+went and read the code:
+
+------------------------
+  snprintf(filename, 255, "%s/.jackdrc", getenv("HOME"));
+        fp = fopen(filename, "r");
+
+        if (!fp) {
+            fp = fopen("/etc/jackdrc", "r");
+        }
+        // if still not found, check old config name for backwards
+compatability
+        if (!fp) {
+            fp = fopen("/etc/jackd.conf", "r");
+        }
+--------------------------------
+
+that  is the definitive answer to the location of this file, even if the
+answer makes no sense in a windows context.
+
+1395423893.25906_0.ltw:2,a <000001cf452d$3d984d30$b8c8e790$ at gmail dot com>
+________________________________________________________________________________
+

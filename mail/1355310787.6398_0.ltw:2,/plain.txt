@@ -1,0 +1,66 @@
+Date:        Wed, 12 Dec 2012 13:12:57 +0200
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Patrick Shirkey Re: [Jack-Devel] speaker management (1355308301.2223_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] speaker management
+
+"Patrick Shirkey" <[hidden]> writes:
+
+>>> So do we need a way to override the jack portnames in the JACK API?
+>>>
+>>> Seems like a reasonable addition to the API to me.
+>>
+>> we already have it - jack aliases (altrough i dont recommend using them)
+>>
+>
+> Are "jack aliases" unique to  LADISH? I haven't heard of them in the JACK
+> API?
+
+jackdbus doesnt expose aliases (on purpose) and ladish doesnt use
+them. There is WIP branch to use jack aliases as "transport" for better
+default hardware client/port names. "default", because you can change
+them later with ladish (or with jack aliases).
+
+jack aliases are part of the jack api. both jack1 and jack2.
+
+> Maybe it would be helpful if you could give a step by step instruction on
+> how to achieve what Arnold is looking for with ladish and then we can test
+> it out to see if it does the trick?
+
+1. Create studio. Studio stores and restores jack setup and
+infrastructure jack apps like crossovers. Connections between hardware,
+infrastructure jack apps and rooms (yes, you can have more than one) are
+part of the studios.
+
+2. Create room in the studio. Room has snake-like (multicore cable)
+connection to studio. The room snake ports have well defined roles.
+
+3. Connect room ports to other jack clients in the studio subgraph.
+
+4. Start your non-infrastructure apps as part of the room and save them
+as projects. You can connect jack apps to studio-link ports.
+
+ladish has two types of "sessions". studios and rooms. The jack graph
+can be split between studio and one or more rooms. Studio is "session"
+that has only non-project specific part of the jack graph. Jack
+management is also part of the studio. Studio has room definitions.
+
+When you load and start the studio:
+ * jack server is configured and started
+ * infrastructure (studio) apps are started
+ * studio app ports are reconnected once they appear in the jack graph.
+ * rooms are recreated (without projects loaded in them
+
+Then you load your project into suitable room. It is not implemented
+yet, but the rooms can be created from room definitions stored in the
+projects. Other think that is not implemented yet is custom
+(user-defined) room templates. Right now they are all defined in the
+code (still easy to add new ones).
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1355310787.6398_0.ltw:2, <87fw3bbk1y.fsf at arnaudov dot name>
+________________________________________________________________________________
+

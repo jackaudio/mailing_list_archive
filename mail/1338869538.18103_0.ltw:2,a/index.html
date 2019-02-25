@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] [LAU] jack2 turned verbose</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] [LAU] jack2 turned verbose</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1338867031.16430_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1338878975.32656_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338869538.18103_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 05 Jun 2012 06:12:07 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Brendan Jones </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Nedko Arnaudov
+<a href='../1338867031.16430_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1338878975.32656_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Pedro Alves
+<a href='../1338891887.20743_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+</table>
+<pre>
+On 06/05/2012 05:30 AM, Nedko Arnaudov wrote:
+&gt; Brendan Jones&lt;[hidden]&gt;  writes:
+&gt;
+&gt;&gt;&gt; http://lists.linuxaudio.org/listinfo/linux-audio-user
+&gt;&gt;
+&gt;&gt; I've had a closer look at this and this patch seems to be working for
+&gt;&gt; me (their's no equivalent bool in jack_driver_param_value_t)
+&gt;&gt;
+&gt;&gt; diff -Nurp '-x*~' jack-1.9.8.orig/common/JackControlAPI.cpp
+&gt;&gt; jack-1.9.8/common/JackControlAPI.cpp
+&gt;&gt; --- jack-1.9.8.orig/common/JackControlAPI.cpp	2011-12-19
+&gt;&gt; 12:54:02.000000000 +0100
+&gt;&gt; +++ jack-1.9.8/common/JackControlAPI.cpp	2012-06-04 21:57:59.264581780 +0200
+&gt;&gt; @@ -246,7 +246,7 @@ jackctl_add_driver_parameters(
+&gt;&gt;               break;
+&gt;&gt;           case JackDriverParamBool:
+&gt;&gt;               jackctl_type = JackParamBool;
+&gt;&gt; -            jackctl_value.b = descriptor_ptr-&gt;value.i;
+&gt;&gt; +            jackctl_value.b = (descriptor_ptr-&gt;value.i&gt;  0);
+&gt;&gt;               break;
+&gt;&gt;           default:
+&gt;&gt;               jack_error("unknown driver parameter type %i",
+&gt;&gt; (int)descriptor_ptr-&gt;type);
+&gt;
+&gt; Does "working for me" mean that verbose is not enabled by default anymore?
+
+That's correct. A cast to bool (which is more appropriate) also seems to 
+work. It also corrects the jackdbus SIGSEGV you listed earlier.
+
+&gt;
+&gt; The verbose parameter is not driver parameter, so it should not
+&gt; be affected by this code at all.
+
+It seems that it is (adding at line 228: printf("Driver parameter: 
+%s\n",descriptor_ptr-&gt;name) );
+
+.
+Driver parameter: output-latency
+Driver parameter: inchannels
+Driver parameter: outchannels
+Driver parameter: verbose
+Driver parameter: snoop
+.
+.
+.
+
+&gt;
+&gt; My reading of the C++ standard is that the implicit conversion is
+&gt; valid. C++11, section 4.12 states:
+&gt;
+&gt; "A prvalue of arithmetic, unscoped enumeration, pointer, or pointer to
+&gt; member type can be converted to a prvalue of type bool. A zero value,
+&gt; null pointer value, or null member pointer value is converted to false;
+&gt; any other value is converted to true. A prvalue of type std::nullptr_t
+&gt; can be converted to a prvalue of type bool; the resulting value is
+&gt; false."
+&gt;
+&gt; Of course, explicit conversion is valid as well. I still claim that the
+&gt; generated code for jackctl_add_parameter() calls for "temporary" and
+&gt; "verbose" engine parameters is wrong because it pushes union
+&gt; jackctl_parameter_value with value of 10 (for both bool and integer
+&gt; members) while it should push false/0. both 1 and 10 are true, not
+&gt; false. the default value for both parameters is false.
+&gt;
+
+Granted - but there is something in O/O2/O3 which is causing the union 
+packing to go awry. I tried to create an isolated test case but failed.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1338867031.16430_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1338878975.32656_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338869538.18103_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1338869538.18103_0.ltw:2,a&nbsp;&lt;4FCD8717.5030304 at gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

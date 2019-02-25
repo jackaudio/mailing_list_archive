@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] [jackaudio/jack1] 4492ce: [alsa_midi] fix hotplug device (de)enumeration</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] [jackaudio/jack1] 4492ce: [alsa_midi] fix hotplug device (de)enumeration</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1430481172.2234_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1430851193.4815_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1430741154.892_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 04 May 2015 05:05:44 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at jackaudio dot org </td></tr>
+</table>
+<pre>
+  Branch: refs/heads/master
+  Home:   https://github.com/jackaudio/jack1
+  Commit: 4492cea02fb46305632d19796460b91fd319ec96
+      https://github.com/jackaudio/jack1/commit/4492cea02fb46305632d19796460b91fd319ec96
+  Author: Hanspeter Portner &lt;[hidden]&gt;
+  Date:   2015-05-04 (Mon, 04 May 2015)
+
+  Changed paths:
+    M drivers/alsa_midi/a2j.h
+    M drivers/alsa_midi/alsa_midi.c
+    M drivers/alsa_midi/port_thread.c
+    M drivers/alsa_midi/port_thread.h
+
+  Log Message:
+  -----------
+  [alsa_midi] fix hotplug device (de)enumeration
+
+Issues:
+- With a running JACK with enabled alsa_midi driver (-X alsa_midi), plugging in
+	a new MIDI device has no effect, e.g. no corresponding JACK ports are spawned
+- With a running JACK with enabled alsa_midi driver (-X alsa_midi), deplugging
+	a MIDI device has no effect, e.g. the corresponding JACK ports stay around
+
+Result:
+- JACK only creates JACK ports of ALSA MIDI clients/ports found at startup
+- JACK has to be restarted for any ALSA MIDI device (de)enumeration to take
+	place
+
+Problem:
+- There are some functions defined which actually should accomplish this in the
+	alsa_midi driver code (e.g. 'a2j_update_ports' and 'a2j_free_ports'), but they
+	are not called from any other function ;-)
+
+Solution:
+- Discriminate properly between ALSA PORT_START and PORT_CHANGE events
+	- 'a2j_new_ports' function has been added which recycles some code from
+		'alsa_input_thread'
+- Actually call the already existing hot(de)plugging infrastructure
+	- 'a2j_update_ports' and 'a2j_new_ports' get called from the
+		'alsa_input_thread'
+	- 'a2j_free_ports' gets called from 'alsa_output_thread'
+	- 'alsa_out_thread' is woken up by 'a2j_jack_process_internal'
+- Cleanup code that is not used:
+	- 'port_add' ringbuffer has no function, as 'new_ports' ringbuffer seems to be
+		implemented to accomplish the same
+
+Signed-off-by: Hanspeter Portner &lt;[hidden]&gt;
+
+
+  Commit: 6685cc737eec2937f0fb9d3088be2efee95a910e
+      https://github.com/jackaudio/jack1/commit/6685cc737eec2937f0fb9d3088be2efee95a910e
+  Author: Paul Davis &lt;[hidden]&gt;
+  Date:   2015-05-04 (Mon, 04 May 2015)
+
+  Changed paths:
+    M drivers/alsa_midi/a2j.h
+    M drivers/alsa_midi/alsa_midi.c
+    M drivers/alsa_midi/port_thread.c
+    M drivers/alsa_midi/port_thread.h
+
+  Log Message:
+  -----------
+  Merge branch 'ventosus-fix_alsa_midi_hotplug'
+
+
+Compare: https://github.com/jackaudio/jack1/compare/fb78f60db1db...6685cc737eec
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1430481172.2234_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1430851193.4815_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1430741154.892_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1430741154.892_0.ltw:2,&nbsp;&lt;5547609880419_49fe3faf34b1b2a0624fd at hookshot-fe6-cp1-prd dot iad dot github dot net dot mail&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

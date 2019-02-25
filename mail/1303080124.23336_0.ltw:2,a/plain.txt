@@ -1,0 +1,85 @@
+Date:        Mon, 18 Apr 2011 01:15:29 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Devin Anderson <[hidden] at charityfinders dot com>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Devin Anderson [Jack-Devel] Call for testing of MIDI Drivers in JACK 2 (1302129032.6125_0.ltw:2,a)
+Follow-Up:   Devin Anderson Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2 (1303112583.18580_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2
+
+I've made tests with jack2 jackdbus from svn trunk r4317. I've tested
+the alsarawmidi backend along with the alsa audio driver. My jackdbus
+settings:
+
+      <parameter path="/engine/driver">alsa</parameter>
+      <parameter path="/engine/realtime">true</parameter>
+      <parameter path="/engine/realtime-priority">70</parameter>
+      <parameter path="/engine/sync">true</parameter>
+      <parameter path="/engine/slave-drivers">alsarawmidi</parameter>
+      <parameter path="/driver/device">hw:0</parameter>
+      <parameter path="/driver/rate">48000</parameter>
+      <parameter path="/driver/period">128</parameter>
+      <parameter path="/driver/nperiods">2</parameter>
+      <parameter path="/driver/hwmon">false</parameter>
+      <parameter path="/driver/hwmeter">false</parameter>
+      <parameter path="/driver/duplex">true</parameter>
+      <parameter path="/driver/softmode">false</parameter>
+      <parameter path="/driver/monitor">false</parameter>
+      <parameter path="/driver/dither">n</parameter>
+      <parameter path="/driver/inchannels">2</parameter>
+      <parameter path="/driver/outchannels">2</parameter>
+      <parameter path="/driver/shorts">false</parameter>
+
+The kernel I used is 2.6.33.7-rt29 with irq threads at default
+priorities (not tweaked).
+
+My hardware is a PCI emu10k1 card (SB Live! 5.1 Dell OEM [SB0228]).
+I have a 4 core Phenom II CPU.
+
+jack_midi_latency_test -m 3 -s 8192 -t 3 "system:1-1 EMU10K1 MPU-401 (UART) 1 out" "system:1-1 EMU10K1 MPU-401 (UART) 1 in"
+---------------------
+Reported out-port latency: 2.67-2.67 ms (128-128 frames)
+Reported in-port latency: 2.67-2.67 ms (128-128 frames)
+Average latency: 6.26 ms (300.52 frames)
+Lowest latency: 5.75 ms (276 frames)
+Highest latency: 6.87 ms (330 frames)
+Peak MIDI jitter: 1.12 ms (54 frames)
+Average MIDI jitter: 0.25 ms (11.64 frames)
+
+Jitter Plot:
+0.0 - 0.1 ms: 1665
+0.1 - 0.2 ms: 1654
+0.2 - 0.3 ms: 1392
+0.3 - 0.4 ms: 1776
+0.4 - 0.5 ms: 1591
+0.5 - 0.6 ms: 113
+0.6 - 0.7 ms: 1
+
+Latency Plot:
+5.7 - 5.8 ms: 276
+5.8 - 5.9 ms: 915
+5.9 - 6.0 ms: 906
+6.0 - 6.1 ms: 688
+6.1 - 6.2 ms: 862
+6.2 - 6.3 ms: 807
+6.3 - 6.4 ms: 823
+6.4 - 6.5 ms: 828
+6.5 - 6.6 ms: 682
+6.6 - 6.7 ms: 852
+6.7 - 6.8 ms: 547
+6.8 - 6.9 ms: 6
+
+Messages sent: 8192
+Messages received: 8192
+---------------------
+
+I'd be happy if jack_midi_latency_test had an option for disabling the
+autoconnect behaviour. Instead, the test could be started when both
+ports are connected. What do you think about this idea?
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 7862B9E45D1B58ED>
+
+1303080124.23336_0.ltw:2,a <87r590ttha.fsf at nuntu dot spacelabs dot org>
+________________________________________________________________________________
+

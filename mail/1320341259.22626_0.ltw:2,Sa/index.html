@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] RFC: jackd portnames</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] RFC: jackd portnames</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1320339784.19943_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1320341641.23391_0.ltw:2,RSa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1320341259.22626_0.ltw:2,Sa'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 03 Nov 2011 18:27:08 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Adrian Knoth </span> &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1320341641.23391_0.ltw:2,RSa/index.html'>Re: [Jack-Devel] RFC: jackd portnames </a></td></tr>
+</table>
+<pre>
+On Thu, Nov 03, 2011 at 10:31:26AM -0400, Paul Davis wrote:
+
+Hi!
+
+&gt; The general feature is to add port meta-data to JACK. Then we define
+&gt; some "well known" meta data keys, such as this one:
+&gt; 
+&gt;           http://jackaudio.org/keyvalue/pretty-name
+&gt; 
+&gt; Applications that display port names should then either (1)
+&gt; acknowledge that they do not use pretty-name or (2) look up the value
+&gt; for a given port before displaying anything.
+
+Definitely a nice idea, especially together with another page I've just
+found:
+
+   http://wiki.linuxproaudio.org/index.php/jack:Semantic_Port_Names
+
+So instead of relying on a naming convention, channel groups can be
+explicitly specified with a dedicated key.
+
+I think we'll probably see more meta-data in the future, so I'm all in
+favour of a flexible meta-data system.
+
+&gt; Florian's port could then be made to tie into this without actually
+&gt; stomping on the actual port name.
+
+I appreciate the idea of having an orthogonal tool that can set
+pretty-names. This way, firewire and basically everything could benefit
+from it.
+
+
+And now that you mention it, I came up with the following quick-n-dirty
+hack. Proof of concept, almost no checks:
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;jack/jack.h&gt;
+
+int main(int argc, char **argv) {
+    jack_client_t *client;
+
+    if (3 != argc) {
+        fprintf(stderr, "usage: %s oldportname newportname\n"
+                "Example: %s \"system:playback1\" \"guitar\"",
+                argv[0], argv[0]);
+    }
+    client = jack_client_open("renamer", JackNoStartServer, NULL);
+
+    if (NULL == client) {
+        printf("couldn't connect to jack server.\n");
+        exit(1);
+    }
+
+    jack_port_t *oldport = jack_port_by_name(client, argv[1]);
+
+    if (NULL == oldport) {
+        printf("Old portname not found\n");
+        exit(2);
+    }
+
+    jack_port_set_name(oldport, argv[2]);
+
+    jack_client_close(client);
+
+    return 0;
+}
+
+
+Works like this:
+
+adi@chopin:~$ jack_lsp 
+system:capture_1
+system:capture_2
+system:playback_1
+system:playback_2
+adi@chopin:~$ ./a.out "system:capture_1" "guitar"
+adi@chopin:~$ jack_lsp 
+system:guitar
+system:capture_2
+system:playback_1
+system:playback_2
+
+Some polish, some scripting or file-IO, and we have decent channel names
+on all backends. WDYT?
+
+
+
+Cheers
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1320339784.19943_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1320341641.23391_0.ltw:2,RSa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1320341259.22626_0.ltw:2,Sa'>Index</a></td></tr>
+</table>
+<p><small>1320341259.22626_0.ltw:2,Sa&nbsp;&lt;20111103172708.GV12362 at ltw dot loris dot tv&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

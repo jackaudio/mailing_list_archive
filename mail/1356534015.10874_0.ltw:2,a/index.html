@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Race conditions in JackPosixSemaphore</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Race conditions in JackPosixSemaphore</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1356465271.26647_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1356549746.28397_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1356534015.10874_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 26 Dec 2012 18:59:59 +0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Max </span> &lt;[hidden] at i-free dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1356549746.28397_0.ltw:2,a/index.html'>Re: [Jack-Devel] Race conditions in JackPosixSemaphore </a></td></tr>
+</table>
+<pre>
+Hi, Jackers
+&gt;
+&gt;   I found a race conditions in JackPosixSemaphore on client side 
+&gt; (method ConnectInput) that can lead to open a semaphore twice or more 
+&gt; and close it only once. As result, a semaphore descriptor leaves 
+&gt; opened after closing  and the client app can hang up ("too more open 
+&gt; files"). It is critical error for our apps. The cause is that more 
+&gt; than one thread can try to open client-side semaphore simultaneously 
+&gt; if fSemaphore is NULL, - classic race condition.
+&gt;
+&gt; I rewrite JackPosixSemaphore::ConnectInput using CAS (I use Linux and 
+&gt; gcc):
+&gt;
+&gt; // Client side : get the published semaphore from server
+&gt; bool JackPosixSemaphore::ConnectInput(const char* name, const char* 
+&gt; server_name)
+&gt; {
+&gt;     if (fSemaphore) {
+&gt;         jack_log("JackPosixSemaphore::Connect: already connected name 
+&gt; = %s", fName);
+&gt;         return true;
+&gt;     }
+&gt;
+&gt;     BuildName(name, server_name, fName, sizeof(fName));
+&gt;     jack_log("JackPosixSemaphore::Connect name = %s", fName);
+&gt;
+&gt;     while ( fSemaphore == SEM_FAILED ) {
+&gt;         sem_t * pSem = sem_open(fName, O_CREAT) ;
+&gt;         if ( pSem == SEM_FAILED ) {
+&gt;             jack_error("JackPosixSemaphore::Connect: can't connect 
+&gt; named semaphore name = %s err = %d %s", fName, errno, strerror(errno));
+&gt;             return false;
+&gt;         }
+&gt;
+&gt;         if ( __sync_bool_compare_and_swap( &amp;fSemaphore, SEM_FAILED, 
+&gt; pSem )) {
+&gt;             // sem_getvalue for debugging purpose...
+&gt;             int val = 0 ;
+&gt;
+&gt;             sem_getvalue(fSemaphore, &amp;val);
+&gt;             jack_log("JackPosixSemaphore::Connect: %s 
+&gt; sem_getvalue=%ld", fName, val);
+&gt;
+&gt;             return true ;
+&gt;         }
+&gt;
+&gt;         sem_close( pSem )   ;
+&gt;     }
+&gt;
+&gt;     jack_log("JackPosixSemaphore::Connect: already connected name = 
+&gt; %s", fName);
+&gt;     return true ;
+&gt; }
+&gt;
+&gt; After this patch, the race cond is disappeared and Jack stay more stable.
+&gt; Of course, instead of use gcc-specific intrinsics 
+&gt; __sync_bool_compare_and_swap it will be better to use C++11 
+&gt; std::atomic to implement CAS.
+&gt;
+&gt; JackPosixSemaphore::Disconnect should be rewritten in that way:
+&gt;
+&gt; // Client side: close semaphore without destroying
+&gt; bool JackPosixSemaphore::Disconnect()
+&gt; {
+&gt;     if ( fSemaphore != SEM_FAILED ) {
+&gt;         jack_log("JackPosixSemaphore::Disconnect name = %s", fName);
+&gt;
+&gt;         while ( fSemaphore != SEM_FAILED ) {
+&gt;             sem_t * pSem = fSemaphore ;
+&gt;             if ( __sync_bool_compare_and_swap( &amp;fSemaphore, pSem, 
+&gt; SEM_FAILED )) {
+&gt;                 if ( sem_close( pSem ) != 0 ) {
+&gt;                     jack_error( "Disconnect: can't disconnect named 
+&gt; semaphore name = %s err = %d %s", fName, errno, strerror(errno) );
+&gt;                     return false ;
+&gt;                 }
+&gt;                 break ;
+&gt;             }
+&gt;         }
+&gt;     }
+&gt;     else {
+&gt;         jack_log("JackPosixSemaphore::Disconnect: attempt to close 
+&gt; empty semaphore %s", fName);
+&gt;     }
+&gt;     return true ;
+&gt; }
+&gt;
+&gt; Second problem is on the server side, 
+&gt; JackRequestDecoder::HandleRequest. If the socket is down on client 
+&gt; side, the HandleRequest method continues to try read a request from 
+&gt; bad socket (of course, it reads garbage data and issues a lot of error 
+&gt; messages) and ** try to execute ** such bad request. In some cases 
+&gt; this can lead to crash. I patch this problem raising "bad_request" 
+&gt; exception in read client socket and catch it in 
+&gt; JackSocketServerChannel::Execute:
+&gt;
+&gt; // Decode request
+&gt;                     } else {
+&gt;                         // Result is not needed here
+&gt;                         try {
+&gt; fDecoder-&gt;HandleRequest(socket, header.fType);
+&gt;                         }
+&gt;                         catch ( bad_request ) {
+&gt; jack_error("JackSocketServerChannel::Execute : Bad request encountered 
+&gt; for fPollTable i = %ld fd = %ld", i, fd);
+&gt;                             ClientKill(fd) ;
+&gt;                         }
+&gt;                     }
+&gt;
+&gt;
+&gt; I rewrite the CheckRead macro:
+&gt;
+&gt; #define CheckRead(req, socket)   { if (req.Read(socket) &lt;  0) { 
+&gt; jack_error("CheckRead error %d", errno); throw bad_request() /*return 
+&gt; -1*/; } }
+&gt;
+&gt; and define bad_request exception:
+&gt;
+&gt; // exception
+&gt; struct bad_request {};
+&gt;
+&gt;
+&gt; Best regards
+&gt;     Max Khizsinsky (aka khizmax)
+&gt;     the author of libcds.sourceforge.net, the C++ template library of 
+&gt; lock-free data structs
+&gt;
+&gt; PS Bugs report (http://trac.jackaudio.org) does not work (internal 
+&gt; server error 500), so I'm writing my bug report in this dev list, sorry.
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1356465271.26647_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1356549746.28397_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1356534015.10874_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1356534015.10874_0.ltw:2,a&nbsp;&lt;50DB10EF.8000901 at i-free dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

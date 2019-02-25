@@ -1,0 +1,78 @@
+Date:        Tue, 06 Nov 2012 01:37:28 +0100
+From:        Thomas DEBESSE  <[hidden] at rcf dot fr>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] How to run multiple jackdbus (1352296379.24934_0.ltw:2,a)
+
+Subject:     [Jack-Devel] How to run multiple jackdbus
+
+Hi !
+I'm trying to run multiple jackdbus…
+I'm writing an app and I want to use jackd with another server name
+than "default" to let the user to have is own jackd!
+The idea is to launch a jackd and do some connections between elements
+without polluting the user's jackd nor his patchbay, and perhaps
+provide a virtual interface between the two jackd.
+
+I can rename jackd easily with cli jackd and jackdbus, I know how to
+run multiple legacy jackd, but I don't know how to run multiple
+jackdbus.
+I'm writing an app and I like how it's cool to configure and manage
+jackd using jack dbus interfaces, but if I start and configure jackd
+using dbus and renaming it to "other" (instead of "default"), I'm not
+running another dbus, I'm renaming the default jackd ! This is not I
+want. If the user try to run jackdbus, he will use my jackd!
+
+Any Idea ?
+
+Some examples :
+
+without dbus I can do this:
+$ jackd -n default -d dummy -C0 -P0
+then
+$ jackd -n other -d dummy -C0 -P0
+
+then I can bind a patchage [http://drobilla.net/software/patchage/] this way :
+$ JACK_DEFAULT_SERVER=default patchage
+and another this way :
+$ JACK_DEFAULT_SERVER=other patchage
+
+If I do that :
+$ JACK_DEFAULT_SERVER=other gst-launch-0.10 audiotestsrc !
+"audio/x-raw-float,channels=2" ! jackaudiosink connect=0
+client-name=test
+I can see the "test" client in the patchage connected to "other"
+jackd, not int the "default" jackd.
+
+I can also do that :
+$ JACK_DEFAULT_SERVER=default jack_lsp
+test:out_jackaudiosink0_1
+test:out_jackaudiosink0_2
+$ JACK_DEFAULT_SERVER=other jack_lsp
+--- nothing
+
+If I do that :
+$ gst-launch-0.10 jackaudiosrc server=default client-name=test !
+"audio/x-raw-float,channels=2" ! jackaudiosink connect=0 sync=0
+server=other client-name=test
+
+It's pretty cool :
+$ JACK_DEFAULT_SERVER=default jack_lsp
+test:in_jackaudiosrc0_1
+test:in_jackaudiosrc0_2
+$ JACK_DEFAULT_SERVER=other jack_lsp
+test:out_jackaudiosink0_1
+test:out_jackaudiosink0_2
+
+It is so easy to manage multiple jackd (and perhaps connect them) using cli!
+How to do the same with jackdbus? How to run multiple jackdbus? It
+would be very exciting!
+
+Thanks in advance.
+
+-- 
+Thomas DEBESSE
+RCF Méditerrannée
+
+1352162255.6293_0.ltw:2,a <CAGXJp73TKZzckk5qSD0AVr=avzuoAuwCo2uyxO86-HG3MRCe5w at mail dot gmail dot com>
+________________________________________________________________________________
+

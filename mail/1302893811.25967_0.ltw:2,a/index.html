@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Real Time extensions for JACK</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Real Time extensions for JACK</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302893359.25048_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302893904.26118_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302893811.25967_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 15 Apr 2011 14:56:27 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at feline-soul dot com </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Bearcat M. Sandor
+<a href='../1302893359.25048_0.ltw:2,a/index.html'>Re: [Jack-Devel] Real Time extensions for JACK </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Bearcat M.\ &#x15E;andor
+<a href='../1302980606.25884_0.ltw:2,a/index.html'>Re: [Jack-Devel] Real Time extensions for JACK </a></td></tr>
+</table>
+<pre>
+On Fri, Apr 15, 2011 at 2:49 PM, Bearcat M. Sandor
+&lt;[hidden]&gt; wrote:
+&gt; On 4/14/2011 7:55 AM, John Rigg wrote:
+&gt;&gt;
+&gt;&gt; JACK requires realtime scheduling privileges, which the standard Linux
+&gt;&gt; kernel has been able to provide for a long time now.
+&gt;&gt;
+&gt;&gt; The -rt patch for the kernel provides realtime preemption, which is
+&gt;&gt; not required by JACK.
+&gt;&gt;
+&gt;&gt; John
+&gt;
+&gt; Can someone explain what the difference between realtime scheduling and
+&gt; realtime preempting is? &#xA0;I know what the words mean, but what &#xA0;does a system
+&gt; do differently in each case?
+
+simple, short answer limited to SCHED_FIFO realtime scheduling:
+
+   * a thread that is set to run with SCHED_FIFO will run forever, or
+until it blocks
+        (e.g. it goes to sleep or does file i/o). it will also be
+temporarily interrupted
+        by an interrupt handler, for as long as the handler runs.
+
+this is totally unlike normal scheduling, where threads will be
+stopped so that something else can run for a while.
+
+that's realtime scheduling, and access to it is "controlled" on linux
+(not on OS X)
+
+realtime preemption is a bad name, but what is generally being
+referred to is how interrupts are handled. in a regular kernel, when a
+device
+interrupts the CPU, the handler will run right away and will continue
+to run until its finished. in kernels with threaded interrupt handlers
+(the most important part of "realtime preemption"), only a tiny part
+of the handler will run, and the rest of it takes place in a thread
+whose priority can be controlled. this means that bulk of the work
+done by an interrupt handler for, say, a video device or a keyboard or
+network interface can be explicitly prioritized to be "less important"
+than a SCHED_FIFO thread, meaning that even interrupts from these
+devices will have very little impact on the execution of the
+SCHED_FIFO thread's code. there are other aspects to "realtime
+preemption", but its not really worth getting into them here.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302893359.25048_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302893904.26118_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302893811.25967_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1302893811.25967_0.ltw:2,a&nbsp;&lt;BANLkTi=dUpFM_E1NfsQjz0Ud3jNWK25_dw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

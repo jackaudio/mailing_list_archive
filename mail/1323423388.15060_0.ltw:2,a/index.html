@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] The Situation(s) With JACK</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] The Situation(s) With JACK</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1323422326.13036_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1323430352.28595_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1323423388.15060_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 09 Dec 2011 10:36:31 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1323422326.13036_0.ltw:2,a/index.html'>Re: [Jack-Devel] The Situation(s) With JACK </a></td></tr>
+</table>
+<pre>
+Le 9 d&#xE9;c. 2011 &#xE0; 10:18, Fons Adriaensen a &#xE9;crit :
+
+&gt; On Fri, Dec 09, 2011 at 09:14:13AM +0100, St&#xE9;phane Letz wrote:
+&gt;&gt;&gt; 
+&gt;&gt;&gt; One good reason to have a fresh look at what Jack is
+&gt;&gt;&gt; supposed to do is the fact that SMP systems are more
+&gt;&gt;&gt; or less the norm today. And complex apps (A3 being
+&gt;&gt;&gt; the prime example) are taking advantage of that and
+&gt;&gt;&gt; organising their internal processing using multiple
+&gt;&gt;&gt; threads. No doubt more will follow. Yet, scheduling
+&gt;&gt;&gt; in Jack remains on a per-process basis. That means
+&gt;&gt;&gt; that e.g. if app B depends on input from app A, the
+&gt;&gt;&gt; entire B is made to wait until all of A has done its
+&gt;&gt;&gt; work, while the actual dependencies may be much more
+&gt;&gt;&gt; fine-grained. There are several ways to address this.
+&gt;&gt;&gt; One would be to have a single 'audio engine' process
+&gt;&gt;&gt; and delegate all audio processing to it. That would
+&gt;&gt;&gt; of course mean that all security is lost, a single
+&gt;&gt;&gt; rogue audio routine could bring down everything. 
+&gt;&gt;&gt; Another solution would be to make Jack trigger port
+&gt;&gt;&gt; or groups of ports instead of a process. So anything
+&gt;&gt;&gt; in B that depends on A would run as soon as all output
+&gt;&gt;&gt; from A that a part of B depends on is available. In
+&gt;&gt;&gt; other words, the signal graphs becomes global. That
+&gt;&gt;&gt; would also allow B to be a insert of A without adding
+&gt;&gt;&gt; latency etc.
+&gt;&gt;&gt; 
+&gt;&gt;&gt; But I'm dreaming. 
+&gt; 
+&gt;&gt; I second those concerns about better SMP system support,
+&gt;&gt; but note that multiple JACK clients per process (which
+&gt;&gt; is perfectly possible with jack2) already allows to do
+&gt;&gt; (or at least to "test" even if the model is not perfect)
+&gt;&gt; what you are speaking about.
+&gt; 
+&gt; Yes, but only if the dependencies are more or less static,
+&gt; which is usually not the case. If they are not, you would
+&gt; not only need to migrate modules from one client to another 
+&gt; (possible), but also ports (hairy).
+&gt; 
+&gt; They way apps like A3 schedule their internal multithreaded
+&gt; computation is entirely dynamic. A module is added to a
+&gt; queue when all its inputs are available; sooner or later
+&gt; one of the computation threads will take it there, execute
+&gt; it and provide triggers for the next ones. There is no
+&gt; static schedule, simply because without knowing the exact
+&gt; execution time of each module you can't compute one.
+&gt; 
+&gt; If you want to seamlessly integrate such networks then
+&gt; the same thing should happen between processes. So, when
+&gt; a Jack client has computed the signal on a particular
+&gt; output port it should set that port to 'ready', Jack
+&gt; transfers this status to all ports this one is connected
+&gt; to, and the owners of those destinations decide what to
+&gt; do. In theory. In practice part of that dynamic logic
+&gt; will have to be pushed into Jack somehow to avoid useless
+&gt; process switches. How to do that is the main challenge.
+
+Discussion to be followed later on...
+
+&gt; 
+&gt; On a related topic: it seems that OSX now has a system
+&gt; that allows a userland process to schedule a task to be
+&gt; executed at a defined priority by a global 'engine', and
+&gt; in a way that is much more efficient than creating a thread
+&gt; for it. The way I understand it (which may be wrong) is that
+&gt; it uses a pool of system threads instead. Do you know more
+&gt; about this ? 
+
+I guess you speak about Grand Central Dispatch (http://en.wikipedia.org/wiki/Grand_Central_Dispatch). The project has even a "open source" side called libdispatch (http://libdispatch.macosforge.org/).
+
+I did some tests with it and the result is: it is interesting, a bit Apple centric for now with this new "Block" concept, linked with the LLVM project (which by itself is really really interesting, but also a bit Apple centric..)..., but "obviously" (I mean "as usual") not designed for real-time context, and "as usual" almost nobody ready and available to push anything in this direction.
+
+St&#xE9;phane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1323422326.13036_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1323430352.28595_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1323423388.15060_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1323423388.15060_0.ltw:2,a&nbsp;&lt;9DCAA38B-A156-4E68-A819-6A5946D0402C at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

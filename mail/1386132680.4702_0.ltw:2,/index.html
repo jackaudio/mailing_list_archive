@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] ALSA PCM substreams</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] ALSA PCM substreams</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1386105653.20598_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1386149488.16396_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1386132680.4702_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 03 Dec 2013 20:51:04 -0800 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Gabriel M. Beddingfield </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Clemens Ladisch &lt;[hidden] at ladisch dot de&gt;, Dominique Michel &lt;[hidden] at vtxnet dot ch&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Clemens Ladisch
+<a href='../1386104898.18859_0.ltw:2,/index.html'>Re: [Jack-Devel] ALSA PCM substreams </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1386162753.26607_0.ltw:2,/index.html'>Re: [Jack-Devel] ALSA PCM substreams </a></td></tr>
+</table>
+<pre>
+On 12/03/2013 01:07 PM, Clemens Ladisch wrote:
+&gt;&gt; If I compare it with the emu10k1 driver, hw:0,1 will provide you
+&gt;&gt; the "normal" PCM device, and hw:0,2 provide 16 separated in and out
+&gt;&gt; into one PCM device.
+&gt;
+&gt; This is how the Emu10k1 chip actually works.
+
+OK. Are hw:0,1 and hw:0,2 mutually exclusive?  Or do they get mixed 
+together?  Can I set independent sample rates?
+
+&gt;&gt;&gt; Unfortunately... these drivers have been out for a while and making
+&gt;&gt;&gt; big changes like this likely break userspace.
+&gt;&gt;
+&gt;&gt; So, the driver must provide hw:0,3 with 4 separated in and out for use
+&gt;&gt; with JACK.
+&gt;
+&gt; The caiaq devices have independent stereo streams, so that is what the
+&gt; driver implements.
+
+I don't think independent.  From inspecting the code... if you open up 
+any substream and set the rate -- all other substreams (playback and 
+capture) will then be constrained to that rate.
+
+So... maybe this would make sense...
+
+    hw:n,0,0 and hw:n,0,1 - "stereo pairs" (legacy)
+    hw:n,1 - "multichannel"
+
+...and hw:n,1 and hw:n,0 would be mutually exclusive.
+
+It wouldn't "just work" with JACK... but a little googling would return 
+"use hw:1,1" instead of "open ~/.asoundrc in an editor...."
+
+-gabe
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1386105653.20598_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1386149488.16396_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1386132680.4702_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1386132680.4702_0.ltw:2,&nbsp;&lt;529EB4B8.9060709 at gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

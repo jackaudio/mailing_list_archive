@@ -1,0 +1,66 @@
+Date:        Sat, 16 Apr 2011 09:47:18 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] Jack 0.120 - ALSA backend (1302962987.23835_0.ltw:2,a)
+Follow-Up:   torbenh Re: [Jack-Devel] Jack 0.120 - ALSA backend (1302966386.30389_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Jack 0.120 - ALSA backend
+
+A second quick question: have there been changes to
+the ALSA backend recently ?
+
+
+I can now trigger the problem reported before quite
+easily.
+
+1. Start jack using the ALSA backend and with -n 3.
+
+2. Start and wire up jack_iodelay. Make the required
+   external loopback. There is already a chance that
+   it will show the latency for -n 2 instead of the
+   expected one. In any case leave it running.
+
+3. Start a second jack client, one that will not 
+   exit cleanly but trigger a 'subgraph time out'
+   when termintated with ctl-C. Jack_iodelay itself
+   will do fine. No need to connect its ports.
+
+4. Terminate the second app. There is a good chance
+   that the measured delay will switch between the
+   expected values for -n 2 and -n 3.
+
+5. When the latency is the -n 2 value, check that
+   the signal is still passing via the external
+   loopback by disconnecting it for a second.
+
+6. Repeat 3,4,5 to taste.
+
+
+Conclusions:
+
+* Measuring the latency for -n 2 while it should be
+  the one for -n 3, and the signal used *is* the one
+  via the external loopback is possible only if there
+  is some error in setting up the ALSA device in the
+  backend. There is no way the jack engine could 
+  'short circuit' the loop if signal being measured
+  is passing via the external loopback.
+
+* This is confirmed by a 'subgraph timeout' triggering
+  a change in measured latency. IIRC this means a
+  restart of the ALSA device. 
+
+So I'm now pretty sure there is some problem in the
+ALSA backend.
+
+Ciao,
+
+-- 
+FA
+
+
+   
+
+1302947251.24326_0.ltw:2,a <20110416094718.GA12632 at linuxaudio dot org>
+________________________________________________________________________________
+

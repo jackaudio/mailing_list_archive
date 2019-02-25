@@ -1,0 +1,102 @@
+Date:        Sun, 29 Dec 2013 23:29:36 +0100
+From:        Wojciech Zabolotny  <[hidden] at gmail dot com>
+To:          Jeremy Jongepier <[hidden] at autostatic dot com>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Jeremy Jongepier Re: [Jack-Devel] Problems with audioadapter used with capture only interface (1388343381.28514_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Problems with audioadapter used with capture only interface
+
+On Sun, Dec 29, 2013 at 7:56 PM, Jeremy Jongepier <[hidden]> wrote:
+> On 12/29/2013 11:43 AM, Wojciech Zabolotny wrote:
+>> What worked for me, was (in three different consoles of the embedded system):
+>> # jackd -r -dnet -i -C0 -P1
+>> # alsa_in -d hw:0,1 -r48000 -p256 -n3
+>> # jack_connect alsa_in:capture_1 system:playback_1
+>> however then I had some problems with xruns/latency
+>>
+>> Is such solution acceptable as a substitute of not working audioadapter?
+>> Can I expect that with fixed audioadapter I should be able to reach lower
+>> latency and less risk of xrun?
+>
+> Hello Wojciech,
+>
+> Afaik the net backend doesn't have -C and -P options, also -i needs an
+> integer as a value. So the first command should throw out an error.
+
+Hello Jeremy,
+
+OK. In fact the "-i" option is ignored. so -C0 and -P1 are interpreted
+by the jackd
+itself.
+If I start "jackd -R -dnet -i -C0 -P1" (or "jackd -R -dnet -C0 -P1")
+on the embedded system,
+I get the following ports on the DAW PC:
+
+$ jack_lsp
+system:capture_1
+system:capture_2
+system:playback_1
+system:playback_2
+system:playback_3
+system:playback_4
+buildroot:from_slave_1
+
+if I start simply "jackd -R -dnet", i get :
+$ jack_lsp
+system:capture_1
+system:capture_2
+system:playback_1
+system:playback_2
+system:playback_3
+system:playback_4
+buildroot:to_slave_1
+buildroot:to_slave_2
+buildroot:from_slave_1
+buildroot:from_slave_2
+buildroot:from_slave_3
+buildroot:from_slave_4
+
+
+> And it seems like you're trying to run JACK as root and with the -r option
+> while you probably want to use JACK with -R (which is also the default).
+
+Yes, you are right. I've mistaken copying that from the console.
+
+> Using alsa_in increases the change of xruns and it also increases
+> latency. And in your first mail you said that you were dealing with a
+> capture only interface which makes me wonder where the system:playback_1
+> JACK port comes from. Could you provide some more information on your
+> setup? What's in /proc/asound/cards?
+
+As I start jack with the "net" backend, the port which is used to
+connect to the master
+is the "playback port". I need to connect the capture port associated
+with my soundcard
+(which is added by the alsa_in or by audio_adapter) this port to
+transmit my audio.
+
+Regards,
+Wojtek
+
+> Best,
+>
+> Jeremy
+>
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+
+
+
+-- 
+Wojciech M. Zabołotny
+My GPG/PGP keys:
+standard: B191 ACF0 7909 83FA 3F9B  450C 407E 3C4B 4569 D119
+confidential: 2BF3 F90F 6EA8 7D35 59FD  5080 78ED 33DE 1312 D8F8
+
+1388356184.4017_0.ltw:2, <CAMduVEcD3=YAwNmEoB7LZKgRZ7HbxU=n+fnC7FyGa2RXx88q-A at mail dot gmail dot com>
+________________________________________________________________________________
+

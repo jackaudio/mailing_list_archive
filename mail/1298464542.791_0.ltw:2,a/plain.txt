@@ -1,0 +1,47 @@
+Date:        Wed, 23 Feb 2011 13:35:23 +0100
+From:        Arnold Krille  <[hidden] at arnoldarts dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fons Adriaensen [Jack-Devel] backend switching - another way (1298314398.28958_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] backend switching - another way
+
+On Monday 21 February 2011 19:53:03 Fons Adriaensen wrote:
+> Hello all,
+> 
+> I've been musing for a long time over the idea 'what if Jack ports
+> were persistent' ? In other words, if they could exists irrespective
+> of the application that uses them is running or not.
+> 
+> This has some far-reaching consequences of course, but there is
+> subset of this idea that is not as mad as it seems (IMHO).
+> 
+> ** What if physical ports were persistent ? **
+
+Here is a practical(?) and maybe less intrusive implementation idea to achieve 
+this:
+
+What if we dropping names for ports and just give them a unique identifier upon 
+creation issued by jack(server), like an uuid. And the the names the users see 
+are all aliases. Of course the number of aliases per port should then be 
+unlimited or at least in the range of 2^7. And then when registering an alias 
+for a port (which might fail if that alias is already defined for another 
+port), an extra argument or alias-property defines if the alias is a persitent 
+one. Persitant aliases then live on as dumb zero-producing, backhole-consuming 
+ports when the registered port doesn't exist anymore and can be reclaimed by 
+the next app/client/backend when registering that alias.
+
+Aliases are already in jack, making them (virtually) unlimited and dropping 
+the primary name for ports should be rather unintrusive. And allowing many 
+aliases for ports should also not affect performance, as the aliases are only 
+used in non-rt context for connections and gui, once the connection is 
+registered the actual unique-identifier of the port is used in the rt thread 
+and if that unique identifier is a simple int or long, its definitely faster for 
+access than comparing char* strings...
+
+Have fun,
+
+Arnold
+
+1298464542.791_0.ltw:2,a <201102231335.28180.arnold at arnoldarts dot de>
+________________________________________________________________________________
+

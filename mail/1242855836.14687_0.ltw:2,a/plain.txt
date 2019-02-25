@@ -1,0 +1,45 @@
+Date:        Wed, 20 May 2009 16:43:33 -0500
+From:        Jack O'Quin  <[hidden] at gmail dot com>
+To:          Fons Adriaensen <[hidden] at kokkinizita dot net>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>
+In-Reply-To: Fons Adriaensen Re: [LAD] [Jack-Devel] A picture...of the global mess (1242848900.5899_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [LAD] [Jack-Devel] A picture...of the global mess (1242858297.19704_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] A picture...of the global mess
+
+On Wed, May 20, 2009 at 2:38 PM, Fons Adriaensen <[hidden]> wrote:
+> On Tue, May 19, 2009 at 04:23:30PM +0200, Stéphane Letz wrote:
+>> A picture to try  summary what I understand about we would like :
+>>
+>
+>> -  "jackcontrol" is an *always" running deamon that defined an entry IPC
+>> point.  jackcontrol get requests from control applications. "jackcontrol"
+>> can start a seprated server called "jackserver (using a fork+exec) way.
+>> "jackcontrol" is a *unique* place where setting are handled.
+>>
+>> - "jackd" is a recoded  control application that parse it's command line,
+>> and use the control IPC to speak to "jackcontrol" (then just quits).
+>> jackcontrol then start the "jackserver" whith the appropriate paramaters.
+>
+> You don't need this jackd. If all the IPC is in libjack, an
+> autostart request can be passed directly to jackcontrol without
+> creating a transient process.
+>
+> 1. Client uses jack_client_open() with autostart.
+> 2. Libjack doesn't find the server
+> 3. Libjack sends 'start server' to jackcontrol
+> 4. jackcontrol starts the server
+> 5. jackcontrol notifies libjack
+> 6. The jack_client_open() call proceeds.
+>
+> Between 3 and 5 the thread doing the original call
+> (i.e. the client's thread) just waits within libjack
+> for the ok/fail message from jackcontrol.
+
+Don't forget a timeout in case the fork/exec fails and there is no message.
+-- 
+ joq
+
+1242855836.14687_0.ltw:2,a <a075431a0905201443s688e1b79k3c395e19c5ae8b5a at mail dot gmail dot com>
+________________________________________________________________________________
+

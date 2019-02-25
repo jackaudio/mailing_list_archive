@@ -1,0 +1,40 @@
+Date:        Wed, 22 Jan 2014 08:44:26 +1100
+From:        Matt Flax  <[hidden] at flatmax dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Chris Caudle Re: [Jack-Devel] new IIO driver added to jack - large overruns (1390320740.31632_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] new IIO driver added to jack - large overruns
+
+On 22/01/14 03:11, Chris Caudle wrote:
+> On Tue, January 21, 2014 1:47 am, Matt Flax wrote:
+>> [... xruns description, etc....]
+>> This result occurs when I sample 4 channels at 1 MHz.
+> That is roughly equivalent to 80 channels at 48k.  Are you sure the
+> hardware you have can handle that much real time data processing?
+
+That is a good question. All of the devices stream directly into memory 
+using DMA, so my understanding is that there is very little CPU 
+interaction at that point. Something must be going on in the IIO 
+subsystem to manage the ring buffer, but most likely very little. As the 
+CPU appears to be loaded by only 3%, I would say that something else is 
+experiencing a bottleneck ... hopefully Christian's suggestion to 
+inspect using OProfile will shed some light on what is causing this 
+bottleneck.
+>> # jackd -R -d iio -p2048
+> At 1M samples/second even 2048 is only 2ms.  You will need to do pretty
+> careful system tuning to guarantee 2ms response time without any missed
+> deadlines.  Do you really need 2ms latency is this system?  That seems
+> much lower than what most people seem to have success achieving on a
+> general music recording system, even with a -RT kernel.
+>
+Yes, I understand this point. The problem with these IIO devices is that 
+if I increase the size of the ring buffer, and thus am able to increase 
+the period size, the xruns actually get worse ! It doesn't seem right to 
+me, but that’s what is happening. I have tuned the period size to their 
+minimum xrun state.
+
+Matt
+
+1390340677.30109_0.ltw:2,a <52DEEA3A.4070302 at flatmax dot org>
+________________________________________________________________________________
+

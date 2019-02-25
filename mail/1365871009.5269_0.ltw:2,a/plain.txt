@@ -1,0 +1,63 @@
+Date:        Sat, 13 Apr 2013 18:36:31 +0200
+From:        Elboulangero  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Elboulangero [Jack-Devel] Fix xrun_recovery in ALSA clients. (1365871008.5262_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] [PATCH] Fix xrun_recovery in ALSA clients. (1366291396.13589_0.ltw:2,a)
+
+Subject:     [Jack-Devel] [PATCH] Fix xrun_recovery in ALSA clients.
+
+From: elboulangero <[hidden]>
+
+According to the ALSA documentation, snd_pcm_readi() returns -ESTRPIPE
+when a suspend event occured. But xrun_recovery() checks for -EAGAIN
+instead.
+
+If the ALSA client is connected to the ALSA loopback device, it leads to
+an infinite loop in the client when the computer is resumed from sleep.
+The client takes up to 99% of the CPU resources.
+
+The problem is fixed by a proper error checking of snd_pcm_readi().
+
+A word of caution however: on kernels prior to 3.8, it will trigger a
+bug in the snd-aloop driver, and may lead to a kernel oops.
+The kernel fix can be found there:
+http://www.spinics.net/lists/stable-commits/msg23379.html
+
+Signed-off-by: elboulangero <[hidden]>
+---
+ example-clients/alsa_in.c  |    2 +-
+ example-clients/alsa_out.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/example-clients/alsa_in.c b/example-clients/alsa_in.c
+index a32a3a5..c6af131 100644
+--- a/example-clients/alsa_in.c
++++ b/example-clients/alsa_in.c
+@@ -111,7 +111,7 @@ static int xrun_recovery(snd_pcm_t *handle, int err) {
+ 		if (err < 0)
+ 			printf("Can't recover from underrun, prepare failed: %s\n", snd_strerror(err));
+ 		return 0;
+-	} else if (err == -EAGAIN) {
++	} else if (err == -ESTRPIPE) {
+ 		while ((err = snd_pcm_resume(handle)) == -EAGAIN)
+ 			usleep(100);	/* wait until the suspend flag is released */
+ 		if (err < 0) {
+diff --git a/example-clients/alsa_out.c b/example-clients/alsa_out.c
+index be25e40..47779d1 100644
+--- a/example-clients/alsa_out.c
++++ b/example-clients/alsa_out.c
+@@ -111,7 +111,7 @@ static int xrun_recovery(snd_pcm_t *handle, int err) {
+ 		if (err < 0)
+ 			printf("Can't recovery from underrun, prepare failed: %s\n", snd_strerror(err));
+ 		return 0;
+-	} else if (err == -EAGAIN) {
++	} else if (err == -ESTRPIPE) {
+ 		while ((err = snd_pcm_resume(handle)) == -EAGAIN)
+ 			usleep(100);	/* wait until the suspend flag is released */
+ 		if (err < 0) {
+-- 
+1.7.10.4
+
+1365871009.5269_0.ltw:2,a <1365870991-22268-2-git-send-email-elboulangero at gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] ladish + jack autoconnect</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] ladish + jack autoconnect</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324773286.16602_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324804636.28017_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324801828.25833_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 25 Dec 2011 09:29:55 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Nedko Arnaudov &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Nedko Arnaudov
+<a href='../1324773286.16602_0.ltw:2,a/index.html'>Re: [Jack-Devel] ladish + jack autoconnect </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1324847989.29166_0.ltw:2,a/index.html'>Re: [Jack-Devel] ladish + jack autoconnect </a></td></tr>
+</table>
+<pre>
+On 12/25/2011 01:34 AM, Nedko Arnaudov wrote:
+&gt; Robin Gareus &lt;[hidden]&gt; writes:
+&gt;&gt; On 12/25/2011 12:22 AM, Nedko Arnaudov wrote:
+&gt; 
+&gt;&gt;&gt; I'd like to implement new jack1 server option (exposed in jackd too) with
+&gt;&gt;&gt; value that defaults to current behaviour. The option (kind of enum) has
+&gt;&gt;&gt; four other possible values. In total:
+&gt;&gt;&gt;
+&gt;&gt;&gt;  * dont restrict self connect attempts (default)
+&gt;&gt;&gt;  * ignore (dont fail, nop) all self-connect requests
+&gt;&gt;&gt;  * fail all self-connect requests
+&gt;&gt;&gt;  * ignore self connect requests to other clients only
+&gt;&gt;&gt;  * fail self connect requests to other clients only
+&gt;&gt;&gt;
+&gt;&gt;&gt; If something in my proposal is not clear, please let me know. I'll try
+&gt;&gt;&gt; to clarify it.
+&gt;&gt;
+&gt;&gt; That clarified a lot regarding the state of ladi. Thanks!
+&gt;&gt;
+&gt;&gt; As for adding this option to vanilla JACK. I'm rather skeptical. I think
+&gt;&gt; this rather works around client-bugs or problems that should be fixed in
+&gt;&gt; the respective clients.
+&gt;&gt;
+&gt;&gt; Too many options make trouble-shooting issue with JACK a pain.
+&gt; 
+&gt; IMO few(?) other options we already have are much rarely used and
+&gt; less useful.
+
+probably true; but IMHO this is not an argument. (If at all: it's a
+counter-argument: the situation is already dire, so why not make it worse..)
+
+&gt;&gt; My first reaction is that this proposal does not add anything to jack
+&gt;&gt; and thus is not relevant in the core. But I did not give it too much
+&gt;&gt; thought. Is there a good use-case - except for working around b0rked apps?
+&gt; 
+&gt;&gt; OTOH I did not investigate how many jack-clients would be affected and
+&gt;&gt; how much it'd improve usability in the real-world with potentially lots
+&gt;&gt; of messy clients.
+&gt; 
+&gt; Its for b0rked apps.
+
+Then maybe this port-override could not be global, but per app instead:
+Every time a client creates a new port it is checked against a
+jack-connect-blacklist.conf that defines the behavior for those ports..
+
+&gt; Some major ones like ardour2 do it. Essentially
+&gt; all-in-one apps tend to implement session manager functionality. And
+&gt; this creates interoperatability problem. We don't have unified way to
+&gt; tell apps to not self-connect. But we can give the power to the user to
+&gt; cut them at the hub - the jack server.
+&gt; 
+&gt; Telling the user that app X must be fixed to add option for disabling
+&gt; self-connect is almost always not acceptable. Because the user has no
+&gt; direct and easy control over app X development and deployment of app X
+&gt; in distro Y.
+
+indeed.
+Actually I start to see some merits of your proposal:
+One could safely use any app in a specialized environment (where f.i.
+playback_1,2 is not the default speakers) without having to worry about
+ruining the hardware connected to those ports (Fons will probably like
+that).
+
+&gt; In my, yours and maybe of others opinion fixing clients is the right
+&gt; thing to do. But the app author may disagree. Or distro packagers may
+&gt; disagree. This is social problem or rather a virtue. 
+yes!
+
+&gt;The opposite is stalinism.
+Well, surly that's exaggerated.
+
+&gt; People have right to disagree.
+&gt; User must be in control of his system. Trying to implement totalitarian
+&gt; society by penalizing users is bad idea.
+
+Certainly. Yet, we're not building a society but a real-time low-latency
+audio system.
+
+I lean towards the Unix attitude: Make a tool that does one thing and
+does it right. Don't try for world-domination or to outsmart the user.
+[Try to] educate users (here: software developers and packagers) why
+certain things are wrong in JACK-context:
+
+Auto-connecting in pulse-audio or ALSA land is a feature.
+Auto-connecting in JACK's realm is wrong(*).
+Take your pick; and also feel free to move around. No visa required :)
+
+(*) optional auto-[re]-connect is a feature, too.
+Yet it's potentially a gray area when it comes to default behavior of
+the JACK auto-connect option.
+
+
+Once you'll add connection-override to the jack-server's features and
+people get used to it, it'll be hard to remove it again I can and
+already imagine end-user complaints ("Help my app does no longer
+connect.."). I'm torn.
+
+
+&gt; This does not mean that systems with predefined, fixed and specialized
+&gt; workflows should not be developed.
+&gt; 
+[..]
+&gt;&gt; It may well be that distributors allow users to install multiple
+&gt;&gt; jack-session handlers/managers along with one of the (3,4? [2])
+&gt;&gt; available implementations or configurations of jackd. The user can
+&gt;&gt; choose at run-time which of the session managers to start/use and
+&gt;&gt; potentially start/stop more than one.
+&gt; 
+&gt; I think this matches the reality.
+&gt; 
+
+Do you [for]see any problems with that?
+
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324773286.16602_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324804636.28017_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324801828.25833_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1324801828.25833_0.ltw:2,a&nbsp;&lt;4EF6DF03.3040908 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

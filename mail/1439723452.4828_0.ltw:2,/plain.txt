@@ -1,0 +1,71 @@
+Date:        Sun, 16 Aug 2015 13:10:41 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          Matt Flax <[hidden] at flatmax dot org>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Matt Flax [Jack-Devel] jackd2 bus error on openwrt (1439682030.13865_0.ltw:2,)
+Follow-Up:   Matt Flax Re: [Jack-Devel] jackd2 bus error on openwrt (1439883121.20767_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] jackd2 bus error on openwrt
+
+On Sun, Aug 16, 2015 at 09:40:18AM +1000, Matt Flax wrote:
+
+Hi!
+
+> I am revisiting running jackd2 on openwrt using another ARM
+> architecture. It is compiled from git commit
+> cd59d67847afb57393a1db6d39badd94a4973f6e
+> 
+> When jack starts I still get bus error :
+> root@OpenWrt:/# jackd -v -d alsa
+> jackdmp 1.9.11
+> Bus error
+> 
+> Not sure what to do next to debug, beyond hacking console outputs
+> into the command line.
+
+You are most likely dealing with unaligned memory access here, usually
+mis-aligned structs. I'm somewhat surprised that it didn't surface on
+other ARM platforms before, but then again, there are many variations of
+"ARM".
+
+Further reading:
+
+   https://www.kernel.org/doc/Documentation/arm/mem_alignment
+
+specifically:
+
+   echo 1 > /proc/sys/debug/alignment
+
+and then check the syslog.
+
+If this confirms that it's unaligned access, you know what to look for.
+
+A good and comprehensive read:
+
+   http://www.catb.org/esr/structure-packing/
+
+Maybe "pahole" in the tools section can be of further help, but let's
+not jump to conclusions.
+
+I've only skimmed the following link, but it also seems like a good
+introduction to memory alignment:
+
+   https://lwn.net/Articles/259732/
+
+In other words: set aside half a day for hunting this down.
+
+Last not least: ARM behaviour may be different depending on the compiler
+flags. I vaguely recall different CPU targets behaving differently. I
+assume you used the correct flags that match your platform, endianess
+etc.
+
+
+
+Cheers
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1439723452.4828_0.ltw:2, <20150816111040.GG25041 at ltw dot loris dot tv>
+________________________________________________________________________________
+

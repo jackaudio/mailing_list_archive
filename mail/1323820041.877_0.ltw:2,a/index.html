@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] The Situation(s) With JACK</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] The Situation(s) With JACK</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1323798712.6919_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1323851465.14087_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1323820041.877_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 14 Dec 2011 00:46:59 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Tobias Hoffmann </span> &lt;[hidden] at thax dot hardliners dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1323770249.26745_0.ltw:2,a/index.html'>Re: [Jack-Devel] The Situation(s) With JACK </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1323851465.14087_0.ltw:2,a/index.html'>Re: [Jack-Devel] The Situation(s) With JACK </a></td></tr>
+</table>
+<pre>
+St&#xE9;phane Letz wrote:
+&gt;&gt; And there are people out there that would be willing to connect via netjack, but without using jack at one end --
+&gt;&gt;     
+&gt;
+&gt; Already possible in NetJack2 (that is in SVN tree and in future 1.9.8 version): the "network stack" in available as a pure C API defined here: http://trac.jackaudio.org/browser/jack2/trunk/jackmp/common/jack/net.h and compiled in a separated library called "libjacknet".
+&gt;   
+Ok, I certainly know more about netjack1 than netjack2. But I'm also 
+thinking here about hardware implementations (e.g. VHDL + Soft-CPU).
+
+&gt;&gt; and need good documentation of the wire format.  From this perspective, and thinking of possible dependencies like DNS-SD, I'm even not too sure, if network protocols (esp. the "network manager" part should be "designed into the jack core".
+&gt;&gt;     
+&gt; Let me explain how NetJack2 is currently structured: [...]
+&gt;   
+Thank you. What I meant was, that from my experience with other network 
+audio protocols, that there is a "manager" part (maybe with auto-master  
+ability by an election protocol), which handles the "who connects to 
+whom", and the parameter stuff, and there is the "raw audio transfer" part.
+
+The other thing I'm kind of undecided about is the usage of Multicast in 
+netjack2. On one hand it sure has merrits, OTOH I can't stop asking 
+myself: do we really need it, are there other ways, etc. And then, if we 
+really need it / want it, maybe only for some cases (say, ease of use), 
+why not use some standardized mechanisms like multicast DNS-SD, ...
+&gt; 2) An "adapter" concept : basically the idea is to "adapt" the network stream on the slave audio system. [...]
+&gt; Adapters are also developed as "in-server" JACK clients.
+&gt;   
+Maybe this questions are stupid (I'm sure lacking good knowledge of 
+jacks internals), but I'm not sure I really understand it:
+- "in-server JACK client"   is whats essentially called "plugin" in 
+other software?
+- to get the audio into jack in this case, the "backend/driver API" is used?
+- and is it correct to say the big difference between a driver and a 
+client, that the backend/driver provides the timing?
+
+&gt; My general felling is that this design already has some qualities that make more suitable for future evolutions in the right direction. The "in-server" JACK clients model allows fine control with any strong control API based approach (like the DBus+ladish one), since in-server client can be configurated and loaded/unloaded dynamically in the server. NetJack2 is currently limited to LAN, so the real weakness (compared to NetJack1) is the lack of "internet" support for the data transfer protocol. 
+&gt;
+&gt; Here again, we have to choose the right horse...
+&gt;   
+I'm sure not against netjack2, but my software developer-nature really 
+desires to break things down into well-separated pieces with defined 
+(internal) API. My way of solving programming problems is by defining APIs.
+
+&gt;&gt; Another thing that has been brought up in the discussion is a standardized driver API for all implementations. IMHO this could have a big impact on jacks future.
+&gt;&gt;     
+&gt; JACK2 used a C++ based class hierarchy for drivers. This model allows to share common behaviors in a base JackAudioDriver class. Then real drivers for specific API have to be developed as a subclass of it. See the PortAudio driver as an simple example: [...]
+&gt;   
+I'd would like to see a C driver API, but that's only a nuance.
+My general intention is to say: Don't think of jack as a monolithic 
+entity, but of exchangeable parts, even if we risk even more user 
+confusion in the short-term.
+
+And one word about jack2's usage of C++... my feeling, when looking at 
+the code, is that jack2 classes are essentially "C code" where every 
+method or whatever is packed into some other class, because C++ has 
+classes, but not because it makes the structure clearer. The term "C++ 
+code" however means to me, that e.g. classes are used, where they 
+provide encapsulation of a certain behavior, that C structures and 
+free-standing functions are used, where this is the most fitting 
+abstraction, templates are used for ..., etc. -- to put it in one word: 
+readability
+
+  Tobias
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1323798712.6919_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1323851465.14087_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1323820041.877_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1323820041.877_0.ltw:2,a&nbsp;&lt;4EE7E3F3.9010300 at thax dot hardliners dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

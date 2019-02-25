@@ -1,0 +1,39 @@
+Date:        Sat, 08 Dec 2012 03:57:07 -0800
+From:        Devin Anderson  <[hidden] at gmail dot com>
+To:          Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Devin Anderson [Jack-Devel] ALSA PCM multi plugin and xruns (1354966732.17248_0.ltw:2,)
+Follow-Up:   Devin Anderson Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355014309.14390_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] ALSA PCM multi plugin and xruns
+
+On Sat, Dec 8, 2012 at 3:38 AM, Devin Anderson
+<[hidden]> wrote:
+
+> IIUC, the 'xruns' are generated because there *is* data available to
+> be read, but there *isn't* enough data, which means 0 is returned,
+> which incorrectly indicates that an xrun happened.  The exception is
+> when both `capture_avail` and `playback_avail` are both set to 0.
+> Perhaps userspace hasn't been told about new samples in the kernel
+> ringbuffer.
+
+I read through the ALSA multi plugin source a bit.  I now see that
+poll descriptors are only returned for one device (the *master*
+device), while the amount of available samples is calculated by
+looking at all the slave devices and returning the minimum amount of
+samples available.  This leads me to believe that the poll descriptors
+indicate that there is data available on the master device, but there
+isn't any data available on one of the other slave devices.
+
+I'll try to figure this out tomorrow.  I need sleep.
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+psinsights - http://psinsights.googlecode.com/
+synthclone - http://synthclone.googlecode.com/
+
+1354967833.17917_0.ltw:2, <CAG7zqTpZJBKEeMoP6kvayrAMs-UO0rnGK1UNeZq0ojx5AGQ8_w at mail dot gmail dot com>
+________________________________________________________________________________
+

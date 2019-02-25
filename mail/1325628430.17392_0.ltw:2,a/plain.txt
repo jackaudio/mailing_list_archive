@@ -1,0 +1,41 @@
+Date:        Tue, 03 Jan 2012 10:06:49 -0800
+From:        Fernando Lopez-Lezcano  <[hidden] at ccrma dot Stanford dot EDU>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] jack 1.9.8 + many many connections = problems? (1325577733.26392_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack 1.9.8 + many many connections = problems?
+
+On 01/03/2012 12:02 AM, Stéphane Letz wrote:
+> Le 2 janv. 2012 à 23:48, Fernando Lopez-Lezcano a écrit :
+>
+>> Found it!
+>> And of course it was not jack's fault...
+>>
+>> I started factoring the connections out in the code (major code changes) to try to isolate the problem. I found that it was not being caused by the connections at all. Most probably the clues I got were wrong, maybe due to wrong ordering of the output due to buffering being different in all programs used. I finally traced the problem to a few un-initialized variables in a supercollider ugen (LR4 high pass and low pass filters used in the speaker crossover). Those were the cause of the big noises in the output stream. I still can't think how this could result in an audio port that stops working! Must be something inside alsa itself? Still puzzling. Still a lot more testing to do but it looks fine for now...
+>>
+>> Many many thanks for your patience and all the debugging hints!
+>>
+>> As I feared I was doing something wrong...
+>
+> So happy to know this is not JACK fault....
+
+I'm very happy as well. And very sorry to have bothered you (and all 
+jack developers) with it.
+
+Although there is still a problem somewhere. How can a misbehaving 
+application that is (I think) just feeding samples to jack, be able to 
+shut down one or more jack channels in such a way that only a jack 
+restart can get them working again?
+
+Hmmmm, maybe I can use bitmeter to do some checks. I just thought that 
+maybe those jack ports could be working just fine except that somehow 
+the client is sending full scale DC to them, any other contribution from 
+other ports does nothing as it is being clipped by jack. I will see if I 
+can test this today.
+
+-- Fernando
+
+1325628430.17392_0.ltw:2,a <4F0343B9.2000307 at ccrma dot stanford dot edu>
+________________________________________________________________________________
+

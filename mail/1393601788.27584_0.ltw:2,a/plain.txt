@@ -1,0 +1,93 @@
+Date:        Fri, 28 Feb 2014 16:36:17 +0100
+From:        [hidden] at danieletorelli dot net <[hidden] at danieletorelli dot net
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] jack-trauma for audio over IP (1393593133.13100_0.ltw:2,a)
+Follow-Up:   [hidden] at danieletorelli dot net Re: [Jack-Devel] jack-trauma for audio over IP (1396015127.5078_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack-trauma for audio over IP
+
+Dear Adrian,
+
+thanks for your notes, in fact when I said "any feedback is welcome" I
+meant it and some of your comments may be very useful in making it 
+better.
+
+> 1. It's the (n+1)th implementation. There are plenty of UDP streamers
+>    around, like jack.udp, gstreamer, jack_stdout+netcat and many more.
+
+I know, the idea was something similar to jacktrip but able to send 
+different
+channels to different IP's possibly changing in realtime (why? long 
+story).
+I know this feature is not still there but it can be added easily (in 
+fact we
+have some even dirtier code that does it, but let's clean this up before
+releasing!)
+
+> 2. Your software doesn't care about audio clocks. Unless you make
+>    sure the clocks stay in sync, you'll overrun/underrun at some point.
+>    netjack is better in this regard.
+
+I know, but (correct me if I'm wrong) netjack requires having JACK 
+running
+with network backend in the slave machine. Said this, it's true it's 
+bound
+to overrun/underrun sooner or later, for now we simply accepted this. I
+think it also depends on the purpose, I for one wouldn't want this for
+recording for example.
+
+> 3. Your software only supports legacy protocols. We have 2014, AF_INET
+>    is no longer sufficient.
+> 4. Low code quality. Sorry, but this is "My first C program with 
+> network
+>    I/O"-level. Particularly: [...]
+
+Ok, we are definitely going to fix the network part, also following the
+feedback from Outro Pessoa.
+
+> Firstly, your program is called "jack_trauma", not "jacknet2" according
+> to your Makefile. You normally just reference argv[0] there to make 
+> sure
+> the output is consistent with the actual binary name. [...]
+
+...totally true and ugly... this was like a leftover from the very first
+draft and needs to be changed, thanks for reporting this!
+
+> I saw a couple of memcpy() invocations. Depending on the data size, 
+> this
+> might be the correct approach, however, with bigger arrays, it might
+> make sense to use IO-vectors (see sendmsg()) instead. You'll have to do
+> benchmarks to find out.
+
+thanks for the hint!
+
+> I didn't bother to read the rest of your code, but from what I've seen
+> and listed above, it's pretty clear that it's nowhere near a usable
+> solution, yet. Personally, I don't see any additional benefit over
+> existing stuff, so I'd rather spend my time on something else, but
+> that's totally up to you.
+> 
+> For now, let's agree you don't try to sell it to everybody who comes
+> along and asks for network audio, OK?
+
+well, we'll just try to improve it! In the best case scenario I think it
+can be a nice toy or maybe a starting point for something else, so
+probably not life changing but (in my totally personal and biased 
+opinion)
+let's say I find it "enjoyable" when actually using it.
+Now we'll focus on the problems, because it has been pointed out it
+doesn't work on certain platforms and because of your comments, 
+expecially
+the network part definitely needs some adjustment.
+
+Again, feedback is always welcome!
+
+BR,
+-- 
+Daniele Torelli
+----------------------
+www.danieletorelli.net
+
+1393601788.27584_0.ltw:2,a <7e5df4a46760b59d4b7a503be05e73d0 at danieletorelli dot net>
+________________________________________________________________________________
+

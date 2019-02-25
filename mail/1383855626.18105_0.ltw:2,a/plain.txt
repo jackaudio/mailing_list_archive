@@ -1,0 +1,46 @@
+Date:        Thu, 07 Nov 2013 21:20:17 +0100
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Kaspar Bumke Re: [Jack-Devel] [jack1] building without zita (1383850407.9723_0.ltw:2,a)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] [jack1] building without zita (1383858613.20449_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [jack1] building without zita
+
+On Thu, Nov 07, 2013 at 06:52:59PM +0000, Kaspar Bumke wrote:
+
+> No there was definitely an issue with 0.121.3.  With 0.121.3 (from
+> Debian's repos) I get:
+> 
+> [  496.470422] Alignment trap: not handling instruction edc67a06 at [<b6f10af4>]
+> [  496.478012] Unhandled fault: alignment exception (0x801) at 0xb65251e6
+> Bus error
+
+jackd2 has addressed (and fixed) the ARM alignment problem.
+
+You could come up with a similar approach for jackd1. Provided all the
+struct members are naturally aligned, it might be enough to define
+POST_PACKED_STRUCTURE as empty (instead of __attribute__((__packed__))).
+
+You might lose binary compatibility with statically linked clients, but
+since you're targeting and embedded platform, I assume you have full
+control over everything, so that's easy to fix.
+
+You might also lose the ability to run 32bit clients on 64bit servers,
+but that's probably none of your concerns.
+
+> As an aside do you think any work could be done to optimize Jack for
+> NEON SIMD?
+
+Sure. libjack/simd.c is your friend. OTOH, I don't know if
+autovectorisation could achieve the same without writing target-specific
+assembler for every new processor.
+
+
+HTH
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1383855626.18105_0.ltw:2,a <20131107202017.GA13920 at ltw dot loris dot tv>
+________________________________________________________________________________
+

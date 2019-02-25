@@ -1,0 +1,73 @@
+Date:        Sun, 17 May 2009 20:04:54 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          Nedko Arnaudov <[hidden] at arnaudov dot name>, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>, JACK Developers <[hidden] at jackaudio dot org>
+In-Reply-To: Paul Davis Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments (1242583067.8724_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments (1242583824.10019_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments (1242605311.15201_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments
+
+Le 17 mai 09 à 19:57, Paul Davis a écrit :
+
+> On Sun, May 17, 2009 at 1:49 PM, Stéphane Letz <[hidden]> wrote:
+>> After all these discussions on JACK2, D-Bus and Qjackctl issues,  
+>> here are
+>> some general comments:
+>>
+>> 1) JACK2 *default* compilation mode defines the same starting  
+>> scheme at
+>> JACK1 was doing. So (beside possible bugs) it is supposed to be  
+>> completely
+>> "interchangeable" with JACK1. It can be controled with Qjackctl as  
+>> usual.
+>>
+>> 2) JACK2 compiled in D-Bus is supposed to be controlled by a D-Bus  
+>> based
+>> control application... (jack_control is a simple python example of  
+>> a control
+>> application part of the package). Using JACK2 compiled in D-Bus with
+>> Qjackctl is a "receipe for trouble", even if if can be done in  
+>> some simple
+>> use cases. (The point is that in this case the client auto-start  
+>> feature
+>> starts the "jackdbus" exe instead of "jackd" with all of the related
+>> "settings" issues).
+>>
+>> 3) The port issue Fons told about in Qjackctl  0.3.4 seems to be a  
+>> Qjackctl
+>> bug, so has to be fixed at the right place.
+>>
+>> I don't see right now any raisonable way to fix this mess, better  
+>> than
+>> adding even more complexity in the design... (Nedko any idea?)  
+>> Otherwise I
+>> guess the only way is to make this totally clear for packagers :   
+>> 1) is the
+>> standard way that maintains complete compatibility with legacy  
+>> applications
+>> and control applications. 2) is the "new" way to be used with new  
+>> D-Bus
+>> based control application (patchage ??)...  So it would mean 2   
+>> separated
+>> packages.
+>
+> this sounds like a mess. there is a control API. i believe it was
+> agreed that the control API could be accessed directly (from C/C++
+> etc), or via other systems for which translators/layers were added
+> (e.g. DBus). i can see no reason why anyone would want to use choose
+> between a JACK server that can be controlled via either DBus or the
+> control API but not both. what is going on?
+
+
+The point is that when compiled in D-Bus mode, libjack behaves  
+differently regarding the way it start the server: it does not use  
+the fork+exec mode anymore but call the D-Bus service to start the  
+server. This "simple" change is the source of all the problems we  
+then see.
+
+Stephane 
+
+1242583532.9431_0.ltw:2,a <C98D5778-20FE-47C4-BC31-4959B4E943A6 at grame dot fr>
+________________________________________________________________________________
+

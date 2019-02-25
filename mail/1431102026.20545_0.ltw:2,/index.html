@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] jack2 crackle sound problem on bbb - jack_bufsize?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] jack2 crackle sound problem on bbb - jack_bufsize?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1430871026.5721_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1431712314.25085_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1431102026.20545_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 08 May 2015 16:15:59 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fredrik Olofsson </span> &lt;[hidden] at fredrikolofsson dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at jackaudio dot org </td></tr>
+</table>
+<pre>
+dear collected wisdom,
+i have a tough problem to solve with jackd messing up my input sound.  it&#x2019;s a
+reoccurring crackling on the input channel that sounds a bit like pulsewave ring
+modulation.  i figured out it&#x2019;s highly dependent on my blocksize settings.
+for example:
+with -p1024 the distortion starts every 7th minute and lasts for 2min50sec.
+with -p512 the distortion sounds slightly different (like with a higher ringmod
+freq) and starts every 3min15sec and lasts for ~1min.
+with -p256 it appears every 1min45sec and lasts for 40sec.
+etc.
+
+after much research i found this...
+http://thread.gmane.org/gmane.comp.audio.jackit/28114/focus=28115
+and this&#x2026;
+http://music.columbia.edu/pipermail/linux-audio-user/2005-August/025787.html
+that i believe describe the same issue.
+
+as suggested in those posts resetting the jack_bufsize makes the distortion go
+away.  but only temporarily - it always comes back after exactly the same time!
+for now i can let my system reset the buffer after a known time interval, but
+that&#x2019;s a really ugly hack and i&#x2019;d be happy for suggestions on how to solve this.
+
+below are details of my system.  i compile jack2 from master and it&#x2019;s all
+running under debian wheezy on a beaglebone black.  i use supercollider 3.7 and
+a terratec aureon dual usb soundcard.
+i&#x2019;ve also tried with another usb soundcard (C-MEDIA) but then the crackle occurs
+on the output instead (and also after longer intervals).  so same issue but
+sounds worse.
+
+thank you,
+_f
+
+
+BeagleBoard.org Debian Image 2015-03-01
+Linux asdf 3.8.13-bone70 #1 SMP Fri Jan 23 02:15:42 UTC 2015 armv7l GNU/Linux
+gcc and g++ version 4.7.2
+
+~$ aplay -l
+**** List of PLAYBACK Hardware Devices ****
+card 1: Device [USB PnP Sound Device], device 0: USB Audio [USB Audio]
+  Subdevices: 0/1
+  Subdevice #0: subdevice #0
+
+~$ lsusb
+Bus 001 Device 004: ID 0ccd:0077 TerraTec Electronic GmbH Aureon Dual USB
+
+~/jack2$ ./waf configure --alsa
+Setting top to                           : /home/debian/jack2 
+Setting out to                           : /home/debian/jack2/build 
+Checking for 'g++' (C++ compiler)        : /usr/bin/g++ 
+Checking for 'gcc' (C compiler)          : /usr/bin/gcc 
+Linux detected 
+Checking for program 'doxygen'           : not found 
+Checking for program 'pkg-config'        : /usr/bin/pkg-config 
+Checking for 'alsa' &gt;= 1.0.18            : yes 
+Checking for 'libffado' &gt;= 1.999.17      : not found 
+Checking for 'libfreebob' &gt;= 1.0.0       : not found 
+Checking for 'gtkIOStream' &gt;= 1.4.0      : not found 
+Checking for 'eigen3' &gt;= 3.1.2           : not found 
+Checking for header windows.h            : not found 
+Checking for 'portaudio-2.0' &gt;= 19       : not found 
+Checking for header mmsystem.h           : no 
+Checking for 'celt' &gt;= 0.11.0            : not found 
+Checking for 'celt' &gt;= 0.8.0             : not found 
+Checking for 'celt' &gt;= 0.7.0             : not found 
+Checking for 'celt' &gt;= 0.5.0             : not found 
+Checking for header opus/opus_custom.h   : not found 
+Checking for 'opus' &gt;= 0.9.0             : not found 
+Checking for 'samplerate' &gt;= 0           : yes 
+Checking for 'sndfile' &gt;= 0              : yes 
+Checking for library readline            : yes 
+Checking for header readline/readline.h  : yes 
+
+==================                      
+JACK 1.9.11 svn revision will checked and eventually updated during build
+Build with a maximum of 64 JACK clients
+Build with a maximum of 768 ports per application
+Install prefix                           :  /usr/local 
+Library directory                        :  /usr/local/lib 
+Drivers directory                        :  /usr/local/lib/jack 
+Build debuggable binaries                :  no 
+C compiler flags                         :  ['-Wall'] 
+C++ compiler flags                       :  ['-Wall'] 
+Linker flags                             :  [] 
+Build with engine profiling              :  no 
+Build with 32/64 bits mixed mode         :  no 
+Build standard JACK (jackd)              :  yes 
+Build D-Bus JACK (jackdbus)              :  no 
+Autostart method                         :  classic 
+Build doxygen documentation              :  no 
+Enable ALSA driver                       :  yes 
+Enable FireWire driver (FFADO)           :  no 
+Enable FreeBob driver                    :  no 
+Enable IIO driver                        :  no 
+Enable Portaudio driver                  :  no 
+Enable WinMME driver                     :  no 
+Build with CELT                          :  no 
+Build Opus netjack2                      :  no 
+Build with libsamplerate                 :  yes 
+Build with libsndfile                    :  yes 
+Build with readline                      :  yes 
+
+~$ tail /etc/security/limits.conf
+@audio - memlock 256000
+@audio - rtprio 75
+
+~$ sudo jackd -P75 -dalsa -dhw:1,0 -p256 -n3 -r44100 -s &amp;
+
+jackdmp 1.9.11
+JACK server starting in realtime mode with priority 75
+self-connect-mode is "Don't restrict self connect requests"
+creating alsa driver ...
+hw:1,0|hw:1,0|256|3|44100|0|0|nomon|swmeter|soft-mode|32bit
+configuring for 44100Hz, period = 256 frames (5.8 ms), buffer = 3 periods
+ALSA: final selected sample format for capture: 16bit little-endian
+ALSA: use 3 periods for capture
+ALSA: final selected sample format for playback: 16bit little-endian
+ALSA: use 3 periods for playback
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1430871026.5721_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1431712314.25085_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1431102026.20545_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1431102026.20545_0.ltw:2,&nbsp;&lt;loom.20150508T180455-749 at post dot gmane dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

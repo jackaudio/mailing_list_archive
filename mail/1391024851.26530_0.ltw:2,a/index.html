@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack is broken on ARM without bogomips</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack is broken on ARM without bogomips</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1391024322.26128_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1391027863.28650_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1391024851.26530_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 29 Jan 2014 20:47:24 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Adrian Knoth </span> &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Grant
+<a href='../1391024322.26128_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack is broken on ARM without bogomips </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Grant
+<a href='../1391036563.1522_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack is broken on ARM without bogomips </a></td></tr>
+</table>
+<pre>
+On Wed, Jan 29, 2014 at 11:38:33AM -0800, Grant wrote:
+
+&gt; &gt; Hi Grant,
+&gt; &gt;
+&gt; &gt; I just tried a hack. Can't be called a proper patch, I just used 1000MHz as
+&gt; &gt; the frequency - I thought that would work as, after all, the BogoMips
+&gt; &gt; numbers are, well, "bogus" anyway. At least on Pidora with 3.12.x it seems
+&gt; &gt; to start and work. Not much testing but got a sinewave going :-) Hack below
+&gt; &gt; (messages could be nicer, of course)...
+&gt; &gt;
+&gt; &gt; It would be nice to have a proper fix.
+&gt; &gt; -- Fernando
+&gt; &gt;
+&gt; &gt; --- jack-1.9.9.5/linux/JackLinuxTime.c~ 2012-12-10 01:26:57.000000000 -0800
+&gt; &gt; +++ jack-1.9.9.5/linux/JackLinuxTime.c  2014-01-22 14:39:41.000000000 -0800
+&gt; &gt; @@ -152,7 +152,9 @@
+&gt; &gt;                 if (fgets(buf, sizeof(buf), f) == NULL) {
+&gt; &gt;                         jack_error ("FATAL: cannot locate cpu MHz in "
+&gt; &gt;                                     "/proc/cpuinfo\n");
+&gt; &gt; -                       exit(1);
+&gt; &gt; +                       fclose(f);
+&gt; &gt; +                       jack_log("Using 1GHz by default");
+&gt; &gt; +                       return (jack_time_t)1000;
+&gt; &gt;                 }
+&gt; &gt;
+&gt; &gt;  #if defined(__powerpc__)
+&gt; &gt; @@ -176,6 +178,10 @@
+&gt; &gt;                 {
+&gt; &gt;                         fclose(f);
+&gt; &gt;                         return (jack_time_t)mhz;
+&gt; &gt; +               } else {
+&gt; &gt; +                       fclose(f);
+&gt; &gt; +                       jack_log("Using 1GHz by default");
+&gt; &gt; +                       return (jack_time_t)1000;
+&gt; &gt;                 }
+&gt; &gt;         }
+&gt; &gt;  }
+&gt; 
+&gt; Hi Fernando, I was about to try this but I can't find JackLinuxTime.c
+&gt; in the latest version from git.  Does anyone know where this code is
+&gt; now?
+
+This is jackd2. AFAIK, you're using jackd1, so if you're really
+affected, it'd be config/os/gnu-linux/time.c
+
+
+
+
+Cheers
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1391024322.26128_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1391027863.28650_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1391024851.26530_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1391024851.26530_0.ltw:2,a&nbsp;&lt;20140129194724.GK25242 at ltw dot loris dot tv&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

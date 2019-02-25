@@ -1,0 +1,123 @@
+Date:        Thu, 06 Feb 2014 15:50:19 +1100
+From:        Matt Flax  <[hidden] at flatmax dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Matt Flax Re: [Jack-Devel] new IIO driver added to jack - large overruns (1390340276.29778_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] new IIO driver added to jack - large overruns (1391690053.31673_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] new IIO driver added to jack - large overruns
+
+Paul and list,
+
+I have now managed to get rid of xruns in my iio driver.
+
+I find that I can pull (with no xruns) 4 channels @ 1 MHz with latencies 
+as low as 0.75 ms ... amazing !
+I am sure this figure will get worse, but it is a good starting point :)
+
+I am starting by using the following for testing :
+jackd -d iio -p 2048 -n 2
+
+Which sets up a latency of about 4 ms.
+
+I am now trying to connect using a client ... here is my problem...
+
+On the driver function 'iio_driver_read'
+     I can see the data coming in ... numbers range from 0. up to 4096.
+     Should these be scaled down to be betwenn -1. and 1. ?
+
+On the client :
+   The process audio callback is receiving nothing from the iio driver. 
+All samples read are = 0.
+
+Any suggestions ideas ?
+
+jack_lsp outputs the following :
+
+# ./jack_lsp -p -t -A
+system:capture_1
+    iio_pcm:capture_1
+     properties: output,physical,terminal,
+     32 bit float mono audio
+system:capture_2
+    iio_pcm:capture_2
+     properties: output,physical,terminal,
+     32 bit float mono audio
+system:capture_3
+    iio_pcm:capture_3
+     properties: output,physical,terminal,
+     32 bit float mono audio
+system:capture_4
+    iio_pcm:capture_4
+     properties: output,physical,terminal,
+     32 bit float mono audio
+
+
+Matt
+p.s. I am still after someone to port this to jack2 ... any takers ?
+
+On 22/01/14 08:37, Matt Flax wrote:
+> Thanks for the suggestions...
+>
+> On 22/01/14 00:21, Adrian Knoth wrote:
+>> On Tue, Jan 21, 2014 at 11:48:55PM +1100, Matt Flax wrote:
+>> If so:
+>>
+>>> I have found that jack isn't pulling much cpu time at all when
+>>> operating the iio driver. Top reports that it chews about 3% of the
+>>> cpu power. This suggests that a lot of the delay is coming from
+>>> kernel related servicing of the iio read calls.
+>>>
+>>> The small overruns can probably be removed by reading from the DMA
+>>> buffer in the background, but I would need to do some form of
+>>> locking and unlocking ... whether it be polling in user space or
+>>> some atomic lock system ...
+>> The usual approach is to be woken up from the kernel whenever some parts
+>> of the buffer (let's say one half for a start) are ready for processing.
+>>
+>> This doesn't require locking. Thing is, it's a bit hard to give useful
+>> hints, since you're developing an entirely new driver, that is, only you
+>> know the details.
+>>
+>> So as a general advice, here's what you can do:
+>>
+>>     1.) Have a look at some PCI ALSA drivers and/or read the ALSA driver
+>>         tutorial. Even if you really don't want to write an ALSA driver,
+>>         you'll at least understand the basic approach taken in jackd.
+>>
+>>
+>>     2.) If you're dealing with a userspace driver, maybe have a look at
+>>         FFADO and its jackd integration. Note that the FFADO project has
+>>         shown that you really want kernel-level streaming, so userspace
+>>         drivers are generally more headache than necessary.
+> I have been referencing all drivers for information and ideas ... it 
+> has been very helpful.
+> Bare in mind that IIO is already implemented using DMA into kernel 
+> memory space. There is a driver which streams all of the samples over 
+> /dev/iio:device0, /dev/iio:device1 and so on.
+>
+>>     3.) Take a shortcut and hire Paul Davis, Clemens Ladisch or Daniel
+>>         Mack. No idea if any of these guys is available for freelancing
+>>         at the moment. They know Linux audio inside out and hence know
+>>         how to do it right.
+>>
+>>
+>> I don't know your hardware at hand, but unless you have very good
+>> reason, I strongly encourage you to write an ALSA driver. This way, your
+>> audio device would automatically work with jack1 AND jack2, so no need
+>> for porting.
+> Yep - that was my first thought, however as there is already a nice 
+> iio driver with ring buffers and so on, the thought is to simply use 
+> them.
+>
+>>
+>> Just my €0.02
+>>
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1391662245.12392_0.ltw:2,a <52F3148B.80109 at flatmax dot org>
+________________________________________________________________________________
+

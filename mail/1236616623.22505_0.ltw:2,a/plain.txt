@@ -1,0 +1,82 @@
+Date:        Mon, 09 Mar 2009 17:35:45 +0100
+From:        Michael Niedermayer  <[hidden] at gmx dot at>
+To:          FFmpeg development discussions and patches <[hidden] at mplayerhq dot hu>
+Cc:          Guillaume Pellerin <[hidden] at parisson dot com>, [hidden] at lists dot linuxaudio dot org, [hidden] at jackaudio dot org
+In-Reply-To: Olivier Guilyardi Re: [LAD] [Jack-Devel] [FFmpeg-devel] [PATCH] libavdevice: JACK demuxer (1236469934.17554_0.ltw:2,a)
+
+Subject:     Re: [LAD] [FFmpeg-devel] [Jack-Devel] [PATCH] libavdevice: JACK demuxer
+
+On Sun, Mar 08, 2009 at 12:51:48AM +0100, Olivier Guilyardi wrote:
+> Michael, Paul has answered you on jack-devel. See below.
+> 
+> Note: I'm cross-posting this mail to linux-audio-dev, since Michael has recently 
+> subscribed to it. At least, we should be able to discuss together in there.
+> 
+> Paul Davis wrote :
+> > I have no idea how any of you have kept this conversation going when one 
+> > of the main protagonists is not even subscribed to one of the two 
+> > mailing lists, and i suspect that one of the others isn't subscribed to 
+> > the other. 
+
+> > perhaps the FFmpeg-devel list doesn't require membership.
+
+it does, though we have some fearless admin that occasionally in the past
+went over the held mails, not sure if he did this recently though.
+
+
+> > 
+> > anyway, i've finally had enough of reading Michael's stuff about 
+> > buffers, timing and so forth and felt obligated to comment.
+> > 
+> > michael - i would politely request that you stop shooting off at the 
+> > mouth about stuff that the JACK community has been dealing with for more 
+> > than 9 years.
+
+Olivier had posted several patches to ffmpeg-dev that add libjack support
+and some "timefilter".
+And these contributions are certainly appreciated!
+
+Ive reviewed them and suggested improvments, the timefilter patch has
+already reached svn (a bug less, time values have roughly half the error
+from before and variable time periods being supported now)
+You arent suggesting we should accept patches without review, are you?
+
+
+> > 
+> > you do not need to write your own ring buffer code - JACK's is LGPL'ed 
+> > and you are free (and probably even recommended) to copy it. 
+
+we have our own ring buffer as well in libavutil/fifo.c|h, it just had a
+little issue with an unuseable element, that ive just fixed.
+i see jacks ringbuffer has the same issue, in addition it seems limited
+to sizes that are a power of 2.
+and considering ours supports user provided functions instead of just memcpy()
+to access the fifo directly and has just 1/3 the number of lines of code
+than jacks, id prefer to keep ours.
+
+
+> > furthermore, you would be very foolish to imagine (especially based on 
+> > your incredibly naive comments about uint8_t) that you understand the 
+> > subtleties of these buffers. the JACK community (and a couple of other 
+> > exclusively audio-focused development groups) have been working with 
+> > this buffer design for many, many years, and we are absolutely confident 
+> > that our buffers are (a) SMP/multi-core safe (b) as efficient as they 
+> > can be without using assembler. you should also be aware that there are 
+> > very good arguments for  the current structure of the ringbuffer code, 
+> > which explicitly does NOT use any memory barriers. if you don't 
+> > understand why it works without them, then you should probably refrain 
+> > from commenting on the design of these buffers at all.
+
+It works because you are lucky
+
+[...]
+-- 
+Michael     GnuPG fingerprint: 9FF2128B147EF6730BADF133611EC787040B0FAB
+
+Many things microsoft did are stupid, but not doing something just because
+microsoft did it is even more stupid. If everything ms did were stupid they
+would be bankrupt already.
+
+1236616623.22505_0.ltw:2,a <20090309163544.GC8315 at MichaelsNB>
+________________________________________________________________________________
+

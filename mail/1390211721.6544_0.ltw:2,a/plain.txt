@@ -1,0 +1,106 @@
+Date:        Mon, 20 Jan 2014 20:55:00 +1100
+From:        Matt Flax  <[hidden] at flatmax dot org>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Matt Flax [Jack-Devel] new IIO driver added to jack - large overruns (1390210559.4511_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] new IIO driver added to jack - large overruns (1390223538.27609_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] new IIO driver added to jack - large overruns
+
+Just confirming that I also see a similar xrun when running the alsa 
+driver ... see below ...
+It is possible that this problem is within Jack itself, and not the 
+drivers ...
+
+Matt
+
+  jackd -r -d alsa
+jackd 0.124.0
+Copyright 2001-2009 Paul Davis, Stephane Letz, Jack O'Quinn, Torben Hohn 
+and others.
+jackd comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+
+JACK compiled with System V SHM support.
+loading driver ..
+creating alsa driver ... hw:0|hw:0|1024|2|48000|0|0|nomon|swmeter|-|32bit
+ALSA: Cannot open PCM device alsa_pcm for capture. Falling back to 
+playback-only mode
+configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 2 periods
+ALSA: final selected sample format for playback: 16bit little-endian
+ALSA: use 2 periods for playback
+
+**** alsa_pcm: xrun of at least 71.259 msecs
+
+**** alsa_pcm: xrun of at least 71.001 msecs
+
+**** alsa_pcm: xrun of at least 71.038 msecs
+
+**** alsa_pcm: xrun of at least 71.019 msecs
+
+
+On 20/01/14 20:35, Matt Flax wrote:
+> Hi there,
+>
+> I have added a new IIO driver to jack.
+> IIO is Industrial IO and it is for devices with high sample rates.
+> Currently it is only partially tested with devices which have the 
+> AD7476A chips onboard - they have a 1MHz sample rate which is rather 
+> nice :) However I have a problem ... please read on ...
+>
+> As I don't have write access to the original jack1 repo, I have forked 
+> until I do. For now you can find it here :
+> https://github.com/flatmax/jack1
+>
+> You will also need the git repo for gtkiostream, as it uses this code :
+> http://www.flatmax.org/gtkiostream/html/classIIO.html
+>
+> This new IIO driver is in alpha mode... I am currently testing on an 
+> ARM board however I get large overruns for some reason ...
+>
+> Here is an example when running 'jackd -r -d iio' :
+>
+> created iio driver ... iio_pcm|1000000|1024|1024|4|0
+> iio_driver_start::   enabling IIO : enable(true)
+> iio_driver_wait
+> iio_driver_wait
+> **** iio: xrun of 97145 usec
+> iio_driver_wait
+> **** iio: xrun of 81626 usec
+> iio_driver_wait
+> **** iio: xrun of 80022 usec
+> iio_driver_wait
+> **** iio: xrun of 79894 usec
+> iio_driver_wait
+> **** iio: xrun of 79856 usec
+> iio_driver_wait
+>
+>
+> I am actually wondering whether anyone can help me with some information ?
+> I run the driver with zero load ... it doesn't ever try to read 
+> anything from the actual devices ... however it appears that jack on 
+> the ARM board is giving Xruns of the order of 80 ms !
+>
+> This is even when the driver_read function is as follows :
+> static int iio_driver_read (iio_driver_t *driver, jack_nframes_t 
+> nframes) {
+>   return 0;
+> }
+>
+> The relevant driver code is located here :
+> https://github.com/flatmax/jack1/blob/master/drivers/iio/iio_driver.C
+>
+> It uses the g++ compiler because it instantiates the IIO class from 
+> gtkiostream to do the heavy lifting.
+>
+> Matt
+>
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1390211721.6544_0.ltw:2,a <52DCF274.7050301 at flatmax dot org>
+________________________________________________________________________________
+

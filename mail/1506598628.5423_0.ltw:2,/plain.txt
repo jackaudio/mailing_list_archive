@@ -1,0 +1,46 @@
+Date:        Thu, 28 Sep 2017 13:36:54 +0200
+From:        Philippe Bekaert  <[hidden] at uhasselt dot be>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Spencer Russell Re: [Jack-Devel] AES67 / SMPTE ST 2110-30 (1506533879.27558_0.ltw:2,)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] AES67 / SMPTE ST 2110-30 (1506630119.14622_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] AES67 / SMPTE ST 2110-30
+
+OK … here are my thoughts ...
+
+AES67 is something else than AVB. It’s operating at a higher OSI layer (3&4 instead of 2), and is reported to work also with standard off-the-shelf IT hardware (no special switches needed etc…), though support for some non-consumer features like PTPv2 is needed for high timing precision. But even without such support, timing accuracy in the order of a few audio frames should be achievable on low cost equipment. Not enough of distributed live audio work perhaps, but probably enough for anyone not wanting to buy a somewhat professional network card offering hardware ethernet packet time stamping (and a PTP Hardware Clock).
+
+I understand there have been fierce discussions what way audio over IP would go, either AVB (ethernet layer), or AES67 (essentially RTP, in higher layer). My impression is that AES67 is way better received by industry, and a safer choice to invest time (and money) in, though AVB does have certain technical benefits over AES67 for high-end applications. The AVB group is now working on a broader class of time critical network transport.
+
+AES67 is essentially raw PCM audio over RTP streams, with clock synchronisation using PTPv2. There’s good support for rtp and ptpv2 on linux, available as standard packages from your distro. There’s a unicast and multicast option, both required for full support of AES67, but most users stick to multicast only. Multicast requires an IGMPv2 compliant switch. Most, also cheaper, managed switches support IGMPv2. Streams are described by the internet standard Session Description Protocol (SDP), ascii text files with well documented and easy to parse entries. Manual configuration is always an option (multicast adres, ports, stream format, or better: loading an SDP file). Supporting any discovery methods such as SAP, RTSP, … is recommended. The ST2110 standard sticks with NMOS. I’ll start with the manual configuration. Unicast support requires SIP for connection management. There exist various open source implementations of SIP, but I will start by focussing on multicast support as a first step.
+
+Some aspects of AES67 may be subject to patents (the standard specs document explicitly mentions audinate). I’ll check out what is patented and what we can do without infringing patents or having to pay license fees.  (Anyone from audinate on this list??)
+
+AES67 is the greatest common factor in proprietary interfaces including Ravenna, Dante, a.s.o. Ravenna, Dante a.s.o have AES67 compliant profiles. You’ll be able to connect your jackaudio linux box to Ravenna, Dante etc… equipment if you set up that equipment in AES67 compliant mode - pretty standard stuff, as AES67 is actually made to let different such interfaces work together (interoperability). But AES67 is also exactly the audio part of the upcoming SMPTE ST2110 IP broadcast standard. 
+
+AES67 requires supporting 1 to 8 channel streams, sent in packets of 1 milisecond (48 samples per channel in one packet at 48KHz), 48KHz, 16 and 24 bits per sample, but I intend to support also other recommended samplerates, bit depths, stream channel counts, and packet times. Note you can always distribute more channels by broadcasting multiple streams. Hundreds of channels are possible over a gigabit ethernet connection. The packet time of 1 milisecond determines latency : count on 3 miliseconds between sending on computer one and receiving on computer 2 when on the same gigabit LAN. Add the latency by your audio interface, which is most probably larger.
+
+My intention is to implement AES67 support as a jack client operating entirely in user space. After all, its essentially a matter of receiving RTP packets from your network interface, ripping out the audio samples and handing them to jack, or the reverse for a sender. For clock synchronisation, you’ll need to set up ptpv2 separately, installing e.g. the ptpd package and configuring it.  You need a clock master - your linux box itself, some other computer, or one piece of your AES67 compliant equipment itself will probably do for most purposes.
+
+The alternative is the implement it as a virtual sound card driver, but that seems more involved. If you already have an audio interface (which you need anyways unless you have AES67 speakers or microphones or use other AES67 compliant devices for capturing/reproducing sound), the client approach should do. I guess this will be the most common use case for our community.
+
+My development system has an RME HDSPe AIO card installed. (happy musician: this interface has 8-channel ADAT, along 2 analog balanced audio, AES3 and SPDIF). It works well under linux (ubuntu studio 16.04), though some tools like the hdspemixer have issues (they are not needed - I use it for monitoring only). RME also has a MADI interface in the same product family in case you need.
+
+However, the client I plan to develop will work in principle with just any jack supported audio interface. 
+
+Ideally, I should be able to adjust the audio card clock to the system clock or PTPv2 hardware clock on the network interface itself. Instead, I intend to stick with sample rate conversion, to keep audio from the network and in your audio card synchronised, and prevent glitches.
+
+What I do not have at hand right now, is any other AES67 equipment. I’ll start connecting two computers with our own implementation of the standard.
+
+Who has AES67 equipment and would possibly be willing to assist, at least in testing once time is there?
+In the mean while, of course, I’m also trying to get hand on AES67 equipment myself too.
+
+Let me know if you have thoughts to share on this.
+
+Best regards,
+
+Philippe.
+
+1506598628.5423_0.ltw:2, <CDE4448D-68D6-4A5B-AF74-32E63506CA9F at uhasselt dot be>
+________________________________________________________________________________
+

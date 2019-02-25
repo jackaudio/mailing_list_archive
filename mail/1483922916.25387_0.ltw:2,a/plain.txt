@@ -1,0 +1,42 @@
+Date:        Mon, 09 Jan 2017 00:48:23 +0000
+From:        Harry van Haaren  <[hidden] at gmail dot com>
+To:          Yuri <[hidden] at rawbw dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Yuri [Jack-Devel] Recorded from OSS /dev/dsp sound is too high pitched on FreeBSD (1483922610.25185_0.ltw:2,a)
+Follow-Up:   Yuri Re: [Jack-Devel] Recorded from OSS /dev/dsp sound is too high pitched on FreeBSD (1483923910.26338_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Recorded from OSS /dev/dsp sound is too high pitched on FreeBSD
+
+On Mon, Jan 9, 2017 at 12:43 AM, Yuri <[hidden]> wrote:
+>
+> Jack runs on FreeBSD 11 with this command line: jackd -r -doss -r48000
+-p1024 -n3 -w16 --capture /dev/dsp6 --playback /dev/dsp2
+> Sound recorded with this command 'jack_rec -f x.wav system:capture_1' is
+too high pitched compared to the original.
+> Recording using the 'sweep' app produces the correct pitch.
+>
+> What is wrong? How to fix?
+
+I would guess that the samplerate is not matching the actual - either in
+the OSS backend, or in the recorded materials settings. Given that jack_rec
+records fine on Linux, I would guess that OSS backend isn't acquiring 48000
+Hz sampling rate, but falling back to 44100 silently.
+
+Then playing the content back (with jack_rec recording as if it was 48000,
+and hence writing that as a .wav header ) would result in high pitched
+playback..
+
+> jack-0.124.1 installed from the FreeBSD port.
+
+Unfortunatly I don't have a FreeBSD machine here to test - but look into
+the sampling rates, and test 44100 to see if that works as expected.
+
+Hope that helps, -Harry
+
+--
+
+http://www.openavproductions.com
+
+1483922916.25387_0.ltw:2,a <CAKudYbPGkq-8Ck4vN8dCd0-qde-YW0iEsTtJXEe375-P_3roQw at mail dot gmail dot com>
+________________________________________________________________________________
+

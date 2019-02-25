@@ -1,0 +1,53 @@
+Date:        Fri, 13 Apr 2012 17:20:33 +0400
+From:        Stéphane VAXELAIRE  <[hidden] at free dot fr>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Elliott Chapin Re: [Jack-Devel] Variable delay line problem (1334325999.23032_0.ltw:2,a)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] Variable delay line problem (1334329176.27787_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Variable delay line problem
+
+Hello,
+
+I don't know if there are DSP gurus in there, but I have a little problem with basic flanger effect.
+I read a few articles / book pieces about this.
+
+I understood that a flanger is just an extremely short delay line (max 15ms) with a variable delay length.
+The variable length can follow an LFO wave, I tried with a simple cosine here.
+
+So here is what I do in a loop through all jack buffer samples :
+
+    max = "number of delay buffer samples";
+    for( int i=0; i<size; i++)
+    {  
+        sample = buffer[i];
+
+    // Get current delay buffer index
+        n = (float)this->dl.getCurrent() / max;
+    // Compute an index between 0 and max based on a LFO, in this case simple cos(2*PI*n)
+        dn = max*0.5f - this->depth * cos( 2*PI*n);
+    // Return the index of delayed sample index "dn" * decay value between 0 and 1
+        temp = this->dl.process( sample, dn);
+        //temp = this->dl.process( buffer[i], 300);
+    // Output original sample + delayed one
+        buffer[i] = sample + temp;
+        //buffer[i] = temp;
+    }   
+
+First of all, I'm not sure about what should be 'n' here. Then I found formulas for dn that use a frequency like :
+dn = D/2 * (1 - cos(2*PI*n*F));
+I don't know either what should be F in my code.
+
+But I have to specify that I get dn indexes that seem to evolve like a Cosine between 0 and max sample of the delay buffer.
+So it would "seem" to work in that area.
+
+In the meantime, all I hear is the original signal + a not nice to hear distorted version of the original sound (the temp part as I verified byt outputting it alone).
+I tried with a constant dn value like 300 ms and I get a normal delay.
+I basically round dn by casting float to an int but I even tried to add interpolation between sample dn and dn+1 in cases where dn is not integer. Nothing changed.
+
+I've spent a few hours trying to understand the concepts and to try variants looking for what could be wrong. I'm lost for now.
+
+Regards
+
+1334323258.18854_0.ltw:2,a <84C79E00-C43F-4689-A0CA-2B1436CE6DC0 at free dot fr>
+________________________________________________________________________________
+

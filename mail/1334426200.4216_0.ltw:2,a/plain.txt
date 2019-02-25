@@ -1,0 +1,96 @@
+Date:        Sat, 14 Apr 2012 18:56:24 +0100
+From:        Matthew Robbetts  <[hidden] at gmail dot com>
+To:          Stéphane VAXELAIRE <[hidden] at free dot fr>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Stéphane VAXELAIRE [Jack-Devel] Fwd: Variable delay line problem (1334401001.5570_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Variable delay line problem
+
+I believe it should be possible to give anything you want to be persistent an entry in the data structure that is passed to the JACK processing callback. This object is passed to the callback every time it runs. So, the callback code can read its value when it begins running and update it when it finishes.
+
+
+
+On 14 Apr 2012, at 11:56, Stéphane VAXELAIRE wrote:
+
+> Maybe I could reset it to 0 each time the sine cross the axis thus having only cos values between 0 and 1 or -1 and 0... Can't try right now...
+> 
+> Début du message transféré :
+> 
+>> Expéditeur: Stéphane VAXELAIRE <[hidden]>
+>> Date: 14 avril 2012 14:51:41 UTC+04:00
+>> Destinataire: Friedrich Ewaldt <[hidden]>
+>> Cc: "[hidden]" <[hidden]>
+>> Objet: Rép : [Jack-Devel] Variable delay line problem
+>> 
+>> Thanks for the Matlab example that's the most explicit I've seen.
+>> 
+>> I guess I have the algo right (not 100% sure though) thanks to you and Chris.
+>> Now my problem seems to be with the 'n' variable.
+>> 
+>> I understood from the Matlab example that it is simply a counter from delay buffer length to size of the audio file.
+>> Now, I'm operating on jack buffer that are 512 samples long. So I can't simply rely on that.
+>> 
+>> How an I maintain such an increasing global var if my sound source is my computer line in for instance ?
+>> Can I modulo it to something ?
+>> 
+>> Thank again
+>> 
+>> Le 14 avr. 2012 à 13:32, Friedrich Ewaldt <[hidden]> a écrit :
+>> 
+>>> Chris Caudle schrieb am 13.04.2012 23:29:
+>>>> On Fri, April 13, 2012 11:52 am, Stéphane VAXELAIRE wrote:
+>>>>> Thanks, I did try that, but when I do, the sine does not seem to evolve.
+>>>> 
+>>>> Maybe I suggested the division in the incorrect location.
+>>>> I tried the equivalent in Octave, and it seems to work with:
+>>>> cos(n/Fs*2*pi*freq)
+>>>> 
+>>>> I don't remember how operator order of precedence works in Octave, so I
+>>>> also tried:
+>>>> cos(2*pi*n*(freq/sample_rate))
+>>>> 
+>>>> and that also seemed to work like expected.
+>>>> 
+>>>> By work as expected, I just mean it generated cosine values of the
+>>>> expected period.  I did not try to actually implement a variable delay so
+>>>> that I could make a flanger in Octave code.
+>>>> 
+>>> 
+>>> If you are looking for a flanger implemented in Matlab (most probably works with litte or no changes also in Octave) you may take a look at e.g.
+>>> http://www.mathworks.com/matlabcentral/fileexchange/6656-flange-effect
+>>> 
+>>> or this nice presentation containing flanger Matlab code as well:
+>>> 
+>>> http://www.cs.cf.ac.uk/Dave/CM0268/PDF/10_CM0268_Audio_FX.pdf
+>>> 
+>>> or in general:
+>>> 
+>>> http://www.google.com/search?q=flanger+octave+OR+matlab
+>>> 
+>>>> Are you doing any prototype code in Octave, or is everything in C?
+>>>> 
+>>>> Also, I didn't really pay attention to how you were implementing the
+>>>> delay.  I had assumed you would do an interpolated delay so you can make
+>>>> smooth phase adjustments.  If you are just grabbing samples from the delay
+>>>> buffer, you are going to have discontinuous jumps between samples, and
+>>>> that is going to sound really bad, just like having lots of under-runs
+>>>> (same effect, you are just skipping over some samples and not playing
+>>>> them).
+>>>> 
+>>> 
+>>> 
+>>> Jack-Devel mailing list
+>>> [hidden]
+>>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1334426200.4216_0.ltw:2,a <A622B522-D4C6-4052-8155-EA78FBC9E31A at gmail dot com>
+________________________________________________________________________________
+

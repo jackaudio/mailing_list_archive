@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] shm registry full errors</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] shm registry full errors</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1465472380.16082_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1465569564.25510_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1465566399.20492_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 10 Jun 2016 15:46:26 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> [hidden] at saepia dot net </span> &lt;[hidden] at saepia dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1465472380.16082_0.ltw:2,/index.html'>Re: [Jack-Devel] shm registry full errors </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1465569564.25510_0.ltw:2,/index.html'>Re: [Jack-Devel] shm registry full errors </a></td></tr>
+</table>
+<pre>
+Well I understand but what I observe is that JACK has unpredictable amount
+of total clients which is an issue, regardless if it's closer to 10 than
+1000.
+
+I have found out at least 3 conditions that affect this:
+
+- compilation flags, which by the way may cause jack to segfault if they
+are set too high
+
+- parameter to jackd
+
+- MAX_SHM_ID
+
+I suggest integrating this into one runtime command line parameter.
+
+M.
+09.06.2016 1:39 PM "Paul Davis" &lt;[hidden]&gt; napisa&#x142;(a):
+
+&gt; shared memory is not a very malleable resource. you can't just arbitrarily
+&gt; increase the size of it like you can with heap memory.
+&gt;
+&gt; But running 250 JACK clients is not a viable workflow either. It doesn't
+&gt; scale in that way unless you're not interested in latency, in which case
+&gt; use PulseAudio.
+&gt;
+&gt; On Thu, Jun 9, 2016 at 6:32 AM, [hidden] &lt;[hidden]&gt;
+&gt; wrote:
+&gt;
+&gt;&gt; Hello,
+&gt;&gt;
+&gt;&gt; I've found a piece of code that can be responsible for this:
+&gt;&gt;
+&gt;&gt; #define MAX_SHM_ID 256
+&gt;&gt;
+&gt;&gt; This is used to determine size of the registry.
+&gt;&gt;
+&gt;&gt; What is rationale for hardcoding this like this?
+&gt;&gt;
+&gt;&gt; m.
+&gt;&gt;
+&gt;&gt; 2016-06-09 12:02 GMT+02:00 [hidden] &lt;[hidden]&gt;:
+&gt;&gt;
+&gt;&gt;&gt; Hello,
+&gt;&gt;&gt;
+&gt;&gt;&gt; at some point I am getting the following errors from JACK
+&gt;&gt;&gt;
+&gt;&gt;&gt; Jun  9 11:57:19 001-can1-plumber jackd[21110]: shm registry full
+&gt;&gt;&gt; Jun  9 11:57:19 001-can1-plumber jackd[21110]: Cannot create shared
+&gt;&gt;&gt; memory segment of size = 422
+&gt;&gt;&gt; Jun  9 11:57:19 001-can1-plumber jackd[21110]: JackShmMem::new bad alloc
+&gt;&gt;&gt; Jun  9 11:57:19 001-can1-plumber jackd[21110]: Cannot open client
+&gt;&gt;&gt; Jun  9 11:57:19 001-can1-plumber jackd[21110]: Cannot create new client
+&gt;&gt;&gt;
+&gt;&gt;&gt; Max locked memory for this process is set to 134217728 while launching
+&gt;&gt;&gt; JACK via systemd.
+&gt;&gt;&gt;
+&gt;&gt;&gt; It effectively causes JACK to hang.
+&gt;&gt;&gt;
+&gt;&gt;&gt; I am using 1.9.10 (commit 1ed50c92) on ubuntu 16.04.
+&gt;&gt;&gt;
+&gt;&gt;&gt; The configure flags are --clients=500 --ports-per-application=4 (I am
+&gt;&gt;&gt; not reaching 500 clients limit when that occurs, they are around 250).
+&gt;&gt;&gt;
+&gt;&gt;&gt; JACK is started with dummy driver, and --port-max set to 2000.
+&gt;&gt;&gt;
+&gt;&gt;&gt; What is the reason for hitting SHM limit? Can I overcome this in any way?
+&gt;&gt;&gt;
+&gt;&gt;&gt; m.
+&gt;&gt;&gt;
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; 
+&gt;&gt; Jack-Devel mailing list
+&gt;&gt; [hidden]
+&gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;&gt;
+&gt;&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1465472380.16082_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1465569564.25510_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1465566399.20492_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1465566399.20492_0.ltw:2,a&nbsp;&lt;CA+DLCvCB77KjVU7W3277r0TbDO7ZoLUY9nn1udsocotwH9rTFA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

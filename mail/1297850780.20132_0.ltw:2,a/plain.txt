@@ -1,0 +1,64 @@
+Date:        Wed, 16 Feb 2011 11:06:01 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Valerio Pilo <[hidden] at akhela dot com>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Valerio Pilo Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1297842576.1424_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client
+
+Le 16 févr. 2011 à 08:49, Valerio Pilo a écrit :
+
+> In data martedì 15 febbraio 2011 17:29:28, Stéphane Letz ha scritto:
+> > Le 15 févr. 2011 à 15:44, Valerio Pilo a écrit :
+> > > Hi guys; thanks a lot for your invaluable support! The patch,
+> > > unfortunately, does nothing to fix or even improve the problem, which
+> > > appears being completely unrelated to killing  clients...
+> > 
+> > Well the real problem is that the ALSA backend returns an error (-1) that
+> > is considered "non recoverable" by the upper layer (the
+> > JackAudioDriver::ProcessSync function), then the wrapper ALSA backend
+> > thread is just stopped. When this wrapper thread is not running anymore,
+> > no client can connect anymore.
+> > 
+> > Now the *reason* the ALSA backend returns an error may be caused by several
+> > different events:
+> > 
+> > - either an issue in ALSA backend code (the thing you're trying to debug)
+> > 
+> > - or a "late graph" occurrence (for instance by killing a client in
+> > synchronous mode, that was not correctly handled, the AUDIO_DRIVER.diif
+> > patch from yesterday was supposed to fix this specific issue.
+> > 
+> 
+> mmm, ok, i'll try debugging the alsa code. We're convinced there's something fishy being done by the hw supplier's ALSA driver.
+
+
+Possibly, but since it is working with JACK1 *and* JACK1/JACK2 ALSA backend share something like 99,9% of their code, then the final behaviour difference is probably a slight difference in the interaction with the upper layer (JackAudioDriver class).
+
+
+> 
+> > > Let me explain. We did never try booting up our ARM box and just leaving
+> > > JACK running without any clients connected, until yesterday. It happened
+> > > by chance and we noticed that JACK *was already blocked*! We didn't
+> > > connect any client to it yet!
+> > 
+> > So it means the ALSA backend and/or the interaction with the upper layer
+> > (the JackAudioDriver::ProcessSync function) still has an issue.
+> > 
+> 
+> That or JackAudioDriver::ProcessAsync(), am I right?
+
+No: JackAudioDriver::ProcessAsync() is used when the server runs in "asynchronous" mode (default mode) and JackAudioDriver::ProcessSync() is used when the the server runs in "synchronous" mode (with -S)
+
+As Torben explained in a previous mail, in "synchronous " mode, the server should not write back in the driver if the "graph is late". This is the way JACK1 works and I changed JackAudioDriver::ProcessSync()  in the AUDIO_DRIVER.diff patch to have the same behaviour now in JACK2.
+
+> 
+> Of course, I'll try doing this myself in the meantime, and I'll hop on IRC right now :)
+> 
+Ok, next week only for me.
+
+Stéphane 
+
+1297850780.20132_0.ltw:2,a <8A73848C-67EE-4CA7-91B1-7923587C8EFB at grame dot fr>
+________________________________________________________________________________
+

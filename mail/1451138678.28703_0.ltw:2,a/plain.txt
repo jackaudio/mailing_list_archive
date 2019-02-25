@@ -1,0 +1,80 @@
+Date:        Sat, 26 Dec 2015 15:04:27 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          JACK devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Kjetil Matheussen Re: [Jack-Devel] jack dsp load calculation (1451136811.26085_0.ltw:2,a)
+Follow-Up:   Kjetil Matheussen Re: [Jack-Devel] jack dsp load calculation (1451146307.4907_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack dsp load calculation
+
+On 12/26/2015 02:33 PM, Kjetil Matheussen wrote:
+> On Sat, Dec 26, 2015 at 1:56 PM, Robin Gareus <[hidden]> wrote:
+> 
+>> On 12/23/2015 09:20 PM, John Emmas wrote:
+>>> On 23 Dec 2015, at 15:35, Robin Gareus wrote:
+>>>
+>>>> Hi all,
+>>>>
+>>>> I'd like to propose changing the algorithm how jack calculates the DSP
+>>>> load from averaging to worst-case.
+>>>>
+>>>> The main reason for having DSP load is to know how much more processing
+>>>> one can safely add without getting x-runs. What matters in this case is
+>>>> the worst-case value.
+>>>>
+>>>
+>>> Matters to whom..?
+>>
+>> Those who want to know the peak DSP load and available headroom.
+>>
+>> The average is meaningless in the context of DSP. A system may run
+>> without x-runs 99% of the time but then some NMI or SMI comes along and
+>> ruins it all. Nobody cares if the average is below 50%.
+>>
+>>
+> For what it's worth, Radium reports three values: 1. Minimum CPU measured
+> for a block during the last second, 2. Average CPU usage during the last
+> second,
+> 3. Maximum CPU usage measured for a block during the last second
+> ( http://folk.uio.no/ksvalast/radiumcpu.png )
+
+nice.
+
+That is per application, right?  Not the whole system - jack can include
+other clients.
+
+> All three values are useful, at least for me as a developer of the program,
+> but I guess the users might find all three values interesting as well. 
+
+For end users in Mixbus  we are considering to maybe even "dumb it
+down": A simple light: green/yellow/red or a short e.g 6-LED peak-meter.
+
+The motivation here: don't encourage comparing percent values.
+
+However it must be meaningful to answer
+ 1) can I safely add more plugins?
+ 2) can I lower the period-size or is the current cycle already very
+short for my setup?
+
+> At least
+> the user doesn't have to wonder whether it's showing peak or average
+> values, and what the average/peak values would have been if only one
+> of them had been shown. I guess peak value is the most useful value,
+> but by showing average and minimum as well, we also indicate the potential
+> performance the program can deliver without xruns. This potential
+> can be used by the user to close other programs and do other operations
+> that might make the computer perform better.
+> 
+> One thing I'm not quite sure of, which is always apparent because all the
+> values are visible, is why there is such a large difference between
+> minimum and maximum CPU usage. It's usually at least 4-10
+> percentage points. I hope it's because of measurement
+> errors.
+
+On which platform is that? with JACK?
+
+best,
+robin
+
+1451138678.28703_0.ltw:2,a <567E9E6B.8010500 at gareus dot org>
+________________________________________________________________________________
+

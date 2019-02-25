@@ -1,0 +1,77 @@
+Date:        Thu, 23 Jun 2011 12:12:22 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+
+Subject:     [Jack-Devel] JACK 0.121.0 released
+
+JACK 0.121.0 is now available at:
+
+    http://jackaudio.org/downloads/jack-audio-connection-kit-0.121.0.tar.gz
+
+It contains a couple of important bug fixes, a small but
+nice new piece of functionality, and some unfinished work.
+
+FIXES
+
+    * Fix memory overrun when calling jack_get_ports() with
+      arguments that lead it to return all existing ports.
+
+    * Remove client->control->nframes data element and use
+      control->engine->buffer_size. This fixes erroneous
+      behaviour when trying to get the buffer size
+      associated with JACK port types.
+
+CHANGES
+
+    * More relaxed zombification rules: clients will only be
+      zombified if they consume more than 1 period of time
+      by themselves. Suppose the period duration is 10msec,
+      and there are two clients. If each client takes 6
+      msec, then JACK will run with continual xruns, even
+      though neither client is taking "too long" on its
+      own. With the old rules, one of the clients (which one
+      is not defined) will be zombified to try to allow JACK
+      to operate without xruns. With the new rules, neither
+      client will be zombified, since neither one of them is
+      doing anything wrong.
+
+    * Continuous xrun "timeout": designed for use in
+      conjuction with the new zombification rules, the -C
+      flag can now be passed to the server with an argument
+      that specifies a number of milliseconds. If used, JACK
+      will stop processing clients if it cannot complete the
+      process cycle in time (typically caused by CPU
+      overloading or misbehaved clients). The optional time
+      argument specifies the number of miliseconds, during
+      which consectutive process cycles must fail before
+      JACK gives up (if the argument is not given, it
+      defaults to 250). Processing will resume on the next
+      change to the port graph (i.e. a port is added,
+      removed, connected or disconnected)
+
+    * There are also changes in the code to support the
+      control API and slave drivers, features previously
+      found only in JACK2, but this work is not finished at
+      this time. However, it has already made possible ...
+
+    * jackd.py .. a new "wrapper" around the regular JACK
+      server that uses the control API to start, stop and
+      reconfigure the server. This includes dynamically
+      changing the backend in use (both the device and the
+      backend used to support it). jackd.py also has support
+      for D-Bus and can interact with PulseAudio to
+      "correctly" share the audio device on Linux. At this
+      time, jackd.py is still a command line prototype, and
+      is totally undocumented. However, it does illustrate
+      how to provide all this functionality in the way that
+      was originally envisaged when the control API was
+      designed, and can act as the basis for improved
+      versions, including perhaps a "systray"
+      widget/controller.
+
+Almost all of the work in this release was done by Torben Hohn. Thanks
+to David Robillard for noticing the memory overrun.
+
+1308845571.14221_0.ltw:2,a <BANLkTim8-P5uLQ+ZReqc==Fpi-OccjdQfQ at mail dot gmail dot com>
+________________________________________________________________________________
+

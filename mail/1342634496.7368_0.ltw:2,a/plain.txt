@@ -1,0 +1,36 @@
+Date:        Wed, 18 Jul 2012 20:01:28 +0200
+From:        Jan Kohnert  <[hidden] at jankoh dot dyndns dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jan Kohnert Re: [Jack-Devel] Connecting alsa-loopback to jack (1342633214.5356_0.ltw:2,a)
+Follow-Up:   James Warden Re: [Jack-Devel] Connecting alsa-loopback to jack (1342641191.18262_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Connecting alsa-loopback to jack
+
+Hi again,
+
+Am Mittwoch, 18. Juli 2012, 19:40:06 schrieb Jan Kohnert:
+> that, it is working. But I have one problem with it: I got jitter in the
+> sound when playing through the alsa_in stuff (alsa_out isn't working
+> either, but that's not a problem).
+
+I got it working. The problem was solved with a simple config change:
+pcm.cloop {
+    type dsnoop
+    ipc_key 219347
+    slave {
+    	pcm "hw:Loopback,1,0"
+        #format S32_LE
+        #period_size 2048
+        #buffer_size 8192
+        rate 48000
+    }
+}
+
+Commenting out period and buffer size removed the jitter...
+
+-- 
+MfG Jan
+
+1342634496.7368_0.ltw:2,a <3230178.bp1AhVYmF2 at kohni>
+________________________________________________________________________________
+

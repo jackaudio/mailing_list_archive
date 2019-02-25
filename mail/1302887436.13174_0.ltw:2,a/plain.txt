@@ -1,0 +1,60 @@
+Date:        Fri, 15 Apr 2011 10:10:14 -0700
+From:        Devin Anderson  <[hidden] at charityfinders dot com>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          qtractor-devel <[hidden] at lists dot sourceforge dot net>, Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2 (1302872411.14119_0.ltw:2,a)
+Follow-Up:   Devin Anderson Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2 (1302893904.26118_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2
+
+On Fri, Apr 15, 2011 at 5:59 AM, Paul Davis <[hidden]> wrote:
+> On Thu, Apr 14, 2011 at 2:35 PM, Devin Anderson
+> <[hidden]> wrote:
+>
+>> I think a better idea would be to convince authors of software that
+>> uses ALSA MIDI to extend their applications with JACK MIDI
+>> functionality.
+>
+> this is actually quite hard to do. as i've mentioned several times before:
+>
+>   * JACK MIDI is a very natural API to use if you use MIDI data
+> inside process(), and a rather cumbersome one to use
+>     if you are using MIDI data outside of the process callback
+> (because you somehow have to get the data across
+>     thread boundaries)
+>
+>  * ALSA MIDI is much easier to use if you don't need MIDI directly
+> inside process(), but is very cumbersome to use
+>    if you do (same reason as above)
+>
+> so, yes, for MIDI-driven synthesizers of all kinds, JACK MIDI is
+> great. For other apps, its not so clearly a win.
+
+So, the issue is getting thread data across boundaries.
+
+Here is the main data structure that I used to get MIDI data across
+thread boundaries for the various JACK 2 MIDI drivers:
+
+    http://trac.jackaudio.org/browser/jack2/trunk/jackmp/common/JackMidiAsyncQueue.cpp
+    http://trac.jackaudio.org/browser/jack2/trunk/jackmp/common/JackMidiAsyncQueue.h
+
+(Pardon the camel case function names.  It's a JACK 2 convention.)
+
+I've found it pretty easy to use when working on the MIDI drivers, and
+have been able to use a semaphore to extend it when I need to block
+until MIDI messages are available.
+
+Is this an adequate solution?  If so, what would need to be done to
+make it more accessible to coders that are having the problems with
+JACK MIDI you described above?
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+
+1302887436.13174_0.ltw:2,a <BANLkTikxH0NbLJxkPBAgmCqxv6Y3yTL3sw at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,41 @@
+Date:        Tue, 26 Jul 2016 15:29:54 -0500
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: james-rpf [Jack-Devel] Linking apps together from script (1469561409.20229_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Linking apps together from script
+
+On Tue, July 26, 2016 1:16 pm, james-rpf wrote:
+> I'm trying to get receive audio data from a USB software defined radio and
+> pipe it through jack to alsa out and also to another app dl-fldigi.
+
+Are you using alsa_out because you need sample rate conversion?  Why are
+you not sending to the ALSA hardware device directly?  Or do you mean you
+connect to the output of your ALSA hardware, and not that you are using
+the "alsa_out" resampling jack client?
+
+> Secondly I have some audio issues, there are fractional pauses every so
+> often which make the audio had to decode, is there anything about piping
+> through jack that could cause this, on something which might mitigate it?
+
+Look for underrun/overrun messages in jack (probably displayed as "xrun"
+messages).
+If you have xrun problems you can try increasing the number of frames per
+period, and when using USB the recommendation is typically to use 3
+periods per buffer (-p and -n arguments to jackd respectively).
+
+If all else fails you can switch to a kernel with real-time extensions
+(-RT patch series).  I don't think you mentioned what kernel you are
+using, before switching completely to the -RT variant you could also try a
+kernel compiled with the low latency configuration (shown as voluntary
+preemption in the kernel config options, will show as PREEMPT in the
+kernel config file).  Often a PREEMPT kernel with large number of frames
+per period will work well enough that you don't need the PREEMPT-RT kernel
+variant.
+
+-- 
+Chris Caudle
+
+1469565018.24110_0.ltw:2,a <7ab864f736e6b1b49f6c93a4927f1e9e.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

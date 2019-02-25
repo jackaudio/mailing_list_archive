@@ -1,0 +1,79 @@
+Date:        Tue, 06 Jun 2017 16:35:06 +0200
+From:        Malik Costet  <[hidden] at malikc dot neomailbox dot net>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Kenneth Fields Re: [Jack-Devel] Looking for help setting up NetJack over WLAN from a Windoze box (1496022578.13103_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Looking for help setting up NetJack over WLAN from a Windoze box
+
+All,
+
+Thank you very much for you inputs.
+
+> If the sound is always garbled, it never even starts out with decent
+> quality, then you may be right, latency could be causing every cycle to
+> not have enough time.  Do you get a lot of under-run notifications when
+> starting?  If latency is the only problem you may be able to set a larger
+> number of network cycles and get around that.
+> You should be able to get some packet loss statistics from ifconfig, it
+> would be worth checking to see if there are lots of RX errors or RX
+> dropped notifications.  I don't know how well that information is gathered
+> for UDP packets, so using iperf to generate traffic and then looking how
+> many dropped packets were detected would be good.  You could probably get
+> an idea from iperf of the average and maximum latency as well.
+> 
+> In general real time audio transmission over Wi-Fi is going to be
+> difficult.  I have no trouble streaming FLAC files to music players over
+> Wi-Fi, but those buffer over half a second of audio, and are using TCP so
+> the TCP layer will just send again any packets which get dropped. When
+> using jack the network connection has to be able to send packets reliably
+> with low latency, and no matter what you do Wi-Fi is still going to be a
+> shared medium, so every time another device anywhere in the local vicinity
+> transmits, your devices are going to have to listen to see if they need to
+> switch to a different channel, or pause to allow fair time for another
+> device.  That other device might belong to your neighbor, so you can't
+> assume that just because you have only two devices connected to your
+> router that there will not be other interference.
+
+I have run an analyser on my network, and I'm indeed getting a
+horrendous (to the naive) amount of packet loss. Given that, it makes
+perfect sense that jackd wouldn't be able to get coherent audio together.
+
+>>>> So your view is that packet loss is the cause? I had naively assumed it
+>>>> might be due to latency or congestion, but packet loss would make a lot
+>>>> of sense.
+>
+> In realtime audio a package congestion IS a lost packagage.
+
+A fair point. The reason I had been focussing on packet loss vs.
+congestion is because I had read somewhere that you could have different
+transport characteristics depending on whether you were using unicast or
+multi/broadcast; differences which might be in play if the problem were
+congestion, but not if it were packet loss. Since (correct me if I'm
+wrong) NetJack1 uses unicast, whereas NetJack2 uses broad/multicast,
+trying NetJack1 would have offered a possible, and close-by, solution. I
+was merely trying to tailor the problem to what seemed like the
+lowest-hanging solutions. But this is moot now.
+
+.-.
+
+I'm currently rewriting my software and abstracting out the transport,
+which I'll do myself instead of relying on Jack (Jack will still be
+digesting the audio on the endpoint; just not transporting it there).
+
+Once the framework is in place, I want to try with a simple TCP
+transport and see what kind of reliability and latency I can achieve
+with that. Perhaps it'll be workable, perhaps not. I can't really afford
+the behaviour of the more common over-the-air music players which, as
+Chris pointed out, will buffer quite heftily to achieve reliability.
+
+Further on, I'd also like to try something like SCTP
+(<https://en.wikipedia.org/wiki/Stream_Control_Transmission_Protocol>)
+and see what gives -- although the Windoze support for that seems
+sketchy, at best.
+
+-- 
+MC.
+
+1496759730.6527_0.ltw:2,a <a07d314b-93bb-b077-f8e9-5e8b2b443534 at malikc dot neomailbox dot net>
+________________________________________________________________________________
+

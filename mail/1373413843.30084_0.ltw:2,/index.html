@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: Segfault when watchdog object is deleted (was: Re: [FFADO-devel] Segfault on jackd/ffado shutdown?)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: Segfault when watchdog object is deleted (was: Re: [FFADO-devel] Segfault on jackd/ffado shutdown?)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1373394272.6773_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1373430649.14154_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1373413843.30084_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 10 Jul 2013 08:57:39 +0930 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jonathan Woithe </span> &lt;[hidden] at just42 dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Adrian Knoth &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot sourceforge dot net, [hidden] at just42 dot net </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Adrian Knoth
+<a href='../1373378327.12750_0.ltw:2,/index.html'>Re: [FFADO-devel] Segfault on jackd/ffado shutdown? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Jonathan Woithe
+<a href='../1373635797.16821_0.ltw:2,/index.html'>Re: Segfault when watchdog object is deleted </a></td></tr>
+</table>
+<pre>
+Hi
+
+Thanks for your thoughts.
+
+I've changed the thread subject to more accurately describe what's going on
+since the segfault is now known to be unrelated to the streaming system.  It
+occurs even when the watchdog object is used without any other ffado
+subsystems.
+
+On Tue, Jul 09, 2013 at 03:57:55PM +0200, Adrian Knoth wrote:
+&gt; On 07/09/2013 03:26 PM, Jonathan Woithe wrote:
+&gt; 
+&gt; &gt; It would appear that there's something about the way Posix threads are
+&gt; &gt; used by FFADO which is causing trouble either due to recent gcc (eg:
+&gt; &gt; 4.7.1) or libc (eg: 2.15).
+&gt; 
+&gt; Debian is at gcc-4.8.1 and libc 2.17, and we haven't received such bug
+&gt; reports, neither in the past nor recently.
+
+Great - that's good to know.  Thanks.
+
+&gt; Which more or less eliminates toolchain issues. Or we patch/configure
+&gt; our toolchain in a certain way that prevents the bug from showing up.
+
+Agreed.
+
+&gt; I vaguely remember a discussion on jack-devel and Paul saying "You must
+&gt; never ever rely on pthread cancellation, it's broken." Maybe you're just
+&gt; seeing this.
+
+Perhaps.  I also recall this discussion, but I don't think the reasons
+behind the statement were ever described in detail (at least not at that
+time).  I might search the list jack archives and see what turns up.
+
+&gt; Or maybe your toolchain got some weird patching.
+
+The toolchain in Slackware 14.0 is very close to being unpatched.  For gcc
+there are two patches: gcc-4.7.1.adalib.pic.diff and
+gcc-no_fixincludes.diff, neither of which affect C/C++ code generation as
+far as I can tell.  Libc has a number of patches, most of which are clearly
+not relevant here.  I might go through these and see if anything crops up.
+
+For reference, I didn't see this segfault under Slackware 13.37 (gcc 4.5.2,
+glibc 2.13).
+
+&gt; Last not least: Check the svn for the commit that fixed a similar issue
+&gt; we had some months ago. Patch was by David Henningsson from Canonical, I
+&gt; guess it was svn r1999.
+
+The symptoms this fixed was quite different and related to the way iterators
+were used in an invalid way to delete lists of objects associated with the
+streaming system.  The watchdog object is deleted with a singular "delete"
+operator.  However, I will take a closer look at the higher level calls
+which lead to the segfault just in case this is another obscure
+iterator-related problem.
+
+Regards
+  jonathan
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1373394272.6773_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1373430649.14154_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1373413843.30084_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1373413843.30084_0.ltw:2,&nbsp;&lt;20130709232739.GA21826 at marvin dot atrad dot com dot au&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

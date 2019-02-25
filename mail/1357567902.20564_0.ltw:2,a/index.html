@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357565863.17166_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357568668.21787_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357567902.20564_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 07 Jan 2013 14:11:32 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> John Emmas </span> &lt;[hidden] at tiscali dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK Mailing List &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1357565863.17166_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1357568668.21787_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) </a></td></tr>
+</table>
+<pre>
+On 7 Jan 2013, at 13:37, St&#xE9;phane Letz wrote:
+
+&gt;&gt; 
+&gt; What do you mean by " a server built, with one compiler to connect" ??
+&gt; 
+&gt; The point here is for jack clients using the public jack headers and linked with libjack.xxx, so for *clients* possibly yes (so we have this issue with data structure : like jack_position_t or jack_latency_range_t defined in *public* headers).
+&gt; 
+
+Yes - in fact there are two mechanisms to consider.  Firstly, the server and its clients use a shared memory block which houses 3 x structs.  JackTransportEngine is one (IIRC) and there are two others.  This situation is only an issue if libjack is built with a different compiler than whatever built the server. For example, it's important in our Mixbus Debug build, where we generally use a version of libjack built using MSVC (because that's the only way we can debug it).
+
+Secondly (like you said) client apps can obtain data from libjack which gets returned using structs.  So it's important that both libjack and the client app agree about the size and layout of those structs.
+
+When we first built Mixbus using MSVC we encountered a problem because although both MSVC and GCC support 8-byte packing, they don't necessarily agree about the layout of an 8-byte packed struct.  MSVC might assume that a certain struct has 18 bytes whereas GCC assumes it has 20 bytes.  That was the reason why we originally needed to introduce 1-byte packing (it was the only arrangement where both compilers agreed about the struct layout).
+
+John
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357565863.17166_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357568668.21787_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357567902.20564_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1357567902.20564_0.ltw:2,a&nbsp;&lt;5311C688-59D1-42C5-BC8A-D13F0BF77EB3 at tiscali dot co dot uk&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

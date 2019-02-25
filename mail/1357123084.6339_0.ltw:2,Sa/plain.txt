@@ -1,0 +1,73 @@
+Date:        Wed, 02 Jan 2013 11:37:47 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Robin Gareus <[hidden] at gareus dot org>
+Cc:          JACK Mailing List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Robin Gareus Re: [Jack-Devel] jack2 on ARM - patch (1357122214.4845_0.ltw:2,Sa)
+Follow-Up:   Robin Gareus Re: [Jack-Devel] jack2 on ARM - patch (1357123304.6632_0.ltw:2,Sa)
+
+Subject:     Re: [Jack-Devel] jack2 on ARM - patch
+
+I've got your merge request, but before that:
+
+- please keep testing (and possibly netjack2 between 64 and 32 machines)
+
+- I would like to test on Windows also (see if it does not break MixBus for instance...)
+
+Stéphane 
+
+Le 2 janv. 2013 à 11:23, Robin Gareus a écrit :
+
+> On 01/01/2013 11:20 PM, Stéphane Letz wrote:
+>> And there was Basil Nutmeg proposal in july 2012 that was finally prepared on a git branch here:
+>> 
+>> https://github.com/basilnut/jack2/
+> 
+> As documented in the git log messages, it breaks the ABI. AFAIK that is
+> a no-go.
+> 
+> ---
+> Quotes from the commit log:
+> 
+> In the current tree, with packed attributes on the relevant structs,
+> the only impact of this change is that the alignments of jack_unique_t
+> and jack_time_t are increased from 4 to 8 on 32-bit platforms, so
+> the layouts of structs which include them as members may be affected.
+> 
+> The ABI impact relative to the tree before the packed attributes
+> were introduced is that the alignment of jack_position_t is increased
+> from 4 to 8 on 32-bit platforms. The layout of the struct itself is
+> unmodified, though the layouts of structs which include it as a
+> member may be affected.
+> 
+> jack_latency_range_t and jack_position_t are no longer packed. The
+> layouts of these structs themselves are unmodified, though the layouts
+> of any structs which include these structs as members may be affected.
+> ---
+> 
+>> Then Robin it would be great to look at this code and possibly test
+>> (= merge or rebase) it with latest git head and see if it works.
+> 
+> Basil's work can be rebased without any conflicts onto the current HEAD.
+> It needs some minor modifications (JackNetTool.h) to compile:
+>  https://github.com/x42/jack2/commits/nopackedstructs
+> and then works as promised - tested on arm and i386.
+> 
+> Interestingly enough, the ABI changes do not seem to make a difference
+> on i386 nor on armel. (basil's jackd2 was configured with --classic
+> --alsa --dbus --firewire).
+> 
+> On i386: Ardour3, xjadeo, zita-a2j (all compiled with jack2-1.9.9) as
+> well as baudline continue to work just fine with initial tests. On arm I
+> only tested some commandline tools jack_capture, jltcgen. No problems
+> either, so far.
+> 
+> so long,
+> robin
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1357123084.6339_0.ltw:2,Sa <742C66E8-CD49-4574-A9B3-115FB87BAA1F at grame dot fr>
+________________________________________________________________________________
+

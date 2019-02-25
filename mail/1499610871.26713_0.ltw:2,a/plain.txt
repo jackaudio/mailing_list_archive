@@ -1,0 +1,38 @@
+Date:        Sun, 09 Jul 2017 22:34:16 +0800
+From:        sqweek  <[hidden] at gmail dot com>
+To:          alex <[hidden] at gmail dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: alex Re: [Jack-Devel] Jack won't start on boot (1499610138.25891_0.ltw:2,a)
+Follow-Up:   alex Re: [Jack-Devel] Jack won't start on boot (1499612012.28051_0.ltw:2,a)
+Follow-Up:   alex Re: [Jack-Devel] Jack won't start on boot (1500498856.15282_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack won't start on boot
+
+On 9 July 2017 at 22:21, alex <[hidden]> wrote:
+>
+> Indeed that seems like a reason. I'm SSHing into to Odroid with -X so I
+> can launch Pd with its GUI, so I tried to SSH without -X and jack wouldn't
+> start, but then SSHing back with -X made jack start.
+>
+> Can you post an example of how I should start jack with a startup
+> mechanism that's run by my graphical environment? I'm not really following
+> there...
+
+
+Having the graphical environment start jackd assumes that there is a
+graphical environment running on the Odroid, which I don't believe is the
+case here? Using -X with ssh forwards X11 connection attempts on the Odroid
+to the X server on your local machine, but since dbus afaik isn't network
+transparent[1] the DISPLAY you end up with via ssh -X will I think not be
+useful for the dbus side of jack. So you can probably get away with setting
+DISPLAY to something arbitrary in your init script, like:
+
+DISPLAY=:0 jackd -dalsa ...
+
+[1] https://news.ycombinator.com/item?id=5130928
+
+-sqweek
+
+1499610871.26713_0.ltw:2,a <CAM104AWemwg6hg9_C0wx9OcigtkNHAnePmsFBFHELkfZvFhy4w at mail dot gmail dot com>
+________________________________________________________________________________
+

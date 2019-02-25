@@ -1,0 +1,67 @@
+Date:        Sat, 15 Feb 2014 10:44:40 +1100
+From:        Matt Flax  <[hidden] at flatmax dot org>
+To:          Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>
+Cc:          Stéphane Letz <[hidden] at grame dot fr>, [hidden] at lists dot jackaudio dot org
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] Recent addition of IIO driver (1392388955.23040_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Recent addition of IIO driver
+
+On 15/02/14 01:42, Adrian Knoth wrote:
+> On 02/14/14 15:29, Adrian Knoth wrote:
+>
+>> It looks like you've accepted Matt Flax's pull request into the
+>> codebase as-is.
+> [..]
+>> We now have a proper git history again. No additional work is required
+>> on Matt's or your side.
+>
+> Matt, I hate to bother you again, but as mentioned in the commit
+> message, I didn't carefully review your code, assuming Stephane has
+> already done that.
+>
+> I see the following checks:
+>
+> adi@chopin:~/jackaudio/jack2/linux$ grep -R SOX *
+> wscript:    conf.env['BUILD_DRIVER_IIO'] += conf.is_defined('HAVE_SOX')
+>
+Good catch, at this point it is likely that SOX isn't necessary as I am 
+currently not linking a library which links against it. This may be 
+necessary in the future, but you'll hear from me then about it. When  I 
+go in and implement some of your suggestions and issue a pull request 
+again, this should disappear.
+
+> adi@chopin:~/jackaudio/jack2/linux$ grep -R GTK *
+> wscript:    conf.env['BUILD_DRIVER_IIO'] = 
+> conf.is_defined('HAVE_GTKIOSTREAM')
+> wscript:        create_jack_driver_obj(bld, 'iio', iio_driver_src, 
+> ["GTKIOSTREAM", "EIGEN3"])
+>
+This isn't GTK, this is gtkIOStream, which implements much of the IIO 
+code. I want more of the code in libgtkiostream.so but when I was 
+linking for jack1, the driver_initialize function was complaining about 
+not being able to find the vtable for certain c++ methods. I am going to 
+address this at a later point, however the gtkIOStream includes are most 
+certainly necessary.
+
+> adi@chopin:~/jackaudio/jack2/linux$ grep -R EIGEN *
+> wscript:    conf.env['BUILD_DRIVER_IIO'] += 
+> conf.is_defined('HAVE_EIGEN3')
+> wscript:        create_jack_driver_obj(bld, 'iio', iio_driver_src, 
+> ["GTKIOSTREAM", "EIGEN3"])
+>
+>
+Yes, Eigen is used to manage memory and will be used to efficiently 
+rescale the data collected from the IIO devices, which is fixed point, 
+to scaled floating point... to come.
+
+> But I don't see *any* reference to SOX, GTK or EIGEN3 in the code. What
+> am I missing? Is it a left-over?
+>
+Thanks for putting in the time to clean up a little, I can see that you 
+like to run a tidy ship :)
+
+Matt
+
+1392421487.11525_0.ltw:2,a <52FEAA68.5080308 at flatmax dot org>
+________________________________________________________________________________
+

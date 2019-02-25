@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4384) for Windows 64 and 32 bits</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4384) for Windows 64 and 32 bits</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305180643.1920_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1305181257.3144_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1305180817.2216_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 12 May 2011 08:13:20 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Devin Anderson &lt;[hidden] at charityfinders dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Devin Anderson
+<a href='../1305163900.13146_0.ltw:2,a/index.html'>Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4384) for Windows 64 and 32 bits </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>David Nielson
+<a href='../1305181257.3144_0.ltw:2,a/index.html'>[Jack-Devel] JACK thread priorities on different OSes (Was: Installers for Jack 1.9.8...) </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1305183703.7898_0.ltw:2,a/index.html'>Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4384) for Windows 64 and 32 bits </a></td></tr>
+</table>
+<pre>
+Le 12 mai 2011 &#xE0; 03:31, Devin Anderson a &#xE9;crit :
+
+&gt; On Wed, May 11, 2011 at 2:54 AM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+&gt; 
+&gt;&gt; That seems a good "theoritical" idea, but I'm still not sure it can be done
+&gt;&gt; in practice.
+&gt; 
+&gt; Right now, save for Linux, thread priorities aren't really *used* in
+&gt; practice, or the way that it is done is sub-par.
+&gt; 
+&gt; On Windows, if the priority is &gt;= 90 and MMCSS is available (Vista,
+&gt; Windows 7), then an MMCSS priority is set; otherwise, the thread is
+&gt; set with a priority of 'THREAD_PRIORITY_TIME_CRITICAL':
+&gt; 
+&gt;    http://trac.jackaudio.org/browser/jack2/trunk/jackmp/windows/JackWinThread.cpp#L201
+&gt; 
+&gt; ... meaning that when a thread requests a priority of 90 or above, it
+&gt; *might* have a priority that's higher than other threads, or it might
+&gt; just have the same thread priority as every other thread that asks for
+&gt; a realtime priority, which defeats the purpose of having thread
+&gt; priorities, since JACK 2 doesn't deal with Windows process priorities.
+&gt; 
+&gt; On OSX, the priority you request doesn't even figure into the what happens:
+&gt; 
+&gt;    http://trac.jackaudio.org/browser/jack2/trunk/jackmp/macosx/JackMachThread.cpp#L188
+&gt; 
+&gt; There is, however, an OS-specific method you can call to set thread
+&gt; parameters called 'SetParams':
+&gt; 
+&gt;    http://trac.jackaudio.org/browser/jack2/trunk/jackmp/macosx/JackMachThread.cpp#L222
+&gt; 
+&gt; ... which has a usage that isn't exactly clear.
+&gt; 
+&gt; Currently, the only platform for which the current thread priority
+&gt; implementation makes sense is Linux.  Even then, it isn't really clear
+&gt; when a thread should request a certain priority in JACK.  There's no
+&gt; documentation suggesting that, for example, if you're writing a MIDI
+&gt; driver and you want your hardware output thread(s) to be able to
+&gt; deliver MIDI messages via hardware with reasonably accurate timing,
+&gt; then you should set your thread priority in this or that manner.
+&gt; 
+&gt; What I'm suggesting is that the thread priorities in JACK 2 be changed
+&gt; so that they accept a priority related to the type of job the thread
+&gt; will do:
+&gt; 
+&gt; enum JackThreadPriority {
+&gt;   // JACK audio thread
+&gt;   PRIORITY_AUDIO,
+&gt;   // JACK callbacks
+&gt;   PRIORITY_CALLBACK,
+&gt;   // JACK MIDI thread that communicates directly with hardware
+&gt;   PRIORITY_MIDI_TERMINAL,
+&gt; 
+&gt;   // More priorities here ...
+&gt; };
+&gt; 
+&gt; ... or maybe a constant that suggests what sort of priority is necessary:
+&gt; 
+&gt; enum JackThreadPriority {
+&gt;    PRIORITY_LOW,
+&gt;    PRIORITY_NORMAL,
+&gt;    PRIORITY_HIGH,
+&gt;    PRIORITY_CRITICAL,
+&gt;    // More priorities here ...
+&gt; };
+&gt; 
+&gt; ... and that the underlying OS implementation does the right thing
+&gt; with the given thread priority.
+&gt; 
+&gt;&gt; The thing is that on each system JACK2 runs on, the
+&gt;&gt; underlying scheduling system is different, especially for real-time
+&gt;&gt; threads. POSIX system (Linux, Solaris) are probably the most flexible
+&gt;&gt; (with a precise setup of priority), but on OSX there is only a single class
+&gt;&gt; for RT threads and RT thread interleaving can be "somewhat" controled.
+&gt;&gt; On Windows the situation seems even worse, and I still don't know if
+&gt;&gt; there is a way to setup different classes of RT threads, and control
+&gt;&gt; thread interleaving the correct way. The situation is maybe only:
+&gt;&gt; Windows in not an OS suitable for "hard" RT stuff...
+&gt; 
+&gt; Regardless of whether or not Windows is not a suitable OS for RT stuff
+&gt; (and I certainly don't believe it is), I think that a system like this
+&gt; could be used to try to make things as usable as possible.
+&gt; 
+&gt; Here's a brief idea for Windows thread priorities:
+&gt; 
+&gt; 1.) Alter the -P switch to set the *process* priority instead of the
+&gt; realtime thread priorities.
+&gt; 2.) Map job priorities to Windows thread priorities:
+&gt; 
+&gt;    PRIORITY_AUDIO: THREAD_PRIORITY_HIGHEST
+&gt;    PRIORITY_CALLBACK: THREAD_PRIORITY_NORMAL
+&gt;    PRIORITY_MIDI_TERMINAL: THREAD_PRIORITY_TIME_CRITICAL
+&gt; 
+&gt;    ... etc.
+&gt; 
+&gt; These values might not be the correct values, but they can be tweaked
+&gt; to do the right thing on Windows.
+&gt; 
+&gt; On Linux, you might map priority constants relative to the -P switch value:
+&gt; 
+&gt;    PRIORITY_AUDIO: P
+&gt;    PRIORITY_CALLBACK: P - 1
+&gt;    PRIORITY_MIDI_TERMINAL: P + 1
+&gt; 
+&gt; I don't understand OSX's 'thread_policy_set' function, but I'm sure
+&gt; something similar can be done.
+&gt; 
+&gt; I think a system like this would make it easier and clearer to set
+&gt; priorities for JACK 2 threads.
+&gt; 
+&gt; -- 
+
+We can certainly makes thing clearer at JACK implementation level, define some enum, but the point is to see if we can then find a  suitable "mapping" to the real stuff on each system:
+
+- I'm really not sure touching the "process" priority class on WIndows with the -P value (http://msdn.microsoft.com/en-us/library/ms685100(v=vs.85).aspx) is the way to go, since (AFAICS) it touches *all threads* in the given process, and this is not what we want. We would want to setup what happens for the RT thread (Audio, possibly MIDI...) only and not the others ones.
+
+- concerning OSX: as I said there is no priority setting in the RT class. But this is more "reservation" like approach, Basically a period, a "uninteruptible computation grain", and a "constraint" (which is basically equals to the period. Periodic tasks (like the audio ones) have to defines their period, MIDI task don"t need that (period = 0). Then the "uninteruptible computation grain", is the way to "control" RT thread interleaving, but this is done in a quite ad-hoc way. Basically CoreAudio guys have defined different values of this computation grain for the different buffer sizes, and that is all! 
+
+What JACK2 does is just to *read* the values that the CoreAudio audio thread is using (so on server side), and just use use them on client side for all RT audio threads. So that all RT audio threads in the JACK context share the same setting, which makes sense since they are all running at the same buffer size. The MIDI thread have a specific setting (see JackCoreMidiOutputPort::Init()) , again by just looking at what CoreMIDI does, and using the same values.... 
+
+So if we define an enum for thread in JACK level, we can map it to priority values on POSIX, but I guess we'll keep the ad-hoc way on OSX, and the other ad-hoc way on Windows (MMCSS when available and so on...)
+
+What else? 
+
+St&#xE9;phane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305180643.1920_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1305181257.3144_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1305180817.2216_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1305180817.2216_0.ltw:2,a&nbsp;&lt;2344382F-99F3-4231-B35A-1A0181168DA7 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,53 @@
+Date:        Tue, 08 Jan 2013 18:02:37 -0500
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Chris Caudle <[hidden] at chriscaudle dot org>
+Cc:          JACK List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Chris Caudle Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357684392.4745_0.ltw:2,a)
+Follow-Up:   John Emmas Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357720138.6042_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)
+
+the original issue arose from situations where a 32 bit client wants to
+interact with a 64 bit server (or vice versa). that required that any
+structs in the public API (there are two) were packed identically
+regardless of the target word size. this has two dimensions - one being the
+compiler used and one being the word size, but we pretty much ignored
+compiler variations other than to make sure that the macros that were used
+to ensure the packing matched would work.
+
+then a second issue arose, almost entirely because john wants to run a
+version of libjack compiled with msvc(++) in combination with a server
+built with gcc. this requires that EVERY struct in the private
+server/library "API" also be packed identically - in this case across
+compiler variations.
+
+finally, a third issue came up whereby the packing used to try to solve the
+second issue broke things on ARM.
+
+
+On Tue, Jan 8, 2013 at 5:33 PM, Chris Caudle <[hidden]> wrote:
+
+> I find the path of this discussion somewhat difficult to follow, since it
+> seems to have wandered back and forth a bit between 64 bit/32 bit
+> compatibility, and what ARM can and cannot handle, and considerations of
+> using gcc and MSVC together in a single project.
+>
+> Could someone who actually understands the root of the problem write up a
+> concise summary of the start of the problem, the original proposed
+> solution, and why that did not actually work?
+> I would find that extremely helpful to tie together all the emails from
+> the past week.
+>
+> thanks,
+> Chris Caudle
+>
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+
+1357686165.7009_0.ltw:2,a <CAFa_cK=cou9ZCa2LUeVm4A5LLS42ydQ1XPLpykO28R9e2MVyDw at mail dot gmail dot com>
+________________________________________________________________________________
+

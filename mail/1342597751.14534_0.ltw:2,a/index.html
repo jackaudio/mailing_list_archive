@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Connecting alsa-loopback to jack</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Connecting alsa-loopback to jack</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1342554371.28498_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1342600686.20923_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1342597751.14534_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 18 Jul 2012 09:49:12 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> aCOSwt </span> &lt;[hidden] at orange dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Jan Kohnert
+<a href='../1342552172.26513_0.ltw:2,a/index.html'>[Jack-Devel] Connecting alsa-loopback to jack </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>James Warden
+<a href='../1342600686.20923_0.ltw:2,a/index.html'>Re: [Jack-Devel] Connecting alsa-loopback to jack </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Jan Kohnert
+<a href='../1342633979.6527_0.ltw:2,a/index.html'>Re: [Jack-Devel] Connecting alsa-loopback to jack </a></td></tr>
+</table>
+<pre>
+This is my asound.conf inspired from some thread in LinuxMusicians :
+
+==========================================
+[note 1 : The following line is not compulsory for the redirection to work ]
+defaults.pcm.rate_converter "samplerate_best"
+
+[note 2 : Alsa default is to be concerned because many jack-unaware packages 
+output on the sole Alsa Default. (Adobe-Flash being an example) ]
+
+pcm.!default{
+        type plug
+        slave.pcm "aduplex"
+        hint{
+                show on
+                description "Alsa Default"}}
+
+pcm.aduplex{
+        type asym
+        playback.pcm "amix"
+        capture.pcm "asnoop"}
+
+pcm.amix{
+        type dmix
+        ipc_key 219345
+        slave{
+                pcm "hw:Loopback,0,0"
+                format S32_LE
+
+[note 3 : You absolutely want to adjust the three following values according 
+to your # Jack instance sampling rate and tests you'll have completed on your 
+system.]
+
+                period_size 512
+                buffer_size 16384
+                rate 44100}}
+
+pcm.asnoop{
+        type dsnoop
+        ipc_key 219346
+        slave.pcm "hw:Loopback,0,1"}
+
+pcm.ploop{
+        type plug
+        slave.pcm "hw:Loopback,1,1"}
+
+pcm.cloop{
+        type dsnoop
+        ipc_key 219348
+        slave{
+                pcm "hw:Loopback,1,0"
+                format S32_LE
+
+[note : idem note 3]
+
+                period_size 2048
+                buffer_size 8192
+                rate 44100}}
+
+[note 4 : Of course, you will adapt the values given as ipc_key to your 
+system. I mean, choosing values that won't ever be used by other programs you 
+run. ]
+=========================================
+In addition to this, you must create jack permanent clients =&gt; create a script 
+named for example Loop2Jack :
+
+
+/usr/bin/alsa_out -j ploop -dploop -q 1 2&gt;&amp;1 1&gt; /dev/null &amp;
+/usr/bin/alsa_in -j cloop -dcloop -q 1 2&gt;&amp;1 1&gt; /dev/null &amp;
+sleep 1
+jack_connect cloop:capture_1 system:playback_1
+jack_connect cloop:capture_2 system:playback_2
+jack_connect system:capture_1 ploop:playback_1
+jack_connect system:capture_1 ploop:playback_2
+exit 0
+==========================================
+You'll then ensure that this script is executed after jackd's startup.
+Launch it manually or, if you use qjackctl there is an option field for 
+allowing this as part of the setup/options page.
+
+Having (I hope so) helped you to do what you wish, I must tell that having 
+used this facility myself, I came to realize that I was nothing but stupid.
+As a matter of fact, I think we can state that nowadays, the applications not 
+jack-aware are consumer grade applications playing medias of relatively poor 
+audio quality.
+You will have additionally noticed that the dmix plugin was used in the 
+asound.conf with a rather huge buffer that will have the consequence to add 
+some significant latency.
+Why then, would you want to bother you real-time-low-latency sound server with 
+this sort of sound ?
+Because your jackd might almost probably be "wired" to your best quality sound 
+device, why would you want &lt;=22Khz samples from your speech-synth, Skype, DE's 
+sound notifier... to be driven to this device ?
+Worse ! Why would you want these sounds of somehow random occurrence to 
+spuriously pollute your precious 24bits &gt;=96KHz recording ?
+
+OK then, of course this is nothing but an opinion from my personal experience.
+I only suggest you wonder before bothering too much.
+
+Regards,
+
+aCOSwt
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1342554371.28498_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1342600686.20923_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1342597751.14534_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1342597751.14534_0.ltw:2,a&nbsp;&lt;201207180949.12949.acoswt at orange dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

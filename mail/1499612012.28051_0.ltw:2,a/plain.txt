@@ -1,0 +1,92 @@
+Date:        Sun, 09 Jul 2017 17:53:15 +0300
+From:        alex  <[hidden] at gmail dot com>
+To:          Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: sqweek Re: [Jack-Devel] Jack won't start on boot (1499610871.26713_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack won't start on boot
+
+On 07/09/2017 05:34 PM, sqweek wrote:
+> On 9 July 2017 at 22:21, alex <[hidden] 
+> <mailto:[hidden]>> wrote:
+>
+>     Indeed that seems like a reason. I'm SSHing into to Odroid with -X
+>     so I can launch Pd with its GUI, so I tried to SSH without -X and
+>     jack wouldn't start, but then SSHing back with -X made jack start.
+>
+>     Can you post an example of how I should start jack with a startup
+>     mechanism that's run by my graphical environment? I'm not really
+>     following there...
+>
+>
+> Having the graphical environment start jackd assumes that there is a 
+> graphical environment running on the Odroid, which I don't believe is 
+> the case here? Using -X with ssh forwards X11 connection attempts on 
+> the Odroid to the X server on your local machine, but since dbus afaik 
+> isn't network transparent[1] the DISPLAY you end up with via ssh -X 
+> will I think not be useful for the dbus side of jack. So you can 
+> probably get away with setting DISPLAY to something arbitrary in your 
+> init script, like:
+>
+> DISPLAY=:0 jackd -dalsa ...
+That did it, kind of... Jack is starting and Pd too, but I get no sound. 
+The DSP does go on (there's an LED on the synth I've built that goes on 
+when Pd's DSP is on) but I can't hear anything.
+Now though, I can SSH into the Odroid without -X and the script 
+launching jack and Pd works and sounds works fine.
+
+This is jack's log:
+
+jackdmp 1.9.10
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2013 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in realtime mode with priority 10
+audio_reservation_init
+Acquire audio card Audio1
+creating alsa driver ... hw:USB|hw:USB|512|2|48000|2|4|nomon|swmeter|-|32bit
+configuring for 48000Hz, period = 512 frames (10.7 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: 32bit integer little-endian
+ALSA: use 2 periods for capture
+ALSA: final selected sample format for playback: 32bit integer little-endian
+ALSA: use 2 periods for playback
+JackEngine::XRun: client = pure_data_0 was not finished, state = Triggered
+Jack main caught signal 15
+JackAudioDriver::ProcessGraphAsyncMaster: Process error
+JackEngine::XRun: client = pure_data_0 was not finished, state = Triggered
+JackAudioDriver::ProcessGraphAsyncMaster: Process error
+Released audio card Audio1
+audio_reservation_finish
+
+
+But this is the log when the script is run manually (and sound works 
+properly):
+
+jackdmp 1.9.10
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2013 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in realtime mode with priority 10
+audio_reservation_init
+Acquire audio card Audio1
+creating alsa driver ... hw:USB|hw:USB|512|2|48000|2|4|nomon|swmeter|-|32bit
+configuring for 48000Hz, period = 512 frames (10.7 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: 32bit integer little-endian
+ALSA: use 2 periods for capture
+ALSA: final selected sample format for playback: 32bit integer little-endian
+ALSA: use 2 periods for playback
+Jack main caught signal 15
+JackEngine::XRun: client = pure_data_0 was not finished, state = Triggered
+JackAudioDriver::ProcessGraphAsyncMaster: Process error
+Released audio card Audio1
+audio_reservation_finish
+
+
+So, what could the issue be now?
+
+1499612012.28051_0.ltw:2,a <f98016cb-0469-58e9-ab39-3b5173a4adf9 at gmail dot com>
+________________________________________________________________________________
+

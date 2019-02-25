@@ -1,0 +1,74 @@
+Date:        Sun, 29 Dec 2013 01:27:05 +0100
+From:        Wojciech Zabolotny  <[hidden] at gmail dot com>
+To:          [hidden] at jackaudio dot org
+Follow-Up:   Wojciech Zabolotny Re: [Jack-Devel] Problems with audioadapter used with capture only interface (1388313809.5598_0.ltw:2,)
+Follow-Up:   Wojciech Zabolotny [Jack-Devel] Problems with audioadapter used with capture only interface (1388324554.16550_0.ltw:2,)
+Follow-Up:   Jeremy Jongepier Re: [Jack-Devel] Problems with audioadapter used with capture only interface (1388341967.27732_0.ltw:2,)
+
+Subject:     [Jack-Devel] Problems with audioadapter used with capture only interface
+
+Hi,
+
+I wanted to use jack2 with an embedded system equipped with capture
+only interface.
+I can start the server with the net backend:
+
+# jackd -r -dnet  -C0 -P1
+jackdmp 1.9.10
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2013 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in non-realtime mode
+NetDriver started in async mode without Master's transport sync.
+Waiting for a master...
+Initializing connection with WZlap...
+**************** Network parameters ****************
+Name : buildroot
+Protocol revision : 7
+MTU : 1500
+Master name : WZlap
+Slave name : buildroot
+ID : 26
+Transport Sync : no
+Send channels (audio - midi) : 0 - 0
+Return channels (audio - midi) : 1 - 0
+Sample rate : 48000 frames per second
+Period size : 256 frames per period
+Network latency : 5 cycles
+SampleEncoder : Float
+Slave mode : async
+****************************************************
+
+However, when I try to load the audioadapter i get:
+
+# jack_load audioadapter -i "-C hw:0,1 -r48000 -p256 -n3 "
+could not load audioadapter, intclient = 0 status = 0x 1
+
+and the server displays:
+Ringbuffer automatic adaptative mode size = 4096 frames
+../linux/alsa/JackAlsaAdapter.h:226, alsa error -2 : No such file or directory
+
+I have checked the line ../linux/alsa/JackAlsaAdapter.h:226 and found,
+that the "open" function defined here ALWAYS tries to open the
+soundcard both as capture and playback device.
+
+How can I patch this function so that the playback part is attemted to
+open only if the audiodapter is loaded for playback or both for
+capture and playback?
+
+Probably people wanting to use audioadapter with playback only devices
+will face the similar problem...
+
+
+-- 
+TIA & Reagrds,
+Wojciech M. Zabołotny
+My GPG/PGP keys:
+standard: B191 ACF0 7909 83FA 3F9B  450C 407E 3C4B 4569 D119
+confidential: 2BF3 F90F 6EA8 7D35 59FD  5080 78ED 33DE 1312 D8F8
+
+1388276836.25293_0.ltw:2, <CAMduVEfDA=5Z_b4kVUWHCBsui9xphhfo9B+ox5qwiHsMOzZk7Q at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,206 @@
+Date:        Thu, 29 Jan 2015 15:19:27 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Marjan Mrak <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Marjan Mrak [Jack-Devel] Dispersing MIDI messages: one to multiple (1422526212.31608_0.ltw:2,)
+Follow-Up:   Marjan Mrak Re: [Jack-Devel] Dispersing MIDI messages: one to multiple (1422598028.17738_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Dispersing MIDI messages: one to multiple
+
+Hi Marjan,
+
+On 01/29/2015 11:08 AM, Marjan Mrak wrote:
+
+[..]
+
+> Or is there a better way to "disperse" one MIDI message to several
+> channels?
+
+There are existing projects, e.g. midish, mididings, qmidiroute,..
+but your hardcoded approach is fine if it addresses your issue.
+
+[..]
+
+> It works, but if I am using it, totaly at random sound output 
+> "hangs" for like 10th of second.
+
+As Harry noted, if verb == 1, the printf() debug info could be the
+cause (blocking wait for the printed text to reach the terminal).
+Other than that there's no obvious reason, but it's a bit hard to read
+the code with all the commented out lines all and unscoped variables
+over the place.
+
+A few comments below inline:
+
+> static int process(jack_nframes_t nframes, void *arg) { int res =
+> 0; int i; int j;
+> 
+> //unsigned char* buffer; unsigned char jbuffer[3];
+> 
+> void* port_buf = jack_port_get_buffer(output_port, nframes);
+> 
+> //get events void* in_port_buf = jack_port_get_buffer(input_port,
+> nframes); jack_nframes_t n =
+> jack_midi_get_event_count(in_port_buf);
+> 
+> jack_midi_clear_buffer(port_buf);
+> 
+> if(n==0) return 0;
+> 
+> jack_midi_event_t jev;
+> 
+> 
+> if(verb == 1) printf("%i: Data arrived!\n", cnt);
+> 
+> for(i = 0;i<n;i++){
+> 
+> res = jack_midi_event_get(&jev,in_port_buf,i); if(res == 0){ 
+> if(verb == 1){ printf("Got event, %i bytes!\n",(int) jev.size); 
+> for(j=0;j<jev.size;j++) printf("%i: %i\n",j,jev.buffer[j]); } }
+> else{ if(verb == 1) printf("ERROR getting event!\n"); return 0; }
+> 
+> 
+> //transmit data cnt++; //buffer = jack_midi_event_reserve(port_buf,
+> i, 3);
+> 
+
+check the event size
+
+   if (jev.size != 3) {
+       continue;
+   }
+
+If there are one or two byte messages (eg active-sensing or
+midi-clock) at the input, all sorts of undefined behaviour could happen.
+
+Yet, in the code below this should be a non-issue, it always check the
+status byte first.
+
+> 
+> //controll to MIDI channel 1! if(jev.buffer[0] == 176 &&
+> jev.buffer[1] == 97){ if(verb == 1) printf("MUTE CONTROL CH1
+> sent\n"); //first button: set mute register on channel 1 
+> //buffer[0] = 176; //buffer[1] = 7; //buffer[2] = jev.buffer[2]; 
+> jbuffer[0] = 176;
+
+I'd like to suggest to use hex values for the status byte, 0xb0
+instead of 176 to improve readability.
+
+> jbuffer[1] = 7; jbuffer[2] = jev.buffer[2]; res =
+> jack_midi_event_write(port_buf, jev.time, jbuffer, 3); }
+> 
+> else if(jev.buffer[0] == 176 && jev.buffer[1] == 96){ if(verb ==
+> 1) printf("MUTE CONTROL to CH2 sent\n"); //second button: set mute
+> register on channel 2 //buffer[0] = 177; //buffer[1] = 7; 
+> //buffer[2] = jev.buffer[2]; jbuffer[0] = 177; jbuffer[1] = 7; 
+> jbuffer[2] = jev.buffer[2]; res = jack_midi_event_write(port_buf,
+> jev.time, jbuffer, 3); }
+> 
+> else if(jev.buffer[0] == 176 && jev.buffer[1] == 66){ if(verb ==
+> 1) printf("MUTE CONTROL CH3 sent\n"); //third button: set mute
+> register on channel 3 //buffer[0] = 176; //buffer[1] = 7; 
+> //buffer[2] = jev.buffer[2]; jbuffer[0] = 178; jbuffer[1] = 7; 
+> jbuffer[2] = jev.buffer[2]; res = jack_midi_event_write(port_buf,
+> jev.time, jbuffer, 3); }
+> 
+> else if(jev.buffer[0] == 176 && jev.buffer[1] == 67){ if(verb ==
+> 1) printf("MUTE CONTROL to CH4 sent\n"); //fourth button: set mute
+> register on channel 4 //buffer[0] = 177; //buffer[1] = 7; 
+> //buffer[2] = jev.buffer[2]; jbuffer[0] = 179; jbuffer[1] = 7; 
+> jbuffer[2] = jev.buffer[2]; res = jack_midi_event_write(port_buf,
+> jev.time, jbuffer, 3); }
+> 
+> else if(jev.buffer[0] == 176 && jev.buffer[1] == 64){ if(verb ==
+> 1) printf("MUTE CONTROL to CH5 sent\n"); //fifth button: set mute
+> register on channel 5 //buffer[0] = 177; //buffer[1] = 7; 
+> //buffer[2] = jev.buffer[2]; jbuffer[0] = 180; jbuffer[1] = 7; 
+> jbuffer[2] = jev.buffer[2]; res = jack_midi_event_write(port_buf,
+> jev.time, jbuffer, 3); }
+> 
+> else if(jev.buffer[0] == 176 && jev.buffer[1] == 65){ if(verb ==
+> 1) printf("MUTE CONTROL to CH6 sent\n"); //sixth button: set mute
+> register on channel 6 //buffer[0] = 177; //buffer[1] = 7; 
+> //buffer[2] = jev.buffer[2]; jbuffer[0] = 181; jbuffer[1] = 7; 
+> jbuffer[2] = jev.buffer[2]; res = jack_midi_event_write(port_buf,
+> jev.time, jbuffer, 3); }
+> 
+> else if(jev.buffer[0] == 176 && jev.buffer[1] == 7){ if(verb == 1) 
+> printf("MUTE CONTROL to CH7 sent\n"); //seventh button: set mute
+> register on channel 7 //buffer[0] = 177; //buffer[1] = 7; 
+> //buffer[2] = jev.buffer[2]; jbuffer[0] = 182; jbuffer[1] = 7; 
+> jbuffer[2] = jev.buffer[2]; res = jack_midi_event_write(port_buf,
+> jev.time, jbuffer, 3); }
+> 
+> else if(jev.buffer[0] == 176 && jev.buffer[1] == 10){ if(verb ==
+> 1) printf("MUTE CONTROL to CH8 sent\n"); //eighth button: set mute
+> register on channel 8 //buffer[0] = 177; //buffer[1] = 7; 
+> //buffer[2] = jev.buffer[2]; jbuffer[0] = 183; jbuffer[1] = 7; 
+> jbuffer[2] = jev.buffer[2]; res = jack_midi_event_write(port_buf,
+> jev.time, jbuffer, 3); }
+> 
+> 
+> 
+> 
+> else if((jev.buffer[0]& 0xF0) == 128 || (jev.buffer[0]& 0xF0) == 
+> 144){ //note key, pass through if(verb == 1) printf("SOUND
+> PASSED-THROUGH\n"); //notes; let them pass //buffer[0] =
+> jev.buffer[0]; //buffer[1] = jev.buffer[1]; //buffer[2] =
+> jev.buffer[2]; jbuffer[0] = jev.buffer[0];  //CH1 jbuffer[1] =
+> jev.buffer[1]; jbuffer[2] = jev.buffer[2]; res =
+> jack_midi_event_write(port_buf, jev.time , jbuffer, 3); jbuffer[0]
+> = jev.buffer[0] + 1; //CH2
+
+These can produce invalid messages. e.g some channel 15 data will
+alter the status byte. (Note on -> Aftertouch)
+
+uint8_t channel = jev.buffer[0] & 0x0f;
+uint8_t status = jev.buffer[0] & 0xf0;
+channel = (channel + 1) & 0x0f;
+jbuffer[0] = status | channel;
+
+
+> jbuffer[1] = jev.buffer[1]; jbuffer[2] = jev.buffer[2]; res =
+> jack_midi_event_write(port_buf, jev.time , jbuffer, 3); jbuffer[0]
+> = jev.buffer[0] + 2; //CH3 jbuffer[1] = jev.buffer[1]; jbuffer[2] =
+> jev.buffer[2];
+
+^^ no need to re-assign, jbuffer[1], jbuffer[2]
+
+> res = jack_midi_event_write(port_buf, jev.time , jbuffer, 3); 
+> jbuffer[0] = jev.buffer[0] + 3; //CH4 jbuffer[1] = jev.buffer[1]; 
+> jbuffer[2] = jev.buffer[2];
+
+ditto.
+
+> res = jack_midi_event_write(port_buf, jev.time , jbuffer, 3); }
+> 
+> //res = jack_midi_event_write(port_buf, i, jev.buffer, 3); //res =
+> jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+> 
+
+Just stop if you can't write more events or a write failed.
+
+    if (!res) {
+        break;
+    }
+
+but that's just some minor optimization. It won't hurt much to keep
+calling jack_midi_event_write() again. it will just be a no-op. It's
+very unlikely to happen anyway.
+
+> 
+> }
+> 
+> return 0;
+> 
+> }
+
+It should work in principle, maybe there's a flaw elsewhere in the
+setup code.
+
+Cheers!
+robin
+
+1422541181.25254_0.ltw:2, <54CA416F.9070905 at gareus dot org>
+________________________________________________________________________________
+

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] new IIO driver added to jack - large overruns</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] new IIO driver added to jack - large overruns</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1391641157.13164_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1391690053.31673_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1391662245.12392_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 06 Feb 2014 15:50:19 +1100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Matt Flax </span> &lt;[hidden] at flatmax dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Matt Flax
+<a href='../1390340276.29778_0.ltw:2,a/index.html'>Re: [Jack-Devel] new IIO driver added to jack - large overruns </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1391690053.31673_0.ltw:2,a/index.html'>Re: [Jack-Devel] new IIO driver added to jack - large overruns </a></td></tr>
+</table>
+<pre>
+Paul and list,
+
+I have now managed to get rid of xruns in my iio driver.
+
+I find that I can pull (with no xruns) 4 channels @ 1 MHz with latencies 
+as low as 0.75 ms ... amazing !
+I am sure this figure will get worse, but it is a good starting point :)
+
+I am starting by using the following for testing :
+jackd -d iio -p 2048 -n 2
+
+Which sets up a latency of about 4 ms.
+
+I am now trying to connect using a client ... here is my problem...
+
+On the driver function 'iio_driver_read'
+     I can see the data coming in ... numbers range from 0. up to 4096.
+     Should these be scaled down to be betwenn -1. and 1. ?
+
+On the client :
+   The process audio callback is receiving nothing from the iio driver. 
+All samples read are = 0.
+
+Any suggestions ideas ?
+
+jack_lsp outputs the following :
+
+# ./jack_lsp -p -t -A
+system:capture_1
+    iio_pcm:capture_1
+     properties: output,physical,terminal,
+     32 bit float mono audio
+system:capture_2
+    iio_pcm:capture_2
+     properties: output,physical,terminal,
+     32 bit float mono audio
+system:capture_3
+    iio_pcm:capture_3
+     properties: output,physical,terminal,
+     32 bit float mono audio
+system:capture_4
+    iio_pcm:capture_4
+     properties: output,physical,terminal,
+     32 bit float mono audio
+
+
+Matt
+p.s. I am still after someone to port this to jack2 ... any takers ?
+
+On 22/01/14 08:37, Matt Flax wrote:
+&gt; Thanks for the suggestions...
+&gt;
+&gt; On 22/01/14 00:21, Adrian Knoth wrote:
+&gt;&gt; On Tue, Jan 21, 2014 at 11:48:55PM +1100, Matt Flax wrote:
+&gt;&gt; If so:
+&gt;&gt;
+&gt;&gt;&gt; I have found that jack isn't pulling much cpu time at all when
+&gt;&gt;&gt; operating the iio driver. Top reports that it chews about 3% of the
+&gt;&gt;&gt; cpu power. This suggests that a lot of the delay is coming from
+&gt;&gt;&gt; kernel related servicing of the iio read calls.
+&gt;&gt;&gt;
+&gt;&gt;&gt; The small overruns can probably be removed by reading from the DMA
+&gt;&gt;&gt; buffer in the background, but I would need to do some form of
+&gt;&gt;&gt; locking and unlocking ... whether it be polling in user space or
+&gt;&gt;&gt; some atomic lock system ...
+&gt;&gt; The usual approach is to be woken up from the kernel whenever some parts
+&gt;&gt; of the buffer (let's say one half for a start) are ready for processing.
+&gt;&gt;
+&gt;&gt; This doesn't require locking. Thing is, it's a bit hard to give useful
+&gt;&gt; hints, since you're developing an entirely new driver, that is, only you
+&gt;&gt; know the details.
+&gt;&gt;
+&gt;&gt; So as a general advice, here's what you can do:
+&gt;&gt;
+&gt;&gt;     1.) Have a look at some PCI ALSA drivers and/or read the ALSA driver
+&gt;&gt;         tutorial. Even if you really don't want to write an ALSA driver,
+&gt;&gt;         you'll at least understand the basic approach taken in jackd.
+&gt;&gt;
+&gt;&gt;
+&gt;&gt;     2.) If you're dealing with a userspace driver, maybe have a look at
+&gt;&gt;         FFADO and its jackd integration. Note that the FFADO project has
+&gt;&gt;         shown that you really want kernel-level streaming, so userspace
+&gt;&gt;         drivers are generally more headache than necessary.
+&gt; I have been referencing all drivers for information and ideas ... it 
+&gt; has been very helpful.
+&gt; Bare in mind that IIO is already implemented using DMA into kernel 
+&gt; memory space. There is a driver which streams all of the samples over 
+&gt; /dev/iio:device0, /dev/iio:device1 and so on.
+&gt;
+&gt;&gt;     3.) Take a shortcut and hire Paul Davis, Clemens Ladisch or Daniel
+&gt;&gt;         Mack. No idea if any of these guys is available for freelancing
+&gt;&gt;         at the moment. They know Linux audio inside out and hence know
+&gt;&gt;         how to do it right.
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; I don't know your hardware at hand, but unless you have very good
+&gt;&gt; reason, I strongly encourage you to write an ALSA driver. This way, your
+&gt;&gt; audio device would automatically work with jack1 AND jack2, so no need
+&gt;&gt; for porting.
+&gt; Yep - that was my first thought, however as there is already a nice 
+&gt; iio driver with ring buffers and so on, the thought is to simply use 
+&gt; them.
+&gt;
+&gt;&gt;
+&gt;&gt; Just my &#x20AC;0.02
+&gt;&gt;
+&gt;
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1391641157.13164_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1391690053.31673_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1391662245.12392_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1391662245.12392_0.ltw:2,a&nbsp;&lt;52F3148B.80109 at flatmax dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

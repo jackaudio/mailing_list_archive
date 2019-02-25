@@ -1,0 +1,67 @@
+Date:        Fri, 15 Apr 2011 14:04:02 -0500
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] is this latency coming from ALSA, jack, or ardour? (1302891755.22008_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] is this latency coming from ALSA, jack, or ardour?
+
+On Fri, April 15, 2011 1:22 pm, Paul Davis wrote:
+> you've got a digital loopback, it appears.
+
+How so?  I have a cable connecting the stereo analog outputs of my card
+back to the stereo analog inputs of the card.
+Oh, wait a minute.  <ears turn red>
+In the connection panel on qjackctl, I connected jack_delay:out to
+jack_delay:in.
+That wasn't right, was it?  Obvious now that I think about it, given how
+jack presents connections.
+
+OK, so now I connected jack_delay out to the card physical output port,
+then connected the card physical input port to jack_delay in, and got
+this:
+
+4155.593 frames     94.231 ms
+
+That makes much more sense.
+
+Assuming that precision is correct, does jack take fractional frames as
+part of the argument to -I and -O?  Qjackctl does not allow fractional
+frames to be input through the dialog.
+Wait, 1 frame = 1 sample period? Never mind, who cares, I was confused
+with periods.
+
+> my instructions were wrong. sorry. subtract frames/period from
+> jack_iodelay's answer, then divide by 2 for the input/output numbers.
+
+OK, with your correction, and my corrected connection, that makes a lot
+more sense:
+(4155.593-3072)/2 = 541.79 frames additional latency,  in and out.
+
+> note that dividing by 2 is a heuristic: if you used different devices
+> for A/D and D/A, it would not necessarily be correct.
+
+Yes, that is understandable, it isn't possible to distinguish input path
+from output path effects when you have just one loopback connection.
+
+It should in principle be possible to calculate the right values if you
+happen to have a device with really thorough specs from the designer.  I
+know Prism specs the delay through the AD and DA sides of their
+converters, digital in to analog out and analog in to digital out.  The
+two sides are different by about 2x.
+
+Trying to figure this out has given me new appreciation for why the
+network audio guys wanted to time stamp everything and just line all the
+audio up via time stamp, rather than trying to figure out path latency.
+
+These measurements were on the PCI card.
+I will have to apply this now to the USB interface, and see if that
+corrects the somewhat unreasonable behavior.
+
+Thanks for the help, this is very useful.
+
+-- 
+Chris Caudle
+
+1302894271.26882_0.ltw:2,a <7923c9f8ef1361af9bee81a2189ebe9d.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

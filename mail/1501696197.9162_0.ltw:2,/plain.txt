@@ -1,0 +1,64 @@
+Date:        Wed, 02 Aug 2017 19:41:16 +0200
+From:        Markus Seeber  <[hidden] at spectralbird dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jörg Müller Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels (1501689380.2930_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels
+
+Did you synchronnize the cards via WordClock? Because if you did not,
+you will inevitably run into issues due to clock drift.
+
+On 08/02/2017 05:56 PM, Jörg Müller wrote:
+> This is months old, but I have news to this topic.
+>
+> The suggested changes work and we have set up 11x16channel audio
+> monitors. That is 176 speakers!
+>
+> However, running Jack is highly unstable, it crashes roughly every two
+> minutes and causes a huge amount of XRuns even at buffer sizes like
+> 16000. CPU is down at 5%, so that is not the issue. Jack runs without a
+> problem when using just one card. However, we need to combine the three
+> MADI-Cards via .asoundrc in order to eventually get to 768 channels.
+>
+> I have the jack logs here: https://pastebin.com/ke25cdXB
+>
+> Do you have any idea what could cause the issue?
+>
+> Best, Jörg
+>
+>
+> Am 10.02.2017 um 14:15 schrieb Adrian Knoth:
+>> On 02/08/17 18:16, Jörg Müller wrote:
+>>
+>>> jackd: ../linux/alsa/JackAlsaDriver.cpp:122: virtual int
+>>> Jack::JackAlsaDriver::Attach(): Assertion `fCaptureChannels < 256'
+>>> failed.
+>>> Aborted (core dumped)
+>>>
+>>> The corresponding cpp-file at that line compares against a variable
+>>> called "DRIVER_PORT_NUM", which is a constant defined in
+>>> "common/JackConstants.h" on line 53 on the github repo. Could that be
+>>> the problem?
+>> That's absolutely the problem, but the limit is arbitrary. Feel free to
+>> recompile jackd2 with changed constants in JackConstants.h.
+>>
+>> I guess you need to tweak a bunch of other values as well.
+>>
+>> PORT_NUM, PORT_NUM_MAX, DRIVER_PORT_NUM (that's per direction),
+>> PORT_NUM_FOR_CLIENT
+>>
+>> That should be it.
+>>
+>> Play a bit so it matches your setup. Feel free to send a patch.
+>>
+>>
+>>
+>> HTH
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1501696197.9162_0.ltw:2, <0c6a0716-7e0b-3718-1c86-7099800ca932 at spectralbird dot de>
+________________________________________________________________________________
+

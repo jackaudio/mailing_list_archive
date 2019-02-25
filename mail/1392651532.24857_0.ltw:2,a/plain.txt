@@ -1,0 +1,41 @@
+Date:        Mon, 17 Feb 2014 15:40:20 +0100
+From:        Christian Schoenebeck  <[hidden] at crudebyte dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: David Santamauro Re: [Jack-Devel] semaphore, permission denied (1392650257.22278_0.ltw:2,a)
+Follow-Up:   David Santamauro Re: [Jack-Devel] semaphore, permission denied (1392652409.26771_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] semaphore, permission denied
+
+On Monday 17 February 2014 16:17:14 David Santamauro wrote:
+> It turns out that a listing of /dev/shm showed that the named semaphore
+> had a permission of 700 for some reason. Changing it to 755 cured this
+> problem.
+> 
+> Of course, how that could happen is baffling.
+
+You haven't mentioned which version of JACK you are using. Named semaphores 
+are created by JACK like this:
+
+	sem_open(fName, O_CREAT | O_RDWR, 0777, value);
+
+This is a POSIX API call where also the permission tuple is given, so if a 
+semaphore of the given name does not exist, it will be created by the OS with 
+the given permission tuple, masked against the process' permission tuple.
+
+I currently don't see a reason why JACK could be blamed for the semaphore 
+being created with 700 there. My guess is that it might be caused by incorrect 
+permissions being set to the JACK server binary. From the sem_open() man page:
+
+	"If  O_CREAT  is specified in oflag, then two additional arguments must 
+	be supplied. The mode argument specifies the permissions to be placed on 
+	the new semaphore, as for open(2) ... The permissions settings  are  
+	masked  against  the  process umask ... If O_CREAT is specified, and a 
+	semaphore with the given name already exists, then mode and value are 
+	ignored."
+
+CU
+Christian
+
+1392651532.24857_0.ltw:2,a <201402171540.20136.schoenebeck at crudebyte dot com>
+________________________________________________________________________________
+

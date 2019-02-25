@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack1 and MIPS architecture</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack1 and MIPS architecture</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1439966831.32345_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1440271451.4791_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1439972143.8628_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 19 Aug 2015 18:15:30 +1000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Matt Flax </span> &lt;[hidden] at flatmax dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Matt Flax
+<a href='../1439966831.32345_0.ltw:2,/index.html'>[Jack-Devel] jack1 and MIPS architecture </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Jeremy Jongepier
+<a href='../1440402332.25566_0.ltw:2,/index.html'>Re: [Jack-Devel] jack1 and MIPS architecture </a></td></tr>
+</table>
+<pre>
+Good news,
+
+It turns out these problems were because shm was on a very space 
+restricted device ... I moved shm to the tmp directory and it is now 
+functioning as it should.
+
+jack1 on MIPS arch. is tested working.
+I ran jackd 1 using 2ms latency, no xruns. That is with a 48kHz sample rate.
+
+I played from my desktop using netjack one and I have seen the I2S data 
+flowing out ... nice first test. When I get an audio codec connected I 
+will do a listening test.
+
+Matt
+
+On 19/08/15 16:47, Matt Flax wrote:
+&gt; I can now start jackd 1 on a MIPS 24Kc architecture.
+&gt;
+&gt; When I try to do anything - even probe the sample rate, it dies with 
+&gt; Bus Error :
+&gt; creating alsa driver ... 
+&gt; hw:0|hw:0|1000|16|48000|0|2|nomon|swmeter|-|32bit
+&gt;
+&gt; jack_samplerate ....
+&gt; Bus error
+&gt;
+&gt; Even when I use the dummy driver :
+&gt; jackd -ddummy
+&gt; creating dummy driver ... dummy_pcm|48000|1024|21333|2|2
+&gt;
+&gt; jack_samplerate ....
+&gt; Bus error
+&gt;
+&gt; I have tried to use gdb and gdbserver, but it is non trivial as the 
+&gt; binaries are stripped ... even when I use gdb remotely with a 
+&gt; non-stripped binary, still don't get any sensible information.
+&gt;
+&gt; I have run jackd with -v and here is what I get - bus error - when I 
+&gt; run jack_lsp
+&gt; ... snip ...
+&gt; start poll on 4 fd's
+&gt; server thread back from poll
+&gt; polling sync client netjack
+&gt; ++ jack_sort_graph
+&gt; client event poll on 12 for netjack starts at 1156835181
+&gt; back from client event poll after 515 usecs
+&gt; client event poll on 12 for netjack starts at 1156835803
+&gt; back from client event poll after 224 usecs
+&gt; ++ jack_rechain_graph():
+&gt; +++ client is now netjack active ? 1
+&gt; client netjack: start_fd=7, execution_order=0.
+&gt; client event poll on 12 for netjack starts at 1156836279
+&gt; back from client event poll after 457 usecs
+&gt; client netjack: wait_fd=9, execution_order=1 (last client).
+&gt; -- jack_rechain_graph()
+&gt; -- jack_sort_graph
+&gt; client event poll on 12 for netjack starts at 1156836908
+&gt; back from client event poll after 389 usecs
+&gt; client event poll on 12 for netjack starts at 1156837389
+&gt; back from client event poll after 269 usecs
+&gt; client event poll on 12 for netjack starts at 1156837788
+&gt; back from client event poll after 298 usecs
+&gt; start poll on 4 fd's
+&gt; load = 5.5052 max usecs: 2206.000, spare = 18627.000
+&gt; load = 7.8695 max usecs: 2132.000, spare = 18701.000
+&gt; load = 11.4493 max usecs: 3131.000, spare = 17702.000
+&gt; server thread back from poll
+&gt; new client: lsp, uuid = 8589934595 type 2 @ 0x7720e000 fd = 14
+&gt; start poll on 5 fd's
+&gt; server thread back from poll
+&gt; new client lsp using 15 for events
+&gt; start poll on 5 fd's
+&gt; server thread back from poll
+&gt; marking client lsp with SOCKET error state = Not triggered errors = 0
+&gt; waking server thread
+&gt; non-POLLIN events on fd 14
+&gt; trying to lock graph to remove 1 problems
+&gt; we have problem clients (problems = 1
+&gt; ++ Removing failed clients ...
+&gt; client lsp error status 10000000
+&gt; removing failed client lsp state = Not triggered errors = 10000000
+&gt; removing client "lsp"
+&gt; removing client "lsp" from the processing chain
+&gt; +++ deactivate lsp
+&gt; before: client list contains 3
+&gt; removed from client list, via matching UUID
+&gt; after: client list contains 2
+&gt; lock-driven null cycle
+&gt; Bus error
+&gt;
+&gt;
+&gt;
+&gt; Matt
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1439966831.32345_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1440271451.4791_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1439972143.8628_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1439972143.8628_0.ltw:2,&nbsp;&lt;55D43B22.8010406 at flatmax dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

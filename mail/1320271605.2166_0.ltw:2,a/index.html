@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash]</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash]</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1320267973.31014_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1320303700.16810_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1320271605.2166_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 02 Nov 2011 23:05:59 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Andreas Degert </span> &lt;[hidden] at papyrus-gmbh dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1320267103.30387_0.ltw:2,a/index.html'>Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] </a></td></tr>
+</table>
+<pre>
+On Wed, 2 Nov 2011 16:51:02 -0400
+Paul Davis &lt;[hidden]&gt; wrote:
+
+&gt; On Wed, Nov 2, 2011 at 4:49 PM, Paul Davis
+&gt; &lt;[hidden]&gt; wrote:
+&gt; &gt; On Wed, Nov 2, 2011 at 4:28 PM, Andreas Degert &lt;[hidden]&gt;
+&gt; &gt; wrote:
+&gt; &gt;
+&gt; &gt;&gt; Hi Paul, I'm the original author of the mail that hermann
+&gt; &gt;&gt; forwarded. Which part of my mail do you not understand? I thought
+&gt; &gt;&gt; I explained the problem :-)
+&gt; &gt;
+&gt; &gt;&gt; AFAICS jackweak.h defines JACK_OPTIONAL_WEAK_EXPORT and
+&gt; &gt;&gt; JACK_OPTIONAL_WEAK_DEPRECATED_EXPORT, whereas the mentioned
+&gt; &gt;&gt; functions from jack/session.h use JACK_WEAK_EXPORT, which is
+&gt; &gt;&gt; defined in jack/weakmacros.h, which is included by session.h.
+&gt; &gt;
+&gt; &gt; fair point, i forgot that this was a mandatorily weakly linked
+&gt; &gt; symbol. this doesn't really make any difference to the point.
+&gt; &gt;
+&gt; &gt; what does this show:
+&gt; &gt;
+&gt; &gt; &#xA0; &#xA0;nm YourExecutable | grep jack_
+&gt; &gt;
+&gt;  just for reference, this is what I get:
+&gt; 
+&gt; paul@sextet[2930]&gt;cc -o js js.c -l jack
+&gt; paul@sextet[2931]&gt;./js
+&gt; jack_client_get_uuid = 0x400510, jack_get_uuid_for_client_name = (nil)
+&gt; paul@sextet[2932]&gt;nm js | grep jack_
+&gt;                  w jack_client_get_uuid
+&gt;                  w jack_get_uuid_for_client_name
+
+My post was not about getting weak linking to work, without
+weak symbols my test program would just have gotten a linker error.
+
+It's about how weak linking works, and especially about how to test
+if a symbol is in the shared library loaded into the current process.
+
+If you test if the address of the function in your program is 0,
+according to my test program you will not get that information (but
+you need to execute the test program with both jackd1 and jackd2 libs
+without recompiling).
+
+Specifically to the situation we have in guitarix:
+
+for session handling we need the uuid of the second guitarix jack
+client (for the first its in the event structure). The two functions
+in the test program can be used for that, but jackd1 has only the first
+function, and jackd2 only the second.
+
+So I thought the theory was to write something like
+
+if (jack_client_get_uuid) {
+    jack_client_get_uuid(...);
+} else if (jack_get_uuid_for_client_name) {
+    jack_get_uuid_for_client_name(...);
+}
+
+and e.g. compile it with jackd1 libs. When you start it the first
+branch is taken. fine. Then uninstall jackd1, install jackd2 and
+start it again. Second branch taken? no... crash...
+jack_client_get_uuid is not 0, but when it's called it will crash at
+address 0. Even if jack_client_get_uuid had been 0 now,
+jack_get_uuid_for_client_name is set to constant 0 by the linker
+building the executable because it didn't find it in any library.
+
+When you recompile with jackd2, now you can start it (takes second
+branch), but will crash with jackd1.
+
+So we had to solve it by not referencing the functions in the program
+but instead resolving them manually with dlsym().
+
+ciao
+Andreas
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1320267973.31014_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1320303700.16810_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1320271605.2166_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1320271605.2166_0.ltw:2,a&nbsp;&lt;20111102230559.4146207c at pluto dot noname&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

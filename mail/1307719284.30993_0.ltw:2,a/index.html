@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] transport rolling + new slow-sync client</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] transport rolling + new slow-sync client</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1307717834.28195_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1307719452.31266_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1307719284.30993_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 10 Jun 2011 15:21:00 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Dan Muresan
+<a href='../1307717423.27356_0.ltw:2,a/index.html'>[Jack-Devel] transport rolling + new slow-sync client </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1307719960.32285_0.ltw:2,a/index.html'>Re: [Jack-Devel] transport rolling + new slow-sync client </a></td></tr>
+</table>
+<pre>
+On Fri, Jun 10, 2011 at 05:49:57PM +0300, Dan Muresan wrote:
+
+
+&gt; I was wondering what happens if the transport is already Rolling, and
+&gt; a new slow-start client activates itself? Does Jack transition from
+&gt; Rolling to Starting and wait for the new client to complete syncing? I
+&gt; don't see that transition in the diagram -- and without it I don't
+&gt; understand how a slow-start client could reliably synchronize with an
+&gt; already-rolling transport...
+
+I don't think you can expect that to work.
+
+If Jack would wait for the new client that would probably be more
+disruptive than anything else.
+
+The whole slow-start system is IMHO fundamentally flawed, because
+checking for readyness is done only when the transport is supposed
+to have already started. This makes it impossible to start on cue,
+unless you are lucky and all clients involved happen to be ready.
+
+To make it really work would require:
+
+1. Clients capable to catch up and sync by themselves if the transport
+   starts when they are not ready, probably outputting silence until
+   they have synced (that would also solve your case).
+
+2. Clients that, when transport is stopped and locates to a new
+   position, get ready to start without delay at that position
+   instead of waiting for a transport start (many probably do
+   this already, but it's not required and can't be checked),
+
+3. A way for clients to indicate their readyness to start without
+   delay _while transport is stopped_.
+
+
+This means you have a 2-element state:
+
+STOPPED  or  ROLLING
+SYNCED   or  LOCATING
+
+and  *all four*  combinations are possible and are reported.
+The combination STOPPED + LOCATING (i.e. not ready to start
+while stopped) doesn't exist in the current design.
+
+
+Ciao,
+
+-- 
+FA
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1307717834.28195_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1307719452.31266_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1307719284.30993_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1307719284.30993_0.ltw:2,a&nbsp;&lt;20110610152100.GE19115 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

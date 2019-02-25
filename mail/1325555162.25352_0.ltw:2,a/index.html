@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] jack_frames_to_time() bug</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] jack_frames_to_time() bug</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325523711.27349_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325556897.9808_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325555162.25352_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 03 Jan 2012 01:40:33 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1325583004.32062_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack_frames_to_time() bug </a></td></tr>
+</table>
+<pre>
+After a lot of frustration and hair-pulling trying to find a bug in
+my code it turns out I was looking for the wrong thing. 
+
+jack_frames_to_time() returns a completely bogus result if
+the argument is before the start of the current period. 
+
+The code is:
+
+  return time.current_wakeup +
+            (long) rint (((double) ((long long) (frames - time.frames)) *
+                        ((long long) (time.next_wakeup - time.current_wakeup)) / ectl-&gt;buffer_size) );
+
+and it's easy to see how it fails. Assume (frames - time.frames) is 
+supposed to be -1. Since both values are unsigned it will be 2^32-1
+and casting it to long long doesn't change that.
+
+A correct implementation could be:
+
+  return time.current_wakeup + 
+            (long) rint (((double) frames - (double)(time.frames)) *
+                         (time.next_wakeup - time.current_wakeup) / ectl-&gt;buffer_size);
+
+
+Ciao,                                        
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325523711.27349_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325556897.9808_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325555162.25352_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1325555162.25352_0.ltw:2,a&nbsp;&lt;20120103014033.GA15564 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

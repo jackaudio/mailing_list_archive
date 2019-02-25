@@ -1,0 +1,124 @@
+Date:        Thu, 17 May 2012 19:11:32 -0400
+From:        Dave Horoschak  <[hidden] at horoschak dot net>
+To:          James Warden <[hidden] at yahoo dot com>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: James Warden Re: [Jack-Devel] Windows application (1337156277.31995_0.ltw:2,a)
+Follow-Up:   Geoff Beasley Re: [Jack-Devel] Windows application (1337381761.27774_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Windows application
+
+As it turns out, I was doing this correctly.  Until I run netmanager, I
+don't see the slave machine on the master's graph at all.  Once I run
+netmanager, I get the slave machine on the master.  The slave shows the
+slave and master machine names and that it's providing 2 send channels and
+2 return channels.  I then cross-patch the slave's outputs to the master's
+inputs and vice versa.  However, I'm still not hearing one machine's mic on
+the other's speakers, and playback of any audio plays on the local machine
+normally and doesn't go over jack.
+
+One thing that's not clear to me is netjack1 vs. netjack2.   The only way
+I'm able to start the slave is with "-d net" (netjack1).  If I try to start
+netjack2 (-d netone), I get the error "initing net driver fails".
+
+Then I run "jack_load netmanager" on the master to get everything going,
+but this is documented as netjack2.   If I run the netjack1 netmanager
+"jack_netsource -H X.X.X.X [slave IP]", I get a virtuallock error.
+
+Assuming none of that is a problem as long as I see the slave in the
+master's graph, when I run netmanager, I get a "cannon read named pipe
+name" error in main jack master window. But once I start the slave, I get
+the network parameters, it waits for slave and syncs with latency 4.
+
+Any other thoughts?  It seems everything is working properly, if a little
+different than the documentation that I've read, but it's not working as I
+expect it to.
+
+Thanks again.
+ - Dave
+
+
+On May 16, 2012 at 4:17 AM James Warden <[hidden]> wrote:
+
+> Hi Dave,
+> 
+> Just what I said: start the 'netmanager' on the master: 'jack_load
+> netmanager' (you will need to open the DOS window in the jack2 directory,
+> just look in the Jack menu items in your Start menu, there should be a
+> shortcut to such DOS window).
+> The netmanager is an "in-process" client that waits for net-slave
+> connections and transfers data from/to master to/from slaves.
+> 
+> J.
+> 
+> ------------------------------------------------------------------------
+> From: Dave Horoschak <[hidden]>
+> To: James Warden <[hidden]>
+> Cc: "[hidden]" <[hidden]>
+> Sent: Wednesday, May 16, 2012 12:44 AM
+> Subject: Re: [Jack-Devel] Windows application
+> 
+> 
+> 
+> On May 15, 2012 at 6:23 AM James Warden <[hidden]> wrote:
+> 
+> > 
+> > Hi Dave,
+> > 
+> > I don't think you need any jack-enabled app for this. All you need is ...
+> > jack (and qjackctl) :)
+> > Make one windows machine the jack net-master, the other the jack net-slave.
+> > I believe you can use the "net" or "netone" backend on the slave, while the
+> > master will have the "netmanager" in-process client running (look at the
+> > jack2 doc on how to start it, i don't remember it, it's been a while). The
+> > slave can expose its h/w inputs to the jack graph. You would then connect
+> > the corresponding jack ports to the system:playback ports (still on the
+> > slave). On the master, you simply connect the slave capture ports to
+> > whatever playback ports you want (e.g. system playback ports linked to your
+> > h/w outputs, speakers, etc).
+> > 
+> > It is quite easy and does not require any special application save for jack
+> > and qjackctl for easy-to-use virtual connection patchbay.
+> > 
+> > Cheers!
+> > J.
+> > 
+> that easy, but I still can't seem to get it to work.  To be completely
+> clear on what I'm doing... I'm running between two WinXP laptops, using the
+> integrated mic and speakers.  Both PCs are connected to the same hub on a
+> LAN.
+> 
+> 
+> On the master machine I start jack as follows:
+> 
+> jackd -R -S -d portaudio -d "DirectSound::IDT Audio"
+> 
+> 
+> 
+> 
+> It appears to start without errors.
+> 
+> On the slave machine I start jack with:
+> 
+> jackd  -R -d net
+> 
+> (I tried running jack2 using netone instead, but this just gives me
+> "Initing net driver fails..." and never shows up on the server machine.)
+> 
+> It also appears to start without error.  Shortly thereafter it connects
+> with the server machine and I now have "system" and the remote machine
+> listed in the server graph list and just "system" devices listed on the
+> slave machine.   (I've tried running jackd -netmanager on the master but
+> get an error that netmanager is already running.)
+> 
+> At this point, the only patching I can do it to cross-patch the slave ports
+> and server ports on the server machine.  (slave machine only has one set of
+> system ports listed).  But that doesn't seem to do anything.
+> 
+> Am I missing something simple in the configuration or usage?
+> 
+> Thanks.
+>  - Dave
+
+1337296304.2195_0.ltw:2,a <1538280158.1168091.1337296292886.JavaMail.open-xchange at email dot 1and1 dot com>
+________________________________________________________________________________
+

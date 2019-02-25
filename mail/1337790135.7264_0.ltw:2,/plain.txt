@@ -1,0 +1,43 @@
+Date:        Wed, 23 May 2012 09:22:40 -0700
+From:        Sean Bolton  <[hidden] at smbolton dot com>
+To:          Robin Gareus <[hidden] at gareus dot org>
+Cc:          JACK Mailing List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Robin Gareus [Jack-Devel] su, limits, PAM and JACK (1337705611.24758_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] su, limits, PAM and JACK
+
+Hi all,
+
+On Tue, 22 May 2012 18:52:38 +0200 Robin Gareus <[hidden]>
+wrote:
+> For an installation, I'm trying to start jackd during boot on a
+> headless box, but it fails to acquire real-time privileges.
+> 
+> 'user' is in the audio group, and limits.conf is set up. All works
+> fine if I log-in as 'user' and launch `jackd -d alsa ..` manually.
+> 
+> If I log in as root (or call it from init):
+> 
+>   su user -c 'jackd ..'     # fails -> no rt priv
+
+I use set_rlimits[1] for this:
+
+    su user -c '/usr/sbin/set_rlimits jackd ..'
+
+The set_rlimits configuration file is much like that of sudo: you can
+specify which users or groups can run which commands with which mem
+lock and rt priority limits. It's the simplest solution I know of, and
+even works on my PAM-less Slackware boxes. For a typical workstation
+environment, I start both jackd and the window manager's task bar with
+it, so that any JACK client apps the user starts also have the needed
+privileges.
+
+HTH,
+
+-Sean
+
+[1] http://www.physics.adelaide.edu.au/~jwoithe/
+
+1337790135.7264_0.ltw:2, <20120523092240.48de33eb at shams dot jps dot net>
+________________________________________________________________________________
+

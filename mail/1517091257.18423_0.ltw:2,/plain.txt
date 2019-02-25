@@ -1,0 +1,63 @@
+Date:        Sat, 27 Jan 2018 23:13:43 +0100
+From:        Filipe Coelho  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Chris Caudle Re: [Jack-Devel] Usage feasibility Q (1517086589.13871_0.ltw:2,)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] Usage feasibility Q (1517095691.23324_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Usage feasibility Q
+
+On 27.01.2018 21:55, Chris Caudle wrote:
+> On Sat, January 27, 2018 12:42 pm, Filipe Coelho wrote:
+>>> The jack design is not really made for having
+>>> plugins in the server.
+>> The JACK internal clients API disagrees with you ;)
+> OK, I stated too strongly.  Perhaps a better way to state is that
+> implementing the DSP as an external jack program may be more convenient,
+> and would be the more typical way to implement.
+>
+> I'm not completely convinced that what I stated was actually too strong,
+> though.
+> To quote Paul Davis
+> https://lists.linuxaudio.org/pipermail/linux-audio-user/2018-January/109472.html
+> "In-process JACK clients are a very special case and almost nobody
+> implements or uses them. They are like plugins for the JACK server, and
+> that's not really the point of JACK (which was designed to connect distinct
+> processes)."
+>
+> I consider Paul a reasonably good authority on jack programming.
+
+Me too, and what he says is right.
+JACK was made with external clients in mind, and it's what 99.9% of apps 
+use.
+But there are specific scenarios where internal clients are useful.
+
+
+>> Internal clients are faster to run, since they dont require context
+>> switches between different processes.
+> Context switches are only a few microseconds.  Whether to implement as a
+> plugin or external client should be based on development effort and ease
+> of debugging, the context switch time should be less than 0.5% of any
+> reasonably sized period so should not be a consideration.
+>
+>> They're harder to control externally though.
+> Which functions are implemented as jack plugins?  There are several
+> example clients available from the jack source repository, are there
+> example internal plugins?
+
+I responded to these 2 on the reply from Fons.
+But in short, pretty much all of the MOD software runs as internal 
+client (host, peak-meter, serial-midi-handler and file player).
+This makes a real difference on their hardware, and was the way to go to 
+maximize performance.
+
+They're hard to control because you don't have direct access to the 
+process running your client unless you start JACK yourself.
+Typically you make your internal client listen to a known socket or 
+other interface, and connect there.
+
+On the other hand, running as internal client means if your process 
+crashes, JACK crashes too (they're the same process).
+
+1517091257.18423_0.ltw:2, <bf5f4007-1f02-7084-d9dd-ef38133597f9 at falktx dot com>
+________________________________________________________________________________
+

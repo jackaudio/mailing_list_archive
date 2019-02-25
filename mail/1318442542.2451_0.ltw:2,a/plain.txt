@@ -1,0 +1,55 @@
+Date:        Wed, 12 Oct 2011 20:01:14 +0200
+From:        Tobias Hoffmann  <[hidden] at thax dot hardliners dot org>
+To:          Robin Gareus <[hidden] at gareus dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Robin Gareus Re: [Jack-Devel] netjack1 / netjack2 (1318431629.16054_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] netjack1 / netjack2
+
+Robin Gareus wrote:
+> Hi John,
+>
+> Is the VHDL (or Verilog or..) available under a libre license? It'd be
+> great to have an netjack core at http://opencores.org/ , would it not?
+>   
+IMHO netjack is better called a "system" not just "core", as it requires 
+a Ethernet interface (e.g via MAC core), which communicates over 
+specific signals, may require hardware-specific initialization, etc. 
+Further it needs some rudimentary Ethernet/IP handling (ARP, UDP) -- 
+which opens up another can of possible implementation choices (e.g. 
+UDP-offload, where only the audio data packets are handled in hardware 
+and everything else is passed on to a soft-cpu, or maybe using some 
+external IP-capable network chips [e.g. wiznet], etc.). Then for 
+fragment reassembly you might want some RAM; at least for that some 
+standards (wishbone, Avalon-MM master) are widely-used that enable the 
+use of different memory cores (e.g. block-ram, SDRAM, ...). Finally the 
+best input/output format of a "netjack-core" is not immediately clear: 
+multiple I2S-lines would certainly make sense. OTOH some cores out there 
+(SPDIF, ADAT, don't forget MIDI) might e.g. prefer a wishbone interface; 
+still it would not make much sense to expose some internal (e.g.) 
+SGDMA-interface to the outside for everyone to create his/her own 
+input/output-adapter, with all the correct clocking.
+
+Then your "netjack-core" needs some configuration interface (e.g. 
+wishbone slave) for setting the ip address, sampling rate, channel 
+configuration, master/slave mode, etc. YMMV.
+
+So I think it would make more sense to opensource a few complete 
+netjack-systems (together with the used IP-cores, e.g. ethernet, spdif, 
+ram), including schematics of the dependent hardware. Then everyone who 
+wants to build his own can start by replacing different parts of the 
+reference design(s). Even more, when some generic infrastructure (say 
+UDP-offload, MAC timestamping) is already there, support of other 
+protocols like AVB is mainly a software thing (i.e. for the Soft-CPU).
+
+But as (good) open-source VHDL/Verilog stuff is rare, I do think John 
+contributing his netjack2 stuff would be great.
+And for my netjack1 implementation, I did plan to put some code online. 
+But don't expect it to be documented... or happen too soon. However I'll 
+definitely announce it here.
+
+  Tobias
+
+1318442542.2451_0.ltw:2,a <4E95D5EA.7080805 at thax dot hardliners dot org>
+________________________________________________________________________________
+

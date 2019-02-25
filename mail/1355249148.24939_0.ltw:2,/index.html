@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] ALSA PCM multi plugin and xruns</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] ALSA PCM multi plugin and xruns</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1355243901.16627_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1355249726.25885_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1355249148.24939_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 11 Dec 2012 10:05:40 -0800 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>John Rigg &lt;[hidden] at jrigg dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>John Rigg
+<a href='../1355242695.14723_0.ltw:2,/index.html'>Re: [Jack-Devel] ALSA PCM multi plugin and xruns </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1355249726.25885_0.ltw:2,/index.html'>Re: [Jack-Devel] ALSA PCM multi plugin and xruns </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>J&#xF6;rn Nettingsmeier
+<a href='../1355250136.26587_0.ltw:2,/index.html'>Re: [Jack-Devel] ALSA PCM multi plugin and xruns </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Rigg
+<a href='../1355251605.28880_0.ltw:2,/index.html'>Re: [Jack-Devel] ALSA PCM multi plugin and xruns </a></td></tr>
+</table>
+<pre>
+Hi John,
+
+On Tue, Dec 11, 2012 at 8:28 AM, John Rigg &lt;[hidden]&gt; wrote:
+
+&gt; When jackd detected no xruns it produced this message repeatedly:
+&gt; snd_pcm_multi_avail_update: sync issue: 1025 1024
+&gt;
+&gt; When jackd detected xruns it produced this message:
+&gt; snd_pcm_multi_avail_update: sync issue: 1024 0
+&gt; There appeared to be two of these messages for every xrun
+&gt; indication.
+&gt;
+&gt; Does this make sense?
+
+Yes, that makes sense.
+
+I'm guessing that the first device in your .asoundrc uses internal
+sync, and the second device listed in your .asoundrc is synced to the
+first device via word clock.  If that's the case, then I'd like you to
+try setting the 'master' device in your multi device to the second
+card.  You can do this using the 'master' parameter in the pcm 'multi'
+section of your .asoundrc:
+
+    pcm.some_name {
+        [... the parameters you already have]
+        master 1;
+    }
+
+The multi device naively assumes that all of the cards that it's
+aggregating are synced perfectly, and thus, the application that's
+polling the cards needs to only check *one* card, which the multi
+device calls the "master".  By default, that card is the first card
+you list in your .asoundrc.
+
+My (possibly incorrect) rationale for setting the master in this way
+is that if only one card is going to be polled for events, then the
+card that should be polled is that one that's going to be ready for
+I/O last.  Above, you said that when xruns aren't happening, this
+message is produced:
+
+    snd_pcm_multi_avail_update: sync issue: 1025 1024
+
+... which means that 1025 frames were available on the first card, and
+1024 frames were available on the second card, and when xruns *are*
+happening, this message is produced:
+
+    snd_pcm_multi_avail_update: sync issue: 1024 0
+
+... which means that 1024 frames were available on the first card, and
+0 frames were available on the second card.
+
+If the second card is always ready last, then polling the second card
+*may* solve the issue.
+
+In the long term, I don't think this is the best way to solve this
+issue.  The multi device is inherently broken because of the
+assumption that only one card needs to be polled.  I think a better
+way to solve this problem would be to write a new JACK driver that
+aggregates the cards itself (no multi device), and waits until I/O is
+available on both cards.  I'm feeling pretty motivated and excited
+about solving this problem, but I don't yet know when I'll have time
+to do it.
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+psinsights - http://psinsights.googlecode.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1355243901.16627_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1355249726.25885_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1355249148.24939_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1355249148.24939_0.ltw:2,&nbsp;&lt;CAG7zqTqM7QrLNsUAGn340B0wXqQb31RUiFwW9=vE9d2zH-Ku-g at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

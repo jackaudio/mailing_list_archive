@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack 1.9.8 + many many connections = problems?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack 1.9.8 + many many connections = problems?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1327942866.25577_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1327946052.30614_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1327943421.26498_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 30 Jan 2012 12:26:06 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> ORL AMMD </span> &lt;[hidden] at ammd dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>jordan
+<a href='../1327951441.7088_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack 1.9.8 + many many connections = problems? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1327951758.7667_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack 1.9.8 + many many connections = problems? </a></td></tr>
+</table>
+<pre>
+Fernando Lopez-Lezcano &lt;nando &lt;at&gt; ccrma.Stanford.EDU&gt; writes:
+
+&gt; 
+&gt; On 12/28/2011 11:27 AM, Robin Gareus wrote:
+&gt; &gt; On 12/28/2011 03:03 AM, Fernando Lopez-Lezcano wrote:
+&gt; &gt;&gt; Hi all, has anyone out there experienced something similar to what I
+&gt; &gt;&gt; describe below? Sorry for the length of the post.
+&gt; &gt;&gt;
+&gt; &gt;&gt; I'm really puzzled...
+&gt; &gt;&gt;
+&gt; &gt;&gt; (running jack 1.9.8, freshly built today, just in case - running with
+&gt; &gt;&gt; 4096 total ports and 768 ports per client)
+&gt; &gt;&gt;
+&gt; &gt;&gt; I have a quite complex jack based system (OpenMixer in our Listening
+&gt; &gt;&gt; Room driving 22 speakers plus 4 subs). Many programs, all interconnected
+&gt; &gt;&gt; through jack and running under Linux (ie: jack itself, three instances
+&gt; &gt;&gt; of supercollider, three instances of ambdec, two instances of
+&gt; &gt;&gt; jconvolver, four internal 24 channel netjack1 clients, etc, etc).
+&gt; &gt;&gt; Everything is run from inside the supercollider language and startup is
+&gt; &gt;&gt; automatic from a boot of the workstation. All jack connections are
+&gt; &gt;&gt; managed by writing them to a file and then running aj-snapshot.
+&gt; &gt;&gt;
+&gt; &gt;&gt; Lately one or two speakers are "silent" after startup.
+&gt; &gt;
+&gt; &gt; Does downgrading jackd to 1.9.7 help?
+&gt; 
+&gt; It was happening in 1.9.7 and I upgraded 
+&gt; 
+&gt; &gt; Which version of aj-snapshot are you using?
+&gt; 
+&gt; Latest, 0.9.5...
+&gt; 
+&gt; &gt; There's been some activity the the last weeks. e.g 4 weeks ago:
+&gt; &gt;    "graph reorder jackd bug workaround implemented"
+&gt; &gt; I don't know the details, but there's more:
+&gt; &gt;
+http://aj-snapshot.git.sourceforge.net/git/gitweb.cgi?p=aj-snapshot/aj-snapshot;a=log
+&gt; 
+&gt; Thanks for the pointer, perhaps I should try git just in case. I looked 
+&gt; at the 0.9.5 source and it seemed fine (and what it is doing is not 
+&gt; complicated at all, just make the connection and wait till it gets the 
+&gt; callback before proceeding using mutex's - I even added delays after 
+&gt; each connection with no change in behavior).
+&gt; 
+&gt; &gt;&gt; If I do _not_ run the aj-snapshot port connection process and I manually
+&gt; &gt;&gt; send a signal (from jnoise) to the ports that are normally affected,
+&gt; &gt;&gt; everything is fine, that is, in my tests I never managed to get the
+&gt; &gt;&gt; system to fail in that state (ie: everything running, no ports connected).
+&gt; &gt;&gt;
+&gt; &gt;&gt;
+&gt; &gt;&gt; It would seem that something bad is happening when all ports are being
+&gt; &gt;&gt; connected and the end result is that inside jack some of the soundcard
+&gt; &gt;&gt; ports seem to go nowhere.
+&gt; &gt;
+&gt; &gt; sounds like jackd's internal connection state somehow becomes
+&gt; &gt; inconsistent. There was a bug in the dbus code a while ago (1.9.6): the
+&gt; &gt; dbus layer kept an independent list of the connections but that was
+&gt; &gt; fixed in 1.9.6+svn before 1.9.7.
+&gt; &gt;
+&gt; &gt; I can't see how aj-snapshot could be the culprit; but minimizing the
+&gt; &gt; number of tools involved makes it easy.
+&gt; 
+&gt; I don't think aj-snapshot is the culprit, it seems to me so far that 
+&gt; aj-snapshot is triggering a problem inside jackd. But the clues are not 
+&gt; clear at all.
+&gt; 
+&gt; &gt;&gt; The aj-snapshot process that connects everything takes a bit to run and
+&gt; &gt;&gt; as it progresses jack reports more and more xruns until it finishes. It
+&gt; &gt;&gt; would seem that something is running inside jack when ports are
+&gt; &gt;&gt; connected that is proportional to the number of existing connections
+&gt; &gt;&gt; (the graph reordering?, that would make sense - but it should not
+&gt; &gt;&gt; generate xruns, right?).
+&gt; &gt;&gt;
+&gt; &gt;&gt; It also appears to be that if I minimize the number of ports I'm
+&gt; &gt;&gt; connecting the problem goes away (but then of course the system is not
+&gt; &gt;&gt; completely functional .
+&gt; &gt;&gt;
+&gt; &gt;&gt; Clues?
+&gt; &gt;&gt; Ways to debug?
+&gt; &gt;
+&gt; &gt; pinpoint _when_ it goes wrong -&gt;  that makes it easier to determine
+&gt; &gt; _where_ it goes wrong.
+&gt; &gt;
+&gt; &gt; 1)Try `jnoise` after startup -&gt;  verify signals end up at speakers.
+&gt; &gt; 2)Launch all apps; walk the `jnoise` again.
+&gt; &gt; 3)run aj-connect.
+&gt; &gt; 4)`jnoise` again.
+&gt; 
+&gt; Yup, I was going to do something similar today from inside supercollider 
+&gt; Thanks!
+
+Hi!
+
+I'm experiencing quite the same since a litlle time with ladish/jackdbus.
+I'm using a quit complex setup with a big Ardour session on the middle of it.
+Lately, and quit randomly, Ardour just couldn't finish its startup blocking on
+certains ports creation.
+The same, when looking at the logs, it seems that there are a lot of Xruns
+coming at that time, though jack doesn't report any problem, it just seems quite
+unusable.
+Then, I switch to non-mixer, for several reasons, one of them being this
+problem, and here is what it gives:
+I've to run 11 instances of Non-Mixer, each with a big amount of clients/ports
+(btw, I've built jackd2 with the clients = 256 and ports_per_application = 2048).
+- if I run these instances manually (from a command line), and wait for one to
+be ready (ports creation and connection) before lauching the next one,
+everything is fine, and the DSP load is not that high, and the machine works
+correctly ;
+- if I run these instances from within ladish, then they're all launched at the
+same time, and then, several of them just won't show up, as they're blocking on
+certains ports creation (not always the same).
+
+I'm using jackd2 1.9.8 freshly built from Debian Sources (SID), and I
+experienced the very same with jackd2 1.9.7.
+
+Hope that helps.
+
+Aur&#xE9;lien
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1327942866.25577_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1327946052.30614_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1327943421.26498_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1327943421.26498_0.ltw:2,a&nbsp;&lt;loom.20120130T131922-359 at post dot gmane dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

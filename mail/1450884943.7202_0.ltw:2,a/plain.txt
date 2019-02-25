@@ -1,0 +1,56 @@
+Date:        Wed, 23 Dec 2015 16:35:33 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Paul Davis Re: [Jack-Devel] jack dsp load calculation (1450898995.24104_0.ltw:2,)
+Follow-Up:   John Emmas Re: [Jack-Devel] jack dsp load calculation (1450902073.28946_0.ltw:2,a)
+Follow-Up:   John Emmas Re: [Jack-Devel] jack dsp load calculation (1451122710.11331_0.ltw:2,a)
+
+Subject:     [Jack-Devel] jack dsp load calculation
+
+Hi all,
+
+I'd like to propose changing the algorithm how jack calculates the DSP
+load from averaging to worst-case.
+
+The main reason for having DSP load is to know how much more processing
+one can safely add without getting x-runs. What matters in this case is
+the worst-case value.
+
+
+
+It looks like there are some prior attempts in the code [1], but the
+current averaging DSP load is pretty much useless for this. As-is, it
+mainly lends itself to compare different machines.
+
+Short spikes, which are in most cases the cause for xruns, are simply
+ignored in the calculation: For them to show up, currently three
+criteria must be met: The spike must be in the last 32 jack-cycles, be >
+95% and the control application must read the value near the end of
+those 32 cycles (see [1], very high LPF).
+
+At 1024fpp / 48KHz, 32 cycles corresponds to ~680msec. Most control
+applications only update the value every second or so.
+
+Apart from that, I'm at a loss how to interpret the current value in a
+meaningful way.
+
+
+The proposed change is to:
+ - jump to the worst-case value if it is larger than the current load
+ - slow fall-off (1st order low-pass), 4-5 seconds (not cycle dependent)
+
+I'm happy to submit a patch for this.
+
+The only downside I can think of is that the reading will be higher and
+some users will complain about this being a regression.
+
+thoughts, comments?
+robin
+
+
+[1]
+https://github.com/jackaudio/jack2/blob/master/common/JackEngineControl.cpp#L66
+
+1450884943.7202_0.ltw:2,a <567ABF45.4000200 at gareus dot org>
+________________________________________________________________________________
+

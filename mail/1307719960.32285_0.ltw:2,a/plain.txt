@@ -1,0 +1,49 @@
+Date:        Fri, 10 Jun 2011 11:32:23 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] transport rolling + new slow-sync client (1307719284.30993_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] transport rolling + new slow-sync client (1307738166.2778_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] transport rolling + new slow-sync client
+
+On Fri, Jun 10, 2011 at 11:21 AM, Fons Adriaensen <[hidden]> wrote:
+
+> The whole slow-start system is IMHO fundamentally flawed, because
+> checking for readyness is done only when the transport is supposed
+> to have already started. This makes it impossible to start on cue,
+> unless you are lucky and all clients involved happen to be ready.
+
+Presumably what you mean is explained by this next paragraph:
+
+> 1. Clients capable to catch up and sync by themselves if the transport
+>   starts when they are not ready, probably outputting silence until
+>   they have synced (that would also solve your case).
+
+having implemented this in ardour, i can testify that its really quite
+complex, and the slow-sync client "abstraction" is much, much easier
+for most people and comes with little cost except when the locate
+really is very costly (and this is rare, extremely rare).
+
+> 2. Clients that, when transport is stopped and locates to a new
+>   position, get ready to start without delay at that position
+>   instead of waiting for a transport start (many probably do
+>   this already, but it's not required and can't be checked),
+
+there's no reason to check it unless you believe that the check on
+client-is-read-to-roll takes too long. the client will be ready the
+first time the server asks if it does this (and indeed, its hard to
+imagine a client that didn't - deferring an actual data i/o operation
+until transport start is ... well, its braindead.
+
+> 3. A way for clients to indicate their readyness to start without
+>   delay _while transport is stopped_.
+
+necessary only if you believe the check is too slow. i can't imagine
+situations where it would be too slow - if you're trying to sync with
+an external timesource, you won't care about this kind of delay, i
+think.
+
+1307719960.32285_0.ltw:2,a <BANLkTimRgy2BYq0mYcnPTMhEYEf0sREsJw at mail dot gmail dot com>
+________________________________________________________________________________
+

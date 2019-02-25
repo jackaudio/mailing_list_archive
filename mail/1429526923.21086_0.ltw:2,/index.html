@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack1 git FTBFS</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack1 git FTBFS</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1429526376.20775_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1429528457.23033_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1429526923.21086_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 20 Apr 2015 12:48:36 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Adrian Knoth </span> &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>J&#xF6;rn Nettingsmeier &lt;[hidden] at stackingdwarves dot net&gt;, Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>J&#xF6;rn Nettingsmeier
+<a href='../1429525593.20012_0.ltw:2,/index.html'>[Jack-Devel] jack1 git FTBFS </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>J&#xF6;rn Nettingsmeier
+<a href='../1429530622.25848_0.ltw:2,/index.html'>[SOLVED] Re: [Jack-Devel] jack1 git FTBFS </a></td></tr>
+</table>
+<pre>
+On 04/20/15 12:26, J&#xF6;rn Nettingsmeier wrote:
+
+&gt; metadata.c:202:15: error: 'DB' has no member named 'exists'
+&gt;           if (db-&gt;exists (db, NULL, &amp;d_key, 0) == DB_NOTFOUND) {
+&gt;                 ^
+
+Weird. Should be there. Did you check db.h (the system-wide file)? Mine
+clearly has it.
+
+&gt; metadata.c:322:29: error: 'DBC' has no member named 'get'
+&gt;           while ((ret = cursor-&gt;get(cursor, &amp;key, &amp;data, DB_NEXT)) == 0) {
+&gt;                               ^
+
+Same here:
+
+struct __dbc {
+[..]
+         /* DBC PUBLIC HANDLE LIST BEGIN */
+         int (*close) __P((DBC *));
+}
+
+It's clearly there.
+
+So either your include file is broken or it's not taken into
+consideration.
+
+You can pass -E to the gcc call (manually) and redirect the output to a
+file, so you get the preprocessor out. Maybe as simple as this:
+
+/* foo.c */
+#include &lt;db.h&gt;
+
+
+gcc - E foo.c
+
+And there, you should see all the expanded struct __db{,c,t} things.
+
+
+Good luck with hunting this down. ;)
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1429526376.20775_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1429528457.23033_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1429526923.21086_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1429526923.21086_0.ltw:2,&nbsp;&lt;5534D984.9060003 at drcomp dot erfurt dot thur dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

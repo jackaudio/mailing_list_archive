@@ -1,0 +1,67 @@
+Date:        Wed, 19 Jun 2013 20:53:02 +0200
+From:        Pawel  <[hidden] at wp dot pl>
+To:          jack-devel <[hidden] at lists dot jackaudio dot org>
+
+Subject:     Re: [Jack-Devel] JackTransport vs VST ppqPos
+
+Dnia Sobota, 18 Maja 2013 11:52 Pawel <[hidden]> napisa³(a) 
+> Dnia Czwartek, 16 Maja 2013 15:02 Robin Gareus <[hidden]> napisa³(a) 
+> > On 05/16/2013 06:39 AM, Pawel wrote:
+> > > Is there any good reason to not sync BBT with frames ?
+> > 
+> > Yes. Tempo maps.
+> > 
+> > > I made patch for jack_transport example client (actually it remove some unnecessary code ;-)
+> > > 
+> > > ... but I just realized that there is always one way for compute BBT 
+> > 
+> > That is only true if you have a single tempo and meter for the whole
+> > timeline.
+> > 
+> > The tempo can change in the middle of the song (accelerando,
+> > decellerando). The meter can change as well. You can also have multiple
+> > songs (or movements of the same song) on the same timeline with BBT offsets.
+> > 
+> > - so Jack should do this by self, and master client should change these
+> > values:
+> > >                 pos->beats_per_bar = time_beats_per_bar;
+> > >                 pos->beat_type = time_beat_type;
+> > >                 pos->ticks_per_beat = time_ticks_per_beat;
+> > >                 pos->beats_per_minute = time_beats_per_minute;
+> > > 
+> > > 
+> > > What do you think ?
+> > 
+> > You'll need a tempo map.
+> > N entries like above that can be positioned at arbitrary points on the
+> > timeline. Furthermore, BPM can be hard or gradual.
+> > 
+> > It's not a trivial task for jackd to take care of. It is also against
+> > design: jackd only passes information between jack-clients. The daemon
+> > does nothing on its own (with few exceptions).
+> > 
+> > Now, if you like a challenge: tempo-ramps, flexible BBT offsets and
+> > arbitrary tempo/meter changes mid song is a major item on the Ardour3
+> > ToDo list :)
+> > 
+> > best,
+> > robiny
+> 
+> Thanks Robin, tempo map is what I'm missed in this story. I think tempo changes are not problem itself , because after each , recalculate is not problem. The problem is when some other than master client want jump to some location (i.e. reposition).
+> 
+> I made new patch for jack_transport example client - please discard this previous one. So the correct way for preserve fractional part of tick is store it internally. In theory bbt_offset should be enough and I even made such implementation, but still counters were late.
+> 
+> Well, please apply my patch (transport.c) - it improve two areas:
+> - precisely calculate ticks between cycles
+> - fixed problem with low tempos
+> - bbt_offset support
+> 
+> P.
+
+Is there someone with good will who can commit my patch, from previous mail, to official repo ? Will be nice to know that my hard work was not cast-off ;-)
+
+P.
+
+1371667990.15173_0.ltw:2,a <51c1fe0ed664d3.65965829 at wp dot pl>
+________________________________________________________________________________
+

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] [LAU] jack2 turned verbose</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] [LAU] jack2 turned verbose</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1338596564.14327_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1338624894.4828_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338621426.3051_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 02 Jun 2012 09:16:57 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1338586425.4283_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1338626586.5707_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1338638086.11899_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+</table>
+<pre>
+On 06/01/2012 11:33 PM, Fons Adriaensen wrote:
+&gt; On Sat, Jun 02, 2012 at 12:04:52AM +0300, Nedko Arnaudov wrote:
+&gt;  
+&gt;&gt; The default value of "verbose" is set to 10, the default value of
+&gt;&gt; "realtime-priority". libdbus has checks for boolean values that gets
+&gt;&gt; triggered because 10 is neither true (1) not false (0).
+
+I was under the impression that true is usually defined as -1 (not +1).
+Using two's complement -1 would set all bits to on.
+and "if (false)" := "branch if zero"
+
+&gt; How are these checks done ?
+&gt; 
+&gt; I tried this:
+&gt; 
+&gt; 
+&gt; int main (int ac, char *av [])
+&gt; {
+&gt;     int i;
+&gt; 
+&gt;     union
+&gt;     {
+&gt;         bool b;
+&gt;         int  i;
+&gt;     } X;
+&gt; 
+&gt;     puts ("");
+&gt;     for (i = 0; i &lt; 5; i++)
+&gt;     {
+&gt;         X.i = i;
+&gt;         if (X.b) puts ("true");
+&gt;         else     puts ("false");
+&gt;     }
+&gt; 
+&gt;     puts ("");
+&gt;     for (i = 0; i &lt; 5; i++)
+&gt;     {
+&gt;         X.i = i;
+&gt;         if      (X.b == true)   puts ("true");
+&gt;         else if (X.b == false)  puts ("false");
+&gt;         else                    puts ("Neither true or false");
+&gt;     }
+&gt; 
+&gt;     return 0;
+&gt; }
+
+nice. That's indeed what the problem boils down to.
+
+Well, depending what the compiler does, maybe add some explicit
+type-casts:  X.b == false  vs.  ((bool) X.b) == false.
+In POSIX-C 'false' is #define'd as 0
+
+&gt; which prints: 
+&gt; 
+&gt; false
+&gt; true
+&gt; true
+&gt; true
+&gt; true
+&gt; 
+&gt; false
+&gt; true
+&gt; true
+&gt; true
+&gt; true
+
+Is this Arch-Linux, gcc/g++-4.7.0, with "-O2" ?
+The flags to produce the problem with: g++ 4.7.0 are
+CXXFLAGS="-march=i686 -mtune=generic -O2 -pipe -fstack-protector
+--param=ssp-buffer-size=4 -D_FORTIFY_SOURCE=2"
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1338596564.14327_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1338624894.4828_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338621426.3051_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1338621426.3051_0.ltw:2,a&nbsp;&lt;4FC9BDE9.4030206 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

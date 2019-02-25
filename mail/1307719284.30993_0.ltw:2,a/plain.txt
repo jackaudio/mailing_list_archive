@@ -1,0 +1,61 @@
+Date:        Fri, 10 Jun 2011 15:21:00 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Dan Muresan [Jack-Devel] transport rolling + new slow-sync client (1307717423.27356_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] transport rolling + new slow-sync client (1307719960.32285_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] transport rolling + new slow-sync client
+
+On Fri, Jun 10, 2011 at 05:49:57PM +0300, Dan Muresan wrote:
+
+
+> I was wondering what happens if the transport is already Rolling, and
+> a new slow-start client activates itself? Does Jack transition from
+> Rolling to Starting and wait for the new client to complete syncing? I
+> don't see that transition in the diagram -- and without it I don't
+> understand how a slow-start client could reliably synchronize with an
+> already-rolling transport...
+
+I don't think you can expect that to work.
+
+If Jack would wait for the new client that would probably be more
+disruptive than anything else.
+
+The whole slow-start system is IMHO fundamentally flawed, because
+checking for readyness is done only when the transport is supposed
+to have already started. This makes it impossible to start on cue,
+unless you are lucky and all clients involved happen to be ready.
+
+To make it really work would require:
+
+1. Clients capable to catch up and sync by themselves if the transport
+   starts when they are not ready, probably outputting silence until
+   they have synced (that would also solve your case).
+
+2. Clients that, when transport is stopped and locates to a new
+   position, get ready to start without delay at that position
+   instead of waiting for a transport start (many probably do
+   this already, but it's not required and can't be checked),
+
+3. A way for clients to indicate their readyness to start without
+   delay _while transport is stopped_.
+
+
+This means you have a 2-element state:
+
+STOPPED  or  ROLLING
+SYNCED   or  LOCATING
+
+and  *all four*  combinations are possible and are reported.
+The combination STOPPED + LOCATING (i.e. not ready to start
+while stopped) doesn't exist in the current design.
+
+
+Ciao,
+
+-- 
+FA
+
+1307719284.30993_0.ltw:2,a <20110610152100.GE19115 at linuxaudio dot org>
+________________________________________________________________________________
+

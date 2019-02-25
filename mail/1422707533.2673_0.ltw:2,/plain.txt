@@ -1,0 +1,52 @@
+Date:        Sat, 31 Jan 2015 12:32:06 +0000
+From:        Harry van Haaren  <[hidden] at gmail dot com>
+To:          Happy <[hidden] at gmail dot com>
+Cc:          Marjan Mrak <[hidden] at gmail dot com>, JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Happy Re: [Jack-Devel] Dispersing MIDI messages: one to multiple (1422685006.17488_0.ltw:2,)
+Follow-Up:   Happy Re: [Jack-Devel] Dispersing MIDI messages: one to multiple (1422785790.21931_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Dispersing MIDI messages: one to multiple
+
+@Christian Schoenebeck wrote:
+- Good point about JACK MIDI input implementation, etc.
+
+Yes, exactly.
+I'll add the following re Hardware MIDI / software MIDI, just for
+completeness and future reference.
+
+On Sat, Jan 31, 2015 at 6:16 AM, Happy <[hidden]> wrote:
+> For whatever it is worth, many older devices any even modern devices
+> (For example I can guarantee it for the Roland TR-8, released in 2014)
+> still apply running status on their MIDI outs.
+Yes indeed: and it makes sense for *hardware* MIDI units to do so. The
+MIDI cable[1] runs at a baud rate of 31250, which limits the amount of
+messages that can be sent over the cable in a certain time-period.
+Using running-status increases the amount of events that can be sent.
+
+On the software side, having running status is a bad idea: the 4 bytes
+duplicated to have a status per message is well worth spending, if
+consideration is given to ease of implementation of MIDI code.
+
+So in a best-of-both-worlds, hardware uses running status (as the
+hardware you mention does), and software always includes the status
+byte, so implementations check the first byte of the message and
+easily deal with it.
+
+As Christian noted, this is exactly what JACK does - MIDI input
+drivers add the running status byte to messages that did not include a
+status byte, and provides the JACK MIDI graph (and hence all JACK
+clients) with normalized "status byte included" MIDI messages.
+
+Cheers, -Harry
+
+[1] Note that an actual 5 pin DIN MIDI cable is meant: USB MIDI
+generally runs at 115200 baud, allowing many more events per unit
+time.
+
+-- 
+
+http://www.openavproductions.com
+
+1422707533.2673_0.ltw:2, <CAKudYbMf4PPEyTvXs1TYCvnoHhv_r3BQ49v9GpcYxtZs7pg+JQ at mail dot gmail dot com>
+________________________________________________________________________________
+

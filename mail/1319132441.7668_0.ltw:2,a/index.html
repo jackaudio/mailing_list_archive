@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Segmentation fault using jackctl_server_start</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Segmentation fault using jackctl_server_start</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1319114263.19119_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1319132635.7791_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1319132441.7668_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 20 Oct 2011 19:39:40 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Royi Freifeld </span> &lt;[hidden] at bgu dot ac dot il&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1319114263.19119_0.ltw:2,a/index.html'>Re: [Jack-Devel] Segmentation fault using jackctl_server_start </a></td></tr>
+</table>
+<pre>
+I have managed to narrow it down to the part where I set the server to be
+real-time. I know that real-time mode is the default but I wonder why didn't
+it work??
+In the .cpp file:
+line 221-222 is where I set the realtime status
+set_parameter method is line 188
+jackctl_get_parameter is a function I created, not one of  the control API
+(line 95).
+
+The testing main function :
+#include &lt;unistd.h&gt;
+int main()
+{
+  JackServerManager* jsm = new JackServerManager();
+  jsm-&gt;start_server();
+  sleep(30);
+  jsm-&gt;stop_server();
+  delete jsm;
+}
+
+The program crashes after trying to run jackctl_server_start on line 70.
+When I remove lines 221-222 It works.
+
+Thnx
+
+On Thu, Oct 20, 2011 at 2:34 PM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+
+&gt; Can you send your code?
+&gt;
+&gt; Thanks.
+&gt;
+&gt; St&#xE9;phane
+&gt;
+&gt; Le 19 oct. 2011 &#xE0; 16:24, Royi Freifeld a &#xE9;crit :
+&gt;
+&gt; &gt; I need to configure the server and connect unknown number of clients to
+&gt; it.
+&gt; &gt; Once everything is connected and running, nothing is changed until some
+&gt; stop button is pressed. I can stop all clients and send a close command
+&gt; (jackctl_server_stop), and basically exit the program.
+&gt; &gt; Can I do it differently, without using the control API?
+&gt; &gt;
+&gt; &gt; On Wed, Oct 19, 2011 at 4:02 PM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+&gt; &gt; Why are you using the control API (which jackctl_server_start is port of)
+&gt; in the first place?
+&gt; &gt;
+&gt; &gt; St&#xE9;phane
+&gt; &gt;
+&gt; &gt; Le 19 oct. 2011 &#xE0; 15:54, Royi Freifeld a &#xE9;crit :
+&gt; &gt;
+&gt; &gt; &gt; It's not a client and JackNoStartServer is passed to each new client
+&gt; being opened.
+&gt; &gt; &gt; I must configure the server before creating and connecting any client
+&gt; &gt; &gt;
+&gt; &gt; &gt; On Wed, Oct 19, 2011 at 2:35 PM, Adrian Knoth &lt;
+&gt; [hidden]&gt; wrote:
+&gt; &gt; &gt; On Wed, Oct 19, 2011 at 02:26:18PM +0200, Royi Freifeld wrote:
+&gt; &gt; &gt;
+&gt; &gt; &gt; &gt; Hey all,
+&gt; &gt; &gt;
+&gt; &gt; &gt; Hi!
+&gt; &gt; &gt;
+&gt; &gt; &gt; &gt; I'm developing an application using JACK (alsa as backend).
+&gt; &gt; &gt; &gt; After setting all parameters, the jackctl_server_start function is
+&gt; being
+&gt; &gt; &gt; &gt; called, the JACK outputs:
+&gt; &gt; &gt;
+&gt; &gt; &gt; Is it a client? If so, there's no need to explicitly start the server,
+&gt; &gt; &gt; you can always assume it is running.
+&gt; &gt; &gt;
+&gt; &gt; &gt; And if not, jack_client_open() would start the server unless
+&gt; &gt; &gt; JackNoStartServer is passed.
+&gt; &gt; &gt;
+&gt; &gt; &gt;
+&gt; &gt; &gt; Cheers
+&gt; &gt; &gt; 
+&gt; &gt; &gt; Jack-Devel mailing list
+&gt; &gt; &gt; [hidden]
+&gt; &gt; &gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt; &gt; &gt;
+&gt; &gt; &gt;
+&gt; &gt; &gt;
+&gt; &gt; &gt; --
+&gt; &gt; &gt; Carpe Diem
+&gt; &gt; &gt; 
+&gt; &gt; &gt; Jack-Devel mailing list
+&gt; &gt; &gt; [hidden]
+&gt; &gt; &gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt; &gt;
+&gt; &gt;
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; --
+&gt; &gt; Carpe Diem
+&gt;
+&gt;
+
+
+-- 
+Carpe Diem
+
+<a href='files/JackServerManager.cpp' target='_blank'>* Attachment: 'JackServerManager.cpp'</a>
+content-type: text/x-c++src
+<a href='files/JackServerManager.hpp' target='_blank'>* Attachment: 'JackServerManager.hpp'</a>
+content-type: text/x-c++hdr
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1319114263.19119_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1319132635.7791_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1319132441.7668_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1319132441.7668_0.ltw:2,a&nbsp;&lt;CAD-ce505CVogweikf47fBcKk+uxQT3u0uPODJ3itoKxx7kJwxA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

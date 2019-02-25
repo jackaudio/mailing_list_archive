@@ -1,0 +1,33 @@
+Date:        Sun, 27 Dec 2015 10:34:26 +0000
+From:        John Emmas  <[hidden] at tiscali dot co dot uk>
+To:          JACK devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Robin Gareus Re: [Jack-Devel] jack dsp load calculation (1451171138.17453_0.ltw:2,a)
+Follow-Up:   Robin Gareus Re: [Jack-Devel] jack dsp load calculation (1451218406.1297_0.ltw:2,a)
+Follow-Up:   Joakim Hernberg Re: [Jack-Devel] jack dsp load calculation (1451259089.5565_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack dsp load calculation
+
+On 26 Dec 2015, at 23:05, Robin Gareus wrote:
+
+> On 12/26/2015 10:56 PM, Joakim Hernberg wrote:
+> [..]
+> 
+>> IME the dsp load is a relatively useless measure as it's not really
+>> related to the max value (which is where an xrun occurs)..  You could
+>> very well have a system with a very low dsp load xrunning all the
+>> time...
+> 
+> exactly.
+> 
+
+No, not quite...  you can have a system "displaying" a very low DSP load even though it's xrunning all the time.  But that problem is NOT caused by Jack's CPU load calculation.  Nor is it caused by the averaging strategy.
+
+The averaging strategy was added to JackEngineControl::CalcCPULoad() to address a very specific problem - which it does address, very successfully.  Furthermore (read this bit carefully) it does NOT cause JackEngineControl::CalcCPULoad() to return a low reading when an xrun occurs.  If a client app is giving that impression, the problem lies within the client app.  And that's where it should be getting fixed.
+
+To prove this point (assuming Ben Loftis agrees) I'd be quite happy to add such a fix to Mixbus.  And if Mixbus still displays low readings when an xrun occurs, maybe then we should consider modifying Jack.
+
+John
+
+1451212476.28653_0.ltw:2,a <C8D300C8-6BC9-4738-8AA3-BC6B863778CB at tiscali dot co dot uk>
+________________________________________________________________________________
+

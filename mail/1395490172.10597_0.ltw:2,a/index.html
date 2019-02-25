@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Bug#728710: jackd2: Bus error w/ POST_PACKED_STRUCTURE on powerpc G4 32bit</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Bug#728710: jackd2: Bus error w/ POST_PACKED_STRUCTURE on powerpc G4 32bit</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1395479837.23279_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1395553281.31940_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1395490172.10597_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 22 Mar 2014 12:09:25 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> John Emmas </span> &lt;[hidden] at tiscali dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Nedko Arnaudov
+<a href='../1395479837.23279_0.ltw:2,a/index.html'>Re: [Jack-Devel] Bug#728710: jackd2: Bus error w/ POST_PACKED_STRUCTURE on powerpc G4 32bit </a></td></tr>
+</table>
+<pre>
+On 22/03/2014 09:17, Nedko Arnaudov wrote:
+&gt;
+&gt; The jack source code should not force packing that violates alignment
+&gt; constraints that are stated in C (and C++ too I guess)
+&gt; standard. I.e. accessing variable of size N must be done only through
+&gt; pointer aligned to N. Default struct composition ensures this. If
+&gt; forced packing is done because of memory shared with process running in
+&gt; different model, padding that ensures the above rule must be done too.
+&gt;
+
+As the person who recommended structure packing in the first place, let 
+me introduce some historical context here.  For (as we should all 
+realise) those who don't learn from the mistakes of the past are 
+invariably condemned to repeat them!
+
+Structure packing was first introduced to allow clients and servers to 
+be built using different compilers.  The problem was that no two 
+compilers could agree on what constituted (for example) 8-byte 
+alignment.  Was each structure member aligned at a memory location whose 
+address was divisible by 8?  Or did this only apply if the next member 
+couldn't be accommodated without overshooting the next boundary?  Or was 
+each member aligned at an address that was a multiple of 8 bytes from 
+the address of the previous member?  In theory, it shouldn't have made 
+any difference but in practice it did - because each compiler was 
+interpreting the rules differently.  The only packing scheme on which 
+every compiler seemed to agree was 1-byte alignment which was therefore 
+adopted as the standard for Jack.  As a result of this, an (msvc-built) 
+client, for example, can be used reliably with a (mingw-built) server.  
+That simply wasn't possible before struct packing was introduced.  
+Padding was unreliable too, for largely the same reasons (padding fields 
+were subject to the same misinterpretations!!)
+
+So 1-byte packing became the norm.  Having said that...  it turned out 
+that some physical architectures simply wouldn't support 1-byte 
+alignment (I think ARM might have been one of them).  And as a result, 
+struct packing needs to be disabled when building Jack for that 
+architecture.  Nevertheless, 1-byte alignment is accepted by the 
+majority of platforms as well as by the majority of popular compilers 
+and (crucially) wherever it's accepted, it seems to be the only 
+alignment scheme on which they all agree.
+
+Anyone who thinks he can come up with a scheme that EVERYTHING will 
+agree about is seriously deluding himself IMHO.  Regardless of any C/C++ 
+standards, real-world programs need to actually WORK in the real world.  
+This means that if compiler designers have interpreted the standards 
+differently (which they evidently have) there's never going to be an 
+ideal solution.  Programmers need to adopt the most pragmatic solution - 
+and this one's been shown to work best in the majority of cases.
+
+John
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1395479837.23279_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1395553281.31940_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1395490172.10597_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1395490172.10597_0.ltw:2,a&nbsp;&lt;532D7D75.9090804 at tiscali dot co dot uk&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

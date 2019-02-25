@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Netjack - one audio source, multiple remote destinations</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Netjack - one audio source, multiple remote destinations</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1369672638.9794_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1369674432.12597_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1369673131.10613_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 27 May 2013 12:44:56 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jason Cipriani </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Adrian Knoth &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Jason Cipriani
+<a href='../1369672196.9189_0.ltw:2,a/index.html'>Re: [Jack-Devel] Netjack - one audio source, multiple remote destinations </a></td></tr>
+</table>
+<pre>
+On Mon, May 27, 2013 at 12:29 PM, Jason Cipriani
+&lt;[hidden]&gt;wrote:
+
+&gt;
+&gt; If you really want/need a jackd-based setup, then do something like
+&gt;
+&gt;&gt; this:
+&gt;&gt;
+&gt;&gt;    - PC is master, can even be -d dummy (no local audio I/O)
+&gt;&gt;    - 20 slaves connected with jack_netsource -N slaveX -H slaveX
+&gt;&gt;    - Run alsa_in/alsa_out or even better zita-ajbridge (a2j, j2a) on
+&gt;&gt;      each slave to enable local audio I/O
+&gt;&gt;
+&gt;
+&gt; This is exactly what I want to do, thanks! Unfortunately, alsa_in/alsa_out
+&gt; do not seem to be available for the devices (Gumstix Overo). I did find the
+&gt; zita-ajbridge source and compiled it with no issues, but am getting
+&gt; floating point exceptions from zita-j2a on initialization:
+&gt;
+&gt; # zita-j2a -d hw:0,0 -L -r 44100 -p 1024 -v
+&gt; playback :
+&gt;   nchan  : 2
+&gt;   fsamp  : 44100
+&gt;   fsize  : 1024
+&gt;   nfrag  : 2
+&gt;   format : S16_LE
+&gt; capture  : not enabled
+&gt; Floating point exception
+&gt;
+&gt; Fortunately gdb is available and the zita source is very tidy, so...
+&gt; hopefully I can get to the bottom of it.
+&gt;
+&gt;
+Well, after disabling all optimizations and enabling debug info in
+zita-resampler, zita-alsa-pcmi, and zita-ajbridge, the smoking gun I was
+hoping for didn't appear. I'm going to have to give up for now due to time
+constraints.
+
+We can run the audio source software directly on our devices. That's our
+backup plan. They don't have quite enough CPU power to run without
+modifications to the source audio but it'll have to do for now. I'd like to
+come back to this later, though.
+
+Thanks again. Here is my stack trace for reference:
+
+This GDB was configured as "arm-angstrom-linux-gnueabi".
+For bug reporting instructions, please see:
+&lt;http://www.gnu.org/software/gdb/bugs/&gt;...
+Reading symbols from
+/home/root/dev/zita-ajbridge-0.2.2/source/zita-j2a...done.
+(gdb) run -d hw:0,0 -r 44100 -L -p 1024 -v
+Starting program: /home/root/dev/zita-ajbridge-0.2.2/source/zita-j2a -d
+hw:0,0 -r 44100 -L -p 1024 -v
+[Thread debugging using libthread_db enabled]
+playback :
+  nchan  : 2
+  fsamp  : 44100
+  fsize  : 1024
+  nfrag  : 2
+  format : S16_LE
+capture  : not enabled
+[New Thread 0x40d50490 (LWP 2923)]
+[New Thread 0x40eca490 (LWP 2926)]
+[New Thread 0x40fc4490 (LWP 2927)]
+
+Program received signal SIGFPE, Arithmetic exception.
+0x400da0ac in raise () from /lib/libpthread.so.0
+(gdb) bt
+#0  0x400da0ac in raise () from /lib/libpthread.so.0
+#1  0x400fc0b8 in __aeabi_uldivmod () from /lib/libgcc_s.so.1
+#2  0x400fa880 in __divsi3 () from /lib/libgcc_s.so.1
+#3  0x400fa880 in __divsi3 () from /lib/libgcc_s.so.1
+Backtrace stopped: previous frame identical to this frame (corrupt stack?)
+(gdb) thread 2
+[Switching to thread 2 (Thread 0x40d50490 (LWP 2923))]#0  0x400d4f58 in
+pthread_cond_wait () from /lib/libpthread.so.0
+(gdb) bt
+#0  0x400d4f58 in pthread_cond_wait () from /lib/libpthread.so.0
+#1  0x400d51a0 in pthread_cond_wait () from /lib/libpthread.so.0
+#2  0x400a5508 in ?? () from /usr/lib/libjack.so.0
+#3  0x400a5508 in ?? () from /usr/lib/libjack.so.0
+Backtrace stopped: previous frame identical to this frame (corrupt stack?)
+(gdb) thread 3
+[Switching to thread 3 (Thread 0x40eca490 (LWP 2926))]#0  0x403b94d4 in
+poll () from /lib/libc.so.6
+(gdb) bt
+#0  0x403b94d4 in poll () from /lib/libc.so.6
+#1  0x403cf364 in __libc_enable_asynccancel () from /lib/libc.so.6
+#2  0x40d51000 in ?? ()
+#3  0x40d51000 in ?? ()
+Backtrace stopped: previous frame identical to this frame (corrupt stack?)
+
+Zita versions were:
+  zita-resampler-1.3.0
+  zita-alsa-pcmi-0.2.0
+  zita-ajbridge-0.2.2
+
+Device is:
+  # uname -a
+  Linux dev41 3.2.28-rt42+ #6 PREEMPT RT Fri Sep 21 12:23:39 EDT 2012
+armv7l GNU/Linux
+
+Jason
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1369672638.9794_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1369674432.12597_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1369673131.10613_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1369673131.10613_0.ltw:2,a&nbsp;&lt;CAF1GSth8awF-4JrwsUeRqExjG5hD=2UkiCbis=y77RCiVq2+Dg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

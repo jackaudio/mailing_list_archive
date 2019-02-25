@@ -1,0 +1,67 @@
+Date:        Wed, 18 Apr 2012 03:47:24 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          David Henningsson <[hidden] at canonical dot com>
+Cc:          [hidden] at lists dot jackaudio dot org, Jaco Kroon <[hidden] at kroon dot co dot za>
+In-Reply-To: David Henningsson [Jack-Devel] [PATCH] jackdbus: Fix sigsegv handling segfaulting by itself (1334658822.12328_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [PATCH] jackdbus: Fix sigsegv handling segfaulting by itself
+
+Hi David,
+
+David Henningsson <[hidden]> writes:
+
+> In my case, the siginfo code was -6, causing the sigsegv handling
+> to crash on its own. This patch adds a range check for siginfo code.
+>
+> BugLink: https://bugs.launchpad.net/bugs/983835
+> Signed-off-by: David Henningsson <[hidden]>
+> ---
+>  dbus/sigsegv.c |    8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+>
+> diff --git a/dbus/sigsegv.c b/dbus/sigsegv.c
+> index 03b1183..8a87dc8 100644
+> --- a/dbus/sigsegv.c
+> +++ b/dbus/sigsegv.c
+> @@ -60,6 +60,7 @@ static void signal_segv(int signum, siginfo_t* info, void*ptr) {
+>      static const char *si_codes[3] = {"", "SEGV_MAPERR", "SEGV_ACCERR"};
+>  
+>      size_t i;
+> +    const char *si_code_str;
+>      ucontext_t *ucontext = (ucontext_t*)ptr;
+>  
+>  #if defined(SIGSEGV_STACK_X86) || defined(SIGSEGV_STACK_IA64)
+> @@ -94,9 +95,14 @@ static void signal_segv(int signum, siginfo_t* info, void*ptr) {
+>          jack_error("Unknown bad signal catched!");
+>      }
+>  
+> +    if (info->si_code >= 0 && info->si_code < 3) 
+> +        si_code_str = si_codes[info->si_code];
+> +    else
+> +        si_code_str = "unknown";
+> +
+>      jack_error("info.si_signo = %d", signum);
+>      jack_error("info.si_errno = %d", info->si_errno);
+> -    jack_error("info.si_code  = %d (%s)", info->si_code, si_codes[info->si_code]);
+> +    jack_error("info.si_code  = %d (%s)", info->si_code, si_code_str);
+>      jack_error("info.si_addr  = %p", info->si_addr);
+>  #if !defined(__alpha__) && !defined(__ia64__) && !defined(__FreeBSD_kernel__) && !defined(__arm__) && !defined(__hppa__) && !defined(__sh__)
+>      for(i = 0; i < NGREG; i++)
+
+I've applied the patch and pushed to the jack2 master branch. Thank you
+for your contribution!
+
+The si_code decoding is still suboptimal because it cannot handle
+negative si_codes that are valid. si_codes are non-continuous and
+the signal specific si_code values are reused for different
+signals. Thus, implementing si_code to string descriptions map with
+directly indexed array is not good idea in the first place.
+
+FTR, a2jmidid, ladish and lash are also affected by this bug.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1334710093.1482_0.ltw:2,a <87fwc19883.fsf at arnaudov dot name>
+________________________________________________________________________________
+

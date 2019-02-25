@@ -1,0 +1,58 @@
+Date:        Wed, 16 Feb 2011 05:22:09 +0100
+From:        hermann  <[hidden] at web dot de>
+To:          Jack O'Quin <[hidden] at gmail dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Jack O'Quin Re: [Jack-Devel] buffer size callback, revisit (1297798899.8215_0.ltw:2,a)
+Follow-Up:   Jack O'Quin Re: [Jack-Devel] buffer size callback, revisit (1297830719.9890_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] buffer size callback, revisit
+
+Am Dienstag, den 15.02.2011, 13:41 -0600 schrieb Jack O'Quin:
+> On Tue, Feb 15, 2011 at 1:25 PM, Paul Davis <[hidden]> wrote:
+> > On Tue, Feb 15, 2011 at 2:22 PM, Jack O'Quin <[hidden]> wrote:
+> >
+> >> If JACK does not, the best hope is not to change the buffer size.
+> >> That's been the de facto solution for the past ten years or so. I
+> >> doubt very many JACK clients ever worked correctly with this
+> >> interface.
+> >
+> > so, if i understand correctly, you are suggesting that we simply
+> > convert the implementations so that the callback is always called from
+> > jack_activate(), and tell client authors "you should assume that its
+> > called from jack_activate(), though it may not be, and that's a bug in
+> > older versions of JACK" ?
+> 
+> Not exactly. The issue is complex, because one needs to look at it
+> from both sides. Existing clients will want to work as best they can
+> with old JACK versions. Removing the initialization code would not
+> serve that purpose well, despite being subject to a race condition.
+> 
+> I am not against adding new, cleaner interfaces. But, let's not hold
+> our breath waiting for everyone to adopt them. That takes years.
+> 
+> I was just asking: what's wrong with fixing the bug in the existing one?
+> 
+> I suspect I may have missed some earlier message where that problem
+> was described already. If so, I apologize.
+
+Many jack clients cant handle buffersize changes anyway, mostly because
+the jack_set_buffer_size_callback() isn't involved.  
+
+But anyhow, clients witch handle it, and use internal buffers, have
+allocate the buffers before they called jack_activate(), so, a change in
+buffersize in between this time, leads anyway to a new allocation, when
+the client notice the change, isn't it ?  
+
+so wouldn't a call like 
+
+if (!jack_activate(jack_client))
+ if(sz != jack_get_buffer_size (jack_client)){buffersize change handle }
+
+handle the race condition without change anything in jack ?
+
+regards
+hermann
+
+1297830242.9505_0.ltw:2,a <1297830129.2052.30.camel at box>
+________________________________________________________________________________
+

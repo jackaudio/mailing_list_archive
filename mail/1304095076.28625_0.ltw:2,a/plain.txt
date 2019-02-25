@@ -1,0 +1,44 @@
+Date:        Fri, 29 Apr 2011 18:37:37 +0200
+From:        torbenh  <[hidden] at gmx dot de>
+To:          Dan Muresan <[hidden] at gmail dot com>
+Cc:          [hidden] at jackaudio dot org
+In-Reply-To: Dan Muresan [Jack-Devel] port callbacks, jack_port_id_t (1304089477.17440_0.ltw:2,a)
+Follow-Up:   Dan Muresan Re: [Jack-Devel] port callbacks, jack_port_id_t (1304101946.8312_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] port callbacks, jack_port_id_t
+
+On Fri, Apr 29, 2011 at 06:04:17PM +0300, Dan Muresan wrote:
+> Hi, I have some questions about the jack1 port API that the
+> documentation and examples don't clarify:
+> 
+> 1) how do I translate a jack_port_id_t to a jack_port_t or a port
+> name? When the app gets a JackPortConnectCallback, how does it know
+> which ports it's talking about?
+> 
+> 2) In what thread do the port callbacks happen? For example I've
+> noticed that calling jack_port_get_buffer() on a disconnected input
+> yields an invalid value (but not NULL). Trying to read from that
+> segfaults. So, ideally I'd want the port disconnection callback to
+
+when are you calling jack_port_get_buffer() ?
+jack_port_get_buffer() is valid, even when the port is not connected.
+however, it might not be valid, when the client is not active yet.
+
+so i suspect, that your calling jack_port_get_buffer too early. 
+
+
+> notify the process thread (of course, I could instead call
+> jack_port_connected() everytime...)
+> 
+> -- Dan
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+-- 
+torben Hohn
+
+1304095076.28625_0.ltw:2,a <20110429163737.GF13755 at siel dot b>
+________________________________________________________________________________
+

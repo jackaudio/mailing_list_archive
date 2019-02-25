@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] transport rolling + new slow-sync client</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] transport rolling + new slow-sync client</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1307719452.31266_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1307738166.2778_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1307719960.32285_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 10 Jun 2011 11:32:23 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1307719284.30993_0.ltw:2,a/index.html'>Re: [Jack-Devel] transport rolling + new slow-sync client </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1307738166.2778_0.ltw:2,a/index.html'>Re: [Jack-Devel] transport rolling + new slow-sync client </a></td></tr>
+</table>
+<pre>
+On Fri, Jun 10, 2011 at 11:21 AM, Fons Adriaensen &lt;[hidden]&gt; wrote:
+
+&gt; The whole slow-start system is IMHO fundamentally flawed, because
+&gt; checking for readyness is done only when the transport is supposed
+&gt; to have already started. This makes it impossible to start on cue,
+&gt; unless you are lucky and all clients involved happen to be ready.
+
+Presumably what you mean is explained by this next paragraph:
+
+&gt; 1. Clients capable to catch up and sync by themselves if the transport
+&gt; &#xA0; starts when they are not ready, probably outputting silence until
+&gt; &#xA0; they have synced (that would also solve your case).
+
+having implemented this in ardour, i can testify that its really quite
+complex, and the slow-sync client "abstraction" is much, much easier
+for most people and comes with little cost except when the locate
+really is very costly (and this is rare, extremely rare).
+
+&gt; 2. Clients that, when transport is stopped and locates to a new
+&gt; &#xA0; position, get ready to start without delay at that position
+&gt; &#xA0; instead of waiting for a transport start (many probably do
+&gt; &#xA0; this already, but it's not required and can't be checked),
+
+there's no reason to check it unless you believe that the check on
+client-is-read-to-roll takes too long. the client will be ready the
+first time the server asks if it does this (and indeed, its hard to
+imagine a client that didn't - deferring an actual data i/o operation
+until transport start is ... well, its braindead.
+
+&gt; 3. A way for clients to indicate their readyness to start without
+&gt; &#xA0; delay _while transport is stopped_.
+
+necessary only if you believe the check is too slow. i can't imagine
+situations where it would be too slow - if you're trying to sync with
+an external timesource, you won't care about this kind of delay, i
+think.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1307719452.31266_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1307738166.2778_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1307719960.32285_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1307719960.32285_0.ltw:2,a&nbsp;&lt;BANLkTimRgy2BYq0mYcnPTMhEYEf0sREsJw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

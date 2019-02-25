@@ -1,0 +1,70 @@
+Date:        Sat, 19 Feb 2011 19:13:10 +0100
+From:        torbenh  <[hidden] at gmx dot de>
+To:          "[hidden] at lists dot jackaudio dot org List" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Robin Gareus Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1298121766.797_0.ltw:2,a)
+Follow-Up:   Robin Gareus [Jack-Devel] jackdus - was Re: Jack 1.9.7 on ARM crashes when killing a client (1298293037.17587_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client
+
+On Sat, Feb 19, 2011 at 02:22:26PM +0100, Robin Gareus wrote:
+> On 02/18/2011 12:23 PM, torbenh wrote:
+> > On Thu, Feb 17, 2011 at 02:01:06PM +0100, Robin Gareus wrote:
+> [..]
+> >> 
+> >> 
+> >> while you're at it: Would it be unreasonable to ask looking into 
+> >> ignoring device disconnect?  f.i. have jackd survive and not crash
+> >> when an interface (eg ALSA-USB) goes away.
+> >> 
+> >> No further action should be taken by JACK (well, maybe some
+> >> hook-script could be invoked or a d-bus command send); some 3rd
+> >> party software could issue d-bus commands to switch backends.
+> > 
+> > i basically did this with tschack. using pyjackd this should be
+> > working. not well tested, as i dont have an usb soundcard with me
+> > very often.
+> 
+> I've updated jackdmp and tschack to latest svn/git and check this with a
+> USB UA-25. annotated logs attached.
+> 
+> 
+> 	tschack (git 7b7a48d)
+> terminates with exit 0 if the interface goes away.
+
+you did not use pyjackd.
+the jackd binary that comes with tschack is supposed to behave excactly
+like a jackd binary should.
+i didnt add a callback to the control api yet. but pyjackd should be
+ignoring the SIGUSR2 thats sent to the process leader upon backend exit.
+
+so it probably wont exit.
+the behaviour of tschack while it doesnt have a backend, is probably not
+really nice. (there are places where it waits for a graph switch) 
+this is definitely fixable though.
+
+
+> 
+> 
+> 	jack2d 1.9.7~svn4120 ( --classic --dbus )
+> keeps running when the USB/ALSA interface goes away - it no longer
+> live-locks or crashes. - All JACK clients stall.
+> With the dbus-version: the backend can be changed. After switching to a
+> new backend (here: internal card) JACK resumes to run nicely.
+> 
+> After the device had been disconnected, the current port-connections can
+> no longer be queried (jack_lsp can not connect) until the backend is
+> re-initialized with `jack_control sm`.
+> Calling 'switch-master' re-creates the physical output ports and the
+> information about previous port-connections to the outputs are lost.
+
+loss of port-connections is to be expected. its a backend switch.
+the ports might be different. recreating the correct connections, should
+be done by some kind of sessionmanager. this is out of scope for jackd.
+
+
+-- 
+torben Hohn
+
+1298139207.6776_0.ltw:2,a <20110219181310.GB3830 at siel dot b>
+________________________________________________________________________________
+

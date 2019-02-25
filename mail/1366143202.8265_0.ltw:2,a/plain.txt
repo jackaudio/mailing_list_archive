@@ -1,0 +1,74 @@
+Date:        Tue, 16 Apr 2013 22:13:10 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Bob van Loosen <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Bob van Loosen Re: [Jack-Devel] Cleanup of clients in libjack2 causes crash (1366146800.13844_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Cleanup of clients in libjack2 causes crash
+
+Le 16 avr. 2013 à 21:38, Bob van Loosen <[hidden]> a écrit :
+
+> On 16-04-13 21:06, Stéphane Letz wrote:
+>> Le 16 avr. 2013 à 20:56, Bob van Loosen <[hidden]> a écrit :
+>> 
+>>> Hello,
+>>> 
+>>> I've written a program that can create multiple jack clients and connect them to jackd.
+>>> I'm using a callback passed to jack_on_info_shutdown() to know when a jack client has exited,
+>> ??
+>> 
+>> jack_on_info_shutdown is called when the *server* quits.
+>> 
+>>> when that happens I deactivate and close the client, and I try to make a new one every second.
+>>> This way I can restart jackd without having to restart my program.
+>>> So far so good, until my program started to segfault whenever I closed jackd.
+>>> After some digging I found this code in JackLibGlobals.h:
+>>> 
+>>> if (!JackGlobals::fServerRunning && fClientCount > 0) {
+>>> 
+>>>    // Cleanup remaining clients
+>>>    jack_error("Jack server was closed but clients are still allocated, cleanup...");
+>>>    for (int i = 0; i < CLIENT_NUM; i++) {
+>>>        JackClient* client = JackGlobals::fClientTable[i];
+>>>        if (client) {
+>>>            jack_error("Cleanup client ref = %d", i);
+>>>            client->Close();
+>>>            delete client;
+>>>            JackGlobals::fClientTable[i] = NULL;
+>>>        }
+>>>    }
+>> This code was supposed to close clients that the program incorrectly forgot to close. It is sometimes rather necessary (you now libjack trying to do the job because developers don't use the API correctly..)
+>>> So what happens here is, jackd exits, I deactivate and close a client, I create a new one with jack_client_open(),
+>>> libjack2 then deletes all the other clients, and my program is then left with several invalid jack_client_t* pointers.
+>> Do you mean double "delete" yes?
+>>> What I suggest here instead, is to just call client->Close() and remove the client from JackGlobals::fClientTable
+>>> (which JackClient::Close() already does btw), and then leave the dealloc up to the program itself.
+>>> 
+>>> Regards,
+>> 
+>> Please send me a test program that shows the problem.
+>> 
+>> Stéphane
+> 
+> Hi,
+> 
+> Thanks for your quick reply, you're right, the problem is that I get a double delete.
+> I've attached a simple program to show the issue, compile with gcc main.cpp -ljack
+> 
+> Regards,
+> 
+> Bob.
+> <main.cpp>
+
+
+Whenever the shutdown callback is called, the clients become somewhat "zombie". The best that can be done is to signal another thread to correctly do cleanup, that is by calling "jack_client_close" (since "jack_client_close" cannot be called directly in the context of the thread that calls the shutdown callback).
+
+In your case you have several clients right? So then you are supposed to close *all of them* because they non longer correspond to any valid client. 
+
+The cleanup code is there in case the developer forgot to call his own cleanup code. I think it has to stay So I don't think we can do much better.
+
+Stéphane
+
+1366143202.8265_0.ltw:2,a <7B20539C-BCD4-4300-A480-60C8E896A12C at grame dot fr>
+________________________________________________________________________________
+

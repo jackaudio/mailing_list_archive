@@ -1,0 +1,55 @@
+Date:        Mon, 10 Dec 2012 14:46:22 +0100
+From:        MONTANARO Luciano (MM)  <[hidden] at magnetimarelli dot com>
+To:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] Lock recursion in Trylock() (1355153342.27132_0.ltw:2,)
+
+Subject:     [Jack-Devel] Lock recursion in Trylock()
+
+Hi all,
+This is the first time I am writing to the list. I am not sure this is the right place to send patches, just let me know if you prefer the use of a different channel.
+I am using jack in an embedded linux project, and I have had to analyze a crash dump from a (heavily threaded) client application, which failed on the
+Jack_error line in JackPosixMutex.cpp: Trylock().
+
+The cause of this is that jack_error() will call JackMessageBuffer::AddMessage() which will call Trylock(), which, if the lock is held, will call jack_error(), and the wole sequence will repeat until the stack is exhausted.
+
+Below is a patch that simply disables the jack_error call for this case. Is it actually an error to call Trylock() from a different thread? This seems more like a copy-paste remnant from the Lock() function. The jack_error() calls in Lock() and Unlock() are probably not a problem, though they make me a bit uncomfortable as well.
+
+I hope this helps,
+Cheers,
+Luciano
+
+--- a/posix/JackPosixMutex.cpp
++++ b/posix/JackPosixMutex.cpp
+@@ -69,7 +69,10 @@ namespace Jack
+                 return false;
+             }
+         } else {
++           /* Calling jack_error here will recursively call Trylock() if
++            * multithreaded debugging is active.  Don't do that.
+             jack_error("JackBasePosixMutex::Trylock mutex already locked by thread = %d", current_thread);
++            */
+             return false;
+         }
+     }
+
+
+
+
+
+--
+Luciano Montanaro
+EntryNAV - Audio Software Integrator
+Magneti Marelli Electronic Systems
+Viale Carlo Emanuele II 150, Venaria Reale (To)
+Tel. (+39) 011 6879765
+
+
+
+
+Confidential Notice: This message - including its attachments - may contain proprietary, confidential and/or legally protected information and is intended solely for the use of the designated addressee(s) above. If you are not the intended recipient be aware that any downloading, copying, disclosure, distribution or use of the contents of the above information is strictly prohibited.
+If you have received this communication by mistake, please forward the message back to the sender at the email address above, delete the message from all mailboxes and any other electronic storage medium and destroy all copies.
+Disclaimer Notice: Internet communications cannot be guaranteed to be safe or error-free. Therefore we do not assure that this message is complete or accurate and we do not accept liability for any errors or omissions in the contents of this message.
+
+1355147209.22418_0.ltw:2, <67BA5DEFFBE7BF46B4C53F7E5FC5AD44183216173E at MXCL13 dot fgremc dot it>
+________________________________________________________________________________
+

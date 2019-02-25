@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] [PATCH] jackdbus: Fix sigsegv handling segfaulting by itself</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] [PATCH] jackdbus: Fix sigsegv handling segfaulting by itself</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1334658822.12328_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1334924014.11165_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1334710093.1482_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 18 Apr 2012 03:47:24 +0300 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Nedko Arnaudov </span> &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>To</td><td>David Henningsson &lt;[hidden] at canonical dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org, Jaco Kroon &lt;[hidden] at kroon dot co dot za&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>David Henningsson
+<a href='../1334658822.12328_0.ltw:2,a/index.html'>[Jack-Devel] [PATCH] jackdbus: Fix sigsegv handling segfaulting by itself </a></td></tr>
+</table>
+<pre>
+Hi David,
+
+David Henningsson &lt;[hidden]&gt; writes:
+
+&gt; In my case, the siginfo code was -6, causing the sigsegv handling
+&gt; to crash on its own. This patch adds a range check for siginfo code.
+&gt;
+&gt; BugLink: https://bugs.launchpad.net/bugs/983835
+&gt; Signed-off-by: David Henningsson &lt;[hidden]&gt;
+&gt; ---
+&gt;  dbus/sigsegv.c |    8 +++++++-
+&gt;  1 file changed, 7 insertions(+), 1 deletion(-)
+&gt;
+&gt; diff --git a/dbus/sigsegv.c b/dbus/sigsegv.c
+&gt; index 03b1183..8a87dc8 100644
+&gt; --- a/dbus/sigsegv.c
+&gt; +++ b/dbus/sigsegv.c
+&gt; @@ -60,6 +60,7 @@ static void signal_segv(int signum, siginfo_t* info, void*ptr) {
+&gt;      static const char *si_codes[3] = {"", "SEGV_MAPERR", "SEGV_ACCERR"};
+&gt;  
+&gt;      size_t i;
+&gt; +    const char *si_code_str;
+&gt;      ucontext_t *ucontext = (ucontext_t*)ptr;
+&gt;  
+&gt;  #if defined(SIGSEGV_STACK_X86) || defined(SIGSEGV_STACK_IA64)
+&gt; @@ -94,9 +95,14 @@ static void signal_segv(int signum, siginfo_t* info, void*ptr) {
+&gt;          jack_error("Unknown bad signal catched!");
+&gt;      }
+&gt;  
+&gt; +    if (info-&gt;si_code &gt;= 0 &amp;&amp; info-&gt;si_code &lt; 3) 
+&gt; +        si_code_str = si_codes[info-&gt;si_code];
+&gt; +    else
+&gt; +        si_code_str = "unknown";
+&gt; +
+&gt;      jack_error("info.si_signo = %d", signum);
+&gt;      jack_error("info.si_errno = %d", info-&gt;si_errno);
+&gt; -    jack_error("info.si_code  = %d (%s)", info-&gt;si_code, si_codes[info-&gt;si_code]);
+&gt; +    jack_error("info.si_code  = %d (%s)", info-&gt;si_code, si_code_str);
+&gt;      jack_error("info.si_addr  = %p", info-&gt;si_addr);
+&gt;  #if !defined(__alpha__) &amp;&amp; !defined(__ia64__) &amp;&amp; !defined(__FreeBSD_kernel__) &amp;&amp; !defined(__arm__) &amp;&amp; !defined(__hppa__) &amp;&amp; !defined(__sh__)
+&gt;      for(i = 0; i &lt; NGREG; i++)
+
+I've applied the patch and pushed to the jack2 master branch. Thank you
+for your contribution!
+
+The si_code decoding is still suboptimal because it cannot handle
+negative si_codes that are valid. si_codes are non-continuous and
+the signal specific si_code values are reused for different
+signals. Thus, implementing si_code to string descriptions map with
+directly indexed array is not good idea in the first place.
+
+FTR, a2jmidid, ladish and lash are also affected by this bug.
+
+-- 
+Nedko Arnaudov &lt;GnuPG KeyID: 5D1B58ED&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1334658822.12328_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1334924014.11165_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1334710093.1482_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1334710093.1482_0.ltw:2,a&nbsp;&lt;87fwc19883.fsf at arnaudov dot name&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

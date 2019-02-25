@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] 64 bit jack applications compiled with mingw crashes</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] 64 bit jack applications compiled with mingw crashes</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1434037788.31841_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1434210281.10978_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1434194717.32652_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 13 Jun 2015 13:25:10 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Kjetil Matheussen </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Kjetil Matheussen
+<a href='../1434210281.10978_0.ltw:2,/index.html'>Re: [Jack-Devel] 64 bit jack applications compiled with mingw crashes </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1434219384.16075_0.ltw:2,/index.html'>Re: [Jack-Devel] 64 bit jack applications compiled with mingw crashes </a></td></tr>
+</table>
+<pre>
+Hi,
+
+I'm trying to compile a 64 bit jack application (radium) with mingw-64.
+When I compile it in 32 bit mode, it works fine, but when creating a 64
+bit version, it crashes when calling a jack_* function.
+
+
+The same happens when trying to run a simple test program:
+
+"
+#include &lt;jack/jack.h&gt;
+int main(){
+  jack_ringbuffer_create(8000); // (Also crashes if callling
+jack_client_open)
+  return 0;
+}
+"
+
+
+If I compile it like this (32 bit):
+
+$ i686-w64-mingw32-gcc winjacktest.c -I/home/kjetil/.wine/drive_c/Program\
+Files/Jack/includes /home/kjetil/.wine/drive_c/Program\
+Files/Jack/lib/libjack.lib
+
+...it works
+
+But if I compile it like this (64 bit):
+
+$ x86_64-w64-mingw32-gcc winjacktest.c
+-I/home/kjetil/.wine/drive_c/Program\ Files/Jack/includes
+/home/kjetil/.wine/drive_c/Program\ Files/Jack/lib/libjack64.lib
+
+...it crashes.
+
+
+I also have a backtrace. The second last frame in the backtrace is the call
+to "jack_ringbuffer",
+while the last frame shows that an unrelated function is called instead of
+jack_rinbuffer_create.
+So it seems like either the stack itself is a little bit corrupted, or
+libjack64.lib sends the program
+further to a random place in the program instead of the libjack64.dll
+library. The latter might
+be more likely though, since it's the same backtrace every time.
+
+
+I've tried installed both the 32 bit and the 64 bit version of
+jack which are available for download at jackaudio.org. Same behaviour for
+both.
+
+My gcc is a little bit old, but I guess that isn't the reason for the crash:
+
+$ x86_64-w64-mingw32-gcc --version
+x86_64-w64-mingw32-gcc (GCC) 4.7.2 20120920 (Fedora MinGW 4.7.2-7.fc17)
+$ i686-w64-mingw32-gcc --version
+i686-w64-mingw32-gcc (GCC) 4.7.2 20120920 (Fedora MinGW 4.7.2-7.fc17)
+
+
+Thanks for any help. Please let me know if there's anything I should try.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1434037788.31841_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1434210281.10978_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1434194717.32652_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1434194717.32652_0.ltw:2,&nbsp;&lt;CAC6niE+XDkk7D-gyaDDefkxeYH2P=BtgqbS8WQL4Npq4MCFjkQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

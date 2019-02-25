@@ -1,0 +1,74 @@
+Date:        Mon, 18 May 2009 16:47:46 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Jack devel <[hidden] at lists dot jackaudio dot org>
+Cc:          linux audio users <[hidden] at lists dot linuxaudio dot org>, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>
+Follow-Up:   Nedko Arnaudov Re: [LAD] [Jack-Devel] What are we talking about. (1242660163.4553_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] What are we talking about. (Was: KILL DBUS)
+
+Le 18 mai 09 à 16:35, Paul Davis a écrit :
+
+> On Mon, May 18, 2009 at 10:25 AM, MarcO'Chapeau <[hidden] 
+> > wrote:
+>> On Mon, 18 May 2009 17:36:11 +0400, alex stone  
+>> <[hidden]> wrote:
+>>> Marc,
+>>> hehe, and the waltz continues. So let's assume that pulse isn't  
+>>> being
+>>> considered here as part of the dbus paradigm intent .
+>>
+>> Hi again.
+>>
+>> Ok, let's stop dancing then :) Let me try to explain that dbus here  
+>> is not
+>> the center of what has changed in JACK2.
+>
+> i'm  just going to trying to summarize even more from what Marc has
+> said. There are two issues that have become tangled up in this recent
+> email flurry.
+>
+> 1) the current D-Bus support can be mishandled by packagers and this
+> can lead to problems for some users
+> 2) the only actual implementation that uses the control API is based
+> on D-Bus, and this is not a source of happiness and cake for everyone.
+>
+> There is nothing stopping other implementations (pure C, OSC, python
+> etc) using the control API, but at this time, nothing else does.
+> Stephane has attempted to correct problem (1) in svn with warnings
+> etc. to packagers.
+>
+> --p
+
+Some more words about that:
+
+JACK2 SVN makes now clear what can be built:
+
+- "classic" JACK : this target compiles the "jackd" executable. This  
+exe behaves exactly as JACK1 is behaving (beside possible bugs). This  
+target is the *default* one (that is the one resulting from "./waf  
+configure). This version is meant to be used with usual tools  
+Qjackctl, Ardour... (to start the server)... and so on.
+
+- D-Bus JACK: this target compiles the "jackdbus" executable *only*  
+(that is the "jackd" is not compiled anymore). This target is obtained  
+using --dbus at configure time. This version is meant to be controled  
+with D-Bus based control applications (Nedko please clarify this  
+point...)
+
+- both targets can be mixed but a WARNING is issued at configure time;  
+that is "./waf configure  --dbus --classic" will compile both "jackd"   
+and "jackdbus"  executable. This is to be done only by people who know  
+exactly what they are doing.
+
+Packagers are then strongly recommended to prepare the "classic"  or  
+the "D-Bus" JACK2. Dependancies have to be handled accordingly (Nedko  
+please clarify this point...)
+The "mixed" target should *not be used* for packaging.
+
+(see http://trac.jackaudio.org/wiki/JackDbusPackaging)
+
+Stephane
+
+1242658321.1374_0.ltw:2,a <28A1386F-A9B1-4C8B-B561-8FE90F401600 at grame dot fr>
+________________________________________________________________________________
+

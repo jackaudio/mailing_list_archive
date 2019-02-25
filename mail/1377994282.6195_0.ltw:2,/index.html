@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] FW: Jack beginner question - which files are Jack's library files?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] FW: Jack beginner question - which files are Jack's library files?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1377898187.14250_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1378003717.27275_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1377994282.6195_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 01 Sep 2013 00:11:06 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Val Veirs (R) </span> &lt;[hidden] at ColoradoCollege dot edu&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Mills
+<a href='../1378003717.27275_0.ltw:2,/index.html'>Re: [Jack-Devel] FW: Jack beginner question - which files are Jack's library files? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1378026002.21749_0.ltw:2,/index.html'>Re: [Jack-Devel] FW: Jack beginner question - which files are Jack's library files? </a></td></tr>
+</table>
+<pre>
+I a still trying to get a simple Jack program to compile (Ubuntu 13.04 64 bit)
+
+The problem seems to be that even when I point gcc toward the folder where the Jack libraries are, the compiler reports undefined reference errors.
+
+For example,
+If I run gcc with no libraries, I get undefined reference errors:
+
+val@zar:~/JackFiles/testJack$ gcc -o metronome   metro.c
+/tmp/cc4akFsZ.o: In function `signal_handler':
+metro.c:(.text+0x16): undefined reference to `jack_client_close'
+/tmp/cc4akFsZ.o: In function `process_silence':
+metro.c:(.text+0x81): undefined reference to `jack_port_get_buffer'
+/tmp/cc4akFsZ.o: In function `process_audio':
+....
+Here I tried both a -L and a -l parameter:
+val@zar:~/JackFiles/testJack$ gcc -o metronome -L/usr/lib/x86_64-linux-gnu -ljack metro.c
+
+/tmp/ccksW4it.o: In function `signal_handler':
+metro.c:(.text+0x16): undefined reference to `jack_client_close'
+/tmp/ccksW4it.o: In function `process_silence':
+metro.c:(.text+0x81): undefined reference to `jack_port_get_buffer'
+/tmp/ccksW4it.o: In function `process_audio':
+...
+
+I get the same errors if I omit the -L with path to the libjack.so files
+val@zar:~/JackFiles/testJack$ gcc -o metronome  -ljack metro.c
+
+/tmp/cc5oyTHv.o: In function `signal_handler':
+metro.c:(.text+0x16): undefined reference to `jack_client_close'
+&#133;
+And the same if I include the -L and omit the -l
+val@zar:~/JackFiles/testJack$ gcc -o metronome -L/usr/lib/x86_64-linux-gnu  metro.c
+
+/tmp/cchbhuv2.o: In function `signal_handler':
+metro.c:(.text+0x16): undefined reference to `jack_client_close'
+...
+
+All this makes me feel that the files that I think are Jack's library files are not in fact the library files or the files are 'incorrect' in some way.
+Here are my Jack library files:
+val@zar:/usr/lib/x86_64-linux-gnu$ find libjack*
+libjack.a
+libjackserver.a
+libjackserver.so
+libjackserver.so.0
+libjackserver.so.0.0.28
+libjack.so
+libjack.so.0
+libjack.so.0.0.28
+
+Any suggestions?  Does anyone have Ubuntu compiling Jack?  If so, what do your libraries look like and where are they and how do you connect them to gcc?
+
+Thanks for any suggestions.
+
+Val Veirs
+Professor of Physics
+
+
+
+
+________________________________________
+From: Val Veirs (R)
+Sent: Wednesday, August 21, 2013 12:44 PM
+To: Florian Paul Schmidt
+Subject: RE: [Jack-Devel] Jack beginner question
+
+First, &#147;Thank you&#148; to Pawel and Flo for helping me as I try to compile anything with jack.
+
+I have now installed libjack-dev and one result seems to be that I now have a path and file:
+/usr/include/jack/jack.h
+which I take to be a good thing.
+When I try to compile, now the compiler now finds jack.h but none of its references resolve.  I now need to be linked into some jack library(s) that either I don't yet have or I have them in one or more wrong locations.
+Compiling metro.c yields:
+val@zar:~/JackFiles/jack-1.9.9.5/example-clients$ gcc -o metronome `pkg-config --cflags --libs jack` metro.c
+/tmp/ccnO5ZRZ.o: In function `signal_handler':
+metro.c:(.text+0x16): undefined reference to `jack_client_close'
+/tmp/ccnO5ZRZ.o: In function `process_silence':
+metro.c:(.text+0x81): undefined reference to `jack_port_get_buffer'
+/tmp/ccnO5ZRZ.o: In function `process_audio':
+metro.c:(.text+0xc3): undefined reference to `jack_port_get_buffer'
+/tmp/ccnO5ZRZ.o: In function `process':
+metro.c:(.text+0x214): undefined reference to `jack_transport_query'
+/tmp/ccnO5ZRZ.o: In function `main':
+metro.c:(.text+0x6e2): undefined reference to `jack_client_open'
+metro.c:(.text+0x736): undefined reference to `jack_set_process_callback'
+metro.c:(.text+0x75c): undefined reference to `jack_port_register'
+metro.c:(.text+0x772): undefined reference to `jack_get_sample_rate'
+metro.c:(.text+0xb31): undefined reference to `sin'
+metro.c:(.text+0xbaf): undefined reference to `jack_activate'
+collect2: error: ld returned 1 exit status
+
+I looked to see if Flo's suggested path to jack.pc existed and found that my jack.pc is one directory farther down at: /usr/lib/x86_64-linux-gnu/pkgconfig
+
+I tried setting:
+ PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig; export PKG_CONFIG_PATH
+and confirmed that this setting worked:
+ printenv PKG_CONFIG_PATH
+/usr/lib/x86_64-linux-gnu/pkgconfig
+
+But, compiling again did not change the failure to find the needed links to the jack.h entry points (jack_client_close etc.)
+
+I have messed with jack so much now that I may have made it impossible to get a working combination of files and paths and libraries.
+
+But, I so much need further advice!
+
+Thanks in advance,
+Val Veirs
+Colorado College
+________________________________________
+From: [hidden] [[hidden]] on behalf of Florian Paul Schmidt [[hidden]]
+Sent: Wednesday, August 21, 2013 6:01 AM
+To: [hidden]
+Subject: Re: [Jack-Devel] Jack beginner question
+
+On 21.08.2013 08:15, Val Veirs (R) wrote:
+&gt; Greetings,
+&gt;
+&gt; I am just beginning to look at Jack.  I am running Ubuntu 13.04 and I installed the binaries and QJackCtrl seems to work just fine.  That makes me think that so far I have the deamon running as it should.
+&gt;
+&gt; I want to compile just the simplest of your example clients programs to get started.
+&gt;   I download the Jack sources and put them in my user space.  There I find metro.c.  In a terminal window I try to compile and I run into path problems.
+&gt;
+&gt; Here is what is reported:
+&gt;
+&gt; val@zar:~/JackFiles/jack-1.9.9.5/example-clients$  gcc -o metronome `pkg-config --cflags --libs jack` metro.c
+&gt;
+&gt; Package jack was not found in the pkg-config search path.
+&gt; Perhaps you should add the directory containing `jack.pc'
+&gt; to the PKG_CONFIG_PATH environment variable
+&gt; No package 'jack' found
+&gt; metro.c:30:23: fatal error: jack/jack.h: No such file or directory
+&gt; compilation terminated.
+&gt;
+&gt;
+&gt; I guess my question is what should PKG_CONFIG_PATH point to?
+&gt;
+&gt; I would appreciate any suggestions.
+
+Like some other people mentioned, you need the -dev packages for
+libjack. But the metro client should be available in the (some) jack
+package. It's called jack_metro. You could also try tools like jack_lsp
+to check if the daemon is running fine..
+
+But just to answer your question: pkg-config looks in some default paths
+for .pc files. One of them should be /usr/lib/pkgconfig. If you want it
+to search additional paths, then you can point it to e.g.
+/usr/local/lib/pkgconfig, this is where the .pc files of packages are
+often put when you build the packages yourself from source and leave the
+default prefix /usr/local unchanged. Installing libjack-dev (or whatever
+it's called) should give you /usr/lib/pkgconfig/jack.pc. So no need to
+adjust the PKG_CONFIG_PATH..
+
+Have fun,
+Flo
+
+&gt; Val Veirs
+&gt; Colorado College
+&gt; Colorado Springs
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1377898187.14250_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1378003717.27275_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1377994282.6195_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1377994282.6195_0.ltw:2,&nbsp;&lt;8ECDB0EB15EB82499D1322E9D92B14E058A5CDEE at exchange-mb2&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

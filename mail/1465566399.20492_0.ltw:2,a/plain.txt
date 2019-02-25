@@ -1,0 +1,91 @@
+Date:        Fri, 10 Jun 2016 15:46:26 +0200
+From:        [hidden] at saepia dot net  <[hidden] at saepia dot net>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] shm registry full errors (1465472380.16082_0.ltw:2,)
+Follow-Up:   Paul Davis Re: [Jack-Devel] shm registry full errors (1465569564.25510_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] shm registry full errors
+
+Well I understand but what I observe is that JACK has unpredictable amount
+of total clients which is an issue, regardless if it's closer to 10 than
+1000.
+
+I have found out at least 3 conditions that affect this:
+
+- compilation flags, which by the way may cause jack to segfault if they
+are set too high
+
+- parameter to jackd
+
+- MAX_SHM_ID
+
+I suggest integrating this into one runtime command line parameter.
+
+M.
+09.06.2016 1:39 PM "Paul Davis" <[hidden]> napisał(a):
+
+> shared memory is not a very malleable resource. you can't just arbitrarily
+> increase the size of it like you can with heap memory.
+>
+> But running 250 JACK clients is not a viable workflow either. It doesn't
+> scale in that way unless you're not interested in latency, in which case
+> use PulseAudio.
+>
+> On Thu, Jun 9, 2016 at 6:32 AM, [hidden] <[hidden]>
+> wrote:
+>
+>> Hello,
+>>
+>> I've found a piece of code that can be responsible for this:
+>>
+>> #define MAX_SHM_ID 256
+>>
+>> This is used to determine size of the registry.
+>>
+>> What is rationale for hardcoding this like this?
+>>
+>> m.
+>>
+>> 2016-06-09 12:02 GMT+02:00 [hidden] <[hidden]>:
+>>
+>>> Hello,
+>>>
+>>> at some point I am getting the following errors from JACK
+>>>
+>>> Jun  9 11:57:19 001-can1-plumber jackd[21110]: shm registry full
+>>> Jun  9 11:57:19 001-can1-plumber jackd[21110]: Cannot create shared
+>>> memory segment of size = 422
+>>> Jun  9 11:57:19 001-can1-plumber jackd[21110]: JackShmMem::new bad alloc
+>>> Jun  9 11:57:19 001-can1-plumber jackd[21110]: Cannot open client
+>>> Jun  9 11:57:19 001-can1-plumber jackd[21110]: Cannot create new client
+>>>
+>>> Max locked memory for this process is set to 134217728 while launching
+>>> JACK via systemd.
+>>>
+>>> It effectively causes JACK to hang.
+>>>
+>>> I am using 1.9.10 (commit 1ed50c92) on ubuntu 16.04.
+>>>
+>>> The configure flags are --clients=500 --ports-per-application=4 (I am
+>>> not reaching 500 clients limit when that occurs, they are around 250).
+>>>
+>>> JACK is started with dummy driver, and --port-max set to 2000.
+>>>
+>>> What is the reason for hitting SHM limit? Can I overcome this in any way?
+>>>
+>>> m.
+>>>
+>>
+>>
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>>
+>>
+>
+
+1465566399.20492_0.ltw:2,a <CA+DLCvCB77KjVU7W3277r0TbDO7ZoLUY9nn1udsocotwH9rTFA at mail dot gmail dot com>
+________________________________________________________________________________
+

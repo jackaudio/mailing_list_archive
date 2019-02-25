@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1312661721.1266_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1312815562.7615_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1312679562.3905_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 06 Aug 2011 19:12:15 -0600 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Dan Swain </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jeroen Van den Keybus &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Dan Swain
+<a href='../1312661721.1266_0.ltw:2,a/index.html'>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Dan Swain
+<a href='../1313356915.31433_0.ltw:2,a/index.html'>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea </a></td></tr>
+</table>
+<pre>
+On Sat, Aug 6, 2011 at 2:15 PM, Dan Swain &lt;[hidden]&gt; wrote:
+
+&gt;
+&gt;
+&gt; On Sat, Aug 6, 2011 at 10:22 AM, Dan Swain &lt;[hidden]&gt; wrote:
+&gt;
+&gt;&gt; On Sat, Aug 6, 2011 at 3:17 AM, Jeroen Van den Keybus &lt;
+&gt;&gt; [hidden]&gt; wrote:
+&gt;&gt;
+&gt;&gt;&gt; In my original post, I proposed slave hardware that would synchronize its
+&gt;&gt;&gt; local clock to sync packets from a regular Jack server (digital PLL),
+&gt;&gt;&gt; advertise a fixed amount of (floating point) and MIDI channels to the
+&gt;&gt;&gt; server, get packet/period/... data from the server and start sending
+&gt;&gt;&gt; receiving data over UDP continuously. The software needs to emulate a
+&gt;&gt;&gt; fixed-configuration NetJack2 client, which can eventually be done without an
+&gt;&gt;&gt; IP stack, since the initial communication is done using broadcasts.
+&gt;&gt;&gt; Therefore: small software footprint ==&gt; no EEPROM or DRAM on the board
+&gt;&gt;&gt; ==&gt; low pin-count FPGA ==&gt; low cost. Since we're trying to digitize
+&gt;&gt;&gt; precision analog signals, reduction of power (no high-current
+&gt;&gt;&gt; switching voltage regulators) and omission of memory (no noisy digital
+&gt;&gt;&gt; memory lines) is also a good thing for circuit design.
+&gt;&gt;&gt;
+&gt;&gt;
+&gt;&gt;&gt;
+&gt;&gt; ...
+&gt;
+&gt;&gt;
+&gt;&gt; Jeroen, are the components you listed in your first response still
+&gt;&gt; applicable for this method?
+&gt;&gt;
+&gt;
+&gt; I've just been researching the parts that you've listed, and I'll make sure
+&gt; to download and read the data sheet for the EP3C10.
+&gt;
+&gt; As for the Ethernet, I've found two controllers that may be worth looking
+&gt; at - either the Microchip ENC424J600 (10/100 Base-T), or the Marvell Yukon
+&gt; Ultra II (8E8057, which is 1000 Base-T). The microchip design sounds quite
+&gt; promising, as I came across its 10Base-T 'cousin' when looking at the Open
+&gt; Open Sound Controller project.
+&gt;
+&gt; I may be thinking about this incorrectly, but my approach to have the ADC
+&gt; talk to JACK on the FPGA was to have some kind of ALSA 'driver' for that
+&gt; chip running in the FPGA, passing the data through JACK to the Ethernet
+&gt; controller. Alas, the CS5368 chip isn't supported in ALSA, but we could use
+&gt; the CMI8788 chip, which is almost exactly the same.
+&gt;
+&gt; Then again, am I thinking about this incorrectly? If we could pass the
+&gt; signals directly to the JACK system (literally give the data it wants), that
+&gt; would circumvent another software layer in the FPGA...
+&gt;
+
+I apologise, I misread the datasheet for the CS5368, so I change my
+viewpoint on that IC, as it would be perfect for this project (which is why
+you recommended it!). Actually, one of the circuits I came across for the
+ADC section of the device uses that chip:
+http://www.beis.de/Elektronik/ADDA24QS/ADDA24QS.html &lt;-- The designer is
+aiming for quality rather than cost savings, so again I'm sorry for the
+false analysis!
+
+I was also looking more at Altera's tutorial videos on YouTube, and if the
+Cyclone III chip has enough space left, maybe we could create a device on
+the chip itself, so that the digital audio signals can be sent to the JACK
+server on the chip correctly. From what I've seen of this chip's
+capabilities, I'm not sure that we'd be stressing it too much (for a
+relative example, one of the video capture cards we use at my workplace has
+the first Cyclone chip, which can handle 16 channels of 704x480, 16-bit
+video at 7fps per channel)!
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1312661721.1266_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1312815562.7615_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1312679562.3905_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1312679562.3905_0.ltw:2,a&nbsp;&lt;CABhkv4MXY0ZZP066gptGFCUMEdOOiZbdBjs+pH=htmvVk0nq=Q at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

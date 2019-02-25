@@ -1,0 +1,125 @@
+Date:        Mon, 21 Feb 2011 23:07:48 +0100
+From:        torbenh  <[hidden] at gmx dot de>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Pieter Palmers Re: [Jack-Devel] controlapi" how about a "backend died" callback ? (1299937826.11416_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] controlapi" how about a "backend died" callback ?
+
+On Mon, Feb 21, 2011 at 08:23:15PM +0200, Nedko Arnaudov wrote:
+> Hi,
+> 
+> > Le 21 févr. 2011 à 17:52, torbenh a écrit :
+> >
+> >>  hi...
+> >> 
+> >> it would be nice, if we could add a callback to the controlapi, so
+> >> that the controller might get notified when the backend dies.
+> >> 
+> >> we currently have 2 callbacks in the control api. and they are
+> >> passed to jackctl_server_create() ... i propose adding functions to
+> >> set these callbacks, so that we maintain consistency with the normal
+> >> jack api.
+> >
+> > Would be better yes than the current situation. I think we may
+> > probably recode jackctl_server_create beacuse it is only used
+> > "internally" right now (jackd, jackdbus)
+> >
+> > Nedko any comment on that?
+> >
+> >
+> >>  iE:
+> >> 
+> >> void jackctl_server_set_backend_died_callback( jackctl_server_t *s,
+> >> JackCtlBackendDiedCallback cb ); -- torben Hohn
+> >
+> > For example...
+> 
+> Given the curent design of the control api I think that it will probably
+> be more consistent to have this as part of the regular api. OTOH as you,
+> Stephane, may remember the original control api proposal that I made was
+> such that jackdbus did not require a jack client to be created on the
+> server side. I dislike most of the regular JACK API and because of this
+> it is hard for me to decide.
+> 
+> Another question is whether we want to keep backward compatibility in
+> the control API. Probably ATM it is not worth to maintain backward
+> compatibility because AFAIK all users of the control API are bundled
+> where the control api is implemented. (there are three variants in the
+> wild)
+> 
+> IMO the real world application of the "backend died" callback is coupled
+> with a "backend switched" callback. Thus I think that it is probably
+> wise to extend the API in a such way that it covers the both
+> notifications. I dont have a deep knowledge on the backend switch
+> implementation, but I tend to think that it can be considered a sequence
+> of "old backend died" and "new backend activated". One way to implement
+> these notifications would be through a "backend status changed"
+> callback.
+> 
+> I would like to also mention a related issue that the current jackdbus
+> implementation has. The server start can sometimes be very slow
+> (i recall reports of about 5 seconds). All reports so far are from users
+> of the firewire audio cards, probably the ffado driver. I think that
+> backend switch can also get slow, when the target driver/device is a
+> firewire one. the current workaround that is in use is to increase the
+> dbus timeout when calling the "server start" dbus method.
+> 
+> IMO this issue should be fixed by making the slow operations
+> asynchronous. I think that it will be better to make part of the the
+> control api usable async mode. E.g. "request server start" instead of
+> "start server and return when it is operational". This also applies to
+> the backend switch.
+
+this requires quite a bit of redesign in the server internals.
+i dont think the server thread should/can be blocking until things are
+up. the control api could just get a controller thread, which then does
+these things.
+
+i actually like that the controlapi is synchronous. this makes it pretty
+easy. and almost all oprations only take a tenth of a second, or even
+less. that ffado takes 3 seconds to start up, seems pretty weird to me,
+and i suspect this is some kind of bug (i dont think that any device can
+be so shitty, that its actually a h/w bug.
+
+> 
+> start server sequence:
+>  0. (implicit) "server stopped" -> "server starting" state change
+>  1. request server start, the call does not wait for server to start
+>  2. server started notification is sent to the api user
+>  3. "born" device state change notification is sent to the api user
+> 
+> stop server sequence:
+>  0. (implicit) "server started" -> "server stopping" state change
+>  1. request server stop, the call does not wait for server to stop
+>  2. "died" device state change notification is sent to the api user
+>  3. server stopped notification is sent to the api user
+> 
+> device died (e.g. user has unplugged the firewire cable):
+>  1. "died" device state change notification is sent to the api user
+> 
+> device reborn (e.g. user has plugged the firewire cable again):
+>  0. the backend is monitoring the status of the device it is configured
+>     for. either through poll or through a notification mechansim.
+>  1. "born" device state change notification is sent to the api user
+> 
+> device/backend switch:
+>  1. "died" device state change notification is sent to the api user
+>  2. "born" device state change notification is sent to the api user
+> 
+> In the above proposal, device state change notifications assume that
+> device identification is part of the notification. Also the "died"
+> notification should mention whether the device "death" is expected or
+> unexpected. In the latter case, the executable that uses the control api
+> may notify the user about the unexpected device disappear.
+> 
+> -- 
+> Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+
+
+-- 
+torben Hohn
+
+1298326092.16604_0.ltw:2,a <20110221220748.GE10799 at siel dot b>
+________________________________________________________________________________
+

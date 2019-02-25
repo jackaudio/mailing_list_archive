@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] jackd2 problem with netjack2 disconnect</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] jackd2 problem with netjack2 disconnect</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1481736427.9066_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1482232160.13733_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1482166306.30523_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 19 Dec 2016 17:51:31 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jan Reusch </span> &lt;[hidden] at barco dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+</table>
+<pre>
+hi there
+i already opened up an issue on github [1] but it seems there is more
+activity. so i decided to send my problem also to this list, i hope
+that's ok?
+
+we have a setup here with one jackd2 instance running with netmanager as
+audio-master and one jackd2 instance connecting to it via netjack2 as
+audio-slave.
+when i restart the jack daemon on the slave i occasionally end up with
+an unusable jackd2 instance on the master.
+this seems to come from the way the netmanager component destroys
+handles for netjack2 masters (JackNetMasterInterface instances)
+
+if a netjack2 master handle encounters a network error or the connection
+gets closed, it sends its own jackd process a KILL_MASTER signal via a
+local socket. if this packets gets lost the jackd2 process gets rendered
+unusable (other local jack-clients and netjack clients can process audio
+anymore...)
+
+the quick(!) choice to evaluation if i'm on the right track was to
+remove sending of this multicast packet and setting a newly introduced
+flag fExit in the  JackNetMasterInterface::Exit method.
+in JackNetMasterManager::Run i hooked up to check all netjack2 slaves
+periodically for this fExit flag and if it is set, it gets removed&amp;the
+the associated objects deleted.
+
+i also removed the call to pthread_exit and instead switched to throwing
+an exception as it gets catched (by the netjack1 code anyway) by
+JackNetMaster::SetProcess.
+
+
+my testsetup was two machines, one running with netmanager and one
+connecting to it via netjack2.
+i restart the jackd process periodically.
+
+one cycle consists of
+- starting jackd
+- wait for 10 seconds
+- stop jackd
+- wait for 5 seconds
+
+after about ~10 minutes the jackd on the master (which doesn't get
+restarted) runs into the problem and is unusable from this moment on.
+with the patch attached to the issue the jackd process gets unusable
+after ~12 hours (this time with the logoutput i attached to the issue) i
+don't know if this is still a problem with my patch (besides it needs
+much nicer integration anyway) or i hit another problem here.
+
+i would be glad if someone could have a look on it and point me in the
+right direction!
+
+thanks!
+Jan
+
+
+
+[1] https://github.com/jackaudio/jack2/issues/239
+--
+Barco Control Rooms GmbH
+
+Greschbachstrasse 5a
+
+D - 76229 Karlsruhe
+
+http://www.barco.com
+mailto:[hidden]
+
+___________________________________________
+Registered at 76229 Karlsruhe, Amtsgericht Mannheim, HRB 102241,
+
+Management: Piet Candeel, Lutz Nehrhoff von Holderberg
+This message is subject to the following terms and conditions: MAIL DISCLAIMER&lt;http://www.barco.com/en/maildisclaimer&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1481736427.9066_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1482232160.13733_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1482166306.30523_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1482166306.30523_0.ltw:2,a&nbsp;&lt;ce966aa7-a358-2c27-2bad-aa5c6b8c80b2 at barco dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

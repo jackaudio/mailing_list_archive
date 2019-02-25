@@ -1,0 +1,74 @@
+Date:        Tue, 02 Jul 2013 12:55:58 +0000
+From:        John Rigg  <[hidden] at jrigg dot co dot uk>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Stefano Rossi [Jack-Devel] Jack crashes, maybe a bug? (1372767511.23505_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Jack crashes, maybe a bug?
+
+On Tue, Jul 02, 2013 at 02:18:19PM +0200, Stefano Rossi wrote:
+> I currently have an alsa device, called "multi", which groups two cards:
+> 
+> > $ cat /etc/asound.conf
+> > pcm.multi {
+> >         type multi;
+> >         slaves.a.pcm "hw:Live";
+> >         slaves.a.channels 2;
+> >         slaves.b.pcm "hw:Intel";
+> >         slaves.b.channels 2;
+> >         bindings.0.slave a;
+> >         bindings.0.channel 0;
+> >         bindings.1.slave a;
+> >         bindings.1.channel 1;
+> >         bindings.2.slave b;
+> >         bindings.2.channel 0;
+> >         bindings.3.slave b;
+> >         bindings.3.channel 1;
+> > }
+> > ctl.multi {
+> >         type hw;
+> >         card 0;
+> > }
+> > pcm.jack2x4 {
+> >      type asym
+> >      playback.pcm {
+> >           type route
+> >           slave.pcm "multi"
+> >           ttable.0.0 1
+> >           ttable.1.1 1
+> >           ttable.2.2 1
+> >           ttable.3.3 1
+> >      }
+> >      capture.pcm {
+> >           type hw
+> >           card 0
+> >      }
+> > }
+> > ctl.jack2x4 {
+> >      type hw
+> >      card 0
+> > }
+> 
+> 
+> My cards:
+> 
+> > $ cat /proc/asound/cards
+> >  0 [Live           ]: EMU10K1 - SB Live! Value [CT4670]
+> >                       SB Live! Value [CT4670] (rev.5, serial:0x201102) at
+> > 0xef00, irq 16
+> >  1 [Intel          ]: HDA-Intel - HDA Intel
+> >                       HDA Intel at 0xfdff8000 irq 44
+> 
+> 
+> This is my jackdrc:
+> 
+> > $ cat /etc/jackdrc
+> > /usr/bin/jackd -d alsa -d jack2x4
+
+Don't know if it's related, but how are you synchronising the clocks on the two
+cards?
+
+John 
+
+1372771767.31142_0.ltw:2, <20130702125558.GA12671 at localhost dot localdomain>
+________________________________________________________________________________
+

@@ -1,0 +1,39 @@
+Date:        Mon, 07 Jan 2013 10:21:27 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          John Emmas <[hidden] at tiscali dot co dot uk>
+Cc:          JACK Mailing List <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   John Emmas Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357552944.32579_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)
+
+Le 7 janv. 2013 à 10:11, John Emmas a écrit :
+
+> .On 7 Jan 2013, at 07:00, Stéphane Letz wrote:
+> 
+>> 
+>> Thanks for recalling this John. But the point is : how are we going to make jack2 work on ARM (where the PRE_PACKED_STRUCT and POST_PACKED_STRUCT based structs are not working because of alignment issues....) *and* continue to make it work on WIndows, possibly with different compilers?
+>> 
+> Hi Stephane.  Which compiler(s) are we talking about on ARM?  Currently, PRE_PACKED_STRUCTURE and POST_PACKED_STRUCTURE are only implemented if either __GNUC__ is defined or _MSC_VER.  However, they can be expanded to accommodate future requirements (other compilers).  So if the ARM compiler was gcc it should have worked.  Or if it wasn't gcc or MSVC it could have been added to the list.
+
+With this 1-byte packing approach, we ended with fields in structs which are not correctly aligned, thus causing jack2 ARM version to crash....
+
+> 
+> 
+>> Have you had a look at the new approach (defining JACK_ALIGN macros then "aligned types" like typedef JACK_ALIGNED_TYPE(double)   jack_double;.....) ? What happens exactly when compiling with different compilers on WIndows. Can you possibly test?
+>> 
+> No, to be fair I haven't looked at the new approach but I'd be happy to consider it.  I just wanted to make the point that whatever you've done, for some structs the alignment HAS changed.  And if it needs to change, the most promising layout is 1-byte packing.  Whilst (in theory) compilers should be able to agree about any given packing arrangement, in practice, 1-byte packing is the only arrangement whose layout leaves no room for doubt.  Compilers are almost bound to agree about 1-byte packing.
+> 
+> 
+>> The problem here is to make jack2 evolved with new constraints *and* maintain the existing. We have to find a reasonable solution.
+>> 
+> Yes, I agree Stephane.  I just wanted to point out that this is the right time to be having this discussion and that whatever we agree upon, it needs to be supported by most compilers (which 1-byte packing is).  However, if you're confident that JACK_ALIGN is also supported by most compilers, I don't have a problem with it.  I just don't want us to find out the hard way that JACK_ALIGN is another arbitrary alignment scheme when a (theoretically good) scheme already exists...  :-)
+> 
+> John
+
+Waiting for others reactions here...
+
+Stéphane 
+
+1357550496.28452_0.ltw:2,a <34AB77A7-8A25-4333-8505-639FEF8F4171 at grame dot fr>
+________________________________________________________________________________
+

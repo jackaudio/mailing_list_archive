@@ -1,0 +1,76 @@
+Date:        Thu, 26 Jan 2012 11:36:32 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] jackd1/jackd2: FFADO port name divergence (1327573698.18947_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jackd1/jackd2: FFADO port name divergence
+
+On Thu, Jan 26, 2012 at 11:28:01AM +0100, Adrian Knoth wrote:
+ 
+> I hence agree with Nedko that the jack core can be lean. Maybe unlimited
+> aliases or pretty names would be nice, but some really don't want
+> system:capture_56 in the session file. They then say good bye to
+> "canonical port names".
+
+There is another approach which I'm moving to. It amounts to using
+Jack only for what in a HW world would be the 'fixed wiring' of
+your studio, the big bundles of cables that go under the floor. 
+
+* You need either real persistent ports, or a connection manager that
+  emulates them. That is, it remembers a set of apps, their ports
+  and connections, and remakes the connections as soon as both ends
+  are available. Qjackctl's patchbay does this in a way.
+
+* All apps have a fixed set of input/outputs which does not depend
+  on any per session or project configuration. For example : a DAW
+  application is configured to have 200 inputs and 100 outputs which
+  are just named input-1..200 and output-1..100. Inputs 1..20 are
+  connected to soundcard capture channels. They may end up as mic
+  inputs in the studio, line inputs for external instruments, etc.
+  Another group goes to a software effects rack. Some may go to
+  a sofware patchbay application. Others are fixed connections to
+  soft synths etc. etc. Similar for outputs. All this is set up
+  once and never changes unless it's necessary.
+
+* All apps have a configuration that knows where it ports are connected
+  and that provides logical names for them. This again is fixed - this
+  configuration belongs to the application in a particular studio and
+  not to a session or project. 
+
+* The DAW (and all other apps where it matters) have an internal routing
+  system allowing to use any Jack port for any internal function. This
+  routing system presents Jack ports using the configured logical names.
+  For example, you can select the input of channel strip #15 as Studio
+  Mic input #6. These internal connections are stored in session or
+  project files.
+ 
+The net effect is that once things are set up, you can basically forget
+about Jack. It provides the connections in the same dumb way as the fixed
+wiring of a hardware based studio would. This changes only when you add
+'new epuipment'. All the intelligence is in the apps (which is different
+from having it in a separate session manager).
+
+When a project is moved to another studio the actual connections (wiring)
+there may be completely different. But if the DAW and other apps) there
+have been configured properly and equivalent ports are available then the
+right internal routing will be set up automatically. This remains completely
+internal to the application(s).  
+
+All this is similar to how e.g. a big digital mixer is wired an set up. 
+It may have e.g 32 analog ins/outs, 4 ADAT ins/outs, maybe one or two
+MADI interfaces. All this is wired up once and the mixer is configured
+to know what is connected where. 
+
+And yes, it amounts to having an 'additional layer of indirection', and
+then fixing the roles of each layer.
+
+Ciao,
+
+--  
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+
+1327577800.25868_0.ltw:2,a <20120126113632.GA21443 at linuxaudio dot org>
+________________________________________________________________________________
+

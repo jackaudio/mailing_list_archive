@@ -1,0 +1,98 @@
+Date:        Fri, 10 Jun 2011 20:35:40 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] transport rolling + new slow-sync client (1307719960.32285_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] transport rolling + new slow-sync client
+
+On Fri, Jun 10, 2011 at 11:32:23AM -0400, Paul Davis wrote:
+> On Fri, Jun 10, 2011 at 11:21 AM, Fons Adriaensen <[hidden]> wrote:
+> 
+> > The whole slow-start system is IMHO fundamentally flawed, because
+> > checking for readyness is done only when the transport is supposed
+> > to have already started. This makes it impossible to start on cue,
+> > unless you are lucky and all clients involved happen to be ready.
+> 
+> Presumably what you mean is explained by this next paragraph:
+
+No, not really. The next paragraph merely describes a fallback
+that could be used if a client is started while it is not ready
+to start.
+ 
+> > 1. Clients capable to catch up and sync by themselves if the transport
+> >   starts when they are not ready, probably outputting silence until
+> >   they have synced (that would also solve your case).
+> 
+> having implemented this in ardour, i can testify that its really quite
+> complex, and the slow-sync client "abstraction" is much, much easier
+> for most people and comes with little cost except when the locate
+> really is very costly (and this is rare, extremely rare).
+
+It needn't be complex. If there's no constraint on how long the
+client could take to sync, it could just skip ahead say 10 seconds,
+have 10 seconds to prepare itself and then start rolling at the
+right moment and be in sync. Even that would in many cases be
+preferred to blocking all others to start. 
+
+> > 2. Clients that, when transport is stopped and locates to a new
+> >   position, get ready to start without delay at that position
+> >   instead of waiting for a transport start (many probably do
+> >   this already, but it's not required and can't be checked),
+> 
+> there's no reason to check it unless you believe that the check on
+> client-is-read-to-roll takes too long. the client will be ready the
+> first time the server asks if it does this (and indeed, its hard to
+> imagine a client that didn't - deferring an actual data i/o operation
+> until transport start is ... well, its braindead.
+
+> > 3. A way for clients to indicate their readyness to start without
+> >   delay _while transport is stopped_.
+> 
+> necessary only if you believe the check is too slow. i can't imagine
+> situations where it would be too slow - if you're trying to sync with
+> an external timesource, you won't care about this kind of delay, i
+> think.
+
+I agree that preparing to start (e.g. buffer the necessary data) only
+when the start command arrives is sort of braindead, and I'd expect 
+clients to prepare as soon as possible instead. But the point here is
+that
+
+1. The current transport system doesn't require a client to do this,
+2. Not doing it is encouraged by the current system allowing clients
+   to make others wait if they are not ready themselves, instead of
+   forcing them to sync later if they can't start immediately (or fail).
+3. There is no way for a client to report not-ready-to-start without
+   actually trying to start it.
+
+The last one is probably the most important. When under interactive
+control of a human operator this sort of problem can be anticipated
+and the human operator probably can handle it. This is *not* the case
+in automated systems - any software controlling clients and wanting
+to a) either start them exactly on cue or b) not at all if there's a
+problem, would need to  know the ready-or-not state of all involved
+clients *before* sending the start command. 
+
+Adding the exra state (not ready to start without delay) does not
+complicate things at all. It does NOT imply that clients should be
+able to sync on their own if started in non-ready state. They could
+just fail instead - these are separate issues.
+
+ 
+Another SEPARATE but related issue:
+
+Ardour's OSC control seems to have some race conditions. Making it
+locate while running sometimes works, and sometimes Ardour just does
+the locate and then stops. Sending a transport start immediately after
+the locate doesn't help - it's ignored unless delayed by 20 ms or so.
+That's just one, there seem to be more of those race conditions.
+
+Ciao,
+
+-- 
+FA
+
+1307738166.2778_0.ltw:2,a <20110610203539.GA21903 at linuxaudio dot org>
+________________________________________________________________________________
+

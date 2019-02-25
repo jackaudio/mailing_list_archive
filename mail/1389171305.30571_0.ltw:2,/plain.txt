@@ -1,0 +1,101 @@
+Date:        Wed, 08 Jan 2014 09:54:55 +0100
+From:        Hanspeter Portner  <[hidden] at airpost dot net>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jonathan Woithe Re: [Jack-Devel] JackEngine::XRun: client = pure_data_0 was not run: state = 2 JackAudioDriver::ProcessGraphAsyncMaster: Process error (1389161433.18566_0.ltw:2,)
+Follow-Up:   Alexandros Drymonitis Re: [Jack-Devel] JackEngine::XRun: client = pure_data_0 was not run: state = 2 JackAudioDriver::ProcessGraphAsyncMaster: Process error (1389175357.5253_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] JackEngine::XRun: client = pure_data_0 was not run: state = 2 JackAudioDriver::ProcessGraphAsyncMaster: Process error
+
+On 08.01.2014 07:10, Jonathan Woithe wrote:
+> On Tue, Jan 07, 2014 at 06:57:10PM +0200, Alexandros Drymonitis wrote:
+>> On Tue, Jan 7, 2014 at 6:38 PM, Jonathan Woithe <[hidden]> wrote:
+>>> On Tue, Jan 07, 2014 at 06:31:51PM +0200, Alexandros Drymonitis wrote:
+>>>> I'm running jack to use my firewire sound card (presonus firebox) with pure
+>>>> data running this in the terminal: $ jackd -dfirewire
+>>>> and jack runs with the firewire. But when I open pure data in another
+>>>> terminal window with this $ pd -rt -jack
+>>>> I get this in jack's terminal:
+>>>> JackEngine::XRun: client = pure_data_0 was not run: state = 2
+>>>> JackAudioDriver::ProcessGraphAsyncMaster: Process error
+>>>> and the audio every now and then quits for half or a whole second and then
+>>>> comes back.
+>>> I *think* this indicates an issue in PureData.  However, if others more
+>>> familiar with jackd messages indicate that it's a problem within FFADO I'll
+>>> take this up.  If it is a FFADO problem it would be best to take the
+>>> discussion to the ffado-user mailing list (detail are in the "Contact" link
+>>> the ffado.org.
+>>>
+>>> After the dropout, is PureData usable and does the Firebox play back
+>>> PureData
+>>> audio?
+>>>
+>> Yes Pure Data is usable and the Firebox does play the Pure Data audio
+> Hmm, interesting.  Do you only see the dropouts when you *start* PureData. 
+> If so then it would appear that the problem might be associated with
+> application startup or some issue with the way PureData does things while
+> its jack system is starting up.
+>
+>>>> I also tried jack with audacity and I got drop outs there as well.
+>>> Is the error message similar?  If it is it would tend to suggest that the
+>>> problem is not within PureData or audacity.
+>>>
+>> There's no error printed when I open Audacity, but when I close it this is
+>> printed in Jack's terminal:
+>> JackProcessSync::LockedTimedWait error usec = 426660 err = Connection timed
+>> out
+>> JackEngine::ClientDeactivate wait error ref = 3 name = PortAudio
+>>
+>> No idea if this should be or not..
+> No, me neither.
+>
+>> also, when I quit Pd though, I get this
+>> in Jack's terminal:
+>> JackEngine::XRun: client = pure_data_0 was not run: state = 1
+>> JackAudioDriver::ProcessGraphAsyncMaster: Process error
+>> Cannot write socket fd = 44 err = Broken pipe
+>> Cannot write socket fd = 44 err = Broken pipe
+>> Cannot write socket fd = 44 err = Broken pipe
+>> Cannot write socket fd = 44 err = Broken pipe
+>> Cannot write socket fd = 44 err = Broken pipe
+>> Cannot write socket fd = 44 err = Broken pipe
+>> Cannot write socket fd = 44 err = Broken pipe
+> I don't run PureData myself.  It would be interesting to hear whether others
+> see this.  This in turn may provide a clue as to whether it is related in
+> some way to the start up glitch.
+I can confirm this, I get those messages too from time to time when
+trying to use Pd's Jack backend.
+It does run once in a while with Jack, but then there are terrible audio
+latencies (~0.5s!) to live event
+inputs (OSC, MIDI) which makes it pretty much useless for me.
+
+Pd 0.45.3, jackdmp 1.9.9.5, ArchLinux, kernel 3.12.6 x86_64
+
+Apart from Pd, my Jack/audio setup works flawlessly, which makes Pd the
+most probable culprit and not Jack itself, IMHO.
+I'd recommend to search/ask the Pd list whether this is a known issue,
+additionally.
+
+Pd works fine with ALSA directly, though.
+Hanspeter
+>
+>>>> I'm on ubuntu 12.04 with jack 1.9.8
+>>>> Can anyone help me out?
+>>> It would be worth trying a lowlatency kernel if you're not already using
+>>> one.  This should be available via the Ubuntu package manager.
+>>>
+>> Hmm, I'm a noob to Linux, some tips on how to do this? what should I type
+>> in the synaptic package manager? If I type lowlatency I get a bunch of
+>> stuff (linux-headers-lowlatenct, linux-image-lowlatency etc.)
+> Hopefully an ubuntu user can chime in here.  I'd have to see a full list of
+> the "lowlatency" matchs and guess based on name.
+>
+> Regards
+>   jonathan
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1389171305.30571_0.ltw:2, <52CD125F.8020203 at airpost dot net>
+________________________________________________________________________________
+

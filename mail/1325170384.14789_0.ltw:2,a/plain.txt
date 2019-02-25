@@ -1,0 +1,74 @@
+Date:        Thu, 29 Dec 2011 14:52:51 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Paul Davis Re: [Jack-Devel] alsa-jack plugin : wrong revents ? (1325170614.15081_0.ltw:2,Sa)
+
+Subject:     [Jack-Devel] alsa-jack plugin : wrong revents ?
+
+Hello all,
+
+I'm using code to interface with ALSA pcm devices that is
+functionally identical to what alsa_driver_wait() in
+Jack's alsa_driver.c is doing. More in particular the
+parts
+
+        if (need_playback) {
+           if (snd_pcm_poll_descriptors_revents
+                (driver->playback_handle, &driver->pfd[0],
+                 driver->playback_nfds, &revents) < 0) {
+                jack_error ("ALSA: playback revents failed");
+                *status = -6;
+                return 0;
+            }
+
+            if (revents & POLLERR) {
+                xrun_detected = TRUE;
+            }
+
+            if (revents & POLLOUT) {
+                need_playback = 0;
+
+and
+
+        if (need_capture) {
+            if (snd_pcm_poll_descriptors_revents
+                (driver->capture_handle, &driver->pfd[ci],
+                 driver->capture_nfds, &revents) < 0) {
+                jack_error ("ALSA: capture revents failed");
+                *status = -6;
+                return 0;
+            }
+
+            if (revents & POLLERR) {
+                xrun_detected = TRUE;
+            }
+
+            if (revents & POLLIN) {
+                need_capture = 0;
+
+
+Now when the ALSA device is actually the alsa<->jack plugin used
+for both playback and capture it seems that the expected POLLOUT
+on the playback side revents never appears, instead I get a POLLIN
+there as well. 
+
+The same device works perfectly when tested for capture or playback
+separately.
+
+If I understand ALSA's snd_pcm_poll_descriptors_revents() correctly
+it should 'normalize' the revents so that one always gets POLLOUT
+for playback and POLLIN for capture. It seems that the plugin's
+code is not doing this correctly when used in duplex mode.
+
+
+Ciao,
+
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+
+1325170384.14789_0.ltw:2,a <20111229145251.GA22822 at linuxaudio dot org>
+________________________________________________________________________________
+

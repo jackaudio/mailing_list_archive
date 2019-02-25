@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] segfault in libjack from incorrect regex in jack_get_ports()</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] segfault in libjack from incorrect regex in jack_get_ports()</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1550342053.21183_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1550611402.26117_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1550610372.24962_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 19 Feb 2019 22:03:45 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Thomas Brand </span> &lt;[hidden] at trellis dot ch&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"\"J&#xF6;rn Nettingsmeier\"" &lt;[hidden] at stackingdwarves dot net&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>J&#xF6;rn Nettingsmeier
+<a href='../1550342053.21183_0.ltw:2,/index.html'>[Jack-Devel] segfault in libjack from incorrect regex in jack_get_ports() </a></td></tr>
+</table>
+<pre>
+Hi J&#xF6;rn,
+
+On Sat, February 16, 2019 19:33, J&#xF6;rn Nettingsmeier wrote:
+&gt; Hi guys,
+&gt;
+&gt;
+&gt;
+&gt; I'm seeing segfaults caused by an incorrect regex (found while fooling
+&gt; around to see what syntax is allowed, since it's not really documented).
+&gt;
+&gt; Turns out the correct answer to that is "regexec.c", and thus, POSIX
+&gt; regexes. Someone might want to put that in the docs somewhere.
+&gt;
+&gt; Thread 1 "shairport-sync" hit Breakpoint 1, jack_init (argc=&lt;optimized
+&gt; out&gt;, argv=&lt;optimized out&gt;) at audio_jack.c:221 221	  if
+&gt; (config.jack_autoconnect_pattern != NULL) {
+&gt; (gdb) print config.jack_autoconnect_pattern
+&gt; $1 = 0x5c8a0 "effect_1:in{L|R}"
+&gt;
+&gt;
+&gt; ^--- this is likely the problem
+&gt;
+&gt;
+&gt; (gdb) step
+&gt; 222	    debug(1, "config.jack_autoconnect_pattern is %s.",
+&gt; config.jack_autoconnect_pattern); (gdb) next
+&gt; 223	    const char** port_list = jack_get_ports(client,
+&gt; config.jack_autoconnect_pattern, (gdb) step
+&gt;
+&gt;
+&gt; Thread 1 "shairport-sync" received signal SIGSEGV, Segmentation fault.
+&gt; 0x76847e8c in __regexec (preg=&lt;optimized out&gt;, string=0x71801e34
+&gt; "system:playback_1", nmatch=0, pmatch=0x0,
+&gt; eflags=0) at regexec.c:243 243	regexec.c: No such file or directory.
+&gt; (gdb) bt
+&gt; #0  0x76847e8c in __regexec (preg=&lt;optimized out&gt;, string=0x71801e34
+&gt; "system:playback_1", nmatch=0, pmatch=0x0,
+&gt; eflags=0) at regexec.c:243 #1  0x76f1d0f4 in ?? () from
+&gt; /usr/lib/arm-linux-gnueabihf/libjack.so.0
+&gt; #2  0x76f1d1c4 in ?? () from /usr/lib/arm-linux-gnueabihf/libjack.so.0
+&gt; #3  0x0002c988 in jack_init (argc=&lt;optimized out&gt;, argv=&lt;optimized out&gt;)
+&gt; at audio_jack.c:223 #4  0x00016adc in main (argc=1, argv=0x7efffc54) at
+&gt; shairport.c:1474
+&gt;
+&gt;
+&gt; It turns out that the return value of regcomp is not checked by libjack.
+&gt; That's the last point where a segfault can be prevented from a simple
+&gt; syntax error. The only way to catch that in the application is to set up an
+&gt; entirely redundant regex scaffold and check the regcomp return value,
+&gt; before throwing it all away and letting libjack do the work all over
+&gt; again.
+&gt;
+&gt; In the case of configurable auto-connect patterns, which many JACK
+&gt; clients now offer as a sane and useful replacement of auto-connecting to
+&gt; system:playback_N, this SEGV is triggered by end-user action, not
+&gt; programmer mistake. That's a harsh user experience, and should be fixed. A
+&gt; brief look at the source seems to indicate the problem also exists in
+&gt; jack1.
+&gt;
+&gt; I don't really feel qualified to tackle this myself, since it will
+&gt; require lots of error handling in a multi-threaded library, which I don't
+&gt; know too much about... glad to help testing, though.
+&gt;
+
+interesting observation .. I'd like to copy/paste this 1:1 to jack2 github
+issues so it doesn't get lost, any objections?
+Greetings
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1550342053.21183_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1550611402.26117_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1550610372.24962_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1550610372.24962_0.ltw:2,&nbsp;&lt;2060d57562ca242e4ffb389f90a9fac2.squirrel at ips73 dot ips dot ch&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

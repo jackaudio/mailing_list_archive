@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Problems with Networking Jack</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Problems with Networking Jack</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1377639130.28717_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1377725097.15335_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1377667426.6749_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 28 Aug 2013 06:23:29 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> David Woodfall </span> &lt;[hidden] at studioware dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Ruslan N. Marchenko
+<a href='../1377639130.28717_0.ltw:2,/index.html'>Re: [Jack-Devel] Problems with Networking Jack </a></td></tr>
+</table>
+<pre>
+On (27/08/13 23:31), Ruslan N. Marchenko &lt;[hidden]&gt; put forth the proposition:
+&gt;On Tue, Aug 27, 2013 at 02:14:23PM +0100, David Woodfall wrote:
+&gt;&gt; On (27/08/13 12:04), David Woodfall &lt;[hidden]&gt; put forth the proposition:
+&gt;&gt; &gt;Hi, I had until yesterday a working jack setup between my laptop and
+&gt;&gt; &gt;server using netone. While trying to troubleshoot why the audio
+&gt;&gt; &gt;was so out of sync while playing videos in mplayer, I tried playing
+&gt;&gt; &gt;with my iptables firewall script. (The sync problem seemed to have
+&gt;&gt; &gt;started when I connected a new router.)
+&gt;&gt; &gt;
+&gt;&gt; &gt;Well, I don't know exactly how I've done it but now I get no networked
+&gt;&gt; &gt;sound at all unless I stop the master firewall completely.
+&gt;&gt; &gt;
+&gt;&gt; &gt;I'm guessing that I took out a line allowing access to a certain port.
+&gt;&gt; &gt;Google doesn't help much except that I've found that UDP 3000 and UDP
+&gt;&gt; &gt;on 19000 may be involved but allowing those hasn't helped. I also
+&gt;&gt; &gt;tried playing with ICMP echo settings, but also to no avail.
+&gt;&gt; &gt;
+&gt;&gt; &gt;So my question is, what ports should be set on the master firewall to
+&gt;UDP/19000. At the same time you need to make sure you're allowing local
+&gt;musticats to get out of your firewall to your broadcast segment. Or you
+&gt;need to use unicast peering instead of default multicast discovery.
+
+I think that unicast would be OK for my purposes at the moment, so
+I'll look into that.
+
+&gt;&gt; &gt;fix this problem? I tried looking at netstat but only found some
+&gt;&gt; &gt;random ports in use, which isn't very helpful.
+&gt;&gt; &gt;
+&gt;&gt; &gt;Incidentally, I also tried using -d net instead of -d netone, but then
+&gt;&gt; &gt;I get no sound at all, even with firewalls on both machines off.
+&gt;&gt;
+&gt;&gt; Well I solved the netone problem by specifying a -r port with
+&gt;&gt; jack_netsource.
+&gt;&gt;
+&gt;&gt; I'd still like to know why using -d net doesn't work for me though.
+&gt;&gt;
+&gt;First you need to understand the difference between netjack and netone.
+&gt;
+&gt;From jackdmp perspective netjack(2) is Jack2 networking stack, while
+&gt;netone is jack(1) networking. Protocols are pretty different, as well as
+&gt;daemons themselves.
+&gt;
+&gt;Then the difference between master and slave.
+&gt;
+&gt;Master is the one how has access to hardware and listens (passively)
+&gt;for slaves to connect while genrating beacons for them to discover itself.
+&gt;
+&gt;You can think of it as who is the clocking master - master is its own master
+&gt;(having clocks from underlying hardware) and slave is using master clocks.
+&gt;But slave is actively performing attempts to connect to the master (it is
+&gt;active from network perspective - initates connection).
+&gt;
+&gt;So when you say -d net - you're creating network slave - i.e. jack2 daemon
+&gt;who is expecting to connect to the master and be driven by that.
+&gt;Network slave  - unless instructed to use unicast master - is waiting for
+&gt;master's beacons on the BMA network to initiate connections. Once it
+&gt;discovers master's beacon - it connects to it and becomes a part of the loop
+&gt;
+&gt;Regards,
+&gt;Ruslan
+
+Thanks for the info. I'll see how I get on with this.
+
+D
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1377639130.28717_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1377725097.15335_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1377667426.6749_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1377667426.6749_0.ltw:2,&nbsp;&lt;20130828052328.GB30226 at Blackswan&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

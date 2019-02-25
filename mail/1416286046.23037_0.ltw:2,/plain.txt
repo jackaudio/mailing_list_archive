@@ -1,0 +1,52 @@
+Date:        Mon, 17 Nov 2014 23:47:03 -0500
+From:        Tim E. Real  <[hidden] at rogers dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] Notifications timing (1416283813.20120_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Notifications timing
+
+On November 17, 2014 11:10:05 PM you wrote:
+> On Mon, Nov 17, 2014 at 11:04 PM, Tim E. Real <[hidden]> wrote:
+> > Our app uses inter-thread messaging to safely time, to the RT thread,
+> >  critical modifications, instead of using say non-blocking atomic-safe
+> >  lists and so on.
+> > 
+> > I read Jack1 notifies the client from the RT thread, and Jack2 uses a
+> >  separate notification thread.
+> > 
+> > So it seems with Jack1, say inside a port connect callback, we /could/
+> > 
+> >  directly modify our local structures (routing lists) which our process
+> >  callback depends on, without delay and safe and since it's all done
+> >  in the same thread.
+> 
+> Your understanding there is correct.
+
+(Whoa you're fast. Seconds after I posted, the reply is there and the
+ question is still not, after several minutes!)
+
+> > But with Jack2, what is the situation?
+>> If the above operation is not a good idea with Jack2, how can we avoid
+>> delay associated with say, messaging another thread just to have that 
+>> thread message our RT audio thread to do some safe modifications? 
+>> (We do this now.)
+
+I could try eliminating that intermediate thread and create a messaging 
+ ring buffer directly from the notification thread to our RT process callback. 
+The very next process callback will grab the messages, so it's safe
+ and as fast as necessary.
+That way it'll work transparently with both Jack1 and Jack2, and it
+ won't have to block or wait.
+
+>> Will the process callback 'interrupt' the notification thread or occur very 
+>> (too) close to it?
+Still, would like to know if that is true or even a valid statement.
+Thanks.
+
+> 
+> I'll leave that to someone else, since I've so often gotten my descriptions
+> of Jack2 incorrect.
+
+1416286046.23037_0.ltw:2, <6353329.M3ra35z9ED at col-desktop>
+________________________________________________________________________________
+

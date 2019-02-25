@@ -1,0 +1,357 @@
+Date:        Tue, 13 Aug 2013 18:47:05 -0700
+From:        Sam Hanes  <[hidden] at maltera dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Amir Eldor [Jack-Devel] Windows compilation - me too (1376373127.9711_0.ltw:2,a)
+Follow-Up:   Tim Mayberry Re: [Jack-Devel] Windows compilation - me too (1376616513.429_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Windows compilation - me too
+
+On 2013-08-12 22:51, Amir Eldor wrote:
+> As far as I can see, Windows development of Jack isn't particularly
+> interesting to most devs here, and I would like to attempt to change it.
+
+Hear, hear!
+
+> I am trying to compile Jack but in vain. I currently own a Windows 7
+> machine and would like to develop a cross platform application using
+> Jack. I understood that modern MSVC++ is not supported, so we'll put
+> that aside. I tried CB (Code::Blocks), but am facing some problems.
+
+I got the Code::Blocks build working for me a while ago; I'll try to 
+remember how I did it. I had to make a few changes to the projects to 
+fix compilation errors; I've attached a patch. Also, the projects expect 
+a CB compiler configuration called 'mingw_64', which I found I had to 
+create under Settings->Compiler.
+
+> On CB, a required 'config.h' is missing, As I understand it, the
+> /config.h.in <http://config.h.in> was not populated when opening a cbp
+> file from within the '/windows/' folder.  How is this done?
+
+I don't remember how I got past that, sorry. I don't have a `config.h` 
+in the same directory as `config.h.in`. The only one I have is 
+`build/config.h`, which I think was created when I (unsuccessfully) 
+tried to run waf under Cygwin.
+
+> But let's put that aside as well. What is your opinion on trying to move
+> the windows build process to 'waf' as well? And in the process of doing
+> this transition, I will also document all the necessary compilation
+> steps (which is currently lacking) /or the sake of future generations.
+
+I'm very much in favor of getting the waf build working, either under 
+MinGW+MSYS or Cygwin with the MinGW cross toolchain. If waf supports 
+building under Windows natively with MSVC++ that would be fine too. Any 
+of those three will give us a nice, repeatable build environment.
+
+It would also be enormously helpful if whoever builds the official 
+Windows installers could explain their environment and process.
+
+--
+Sam Hanes
+[hidden]
+From 1f530885b4f52d283e18d30c75aeaf51dcb97650 Mon Sep 17 00:00:00 2001
+From: Sam Hanes <[hidden]>
+Date: Fri, 26 Jul 2013 11:59:43 -0700
+Subject: [PATCH] Fix Code::Blocks compiler config.
+
+---
+ windows/jack_netadapter.cbp   |    2 +-
+ windows/jack_netdriver.cbp    |    2 +-
+ windows/jack_netmanager.cbp   |    2 +-
+ windows/jack_netonedriver.cbp |    2 +-
+ windows/libjacknet.cbp        |  111 +++++++++++++++++++++--------------------
+ 5 files changed, 60 insertions(+), 59 deletions(-)
+
+diff --git a/windows/jack_netadapter.cbp b/windows/jack_netadapter.cbp
+index b41b31e..dbe01e6 100644
+--- a/windows/jack_netadapter.cbp
++++ b/windows/jack_netadapter.cbp
+@@ -151,7 +151,7 @@
+ 			<Add directory="..\common" />
+ 		</Compiler>
+ 		<Linker>
+-			<Add option="-enable-auto-import" />
++			<Add option="--enable-auto-import" />
+ 			<Add library="kernel32" />
+ 			<Add library="user32" />
+ 			<Add library="gdi32" />
+diff --git a/windows/jack_netdriver.cbp b/windows/jack_netdriver.cbp
+index b3d0c0b..320351a 100644
+--- a/windows/jack_netdriver.cbp
++++ b/windows/jack_netdriver.cbp
+@@ -142,7 +142,7 @@
+ 			<Add option="-Wall" />
+ 		</Compiler>
+ 		<Linker>
+-			<Add option="-enable-auto-import" />
++			<Add option="--enable-auto-import" />
+ 			<Add library="kernel32" />
+ 			<Add library="user32" />
+ 			<Add library="gdi32" />
+diff --git a/windows/jack_netmanager.cbp b/windows/jack_netmanager.cbp
+index 4be11f2..0356481 100644
+--- a/windows/jack_netmanager.cbp
++++ b/windows/jack_netmanager.cbp
+@@ -136,7 +136,7 @@
+ 			<Add option="-Wall" />
+ 		</Compiler>
+ 		<Linker>
+-			<Add option="-enable-auto-import" />
++			<Add option="--enable-auto-import" />
+ 			<Add library="kernel32" />
+ 			<Add library="user32" />
+ 			<Add library="gdi32" />
+diff --git a/windows/jack_netonedriver.cbp b/windows/jack_netonedriver.cbp
+index 0a4e718..066d928 100644
+--- a/windows/jack_netonedriver.cbp
++++ b/windows/jack_netonedriver.cbp
+@@ -142,7 +142,7 @@
+ 			<Add option="-Wall" />
+ 		</Compiler>
+ 		<Linker>
+-			<Add option="-enable-auto-import" />
++			<Add option="--enable-auto-import" />
+ 			<Add library="kernel32" />
+ 			<Add library="user32" />
+ 			<Add library="gdi32" />
+diff --git a/windows/libjacknet.cbp b/windows/libjacknet.cbp
+index f77a3b4..63de4b9 100644
+--- a/windows/libjacknet.cbp
++++ b/windows/libjacknet.cbp
+@@ -4,13 +4,13 @@
+ 	<Project>
+ 		<Option title="libjacknet" />
+ 		<Option pch_mode="2" />
+-		<Option compiler="gcc" />
++		<Option compiler="mingw_64" />
+ 		<Build>
+ 			<Target title="Win32 Release 64bits">
+-				<Option output="Release64\bin\libjacknet" prefix_auto="1" extension_auto="1" />
+-				<Option object_output="Release64\libjacknet" />
++				<Option output="Release64/bin/libjacknet" prefix_auto="1" extension_auto="1" />
++				<Option object_output="Release64/libjacknet" />
+ 				<Option type="3" />
+-				<Option compiler="gcc" />
++				<Option compiler="mingw_64" />
+ 				<Option createDefFile="1" />
+ 				<Option createStaticLib="1" />
+ 				<Compiler>
+@@ -26,20 +26,20 @@
+ 					<Add option="-DSTDC_HEADERS" />
+ 					<Add option="-D__SMP__" />
+ 					<Add directory="." />
+-					<Add directory="..\windows" />
+-					<Add directory="..\common\jack" />
+-					<Add directory="..\common" />
++					<Add directory="../windows" />
++					<Add directory="../common/jack" />
++					<Add directory="../common" />
+ 				</Compiler>
+ 				<Linker>
+ 					<Add library="libsamplerate_x86_64.a" />
+-					<Add directory="Release64\bin" />
++					<Add directory="Release64/bin" />
+ 				</Linker>
+ 			</Target>
+ 			<Target title="Win32 Debug 64bits">
+-				<Option output="Debug64\bin\libjacknet" prefix_auto="1" extension_auto="1" />
+-				<Option object_output="Debug64\libjacknet" />
++				<Option output="Debug64/bin/libjacknet" prefix_auto="1" extension_auto="1" />
++				<Option object_output="Debug64/libjacknet" />
+ 				<Option type="3" />
+-				<Option compiler="gcc" />
++				<Option compiler="mingw_64" />
+ 				<Option createDefFile="1" />
+ 				<Option createStaticLib="1" />
+ 				<Compiler>
+@@ -55,20 +55,20 @@
+ 					<Add option="-DSTDC_HEADERS" />
+ 					<Add option="-D__SMP__" />
+ 					<Add directory="." />
+-					<Add directory="..\windows" />
+-					<Add directory="..\common\jack" />
+-					<Add directory="..\common" />
++					<Add directory="../windows" />
++					<Add directory="../common/jack" />
++					<Add directory="../common" />
+ 				</Compiler>
+ 				<Linker>
+ 					<Add library="libsamplerate_x86_64.a" />
+-					<Add directory="Debug64\bin" />
++					<Add directory="Debug64/bin" />
+ 				</Linker>
+ 			</Target>
+ 			<Target title="Win32 Profiling 64bits">
+-				<Option output="Release64\bin\libjacknet" prefix_auto="1" extension_auto="1" />
+-				<Option object_output="Release64\libjacknet" />
++				<Option output="Release64/bin/libjacknet" prefix_auto="1" extension_auto="1" />
++				<Option object_output="Release64/libjacknet" />
+ 				<Option type="3" />
+-				<Option compiler="gcc" />
++				<Option compiler="mingw_64" />
+ 				<Option createDefFile="1" />
+ 				<Option createStaticLib="1" />
+ 				<Compiler>
+@@ -85,20 +85,20 @@
+ 					<Add option="-D__SMP__" />
+ 					<Add option="-DJACK_MONITOR" />
+ 					<Add directory="." />
+-					<Add directory="..\windows" />
+-					<Add directory="..\common\jack" />
+-					<Add directory="..\common" />
++					<Add directory="../windows" />
++					<Add directory="../common/jack" />
++					<Add directory="../common" />
+ 				</Compiler>
+ 				<Linker>
+ 					<Add library="libsamplerate_x86_64.a" />
+-					<Add directory="Release64\bin" />
++					<Add directory="Release64/bin" />
+ 				</Linker>
+ 			</Target>
+ 			<Target title="Win32 Release 32bits">
+-				<Option output="Release\bin\libjacknet" prefix_auto="1" extension_auto="1" />
+-				<Option object_output="Release\libjacknet" />
++				<Option output="Release/bin/libjacknet" prefix_auto="1" extension_auto="1" />
++				<Option object_output="Release/libjacknet" />
+ 				<Option type="3" />
+-				<Option compiler="gcc" />
++				<Option compiler="mingw_64" />
+ 				<Option createDefFile="1" />
+ 				<Option createStaticLib="1" />
+ 				<Compiler>
+@@ -115,24 +115,24 @@
+ 					<Add option="-DSTDC_HEADERS" />
+ 					<Add option="-D__SMP__" />
+ 					<Add directory="." />
+-					<Add directory="..\windows" />
+-					<Add directory="..\common\jack" />
+-					<Add directory="..\common" />
++					<Add directory="../windows" />
++					<Add directory="../common/jack" />
++					<Add directory="../common" />
+ 				</Compiler>
+ 				<Linker>
+ 					<Add option="-m32" />
+ 					<Add library="libsamplerate_x86.a" />
+-					<Add directory="Release\bin" />
++					<Add directory="Release/bin" />
+ 				</Linker>
+ 				<ExtraCommands>
+ 					<Add before="windres -F pe-i386 -O coff -o Release/libjacknet/libjacknet.res libjacknet.rc" />
+ 				</ExtraCommands>
+ 			</Target>
+ 			<Target title="Win32 Debug 32bits">
+-				<Option output="Debug\bin\libjacknet" prefix_auto="1" extension_auto="1" />
+-				<Option object_output="Debug\libjacknet" />
++				<Option output="Debug/bin/libjacknet" prefix_auto="1" extension_auto="1" />
++				<Option object_output="Debug/libjacknet" />
+ 				<Option type="3" />
+-				<Option compiler="gcc" />
++				<Option compiler="mingw_64" />
+ 				<Option createDefFile="1" />
+ 				<Option createStaticLib="1" />
+ 				<Compiler>
+@@ -149,24 +149,24 @@
+ 					<Add option="-DSTDC_HEADERS" />
+ 					<Add option="-D__SMP__" />
+ 					<Add directory="." />
+-					<Add directory="..\windows" />
+-					<Add directory="..\common\jack" />
+-					<Add directory="..\common" />
++					<Add directory="../windows" />
++					<Add directory="../common/jack" />
++					<Add directory="../common" />
+ 				</Compiler>
+ 				<Linker>
+ 					<Add option="-m32" />
+ 					<Add library="libsamplerate_x86.a" />
+-					<Add directory="Debug\bin" />
++					<Add directory="Debug/bin" />
+ 				</Linker>
+ 				<ExtraCommands>
+ 					<Add before="windres -F pe-i386 -O coff -o Debug/libjacknet/libjacknet.res libjacknet.rc" />
+ 				</ExtraCommands>
+ 			</Target>
+ 			<Target title="Win32 Profiling 32bits">
+-				<Option output="Release\bin\libjacknet" prefix_auto="1" extension_auto="1" />
+-				<Option object_output="Release\libjacknet" />
++				<Option output="Release/bin/libjacknet" prefix_auto="1" extension_auto="1" />
++				<Option object_output="Release/libjacknet" />
+ 				<Option type="3" />
+-				<Option compiler="gcc" />
++				<Option compiler="mingw_64" />
+ 				<Option createDefFile="1" />
+ 				<Option createStaticLib="1" />
+ 				<Compiler>
+@@ -184,14 +184,14 @@
+ 					<Add option="-D__SMP__" />
+ 					<Add option="-DJACK_MONITOR" />
+ 					<Add directory="." />
+-					<Add directory="..\windows" />
+-					<Add directory="..\common\jack" />
+-					<Add directory="..\common" />
++					<Add directory="../windows" />
++					<Add directory="../common/jack" />
++					<Add directory="../common" />
+ 				</Compiler>
+ 				<Linker>
+ 					<Add option="-m32" />
+ 					<Add library="libsamplerate_x86.a" />
+-					<Add directory="Release\bin" />
++					<Add directory="Release/bin" />
+ 				</Linker>
+ 				<ExtraCommands>
+ 					<Add before="windres -F pe-i386 -O coff -o Release/libjacknet/libjacknet.res libjacknet.rc" />
+@@ -201,8 +201,8 @@
+ 		<Compiler>
+ 			<Add option="-Wall" />
+ 			<Add directory="." />
+-			<Add directory="..\common" />
+-			<Add directory="..\common\jack" />
++			<Add directory="../common" />
++			<Add directory="../common/jack" />
+ 		</Compiler>
+ 		<Linker>
+ 			<Add library="kernel32" />
+@@ -220,15 +220,15 @@
+ 			<Add library="ws2_32" />
+ 			<Add library="winmm" />
+ 		</Linker>
+-		<Unit filename="..\common\JackAudioAdapterInterface.cpp" />
+-		<Unit filename="..\common\JackException.cpp" />
+-		<Unit filename="..\common\JackGlobals.cpp" />
+-		<Unit filename="..\common\JackLibSampleRateResampler.cpp" />
+-		<Unit filename="..\common\JackNetAPI.cpp" />
+-		<Unit filename="..\common\JackNetInterface.cpp" />
+-		<Unit filename="..\common\JackNetTool.cpp" />
+-		<Unit filename="..\common\JackResampler.cpp" />
+-		<Unit filename="..\common\ringbuffer.c">
++		<Unit filename="../common/JackAudioAdapterInterface.cpp" />
++		<Unit filename="../common/JackException.cpp" />
++		<Unit filename="../common/JackGlobals.cpp" />
++		<Unit filename="../common/JackLibSampleRateResampler.cpp" />
++		<Unit filename="../common/JackNetAPI.cpp" />
++		<Unit filename="../common/JackNetInterface.cpp" />
++		<Unit filename="../common/JackNetTool.cpp" />
++		<Unit filename="../common/JackResampler.cpp" />
++		<Unit filename="../common/ringbuffer.c">
+ 			<Option compilerVar="CC" />
+ 		</Unit>
+ 		<Unit filename="JackMMCSS.cpp" />
+@@ -246,8 +246,9 @@
+ 			<debugger />
+ 			<AutoVersioning>
+ 				<Scheme minor_max="10" build_max="0" rev_max="0" rev_rand_max="10" build_times_to_increment_minor="100" />
+-				<Settings autoincrement="0" date_declarations="0" do_auto_increment="0" ask_to_increment="0" language="C++" svn="0" svn_directory="" header_path="version.h" />
++				<Settings autoincrement="0" date_declarations="0" update_manifest="97" do_auto_increment="0" ask_to_increment="0" language="C++" svn="0" svn_directory="" header_path="version.h" />
+ 				<Changes_Log show_changes_editor="0" app_title="released version %M.%m.%b of %p" changeslog_path="ChangesLog.txt" />
++				<Code header_guard="VERSION_H" namespace="AutoVersion" prefix="" />
+ 			</AutoVersioning>
+ 		</Extensions>
+ 	</Project>
+-- 
+1.7.9
+
+1376444839.7342_0.ltw:2,a <520AE199.5040509 at maltera dot com>
+________________________________________________________________________________
+

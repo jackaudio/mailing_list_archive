@@ -1,0 +1,93 @@
+Date:        Mon, 21 Feb 2011 14:54:37 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          James Warden <[hidden] at yahoo dot com>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: James Warden Re: [Jack-Devel] sweet! (jack2 backend switching demo by robin gareus) (1298287009.8322_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] sweet! (jack2 backend switching demo by robin gareus)
+
+On 02/21/2011 12:16 PM, James Warden wrote:
+> 
+> --- On Mon, 2/21/11, Harry Van Haaren <[hidden]> wrote:
+> 
+> From: Harry Van Haaren <[hidden]> Subject: Re:
+> [Jack-Devel] sweet! (jack2 backend switching demo by robin gareus) 
+> To: Cc: "Jack devel" <[hidden]> Date: Monday,
+> February 21, 2011, 5:31 AM
+> 
+> 
+> 2011/2/21 Jörn Nettingsmeier <[hidden]>
+> 
+> http://gareus.org/blog/jack2dbu
+> 
+> That one gives me a broken link: http://gareus.org/blog  its
+> currently the first entry...
+> 
+> 
+> Awesome work Robin, thanks for the tip. Will be testing later in the
+> week! -Harry ------------
+> 
+> Hey, looks interesting! Can some of the internals be used for
+> suspending / resuming jack based systems ?
+
+yes, http://rg42.org/wiki/jack2contol
+
+However, recent work on tschack and jack2 might be more suitable for
+handling suspend/resume, YMMV.
+
+> I was thinking whether one
+> could switch to the dummy backend (which would mirror the exact same
+> port connectivity as the real backend is using if this dummy backend
+> can be told to declare X number of fake ports), then suspend or even
+> turn off the real audio device (like an RME HDSP which does not wake
+> up gracefully), and then suspend the jack session. At resume time,
+> the real audio device would be turned on again, the jack backend
+> switching would then kick in to restore the session with this
+> device.
+
+myjackctl.sh does that exactly.
+more specific: /etc/pm/sleep.d/90myjackctl.sh does it using myjackctl.sh
+
+
+
+
+Here's a few quotes from an off-list exchange with Sampo:
+
+> I have one question though: what about switching between cards with
+> different amounts of I/O?
+
+myjackctl.sh does not map ports. Currently it only restores the
+previous physical port-connections, but it's a simple shell script:
+change it to fit your needs.
+
+> Say your RME/whatever gets disconnected and you don't want your
+> entire setup to vanish. This mechanism switches you over to your
+> builtin sound card, then you find the disconnected cable and plug it
+> in. I'd expect to have all connections present, even those from/to
+> ports that weren't available when using the internal sound card.
+
+good point. the tool that does the switch will need to remember the last
+connection state of _each_ interface. Currently it only remembers _the_
+last state - and only very briefly :)
+
+The idea is to go one step further: It should be possible to configure a
+set of transition actions for each backend-switch.
+
+> Does this mechanism always switch to a "new" sound interface
+> connected to the system, or does it only switch back to the original
+> interface jack was started with?
+
+That is configurable.The example-commandline I posted only switches to
+THIS new device once it's connected:
+org/freedesktop/Hal/devices/usb_device_582_74_noserial_if0_sound_card_2
+and always switches to internal card when there's a DeviceError.
+
+Clearly, the whole mechanism, configuraion and setup will eventually
+become too tricky do be done by a bash-script.
+
+ciao,
+robin
+
+1298296505.24906_0.ltw:2,a <4D626E9D.10607 at gareus dot org>
+________________________________________________________________________________
+

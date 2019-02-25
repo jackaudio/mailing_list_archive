@@ -1,0 +1,60 @@
+Date:        Sun, 19 Jun 2016 19:29:55 +0200
+From:        Xavier Mendez  <[hidden] at jmendeth dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+
+Subject:     [Jack-Devel] Suggestion for two new tools
+
+I'd like to suggest two new tools. I find myself using them frequently 
+whenever I'm dealing with sets of outputs / inputs of different 
+latencies, or sometimes when I'm using software that adds noticeable 
+(i.e. >= 15ms) latency.
+
+I think it would be best to add them as standard JACK tools because:
+
+- They perform a very basic task.
+- JACK has almost no latency-related tools AFAIK.
+- They demonstrate the power of JACK's latency API and could serve
+as [non-trivial] examples for devs trying to understand it.
+
+What do you think? I've attached a patch with both tools. If they get 
+included, I'll write documentation about its usage and the latency API 
+in general. Below is a summary of what they do:
+
+
+## jack_lsync
+
+Synchronizes a set of ports for playback or capture, by inserting 
+appropriate delays to compensate for latency. Example:
+
+Suppose you have one output `playback_1` with 20ms output latency, and 
+another output `playback_2` with 50ms output latency:
+
+     jack_lsync -a2 &
+     jack_connect lsync:output_1 playback_1
+     jack_connect lsync:output_2 playback_2
+
+lsync will insert a 30ms delay on the first output, giving you two 
+outputs of 50ms latency. Instead of connecting to the original outputs, 
+you'd connect to `lsync:input_1` and `lsync:input_2` respectively.
+
+
+## jack_lset
+
+Corrects the reported latency of a port. Example: to increment the 
+playback latency of `port` by 30ms:
+
+    jack_lset 30ms &
+    jack_connect lset:output_1 port
+
+Then connect everything to `lset:input_1` instead of `port`.
+
+Clients should ideally set the correct latency at their ports, or 
+provide an option (as with -I and -O) for users to set them. This is not 
+the case in practice, and there are also a number of legitimate reasons 
+why users may want to correct latency externally.
+* Attachment: '1466357422.12744_0.ltw:2,a/files/0001-Add-lset-and-lsync.patch'
+content-type: text/x-patch
+
+1466357422.12744_0.ltw:2,a <5766D693.6020300 at jmendeth dot com>
+________________________________________________________________________________
+

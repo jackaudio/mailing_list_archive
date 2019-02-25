@@ -1,0 +1,99 @@
+Date:        Mon, 15 Jun 2009 15:34:46 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Lennart Poettering <[hidden] at 0pointer dot de>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>
+Follow-Up:   Lennart Poettering Re: [LAD] jack2's dbus name (1245076681.2457_0.ltw:2,a)
+
+Subject:     Re: [LAD] jack2's dbus name
+
+Le 15 juin 09 à 14:59, Lennart Poettering a écrit :
+
+> On Mon, 15.06.09 11:01, Stéphane Letz ([hidden]) wrote:
+>
+>>> I was just thinking, when jack2 finished initialization it takes a
+>>> name on the session bus, right?
+>>
+>> Not sure about what you mean by " it takes name on the session  
+>> bus". I
+>> hope Nedko can answer better here.
+>
+> I simply mean it calls dbus_bus_request_name()
+> resp. org.freedesktop.DBus.RequestName to acquire a service name n the
+> session bus, such as org.jack.foo.bar.
+
+
+We recently had a strong debate on JACK dev list about the way DBus  
+could/should be used with JACK. DBus is currently used a two different  
+places in JACK2:
+
+1) to deal with this "audio device reservation" idea to better  
+cooperate with PulseAudio. This is coded in ALSA backend directly (and  
+so is used only when ALSA backend is used..)
+
+2) to deal with the so-called "server control API", that is a more  
+powerful way to control the server from (DBus) based applications.
+
+What I'm personally trying to achieve is a more "flexible" way  
+(compared to what is currently a bit hard-coded in JAKC2 SVN) so that  
+a DBus control component can be coded as a "plugin" to be possibly  
+loaded in JACK server process. This new plugin model allows to keep  
+basically 2 ways of using JACK server :  the "old way" (typically  
+starting the jackd server using Qjackctl control application) or the  
+new way using DBus based control applications (after the DBus control  
+plug-in has been properly loaded in JACK server).  (Keeping the "old- 
+way" is also important on others platforms JACK2 runs on.)
+
+If this new "control plugin" model is finally accepted by JACK  
+community, then we'll distribute/package JACK2 compiled with the 1)  
+option, so that it (at least) cooperates with PulseAudio. But 2) would  
+then be optional, so PA can not rely on the DBus control plug-in to  
+always be present.
+
+The 1) code uses  "org.freedesktop.ReserveDevice1.AudioXX" name, and  
+2) optional DBus plugin uses "org.jackaudio.service" name. If we want  
+to implement your proposal, the we would need to request another name  
+in  1) part, is that correct?
+
+
+>
+>>> As soon as jack starts up and takes posession of the device, the hw
+>>> device will appear grayed out in pa's volume control, however a new
+>>> virtual device for connectivity with jack appears in the vc. Data
+>>> written to that device will be passed to JACK on a couple of
+>>> ports. It's then up to the user if he wants to make use of those  
+>>> ports
+>>> and connect them inside of jack or just leave them unconnected. (as
+>>> far as I understood the mere existance of a port when it is
+>>> unconnected has no detrimental effect on jack latency behaviour,  
+>>> does
+>>> it?).
+>
+> Could you say something about this question of mine regarding the mere
+> existance of ports in jack please?
+
+Having JACK ports means a PulseAudio client is running. But it does  
+not add any "latency" by itself.
+
+
+>
+>>> Does that make sense to you?
+>>>
+>>> Lennart
+>>
+>> Technically it "could" make sense, but I'm not sure JACK users want
+>> that as the default behaviour. I would prefer if "real users" in JACK
+>> and LAD communities could elaborate on that.
+>
+> I mean, the idea is to simply offer those PA innterconnection ports,
+> it's up to the user to connect them or not. And if a user really
+> doesn't want that we could even make that easily disabable in the PA
+> UI somewhere.
+>
+
+Yes, I see.
+
+Stephane 
+
+1245073137.27928_0.ltw:2,a <1F4F3229-7278-4BF3-971E-624C4A67D560 at grame dot fr>
+________________________________________________________________________________
+

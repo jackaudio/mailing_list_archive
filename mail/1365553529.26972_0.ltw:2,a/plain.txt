@@ -1,0 +1,54 @@
+Date:        Wed, 10 Apr 2013 02:25:21 +0200
+From:        Pawel  <[hidden] at wp dot pl>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+
+Subject:     Re: [Jack-Devel] Graph callback and client state
+
+Dnia Šroda, 10 Kwietnia 2013 01:37 Paul Davis <[hidden]> napisa³(a)
+> 
+> On Tue, Apr 9, 2013 at 7:07 PM, Pawel <[hidden]> wrote:
+> >  - port is inactive - ?? Client suppose that port exits - and it exists, so it's "broken" ... but because jack server KNOW this before serve it to client  - it should at least try to avoid problems.
+> >  
+> >  What I want to say - we can't fix this ultimately - but jack server should at least TRY to protect client from evil
+> you can't protect them from *all* "evil", so the question is : which types of "evil" will we attempt to avoid.
+>
+That's what I said - we can't protect from all error. Client should always check return of each API call , but jack server should return consistent state at the moment, IMO.
+   
+> > - and in this case he definitely can. So , once again - jack_get_ports shouldn't return broken ports if he know they are useless for client.
+> mostly agreed.
+>  
+> >  I also can't find a problem in jack_is_port_active. Example:
+> >  jack_get_ports(....)
+> >  <--- obviously some time here - and things can change ..
+> >  jack_port_t* port = jack_get_port_by_name ( ...)
+> >  <-- still things can change - but if we got port == NULL we fail here and remove port from patchbay graph.
+> >  jack_port_is_active ( client, port); 
+> > # return 0 on success i.e. port still exists and is active. Otherwise we can return some codes like "1 - not active, 2 - not exists .. etc, but for me (as patch manager maintainer) it's clear that in this short time window port is broken. I just mark it as "unusable" .. and wait for another event.
+> so for now, you know that the port is active ... so what? you can't do anything useful with this information. 
+>  
+
+I just know that in this short time window port is valid. You a little bit reverse my thought. I mean that (inactive port == useless == not exists for regular apps). It can exists internally in jack, but it's useless for app. I don't even try to prove that this resolve all problems. It just made things better. That's all.
+
+> every time you use jack_get_ports(), you get, as you noted above, a "snapshot" of things. there is no way to prolong the life of the information in the snapshot. when you come to use the information, you *must* be ready for some or all of it to be invalid or out of date.
+>  
+> i think this is a somewhat separate question to whether or not we should return ports that *at the time of jack_get_ports()* are known to be inactive. logic and cleanliness would suggest that we should not. however, the comparison with other kinds of potential "invalidation" of port information says "it doesn't really matter".
+
+Try to my POV (as patchbay manager). Or we have two state port exists (== useful), not exists ... or we have three state - exists, inactive, not exists. For me it's doesn't matter which approach YOU choose. If jack server provide API to ask "is port is OK" - then I call this. If this call will be too late - and port just disappear - then I remove it from my screen. I just don't want to "show" broken ports for user.
+
+If user try connect that doesn't exists - it got error - and port will disappear from patchbay. What can I say to user when port exists but I can't connect them ?
+
+Fact that we can't resolve all problems shouldn't stop us from try to improve current situation. That's all.
+
+BTW. after all I think that Harry's idea is most flexible - it doesn't ruin anything. Maybe there is a race - but you can also got error while trying jack_port_flags, or jack_get_port_by_name .. problem is that - we don't know how long port will be inactive - so for *now* we just mark port as "inactive" .. and we see in next iteration. That's all. If shit happen meantime - then we try to adapt ;-)
+
+Xj.
+
+>  
+> --p
+> 
+> 
+
+1365553529.26972_0.ltw:2,a <5164b17156eb78.28544679 at wp dot pl>
+________________________________________________________________________________
+

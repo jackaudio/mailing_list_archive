@@ -1,0 +1,61 @@
+Date:        Sat, 08 Dec 2012 22:33:12 -0800
+From:        Devin Anderson  <[hidden] at gmail dot com>
+To:          Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Devin Anderson Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355014309.14390_0.ltw:2,)
+Follow-Up:   Devin Anderson Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355052429.20274_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] ALSA PCM multi plugin and xruns
+
+On Sat, Dec 8, 2012 at 4:51 PM, Devin Anderson
+<[hidden]> wrote:
+
+> I added some errors messages to the multi plugin in alsa-lib, and have
+> found that:
+>
+> 1.) Both of the Layla 3Gs have the same amount of frames available
+> regardless of whether the xrun onslaught is happening.  So, when 32 is
+> reported back as the amount of frames available, both of the devices
+> have 32 frames available, despite the period size being 256.
+
+I was wrong about this too.  It appears that one of two scenarios happens:
+
+1.) The master device has (period_size + 32) frames available, and the
+other has 0 frames available.
+2.) The master device has (period_size + 32) frames available, and the
+other has 32 frames available.
+
+So, it sure *looks* like an xrun, but it's not currently being handled
+in `alsa_driver_wait` the same way that a detected xrun is handled.
+
+I tried adding the following code just before the last return
+statement in `alsa_driver_wait`:
+
+	/* if the number of available frames is less than the expected frame
+	   count, then handle this as a buffer underrun */
+
+	if (avail < driver->frames_per_cycle) {
+		*status = alsa_driver_xrun_recovery (driver, delayed_usecs);
+		return 0;
+	}
+
+... and the situation improved considerably.  The onslaught of xruns
+is now limited to a few at most.
+
+@Paul, Torben, etc.: I'm not convinced that this is the best or
+correct way to solve the problem, or if this will introduce problems
+in other setups.  I think you'd know better than me.  If this is an
+acceptable fix, I'll submit a patch.  Let me know.
+
+Thanks,
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+psinsights - http://psinsights.googlecode.com/
+synthclone - http://synthclone.googlecode.com/
+
+1355034800.2308_0.ltw:2, <CAG7zqTrAkz0mG-y46u0iXNGqkpGByvg2DQ2ziQ4Jm=kR5wdVBw at mail dot gmail dot com>
+________________________________________________________________________________
+

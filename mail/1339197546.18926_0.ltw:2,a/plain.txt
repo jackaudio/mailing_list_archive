@@ -1,0 +1,44 @@
+Date:        Sat, 09 Jun 2012 02:18:56 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Jack O'Quin <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jack O'Quin Re: [Jack-Devel] [LAU] jack2 turned verbose (1339196394.17851_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [LAU] jack2 turned verbose
+
+"Jack O'Quin" <[hidden]> writes:
+
+> On Fri, Jun 8, 2012 at 5:37 PM, Nedko Arnaudov <[hidden]> wrote:
+>> Nedko Arnaudov <[hidden]> writes:
+>>
+>>> If someone can explain why this
+>>> is invalid C code, please do it. If someone cares to produce an isolated
+>>> test case please do it and then report upstream (gcc). In the latter
+>>> case we can at least expect some gcc guru to decide if its a gcc bug or
+>>> invalid C code.
+>>
+>> I made a test program (attached) that reproduces the issue.
+>
+> The return from main() coerces v2.b to an int.
+>
+> Are you sure that is really a valid test?
+
+Try this instead:
+
+    if (v2.b) return 1;
+    return 0;
+
+Here this makes main return 10. (incorrect)
+If i change 0 to 2, main returns 1. (incorrect)
+
+If you are are really curious, change 10 in the original test to
+9. However, this trick doesnt workaround the original issue. fc17
+changes default realtime-priority from 10 to 60. Changing the default to
+61 doesnt workaround the code generated for jack.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1339197546.18926_0.ltw:2,a <87r4tpqtnj.fsf at arnaudov dot name>
+________________________________________________________________________________
+

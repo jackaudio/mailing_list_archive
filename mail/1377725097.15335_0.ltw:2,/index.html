@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Android xrun questions</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Android xrun questions</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1377667426.6749_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1377726989.18366_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1377725097.15335_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 28 Aug 2013 14:24:47 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Bradley Justice </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+</table>
+<pre>
+I am testing Jack on the original Nexus 7 and recently released Nexus 7 2.
+The new Nexus 7 is the focus of my development. My audio device is a USB
+Native Instruments Komplete Audio 6, which I have been testing at 96K
+sampling rate. Android has been modified to include glib and to run Jack
+software as root. This enables real time priorities and memory locking.
+Jack addresses the USB device using the ALSA driver.
+
+Current testing indicates Jack is stable on Nexus 7 2 at 96k with buffers
+set at 512, periods 2. When I set this to 256/3, I see a repeating pattern
+of xruns and watchdog resets. Every second I see 13 xruns, plus or minus 1
+and every 15 seconds a watchdog reset. My supervisory software restarts
+jackd and the pattern repeats. This occurs indefinitely and is 100%
+reproducible.
+
+I presume I am now looking for  periodic event that occurs every 75 usecs
+and delays Jack processing. Then either it interrupts processing for a
+longer period of time every 200 iterations or there is a different problem
+that occurs every 15000 usecs. I will likely take this to a Google forum
+soon.
+
+So now the Jack questions.
+
+1. There is something that puzzles me regarding my diagnostic output. When
+testing against Nexus 7, I see occasional xruns at 96k, buffers 512,
+periods 3. My diagnostics display jack_get_xrun_delayed_usecs. This returns
+something that seems sensible to me, e.g. 4.924 ms, which matches the
+return from jack_get_max_delayed_usecs. However, in the failure scenario on
+Nexus 7 2, when an xrun occurs jack_get_xrun_delayed_usecs returns values
+such as 0.031 ms, 0.160 ms, even 0.0 ms. Can someone assist ne in
+interpreting these results?
+
+2. I am curious about the recommendation for 3 periods when using a USB
+device. It seems an obvious precaution when using USB 1.0 as any given
+buffer can be sourced from 2 USB packets with a 1 ms delay between. But
+does that recommendation still apply to a USB 2.0 device thqt is generating
+packets every 125 usecs? If so, what is the rationale?
+
+3. Of course recommendations regarding isolating my problem events are
+welcome.
+
+Thanks in advance,
+
+Brad Justice
+
+Testing details
+===========
+Android version: 4.3.2.1
+Kernel version: 3.4.0
+Jack priority: 8 (Google recommends running audio threads at RT priority 2
+or 3. Running Jack at priority 60 had no effect on test results.)
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1377667426.6749_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1377726989.18366_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1377725097.15335_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1377725097.15335_0.ltw:2,&nbsp;&lt;CALNZyLF_-0gDY7CaV_PuFP6dDJN2nD_iereHNn85Tti3gKT6BQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

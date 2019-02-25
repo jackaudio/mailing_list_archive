@@ -1,0 +1,153 @@
+Date:        Wed, 22 Feb 2012 15:39:01 +0100
+From:        [hidden] at nebelschwaden dot de <[hidden] at nebelschwaden dot de
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Robin Gareus Re: [Jack-Devel] Some kernel questions reg. jack (1329660110.18797_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Some kernel questions reg. jack
+
+Thanks to all for your time & insight. Also to those who do not get cited
+here.
+
+The reason for BFS was not really audio, but more, it doesn't suck as much
+as the regular scheduler for I/O, which by time tends to [b]lock the whole
+system for a couple of seconds.
+
+I will be building a dedicated audio system somewhat soon, currently my
+ordinary workstation has to do the job. Maybe that'll get an RT kernel
+anyway.
+But I'll recheck with HT and BFS. That was a tremendous hint.
+
+The mention of fan noise is actually a really good one, haven't thought
+about this, but I'll try to get the didecated system silet from start. Not
+sure, wether I succeed, as I am not really following the hardware
+business.
+
+Oh, and I do have two cores, but both are HT, so irqbalancer isn't a bad
+option, I suppose.
+
+Again, thanks for your explanations. I'll try PREEMPT RCU with next kernel
+baking.
+
+
+
+
+> Hi Ede,
+>
+> On 02/17/2012 09:07 PM, Ede Wolf wrote:
+>> Hello,
+>>
+>> I do have some questions regarding kernel options for a jack friendly
+>> kernel. I've found some information on the net, some outdated, some
+>> maybe not complete. I am talking about a stock vanilla kernel 3.2 with
+>> BFS scheduler,
+>
+> I've only tested BFS in the late linux-2.6. days. It performed very well
+> but could not compete with RT_PREEMT under heavy load wrt low-latency
+> audio. YMMV.
+>
+>> I most likely do not need hard realtime.
+>>
+>> While my kernels usually do run, I do not understand all options.
+>
+> There's probably no one out there who can tell how _all_ those options
+> affect each other and what effect they have on the system :)
+>
+>> Not to
+>> get me wrong, I am not asking to get those explained at all, just would
+>> like to know wether those are jack relevant and should en/disabled.
+>
+> none of them are relevant for JACK per se; I assume you want a tuned
+> reliable audio-system.
+>
+>> So a 1000Hz timer and full preemption are quite obvious.
+>
+> N/A and yes. (the 1kHZ timer is motivated mostly by MIDI I/O; I'm unsure
+> if it is still relevant with jack-midi - but it won't hurt. jackd
+> backends use the audio-hardware IRQ for timing; NTL ALSA-sequencer apps
+> will run with less jitter with a higher precision system timer.)
+>
+>> A tickless system is not recommended.
+>
+> well, no. A tickless system just replaces the periodic timer interrupt
+> with on-demand interrupts. The response time is basically identical; but
+> the power-consumption is drastically reduced. They system can also do
+> other things instead of handling some unused timer-irq but the effect of
+> that is marginal.
+>
+> CONFIG_NO_HZ=y
+> CONFIG_HIGH_RES_TIMERS=y
+>
+>> IIRC and also hyperthreading should be disabled in bios as well as
+>> kernel?
+> In general: no. leave it enabled.
+>
+> It helps to increase parallelism for I/O bound (non-CPU intensive)
+> threads. It may have to be "yes" for you, because BFS may not /aware/ of
+> HT features when it schedules context-switches. The scheduler needs to
+> realize that the two logical CPUs belong to the same physical CPU. I
+> don't know if BFS cares about that. In general one needs a shared
+> runqueue per physical-CPU for HT-scheduling; yet one of the BFS features
+> is to only use a single runqueue for the entire system.
+>
+>> Same with Power management, I suppose.
+> In general, yes.
+>
+> but it's not that simple: for maximum reliability, you want to run the
+> machine as cool as possible which also produces less [fan] noise. Also
+> if you're on a mobile system, with power-mgmt the battery will last much
+> longer.
+>
+> CPU freq changes are fast enough and not an issue for audio
+> applications, but PCI/PCIexpress power management can screw up
+> low-latency I/O. Alas, this differs from board-to-board and
+> bios-to-bios. Check if you can disable C1E halt state and EIST in the
+> BIOS. Other power-management options are usually not an issue.
+>
+>> Is that RCU stuff somehow realted to audio? What about "Enable RCU
+>> priority boosting". Is that recommended to be activated? And is the I/O
+>> scheduler of any relevance? I an mot going to record 52 tracks at once.
+>
+> mmh. IIRC there were (or are) implementation issues with the locking
+> model of RCU WRT to low-latency. I did not follow up the details but it
+> works fine and reliable with the -rt patch on i686 and x64_64 here with
+> 2.6.39 and 3.X
+>
+> CONFIG_TREE_PREEMPT_RCU=y
+> CONFIG_PREEMPT_RCU=y
+> CONFIG_RCU_BOOST=y
+>
+>
+>> Also I do filter access to /dev/mem below "kernel hacking". That should
+>> not matter, should it? Anything I might have missed?
+>
+> not that I'm aware of.
+>
+>> Finally, not really kernel related, but what is about irq-balancer? I've
+>> attached "threadirqs" to my lilo line - there is no dedicated kernel
+>> option for threadirqs? - do threadirqs and irq-balancer they play well
+>> together or should latter one be removed?
+>
+> /sbin/irqbalance is a daemon. - "threadirqs" is a kernel option.
+> They work in combination. However it is questionable if balancing IRQs
+> on a single hyperthreaded core makes sense.
+>
+> You'll definitely want to use "threadirqs" to increase the priority of
+> audio-device-IRQ handlers over other interrupt handlers. Rui's rtirq
+> script can configure IRQ priorities during boot for kernels with
+> threaded IRQ handlers.
+>
+> `hwlatdetect` and other tools from the "rt-tests" suite do come in handy
+> to check system and kernel latencies.
+>
+>> Hopefully this is not too off topic.
+>
+> it's a recurring on-topic subject at
+> http://lists.linuxaudio.org/listinfo/linux-audio-dev
+>
+> have fun,
+> robin
+>
+
+1329921554.12668_0.ltw:2,a <a150ca3ba19e20d5ab8a69b65772678a.squirrel at drachentor dot dyndns dot org>
+________________________________________________________________________________
+

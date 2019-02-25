@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] System signals and JACK</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] System signals and JACK</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1414436420.13429_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1414439643.19018_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1414438966.17922_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 27 Oct 2014 20:42:47 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Hans Petter Selasky </span> &lt;[hidden] at selasky dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Robin Gareus &lt;[hidden] at gareus dot org&gt;, [hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1414080933.31679_0.ltw:2,/index.html'>Re: [Jack-Devel] System signals and JACK </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Hans Petter Selasky
+<a href='../1414439643.19018_0.ltw:2,/index.html'>Re: [Jack-Devel] System signals and JACK </a></td></tr>
+</table>
+<pre>
+On 10/23/14 16:52, Robin Gareus wrote:
+&gt; On 10/23/2014 09:46 AM, Hans Petter Selasky wrote:
+&gt;&gt; Hi,
+&gt;&gt;
+&gt;&gt; Some applications are using signals() and the jack client needs to
+&gt;&gt; ignore these. Consequently read/write calls should be wrapped. See
+&gt;&gt; attached patch. Can this be put upstream? Probably same issue with jack2.
+&gt;&gt;
+&gt;
+&gt; JACK is a *realtime* audio system, if application code changes the
+&gt; behavior so that jack read/writes to be interrupted by a EINTR, it
+&gt; really seems something is broken by design there.
+&gt;
+&gt; signal() is sent to the main process thread. It should not be able to
+&gt; affect the jack-process callback thread at all. (Marking the jack thread
+&gt; as TASK_UNINTERRUPTIBLE could be a way forward or explicitly using
+&gt; pthread_sigmask() - but those are hacks and workarounds).
+&gt;
+&gt; Either way I cannot reproduce the problem in the first place, jltcgen
+&gt; from https://github.com/x42/ltc-tools uses SIGHUP to re-sync and that
+&gt; never caused issues here with jack2 on various architectures.
+&gt;
+
+Hi,
+
+I have a QT4/5.x based application using JACK, and this is a race. On 
+one machine the issue never triggered. On another it happens from time 
+to time, and prevents the JACK-client from registering. Have have not 
+seen a problem in the jack-process callback thread yet, but when the 
+register call is done from the main() thread. Initially I thought there 
+was a problem with jackd, and I did a "strace" / "ktrace" and the 
+problem went away.
+
+QT4/5.x has similar wrappers around its read/write operations.
+
+--HPS
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1414436420.13429_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1414439643.19018_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1414438966.17922_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1414438966.17922_0.ltw:2,&nbsp;&lt;544EA037.3030806 at selasky dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

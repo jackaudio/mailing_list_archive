@@ -1,0 +1,44 @@
+Date:        Tue, 08 Jan 2013 20:45:17 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          "MONTANARO Luciano (MM)" <[hidden] at magnetimarelli dot com>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: MONTANARO Luciano (MM) [Jack-Devel] A couple of related issues in jackd on ARM (1357672415.22666_0.ltw:2,a)
+Follow-Up:   MONTANARO Luciano (MM) [Jack-Devel] R: A couple of related issues in jackd on ARM (1357720693.6865_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] A couple of related issues in jackd on ARM
+
+Le 8 janv. 2013 à 20:13, MONTANARO Luciano (MM) a écrit :
+
+> Hi all again,
+> I am having new problems with jackd2, after our embedded platform switched to the 3.1 kernel.
+> Actually, I think they were present with our previous kernel as well, but they have become systematic while once they were sporadic.
+> 
+> I think I have found the problematic code, but I need some insight from someone that knows the code.
+> The first problem I am seeing is a very high number of xrun notifications, tens of them a second.
+> They is due to alsa_driver_wait() returning with 0 as its frame number, which normally means an xrun has occurred, but in this case what seems to be happening is that jack_wait returns "normally", but with a capture_avail of 0 and a playback_avail of 512 on 9 calls out of 10. The tenth call I get both capture_avail and playback_avail set to 512. The wait_status is set to 0, as in "everything normal", I guess, and so I tried to modify JackAlsaDriver to skip the notification in this case, and things seem to be working fine, no noticeable glitches in the audio playback at all.
+
+Cannot answer here: what ALSA gurus think of the possible fix?
+
+> 
+> The second problem I was referring to is that this high number of notifications is triggering a problem in the JackRequest code:
+> The CheckRes() macro checks for errors from the Read/Write calls, but these calls may silently fail: they can return without writing or reading, and this is accounted as success, but then Read() may return uninitialized data or Write is not retried when it should.
+> 
+> There is code like this:
+> 
+>         CheckRes(JackRequest::Write(trans));
+>         CheckRes(trans->Write(&fName, sizeof(fName)));
+>         CheckRes(trans->Write(&fProtocol, sizeof(int)));
+>         CheckRes(trans->Write(&fOptions, sizeof(int)));
+>         CheckRes(trans->Write(&fUUID, sizeof(int)));
+> 
+> Where I think after each Write there is potential for a needed retry, which is not done at all. Am I missing something?
+
+CheckRes was supposed to fail in case of error?
+
+Any log of the problem to show?
+
+Stéphane 
+
+1357674332.25723_0.ltw:2,a <48F7C588-39F8-4983-A384-5EAB28DE3F1C at grame dot fr>
+________________________________________________________________________________
+

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] buffer size callback, revisit</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] buffer size callback, revisit</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297869703.26027_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297869978.26702_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297869716.26054_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 16 Feb 2011 10:21:42 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Arne Jacobs &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Arne Jacobs
+<a href='../1297869213.24885_0.ltw:2,a/index.html'>Re: [Jack-Devel] buffer size callback, revisit </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Arne Jacobs
+<a href='../1297869978.26702_0.ltw:2,a/index.html'>Re: [Jack-Devel] buffer size callback, revisit </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1297870434.27550_0.ltw:2,a/index.html'>Re: [Jack-Devel] buffer size callback, revisit </a></td></tr>
+</table>
+<pre>
+On Wed, Feb 16, 2011 at 10:12 AM, Arne Jacobs &lt;[hidden]&gt; wrote:
+&gt; On a sidenote:
+&gt;
+&gt; The JACK API documentation states for the buffer size callback, that it
+&gt; is called in a "separate non RT thread", i.e., not in the process
+&gt; thread. Which sounds to me that the process callback and the buffer size
+&gt; callback can run in parallel.
+
+where are you reading this? the docs at jackaudio.org state:
+
+   Tell JACK to call bufsize_callback whenever the size of the the
+buffer that will be passed to the
+   process_callback is about to change. Clients that depend on knowing
+the buffer size must
+   supply a bufsize_callback before activating themselves.
+
+&gt; Is this really the case? It means you'd have to allocate new buffers and
+&gt; then somehow send those to the process thread in a lock-free way...?
+&gt; What if the process callback has already been called with the new buffer
+&gt; size, while the other thread is still reallocating the buffers?
+
+this sounds like an artifact of jack2 calling everything (?) but the
+process callback from a 2nd non-RT client thread. if it does this,
+then its wrong, in the sense that as you noted, its unworkable. buffer
+size changes and the process callback MUST be synchronous, i think.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297869703.26027_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297869978.26702_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297869716.26054_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1297869716.26054_0.ltw:2,a&nbsp;&lt;AANLkTin-pWgK_s9QBW0gu3cg2wJjkfxYHokEn4=6=j=F at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

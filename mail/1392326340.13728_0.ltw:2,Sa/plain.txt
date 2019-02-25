@@ -1,0 +1,89 @@
+Date:        Fri, 14 Feb 2014 08:18:25 +1100
+From:        Matt Flax  <[hidden] at flatmax dot org>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Matt Flax [Jack-Devel] [PATCH 04/16] removed a commented out guard from configure.ac (1392326352.13740_0.ltw:2,a)
+Follow-Up:   Matt Flax [Jack-Devel] [PATCH 01/16] Added the beginnings of the iio driver to the codebase. The IIO driver compiles using the C++ preprocessor. The driver requires more code, but in this version the it compiles and the beginnings of Added the beginnings of the functions driver_initialize, iio_driver_bufsize are in place. Also the autotools system is setup to compile IIO if the pre-requisites are present. Added prerequisite checking for the IIO driver and the generation of drivers/iio/Makefile to configure.ac. Also added the iio subdirectory directive to drivers/Makefile.am Added the drivers/iio subdirectory and required code. (1392326354.13744_0.ltw:2,a)
+Follow-Up:   Matt Flax [Jack-Devel] [PATCH 02/16] For the IIO driver : 1.info.txt body.txt header headers.txt html_attachments.txt html_body_escaped.txt html_body.txt html_header.txt index.html orig.txt parts_structure.txt parts.txt plain.txt prev_next.txt text_attachments.txt text_body_obfus.txt text_body.txt Implemented the following functions - untested will contain bugs : iio_driver_attach, iio_driver_detach, iio_driver_start, iio_driver_stop, iio_driver_wait, iio_driver_run_cycle, iio_driver_delete, driver_get_descriptor 1.info.txt body.txt header headers.txt html_attachments.txt html_body_escaped.txt html_body.txt html_header.txt index.html orig.txt parts_structure.txt parts.txt plain.txt prev_next.txt text_attachments.txt text_body_obfus.txt text_body.txt The function iio_driver_bufsize now checks that the requested buffer size is safe w.r.t. the iio subsystem. It also checks that the iio required read buffer is resized successfully. 1.info.txt body.txt header headers.txt html_attachments.txt html_body_escaped.txt html_body.txt html_header.txt index.html orig.txt parts_structure.txt parts.txt plain.txt prev_next.txt text_attachments.txt text_body_obfus.txt text_body.txt driver_initialize : The driver now allows the period size option to be specified on the command line. Checks for acceptable period size and creates the required iio read buffer. (1392326362.13769_0.ltw:2,a)
+Follow-Up:   Matt Flax [Jack-Devel] [PATCH 09/16] iio_driver.C, local debugging enabled. driver_null_cycle now empties the MMap queue as per normal operation. If the iio_driver finds no chips by the desired name, then it indicates as jack expects. (1392326368.13775_0.ltw:2,a)
+Follow-Up:   Matt Flax [Jack-Devel] [PATCH 14/16] Removed re-enabled the exit command in the not_overwriting configure.ac section. (1392326369.13780_0.ltw:2,a)
+Follow-Up:   Matt Flax [Jack-Devel] [PATCH 03/16] Removed UUID from the configure.ac Added JackIIODriverTest.C to test the IIO driver. Reduced the period size to 1024 samples. Added port handling to the iio_driver_attach function. Implemented iio_driver_read. Addeed various run time comments to help understanding whats being processed when. (1392326369.13781_0.ltw:2,a)
+Follow-Up:   Matt Flax [Jack-Devel] [PATCH 11/16] Switched to the unified time handling in iio_driver.C Started compiling iio_driver_dummy.C in G++ to ensure nothing strange is happening there to cause xruns when executing the client experienced on the ARM when using iio_driver.C. (1392326378.13803_0.ltw:2,a)
+Follow-Up:   Matt Flax [Jack-Devel] [PATCH 08/16] Modified jack to compile without warnings using g++. (1392326381.13805_0.ltw:2,a)
+Follow-Up:   Matt Flax [Jack-Devel] [PATCH 05/16] iio_driver.c Improved speed, added xrun indications. Removed references to POST_PACKED_STRUCTURE to enable execution on ARM without "Bus error" problems. (1392326382.13808_0.ltw:2,a)
+Follow-Up:   Matt Flax [Jack-Devel] [PATCH 06/16] Addempted to use the IIOThreaded driver to remove latency issues. It turns out that the IIO kernel subsystem is introducing very large latencies at the end of the buffer. A different approach will be sought. (1392326388.13826_0.ltw:2,a)
+Follow-Up:   Matt Flax [Jack-Devel] [PATCH 07/16] Switched to using the mmap to interact with the IIO hardware. Can now specify the number of periods to use. (1392326389.13827_0.ltw:2,a)
+Follow-Up:   Matt Flax [Jack-Devel] [PATCH 12/16] now compiling the iio_driver_dummy.C using G++ and a high sample rate. The clients now report large xruns, whilst the server doesn't. (1392326392.13829_0.ltw:2,a)
+Follow-Up:   Matt Flax [Jack-Devel] [PATCH 15/16] Fixed copyrights. (1392326392.13832_0.ltw:2,a)
+Follow-Up:   Matt Flax [Jack-Devel] [PATCH 13/16] Removed the codeBlocks ide directory. (1392326402.13856_0.ltw:2,a)
+Follow-Up:   Matt Flax [Jack-Devel] [PATCH 10/16] Added unified_jack_time.h a header file to unify the treatment of both timespce and jack_time_t. Created iio_driver_dummy.c to test the jack framework using a dummy driver and the unified time header to implement the iio_driver_wait function. struct _iio_driver now uses timeType to specify the next time. The macro NEXT_TIME is used to specify the next expected time. (1392326410.13861_0.ltw:2,a)
+
+Subject:     [Jack-Devel] [PATCH 00/16] IIO driver for jack1
+
+This set of patches introduces the IIO driver for jack1.
+Whilst the codeBlocks ide directory is added in the first patch,
+it is removed in the fourth last patch.
+Currently the iio_driver_read function is set to a test mode where it writes
+i/nframes to the input ports ... this is to enable testing. Once tested successfully, this test state can easily be removed.
+More work is coming on this driver for further testing.
+
+Matt Flax (16):
+  Added the beginnings of	the iio	driver to the codebase.     The
+    IIO	  driver compiles   using the C++ preprocessor.     The driver
+    requires more code, but  in this version the it compiles and the
+    beginnings of Added the beginnings of the functions
+    driver_initialize, iio_driver_bufsize are in place. Also the
+    autotools system is setup to compile IIO if the pre-requisites are
+    present.     Added prerequisite checking for the IIO driver and the
+    generation of drivers/iio/Makefile to configure.ac. Also added the
+    iio subdirectory directive to drivers/Makefile.am     Added the
+    drivers/iio subdirectory and required code.
+  For the IIO driver :     * Implemented the following functions -
+    untested will contain bugs : iio_driver_attach, iio_driver_detach,
+    iio_driver_start, iio_driver_stop, iio_driver_wait,
+    iio_driver_run_cycle, iio_driver_delete, driver_get_descriptor     *
+    The function iio_driver_bufsize now checks that the requested buffer
+    size is safe w.r.t. the iio subsystem. It also checks that the iio
+    required read buffer is resized successfully.     *
+    driver_initialize : The driver now allows the period size option to
+    be specified on the command line. Checks for acceptable period size
+    and creates the required iio read buffer.
+  Removed UUID from the configure.ac     Added JackIIODriverTest.C to
+    test the IIO driver.     Reduced the period size to 1024 samples.   
+     Added port handling to the iio_driver_attach function.    
+    Implemented iio_driver_read.     Addeed various run time comments to
+    help understanding whats being processed when.
+  removed a commented out guard from configure.ac
+  iio_driver.c Improved speed, added xrun indications.     Removed
+    references to POST_PACKED_STRUCTURE to enable execution on ARM
+    without "Bus error" problems.
+  Addempted to use the IIOThreaded driver to remove latency issues. It
+    turns out that the IIO kernel subsystem is introducing very large
+    latencies at the end of the buffer. A different approach will be
+    sought.
+  Switched to using the mmap to interact with the IIO hardware.     Can
+    now specify the number of periods to use.
+  Modified jack to compile without warnings using g++.
+  iio_driver.C, local debugging enabled. driver_null_cycle now empties
+    the MMap queue as per normal operation.     If the iio_driver finds
+    no chips by the desired name, then it indicates as jack expects.
+  Added unified_jack_time.h a header file to unify the treatment of both
+    timespce and jack_time_t.     Created iio_driver_dummy.c to test the
+    jack framework using a dummy driver and the unified time header to
+    implement the iio_driver_wait function.     struct _iio_driver now
+    uses timeType to specify the next time. The macro NEXT_TIME is used
+    to specify the next expected time.
+  Switched to the unified time handling in iio_driver.C     Started
+    compiling iio_driver_dummy.C in G++ to ensure nothing strange is
+    happening there to cause xruns when executing the client experienced
+    on the ARM when using iio_driver.C.
+  now compiling the iio_driver_dummy.C using G++ and a high sample rate.
+        The clients now report large xruns, whilst the server doesn't.
+  Removed the codeBlocks ide directory.
+  Removed re-enabled the exit command in the not_overwriting
+    configure.ac section.
+  Fixed copyrights.
+  Added acknowledgements to AUTHORS
+
+1392326340.13728_0.ltw:2,Sa <1392326321-3699-1-git-send-email-flatmax at flatmax dot org>
+________________________________________________________________________________
+

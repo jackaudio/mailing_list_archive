@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] port callbacks, jack_port_id_t</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] port callbacks, jack_port_id_t</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1304089697.17859_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1304092978.24541_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1304091937.22489_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 29 Apr 2011 11:45:18 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Dan Muresan &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Dan Muresan
+<a href='../1304089477.17440_0.ltw:2,a/index.html'>[Jack-Devel] port callbacks, jack_port_id_t </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Dan Muresan
+<a href='../1304092978.24541_0.ltw:2,a/index.html'>Re: [Jack-Devel] port callbacks, jack_port_id_t </a></td></tr>
+</table>
+<pre>
+On Fri, Apr 29, 2011 at 11:04 AM, Dan Muresan &lt;[hidden]&gt; wrote:
+&gt; Hi, I have some questions about the jack1 port API that the
+&gt; documentation and examples don't clarify:
+&gt;
+&gt; 1) how do I translate a jack_port_id_t to a jack_port_t or a port
+&gt; name? When the app gets a JackPortConnectCallback, how does it know
+&gt; which ports it's talking about?
+
+read the API docs:
+
+  jack_port_by_id (jack_client_t*, jack_port_id_t);
+  jack_port_by_name (jack_client_t*, const char* name);
+
+&gt; 2) In what thread do the port callbacks happen?
+
+threads for callbacks are one of the only areas where Jack1 and Jack2
+appear different from a client perspective. they also differ between
+OS X, Windows and other systems on which JACK runs. the following is a
+table that i believe is correct:
+
+1) Process Callback: ALWAYS called from the "process thread". There
+may or may not be an "Other" thread running.
+
+2) Other Server-&gt;Client Callbacks
+
+                 OS X    Windows    *nix
+----------------------------------------------
+JACK1   |   Other     n/a            Process
+JACK2   |   Oher      Other        Other
+
+
+Finally, you should probably never make client-&gt;server calls from the
+process callback. The API is not clearly marked with indications of
+which functions involve client-&gt;server roundtrips. The best rule of
+thumb is that functions involving a jack_client_t* argument are not
+usable from within the process callback. This issue may go away
+if/when Jack1 moves to an "always use 2 threads" model, but the
+programming discipline that the rule provides is a good one. There is
+some documentation on this within the refmanual.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1304089697.17859_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1304092978.24541_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1304091937.22489_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1304091937.22489_0.ltw:2,a&nbsp;&lt;BANLkTinDU4yuGUGxNFg8TrYc4DLx5=HCZw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

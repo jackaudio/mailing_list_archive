@@ -1,0 +1,53 @@
+Date:        Sat, 17 Mar 2012 17:15:16 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] Jack shutdown action (1332018537.19218_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] Jack shutdown action (1332019955.20103_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack shutdown action
+
+On Sat, Mar 17, 2012 at 5:08 PM, Fons Adriaensen <[hidden]> wrote:
+> On Sat, Mar 17, 2012 at 04:47:09PM -0400, Paul Davis wrote:
+>> On Sat, Mar 17, 2012 at 4:44 PM, Fons Adriaensen <[hidden]> wrote:
+>> > A simple question (reading jack.h doesn't answer it):
+>> >
+>> > If a client does not register a shutdown callback using
+>> > jack_on_shutdown(), what is supposed to happen when the
+>> > server is terminated ?
+>> >
+>> > Apparently the process containing the client is terminated
+>> > in some way, but can this be relied on ?
+>>
+>> the server will not terminate any clients. the thread(s) created by
+>> libjack will exit at some point when/if they discover that the server
+>> is gone, but that may never happen.
+>>
+>> the whole point of the shutdown callback is that  the client has no
+>> way to differentiate between "the server has gone" and "the server
+>> hasn't called me in a very, very long time.
+>
+> Indeed. I'm asking because I noticed that an app (in development
+> and not having a shutdown callback) terminates if the server is
+> stopped, even while it has other active threads. None of its code
+> watching stop conditions is ever called.  Removing the shutdown
+> handler in other apps (e.g. jaaa) leads to the same result. Now I'm
+> pretty sure that did not happen before. It looks as if Jack's thread
+> is calling exit() or something similar when it terminates... Have
+> there been recent changes in that area ?
+
+if you run this command:
+
+   find . -name \*.c -o -name \*.h | xargs grep '[^a-zA-Z]exit'
+
+on the JACK1 source tree, you'll find that the only place that the
+libjack code calls exit is immediately after a fork() to start the
+server (auto-starting).
+
+all other exits from within libjack are via pthread_exit() which
+should not take down a process. running inside gdb() with a breakpoint
+at _exit and then a backtrace may prove revealing.
+
+1332018928.19495_0.ltw:2,a <CAFa_cKnS46XvbifGABagsjz4ez9U1y6B6EHyrFTKshW-pEir+A at mail dot gmail dot com>
+________________________________________________________________________________
+

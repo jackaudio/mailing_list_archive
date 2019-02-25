@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357575705.1094_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357585560.24569_0.ltw:2,RSa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357584835.23472_0.ltw:2,RSa'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 07 Jan 2013 18:53:30 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> John Emmas </span> &lt;[hidden] at tiscali dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK List &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1357573896.30617_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1357585560.24569_0.ltw:2,RSa/index.html'>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Chris Caudle
+<a href='../1357589471.31159_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1357599288.11033_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) </a></td></tr>
+</table>
+<pre>
+On 7 Jan 2013, at 15:50, St&#xE9;phane Letz wrote:
+
+&gt; 
+&gt; Not yet on master, but on a development branch
+&gt; 
+
+Okay, I found it.  Sadly it doesn't compile with MSVC.  The reason is the use of the sizeof operator.  For example, the declaration for type 'jack_double' evaluates to this for MSVC:-
+
+        typedef __declspec(align(sizeof(double))) double jack_double;
+
+and the problem is that sizeof() isn't evaluated by the preprocessor (it gets evaluated later) so the alignment size is unknown at this point.
+
+In any case, I'm not sure how this strategy leads to portable struct packing (or to put it another way, it might be working in the ARM compiler but I suspect it's probably working by accident).  Different structs (and even the fields within a struct) will have different alignment.  Of course, that's theoretically do-able - but it seems unlikely that the ARM compiler could make sense of this complicated, variable packing arrangement whilst at the same time, failing to understand 1-byte packing.
+
+Are we sure that __attribute__((__packed__)) isn't just broken in the ARM compiler?  That seems the most likely explanation for what Robin observed.
+
+John
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357575705.1094_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357585560.24569_0.ltw:2,RSa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357584835.23472_0.ltw:2,RSa'>Index</a></td></tr>
+</table>
+<p><small>1357584835.23472_0.ltw:2,RSa&nbsp;&lt;BC88F349-313C-44FD-B08E-2B33267E9BD7 at tiscali dot co dot uk&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

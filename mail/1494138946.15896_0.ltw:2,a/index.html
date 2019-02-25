@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How does --hwmon work?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How does --hwmon work?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1494118493.25656_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1494139362.16505_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1494138946.15896_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 07 May 2017 08:35:22 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> David Kastrup </span> &lt;[hidden] at gnu dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>David Kastrup
+<a href='../1494139362.16505_0.ltw:2,a/index.html'>Re: [Jack-Devel] How does --hwmon work? </a></td></tr>
+</table>
+<pre>
+Ralf Mardorf &lt;[hidden]&gt; writes:
+
+&gt; On Sat, 06 May 2017 22:24:29 +0200, David Kastrup wrote:
+&gt;&gt;dak@lola:~$ ps ax k priority -o priority,comm |grep irq
+&gt;&gt;-91 irq/8-rtc0
+&gt;&gt;-81 irq/17-firewire
+&gt;&gt;-71 irq/32-snd_hda_
+&gt;&gt; [snip]
+&gt;&gt; 20 irqbalance
+&gt;&gt;
+&gt;&gt;Looks like somebody is prioritizing my soundcards.
+&gt;
+&gt; Much likely it's Rui's rtirq script. For what ever reason Ubuntu
+&gt; keeps it in init.d and doesn't start it by a systemd unit.
+&gt;
+&gt; http://packages.ubuntu.com/yakkety/rtirq-init
+&gt;
+&gt; Instead of ps, you could run
+&gt;
+&gt; /etc/init.d/rtirq status
+&gt;
+&gt; I can't speak for your computer, but usually rtc shouldn't be
+&gt; prioritised anymore and irqbalance should be completely removed.
+
+It's been years since I touched the config file.  Probably I should
+remove, install from scratch.
+
+Oh wait.  snd_hda_ would be the laptop internal sound card, not the
+Hammerfall DSP.  The latter doesn't have its own interrupt apparently,
+so this would rather be, uh, irq/16-yenta ?  That one's at the bottom in
+the list.  Darn it.  I probably removed it when I put the Hammerfall
+into storage.  And got it out again since the Mackie Onyx mixer is too
+bulky for Free Software conference duty.
+
+So maybe I should give the Hammerfall a better chance at working.
+
+&gt; Take a look at /etc/default/rtirq (on Arch Linux
+&gt; it's /etc/conf.d/rtirq ;):
+&gt;
+&gt; [rocketmouse@archlinux ~]$ grep RTIRQ_NAME_LIST /etc/conf.d/rtirq | grep -v "#"
+&gt; RTIRQ_NAME_LIST="usb snd_hdsp snd_ice1"
+
+You probably have a PCI (or express) card rather than a Cardbus one?
+
+&gt; Check the output of
+&gt;
+&gt; cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+&gt;
+&gt; Perhaps setting it to performance helps to reduce xruns
+
+I seem to remember that CPU switching speed with the Penryn is supposed
+to be close enough, but I admit that if it were instantaneous it would
+be indistinguishable from a power-saving halt state but full speed
+otherwise.  I think I had the system on performance for a while but it
+did not make a noticeable difference with regard to xruns.
+
+I'll keep it in mind.
+
+-- 
+David Kastrup
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1494118493.25656_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1494139362.16505_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1494138946.15896_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1494138946.15896_0.ltw:2,a&nbsp;&lt;87o9v5b2dx.fsf at fencepost dot gnu dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

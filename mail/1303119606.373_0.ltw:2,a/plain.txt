@@ -1,0 +1,80 @@
+Date:        Mon, 18 Apr 2011 11:39:48 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          John Emmas <[hidden] at tiscali dot co dot uk>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: John Emmas Re: [Jack-Devel] A couple of questions about Jackdmp (1303119157.31846_0.ltw:2,a)
+Follow-Up:   John Emmas Re: [Jack-Devel] A couple of questions about Jackdmp (1303136738.24133_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] A couple of questions about Jackdmp
+
+Le 18 avr. 2011 à 11:32, John Emmas a écrit :
+
+> 
+> On 18 Apr 2011, at 09:38, Stéphane Letz wrote:
+> 
+>> 
+>>> In recent mailings I've noticed some references to the VC++10 runtime and redistributables.
+>> 
+>> Only to compile JackRouter ASIO driver, not for jack2 itself.
+>> 
+> Ah - that's the bit I hadn't realised.  Looking through my code though, although I modified the jackdmp source quite extensively, the vast majority of my changes seem to be for accommodating Cygwin rather than VC++.  For example wherever the code says this:-
+> 
+> #ifdef WIN32
+> 
+> I've needed to change it to this:-
+> 
+> #if (defined(WIN32) && !defined(__CYGWIN__))
+> 
+> 
+> With regard to Visual C++ the only major change I needed to implement was to use the threading library 'pthread_win32' as opposed to regular pthread.  
+
+Hum... jack2 on WIndows does not use "pthread": it directly uses Windows threads (look at JackWinThread.cpp file)
+
+
+> The other changes seem to be very simple things (redefining Int64 to be 'long long' for example).
+> 
+> 
+>>> 
+>>> Q2.  If I understand Jackdmp's command line parameters, the parameter "-T" makes Jackdmp "temporary".  I think this means that if a client launches Jackdmp using the "-T" parameter, Jackdmp should unload itself when there are no more clients connected.  Have I understood that correctly?
+>> 
+>> Yes.
+>> 
+>>> It's the only thing that doesn't seem to work in my Windows build so I'd like to figure out where I should start looking for the problem.
+>>> 
+> I'm glad I looked into this.  While browsing through the source I came across this function in JackEngine.cpp:-
+> 
+> void JackEngine::ReleaseRefnum(int ref)
+> {
+>    fClientTable[ref] = NULL;
+> 
+>    if (fEngineControl->fTemporary) {
+>        int I;
+> 
+>        for (I = REAL_REFNUM; I < CLIENT_NUM; I++) {
+>            if (fClientTable[I])
+>                break;
+>        }
+> 
+>        if (I == CLIENT_NUM) {
+>            // last client and temporay case: quit the server
+>            jack_log("JackEngine::ReleaseRefnum server quit");
+>            fEngineControl->fTemporary = false;
+> 
+> #ifndef WIN32
+>            exit(0);
+> #endif
+>        }
+>    }
+> }
+> 
+> I assume that if I removed  #ifndef WIN32  in the above code, my server would magically unload itself when there are no more clients left - but I'm curious to know why the condition was ever there.  Is it still present in the latest code and/or can anyone remember why it's needed?
+> 
+> John
+
+The whole "temporary" machinery has been redesigned since and works also on Windows.
+
+Stéphane 
+
+1303119606.373_0.ltw:2,a <F2FD6625-FD67-461E-92D3-2D9EADBB285B at grame dot fr>
+________________________________________________________________________________
+

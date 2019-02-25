@@ -1,0 +1,93 @@
+Date:        Mon, 04 Nov 2013 03:35:27 +0100
+From:        Marc Waesche  <[hidden] at waesche dot org>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] multiple jack crashes in high-load VOIP environment (1383550925.3026_0.ltw:2,)
+
+Subject:     [Jack-Devel] multiple jack crashes in high-load VOIP environment
+
+Hi devs,
+
+first of all let us express our gratitude to such a great tool like jackd!
+
+One of our IT projects uses jackd in a high-load VoIP-environment, to 
+transfer and mix audiostreams from an asterisk pbx server to a wowza 
+flash media server. But we're currently experiencing problems with 
+jackd, unfortunately. The issues:
+
+- creating new jack ports failes
+- massive XRuns
+- jackd crashes unconditionally
+- jack_lsp throws errors, unconditionally
+
+Some of the error messages are:
+
+jack_lsp:
+    jack_lsp: no process found
+
+jackd:
+    JackEngine::XRun: client = .... was not finished, state = Triggered
+    JackAudioDriver::ProcessGraphAsyncMaster: Process error
+    CheckRes error
+    Could not write notification
+    ClientNotify fails name = ....  notification = 1 val1 = 0 val2 = 0
+
+ffmpeg client:
+    JACK xrun
+    Cannot open ....  client
+    [jack @ 0x2dde120] Unable to register as a JACK client
+
+
+Of course, jackd was being started before. Further information:
+
+- Cmdline: /usr/bin/jackd -R -p 512 -d dummy -C0 -P0 -p 320 -r 16000
+- All servers are on the same machine
+- Concurrent Streams: up to 100 (but the problems occurs with even a few
+streams like 5 or 10)
+- we do not use jackdbus
+- jackd is started by root
+
+Our internal process:
+
+Asterisk is originating a call (by using a callfile) and will create two 
+jack ports for incoming and outgoing audio. At the same time, ffmpeg is 
+being started, creating an input jack port and sending all audio out to 
+the wowza flash server using the rtmp protocol. Now both ports 
+(asterisk/out and ffmpeg/in) are being connected using jack_connect. 
+During this session, mplayer playes wav-files to tho asterisk/in port.
+
+One problem is that we need to start ffmpeg in the brackground, so we 
+have to wait some seconds before calling jack_connect, because the jack 
+port created by ffmpeg might not to be "ready" at this time. Our current 
+-not very intelligent- solution ist to call jack_lsp in intervals to 
+find out, when the port is available.
+
+But it seems to me, that jack_lsp does not always return the list of 
+jack ports, and even, in some cases, crashes the jackd daemon. Could it 
+be a multithreading-issue, or a kind of race-condition that leads to the 
+crash?
+
+Other issues we run into are the masssive xruns. Is it possible that 
+Wowza (java software) is interfering the realtime jackd processes by 
+acquiring too many CPU ressources? I've never seen Wowza in a "critical 
+state", even when the xruns occur.
+
+
+One last thing to mention:
+Fighting the xruns, I've tried to increase the period parameter, 
+expecting higher latencies. Now there were no more xruns, but the 
+audiostream was scattered/staccato.
+
+
+For every help to solve (or localize) the described problems we are 
+very, very thankful because we work for over a year now at this server 
+solution and did not awaite such a technical problem at the end of the 
+development. That problems became recognizable when we did our last 
+tests after finishing the development. (okay, we THOUGHT we finished the 
+development work ;)
+
+Best regards from Germany
+Andreas Born & Marc Waesche
+
+1383532537.28067_0.ltw:2, <527707EF.3000000 at waesche dot org>
+________________________________________________________________________________
+

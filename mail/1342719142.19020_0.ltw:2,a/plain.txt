@@ -1,0 +1,71 @@
+Date:        Thu, 19 Jul 2012 10:32:15 -0700
+From:        Basil Nutmeg  <[hidden] at li95-58 dot members dot linode dot com>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] packed data structures in jack2 (1342713471.10064_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] packed data structures in jack2 (1342719447.19401_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] packed data structures in jack2
+
+On Thu, Jul 19, 2012 at 11:57:42AM -0400, Paul Davis wrote:
+> On Thu, Jul 19, 2012 at 11:41 AM, Basil Nutmeg <
+> [hidden]> wrote:
+> 
+> >
+> > /* ... this type has the same layout between 32-bit and 64-bit. */
+> > struct A_with_alignment {
+> >   aligned_char x;
+> >   aligned_int64_t i;
+> > };
+> >
+> 
+> this translates to:
+> 
+>      struct A_with_alignment {
+>           char     x    __attribute__((aligned(sizeof(char));
+>           int64_t i     __attribute__((aligned(sizeof(int64_t));
+>       };
+> 
+> which i think is not the same as what "packed" does at all. it could be
+> enough though, and arguably is better because it preserves aligned access.
+
+Right, the goal isn't to emulate "packed" exactly; the goal is to solve a
+specific problem without incurring the undesirable side effects :-).
+
+> 
+> however, as stephane noted: far easier to just change the macros that do
+> this stuff so that they are no-ops.
+
+This is easy to do, and it works for my project today. However, I was
+thinking about what would be best for Jack in the long term.
+
+I think it would be preferable to have a solution which could support
+mixed 64/32 mode even on platforms which don't have misaligned accesses
+(64-bit ARM chips are coming...), which would avoid the performance
+issues, and which would avoid "breaking the rules" even on platforms
+where it works, because clever compiler writers can still theoretically 
+find ways to take advantage of alignment assumptions there. And it would
+undo what is technically an ABI break in the recent addition of "packed"
+to <jack/types.h>.
+
+I think it's even worthwhile to make moderately more invasive source
+changes to achieve this. And, I'm willing to do some work to help make it
+happen. But if the maintainers disagree, I'll move on.
+
+> 
+> > As another idea would be to have a source file which simply includes all
+> > the important headers and is compiled with -Wpadded and maybe even
+> > -Werror, to catch any mistakes.
+> >
+> 
+> i don't this is portable to non-gnu compilers. i could be wrong.
+
+Perhaps so, or perhaps other compilers have analogous features; I don't
+know offhand. I'd be willing to do some research here. It might not be a
+complete solution, but it might be a nice sanity check, regardless.
+
+-- Basil
+
+1342719142.19020_0.ltw:2,a <20120719173215.GC27528 at li95-58 dot members dot linode dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,65 @@
+Date:        Thu, 22 Dec 2011 05:18:58 -0800
+From:        James Warden  <[hidden] at yahoo dot com>
+To:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Robert M. Riches Jr. [Jack-Devel] How to control playback volume of loopback->JACK chain? (1324526711.29050_0.ltw:2,a)
+Follow-Up:   Robert M. Riches Jr. Re: [Jack-Devel] How to control playback volume of loopback->JACK chain? (1324877144.7078_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] How to control playback volume of loopback->JACK chain?
+
+Hello,
+
+Back in the days when I was hacking my way through to get the loopback method to work, I experimented with the "softvol" ALSA plugin.
+If you want to have the volume control on the loopback device, just modify your .asoundrc like this in the !default section (I commented out the former stuff and added a "softvol" section instead, assuming that you are using the same naming as found in my TWIKI page):
+
+# ------------------------------------------------------
+# default device
+
+pcm.!default {
+#  type plug
+#  slave.pcm "aduplex"
+
+  type softvol
+  slave {
+      pcm "aduplex"
+  }
+
+  control {
+      name "aduplex"
+  }
+
+  min_dB -51.0  # 
+  max_dB   0.0
+}
+
+# -------------------------------------------------------
+
+
+Try this and see if that fulfils your need.
+
+J.
+
+
+
+________________________________
+ From: Robert M. Riches Jr. <[hidden]>
+To: [hidden] 
+Sent: Thursday, December 22, 2011 5:04 AM
+Subject: [Jack-Devel] How to control playback volume of loopback->JACK chain?
+ 
+Is there some way to do volume control on the JACK slave side
+when using an ALSA loopback device (snd_aloop) and NetJACK?
+
+Alsamixer and amixer both claim there are no volume controls
+for the loopback soundcards.
+
+(Thank you again for all the help getting this working thus
+far.  After a bit of trial-and-error, I got per-user loopback
+soundcards working--except for lack of slave-side volume ctl.)
+
+Thanks,
+
+Robert
+
+1324559952.23180_0.ltw:2,a <1324559938.23276.YahooMailNeo at web39302 dot mail dot mud dot yahoo dot com>
+________________________________________________________________________________
+

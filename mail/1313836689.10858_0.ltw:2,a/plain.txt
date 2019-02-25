@@ -1,0 +1,47 @@
+Date:        Sat, 20 Aug 2011 12:37:47 +0200
+From:        Graham Goode  <[hidden] at gmail dot com>
+To:          FluidSynth mailing list <[hidden] at nongnu dot org>, jack-devel <[hidden] at lists dot jackaudio dot org>, jorgan-user <[hidden] at lists dot sourceforge dot net>
+
+Subject:     [Jack-Devel] Building Fluidsynth 1.1.4 on Windows with Jack for Windows Support
+
+Hi,
+
+I am pleased to report that I have a successful compile and a working
+fluidsynth library using Jack for Windows 1.9.8 with Fluidsynth 1.1.4.
+
+One critical change was needed in fluid_jack.c, I replaced
+
+ free (jack_ports);  /* free jack ports array (not the port values!) */
+
+with :
+
+   jack_free (jack_ports);  /* free jack ports array (not the port values!) */
+
+Thank you Stephane for your advice when I originally attempted this
+build in 2009, as you pointed out this was a new function added in
+JACK2 for Windows users :
+
+/**
+  * The free function to be used on memory returned by
+jack_port_get_connections,
+  * jack_port_get_all_connections and jack_get_ports functions.
+  * This is MANDATORY on Windows when otherwise all nasty runtime
+version related crashes can occur.
+  * Developers are strongly encouraged to use this function instead of
+the standard "free" function in new code.
+  *
+  */
+void jack_free(void* ptr);
+
+
+I will be testing my build for a few days and if there are no major
+issues I will then upload 32-bit and 64-bit builds of both Fluidsynth
+and Qsynth for others to test, as well as libraries for jOrgan users
+to test.
+
+Kind regards,
+GrahamG
+
+1313836689.10858_0.ltw:2,a <CALuNdZRRw1zm_0Mw0kjM+fmtSpgS8G3h-uFvB5+3FwpxXi+fQw at mail dot gmail dot com>
+________________________________________________________________________________
+

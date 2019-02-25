@@ -1,0 +1,67 @@
+Date:        Fri, 28 Sep 2018 20:51:09 +0200
+From:        Holger Marzen  <[hidden] at marzen dot de>
+To:          David Kastrup <[hidden] at gnu dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Holger Marzen Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency? (1537790919.32570_0.ltw:2,)
+Follow-Up:   Holger Marzen Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency? (1538164256.637_0.ltw:2,)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency? (1538164951.1388_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency?
+
+On Mon, 24 Sep 2018, Holger Marzen wrote:
+
+> On Mon, 24 Sep 2018, David Kastrup wrote:
+> 
+> > Holger Marzen <[hidden]> writes:
+> > 
+> The output of the first adapter is used for
+> - direct monitoring
+> - headphone monitoring and mixing/mastering, but without EQ
+> 
+> > > As I played around with the quality setting (-q0 ... -q4) I noticed an
+> > > enormous CPU load with -q4 (sinc) but couldn't hear any differences in
+> > > audio quality. -q0 sounds as good as -q4.
+> > >
+> > > Now my question:
+> > > When the audioadapter has to resample to the same frequency (from 48000
+> > > to 48000), do higher -q settings improve the audio quality? As I
+> > > understand there is no interpolation needed at all so -q0 would be
+> > > enough to have a perfect audio quality.
+> > >
+> > > Any comments/ideas to this?
+> > 
+> > Interpolation will be needed when the clocks drift.
+> 
+> Or you can simply wait til the "right" moment und use the original
+> values. But that would not use more CPU depending on the quality
+> setting. So there seems to bee an interpolation happening.
+> 
+> It looks as if I have to do a looptest (play through the 2nd interface
+> and record with the 1st) to get an impression how's the signal distorted
+> at the different quality settings.
+
+I used the interface that's connected via audioadapter for playback and
+the "main" interface that's directly controlled by jackd for recording.
+As a signal source I used Audacity with generated sine waves of 5000 and
+10000 Hz. I played this signal and recorded it (audio cable between
+interfaces). The result showed that the signal gets indeed resampled and
+that the quality setting matters.
+
+q0 (SRC_LINEAR) and q1 (SRC_ZERO_ORDER_HOLD) showed a non-flat envelope
+of the recorded signal - bad.
+
+q2 (SRC_SINC_FASTEST) showed the desired flat envelope and seems to be
+the best compromise between CPU load and quality.
+
+-> That's the setting I'll use from now on.
+
+I cannot to further examination because the spectrum analyzer in
+Audacity can't show the harmonics accurately. I expect a single peak in
+a sine wave's spectrum but I got a softer curve.
+
+SRC seems to bee an abbreviation for Secret Rabbit Code
+http://www.mega-nerd.com/SRC/
+
+1538160705.30217_0.ltw:2, <alpine.DEB.2.20.1809282039560.6557 at bubu dot intern dot marzen dot de>
+________________________________________________________________________________
+

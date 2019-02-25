@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Jack crashes, maybe a bug?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Jack crashes, maybe a bug?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1372695317.6565_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1372771767.31142_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1372767511.23505_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 02 Jul 2013 14:18:19 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Stefano Rossi </span> &lt;[hidden] at stefanorossi dot me&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Rigg
+<a href='../1372771767.31142_0.ltw:2,/index.html'>Re: [Jack-Devel] Jack crashes, maybe a bug? </a></td></tr>
+</table>
+<pre>
+Hello everybody,
+
+I'm not sure this is the right place to post bugs. Please apologize me if
+it's not, I wasn't sure where to post.
+
+This is my version of jackd:
+
+&gt; $ jackd --version
+&gt; jackdmp 1.9.9.5
+
+
+I currently have an alsa device, called "multi", which groups two cards:
+
+&gt; $ cat /etc/asound.conf
+&gt; pcm.multi {
+&gt;         type multi;
+&gt;         slaves.a.pcm "hw:Live";
+&gt;         slaves.a.channels 2;
+&gt;         slaves.b.pcm "hw:Intel";
+&gt;         slaves.b.channels 2;
+&gt;         bindings.0.slave a;
+&gt;         bindings.0.channel 0;
+&gt;         bindings.1.slave a;
+&gt;         bindings.1.channel 1;
+&gt;         bindings.2.slave b;
+&gt;         bindings.2.channel 0;
+&gt;         bindings.3.slave b;
+&gt;         bindings.3.channel 1;
+&gt; }
+&gt; ctl.multi {
+&gt;         type hw;
+&gt;         card 0;
+&gt; }
+&gt; pcm.jack2x4 {
+&gt;      type asym
+&gt;      playback.pcm {
+&gt;           type route
+&gt;           slave.pcm "multi"
+&gt;           ttable.0.0 1
+&gt;           ttable.1.1 1
+&gt;           ttable.2.2 1
+&gt;           ttable.3.3 1
+&gt;      }
+&gt;      capture.pcm {
+&gt;           type hw
+&gt;           card 0
+&gt;      }
+&gt; }
+&gt; ctl.jack2x4 {
+&gt;      type hw
+&gt;      card 0
+&gt; }
+
+
+My cards:
+
+&gt; $ cat /proc/asound/cards
+&gt;  0 [Live           ]: EMU10K1 - SB Live! Value [CT4670]
+&gt;                       SB Live! Value [CT4670] (rev.5, serial:0x201102) at
+&gt; 0xef00, irq 16
+&gt;  1 [Intel          ]: HDA-Intel - HDA Intel
+&gt;                       HDA Intel at 0xfdff8000 irq 44
+
+
+This is my jackdrc:
+
+&gt; $ cat /etc/jackdrc
+&gt; /usr/bin/jackd -d alsa -d jack2x4
+
+
+If I start jackd either via dbus or via /usr/bin/jackd, it crashes after a
+while. I was able to see it from the "Messages" window of qjackctrl. This
+is a small part of that window (you can see the full window at
+http://pastebin.com/k776zEmX), the errors are repeated very often:
+
+&gt; Tue Jul 2 13:48:40 2013: ERROR: Unknown request 4294967295
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 32 Size() = 12
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 32 Size() = 4
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = -1 Size() = 4
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 32 Size() = 12
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = -1 Size() = 4
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = -1 Size() = 4
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 32 Size() = 12
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = -1 Size() = 4
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 32 Size() = 12
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = -1 Size() = 4
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: Unknown request 0
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 32 Size() = 12
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = -1 Size() = 4
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: Unknown request 0
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 0 Size() = 12
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckSize error size = 32 Size() = 12
+&gt; Tue Jul 2 13:48:40 2013: ERROR: CheckRead error
+&gt; Tue Jul 2 13:48:40 2013: ERROR: Abort!
+&gt; Tue Jul 2 13:48:40 2013: ERROR: info.si_signo = 6
+&gt; Tue Jul 2 13:48:40 2013: ERROR: info.si_errno = 0
+&gt; Tue Jul 2 13:48:40 2013: ERROR: info.si_code = -6 (unknown)
+&gt; Tue Jul 2 13:48:40 2013: ERROR: info.si_addr = 0x3e900005a1e
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[00] = 0x0000000000000000
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[01] = 0x0000000000000000
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[02] = 0x0000000000000008
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[03] = 0x0000000000000206
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[04] = 0x00007f542f0fe8ce
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[05] = 0x00007f542f0ff260
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[06] = 0x0000000000000003
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[07] = 0x00007f542f3ff700
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[08] = 0x0000000000005a1e
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[09] = 0x00000000000063f4
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[10] = 0x00007f542e27f9c0
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[11] = 0x00007f542f377000
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[12] = 0x0000000000000006
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[13] = 0x0000000000000000
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[14] = 0xffffffffffffffff
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[15] = 0x00007f542f3fe4c8
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[16] = 0x00007f542e1491e5
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[17] = 0x0000000000000206
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[18] = 0x0000000000000033
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[19] = 0x0000000000000000
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[20] = 0x0000000000000000
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[21] = 0x0000000000005a07
+&gt; Tue Jul 2 13:48:40 2013: ERROR: reg[22] = 0x0000000000000000
+&gt; Tue Jul 2 13:48:40 2013: ERROR: Stack trace:
+&gt; Tue Jul 2 13:48:40 2013: ERROR: 1: 0x7f542e1491e5 &lt;gsignal+53&gt;
+&gt; (/lib/x86_64-linux-gnu/libc.so.6)
+&gt; Tue Jul 2 13:48:40 2013: ERROR: End of stack trace
+
+
+I forgot to mention, I also use pulseaudio with the jack sink:
+
+&gt; $ cat /etc/pulse/default.pa | grep jack
+&gt; load-module module-jack-sink channels=4
+&gt; channel_map=front-left,front-right,rear-left,rear-right
+&gt; load-module module-jack-source
+
+
+I'm running Debian testing with a 3.9 kernel.
+
+
+Any idea you might have is greatly appreciated.
+Thanks!
+
+Stefano
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1372695317.6565_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1372771767.31142_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1372767511.23505_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1372767511.23505_0.ltw:2,&nbsp;&lt;CAOCAckkLuejf=0GvR0zXDLNTkecqPbQMydRetWVQjdgGLghoSQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

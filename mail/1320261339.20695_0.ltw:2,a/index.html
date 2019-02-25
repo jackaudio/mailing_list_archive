@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash]</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash]</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1320002953.12692_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1320262433.22676_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1320261339.20695_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 02 Nov 2011 20:14:58 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> hermann </span> &lt;[hidden] at web dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Cc</td><td>guitarix-developer &lt;[hidden] at lists dot sourceforge dot net&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1320262433.22676_0.ltw:2,a/index.html'>Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1320321251.20327_0.ltw:2,a/index.html'>Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] </a></td></tr>
+</table>
+<pre>
+Hi
+
+We have a wired problem with jack_session_manager diffs in 
+jack1 &lt;-&gt; jack2 
+for functions:
+
+A)  jack_client_get_uuid
+B)  jack_get_uuid_for_client_name
+
+Therefore I forward our results to you. (attached)
+
+Is that a known issue ?
+
+regards
+hermann
+&gt; Could nail it on
+&gt; string GxJack::get_uuid_insert()
+&gt;
+&gt; replacing
+&gt; char* uuid = jack_client_get_uuid(client_insert);
+&gt; with
+&gt; const char* uuid = jack_get_uuid_for_client_name(client_insert,
+&gt; client_insert_name.c_str());
+&gt;
+&gt; works here.
+&gt; I'm on jackd2, but as rosea already reported a crash with jackd1 and the
+&gt; old version, there seems to be a incompatibility in both versions of
+&gt; jack-session manager (jack1 &lt;-&gt;jack2). That's more then strange. . . &#xA0;.
+
+yes, we have incompatibilities in all directions, that's really bad. I tested
+with ubuntu jackd1 (1:0.121.0+svn4) and jackd2 (1.9.7~dfsg-1ubuntu2)
+
+functions:
+
+A)  jack_client_get_uuid
+B)  jack_get_uuid_for_client_name
+
+Both functions are defined with weak linkage in the header files of both
+packages. But jackd1 has only A in its shared library, while jackd2 has
+only B.
+
+To make the mess complete, the weak linking doesn't work as
+advertised by the jackd developers. At least my understanding and
+that of the ubuntu / debian packagers seems to be:
+
+ 1) you can compile and link with either package (works)
+ 2) when the function is not in the shared library used at
+     runtime, the function address will be 0. Does NOT work.
+
+2) only works when the shared lib used at runtime is the same as
+the one used when linking. The compiler / linker will set the address
+of a weak function that it does not find in the libraries supplied to
+constant 0. Even when the funktion is in the library which is used at
+runtime, there will be no runtime linking.
+
+Even worse, when the funktion is found while building the
+executable, there will be an entry in the ELF PLT (Procedure Linkage
+Table). The address of the function in the program will be that of
+the PLT entry. So the function address is != 0 even when the
+runtime linker can't resolve the function and produces a jump
+to address 0 when calling the funktion.
+
+To solve the problem for guitarix, I had to make some ugly
+constructions:
+
+ - the functions must never be used directly (or you will get
+   a PLT entry so that dlsym() will only reflect the state while
+   building the executable)
+
+ - define typedefs for the function pointers that must be kept
+   in sync with the definitions of the functions in the jack header
+
+ - define global variables that are initialized with the function
+   addresses via dlsym().
+
+Example:
+
+typedef char *(*jack_client_get_uuid_type)(jack_client_t *);
+
+jack_client_get_uuid_type jack_client_get_uuid_fp =
+    reinterpret_cast&lt;jack_client_get_uuid_type&gt;(
+	dlsym(RTLD_DEFAULT, "jack_client_get_uuid"));
+
+Test program to verify the described behaviour:
+
+----------------------------------------------------------------
+#include &lt;stdio.h&gt;
+#include &lt;jack/session.h&gt;
+
+int main() {
+    printf("jack_client_get_uuid = %p, jack_get_uuid_for_client_name = %p\n",
+	   jack_client_get_uuid, jack_get_uuid_for_client_name);
+    return 0;
+}
+----------------------------------------------------------------
+
+test run (the ## lines represent deinstallation of jackd
+and installation of the displayed jackd version):
+
+----------------------------------------------------------------
+## libjack0            1:0.121.0+svn4
+$ gcc t.c -ljack
+$ ./a.out
+jack_client_get_uuid = 0x8048430, jack_get_uuid_for_client_name = (nil)
+
+## libjack-jackd2-dev  1.9.7~dfsg-1ubuntu2
+$ ./a.out
+jack_client_get_uuid = 0x8048430, jack_get_uuid_for_client_name = (nil)
+$ gcc t.c -ljack
+$ ./a.out
+jack_client_get_uuid = (nil), jack_get_uuid_for_client_name = 0x8048420
+
+## libjack0            1:0.121.0+svn4
+$ ./a.out
+jack_client_get_uuid = (nil), jack_get_uuid_for_client_name = 0x8048420
+----------------------------------------------------------------
+
+ciao
+Andreas
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1320002953.12692_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1320262433.22676_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1320261339.20695_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1320261339.20695_0.ltw:2,a&nbsp;&lt;1320261298.2111.31.camel at box&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

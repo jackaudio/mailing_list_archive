@@ -1,0 +1,64 @@
+Date:        Fri, 19 May 2017 21:28:08 +0000
+From:        Josh Junon  <[hidden] at gmail dot com>
+To:          Michael <[hidden] at gmail dot com>, JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Michael [Jack-Devel] Using Jack in 10.10 and later? (1495226541.13263_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Using Jack in 10.10 and later?
+
+I was writing a project called CaptainJack that used macOS's new HAL audio
+subsystem to do just this.
+
+The problem is that the service that runs that is supposed to talk to JACK
+has to run under a particular user, which is never the user that's running
+the JACK daemon. JACK doesn't support multi-user setups, and the developers
+refuse to make this an out of the box thing to support (
+https://github.com/jackaudio/jack1/issues/52). Because of that, I
+discontinued development on CaptainJack.
+
+If they change their minds, I'll happily finish CaptainJack as I find a
+use-case for it almost every week.
+
+On Fri, May 19, 2017 at 1:42 PM Michael <[hidden]> wrote:
+
+> So has anyone gotten Jack to work as a default device in 10.10 or later?
+>
+> To repost, to make Jack work as an audio device for almost everything in
+> 10.9.5 (and sadly, I can only say almost everything), I had to put this in
+> /System/Library/Sandbox/Profiles/system.sb (goes at the end)
+>
+> ;;; local additions for Jack
+>   (allow network*
+>          (regex #"/private/tmp/jack_.*"))
+>   (allow file-write*
+>          (regex #"/private/tmp/jack_.*"))
+>   (allow mach-lookup
+>          (global-name-regex "jack_mach_sem.*"))
+>   (allow ipc-sysv-sem)
+>   (allow ipc-posix-shm-read*
+>          (ipc-posix-name-regex "/jack-.*"))
+>   (allow ipc-posix-shm-write*
+>          (ipc-posix-name-regex "/jack-.*"))
+>   (allow file-read*
+>          (regex
+> #"/Library/Audio/Plug-Ins/Components/JACK-insert.component.*"))
+>
+> Additionally, after logging in, and starting up Jack, I have to kill
+> coreaudiod (for some reason, Jack has to be running for this to start up
+> with Jack support), and then kill and restart Jack itself (otherwise it
+> can't seem to register itself with the active coreaudiod).
+>
+> From what I understand of the 10.10 security system, editing that file
+> needs to be in single user mode, not even as root in normal mode.
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+-- 
+PGP signature: 03A0 B7D0 432E 1514
+You may send me encrypted email using my key: https://keybase.io/qix/key.asc
+
+1495229311.17230_0.ltw:2,a <CADYt08bJzppzohoXrRNQ=SOR34RsUHJur24c+SYOtnNPYJWE_A at mail dot gmail dot com>
+________________________________________________________________________________
+

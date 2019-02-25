@@ -1,0 +1,118 @@
+Date:        Thu, 19 Sep 2013 01:29:42 +1000
+From:        Patrick Shirkey  <[hidden] at boosthardware dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] Testing JACK and PA latency (1379511415.18567_0.ltw:2,)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Testing JACK and PA latency (1379519983.30922_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Testing JACK and PA latency
+
+On Wed, September 18, 2013 11:36 pm, Paul Davis wrote:
+> there isn't any way to separately compute the "outbound" and "inbound"
+> latency. in fact, jack_iodelay's message about the value to use for -I and
+> -O is based on the not-entirely-defensible but somewhat reasonable
+> assumption that the outbound and inbound latencies are symmetric.
+>
+> put differently, i don't think there is any way to do what you want.
+> someone may prove me wrong.
+>
+
+It's a new one for me too so I'm not expecting a pre-existing solution.
+
+This is part of a wider test procedure so I am trying to get a method that
+can be considered robust and literal. I'm sure it is viable to calculate
+the latency for each step in the process based on configuration settings
+but in this case it will be *very* useful (and potentially lucrative for
+everyone) to present a definitive result and test procedure.
+
+Any ideas for how to go about it are welcome.
+
+To recap I am seeking to define the i/o latency at any period size/sample
+rate when an application that is dependant on PA is sending/receiving data
+via JACK.
+
+If anyone has thoughts on a method for tweaking the configuration settings
+for both PA and JACK while running (automated) latency tests that would
+also be very useful. Piece of cake right?
+
+
+
+>
+> On Wed, Sep 18, 2013 at 6:55 AM, Patrick Shirkey
+> <[hidden]
+>> wrote:
+>
+>>
+>> On Wed, September 18, 2013 4:49 pm, Patrick Shirkey wrote:
+>> > Hi,
+>> >
+>> > Can anyone recommend a rigorous procedure for verifying round trip
+>> latency
+>> > between i/o using a combination of both JACK and PA?
+>> >
+>> >
+>>
+>> I have the following setup:
+>>
+>> jack running in duplex mode (1024/48000/2)
+>> pa connected to jack with sink/source plugins
+>> skype* running via pa
+>> jack_iodelay
+>>
+>> I have the following connections
+>>
+>>      jack_delay (out) -> pa jack source (1)
+>>      system_in (1) -> jack_delay (in)
+>>      system_in (1) -> pa jack source (1)
+>>      pa jack sink -> system_out (1)
+>>
+>> I can hear the output signal from jack_delay in the skype call test
+>> service.
+>> I can hear the mic input in skype call test service
+>> I can hear skype output in my speakers via jack system output
+>>
+>> I see the following info in jack_delay console messages:
+>>
+>>  22120.239 frames    460.838 ms total roundtrip latency
+>>         extra loopback latency: 21096 frames
+>>         use 10548 for the backend arguments -I and -O ??
+>>
+>>
+>> However I don't think this setup is calculating latency details that I
+>> am
+>> looking for.
+>>
+>> I would like to retrieve the following info:
+>>
+>> 1: latency from jack system in -> pa_source -> skype in -> skype network
+>> output (before the data is transmitted to the external receiver)
+>>
+>> 2: latency from skype network input (immediately data that is received
+>> from external provider) -> pa_sink -> jack_system out
+>>
+>>
+>> * skype is used for testing i/o via PA. Any other duplex app could also
+>> be
+>> used.
+>>
+>>
+>>
+>>
+>>
+>> --
+>> Patrick Shirkey
+>> Boost Hardware Ltd
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>>
+>
+
+
+--
+Patrick Shirkey
+Boost Hardware Ltd
+
+1379518192.27958_0.ltw:2, <57026.86.127.135.98.1379518182.squirrel at boosthardware dot com>
+________________________________________________________________________________
+

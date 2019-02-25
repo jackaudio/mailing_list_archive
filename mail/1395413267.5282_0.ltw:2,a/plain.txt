@@ -1,0 +1,67 @@
+Date:        Fri, 21 Mar 2014 15:47:24 +0100
+From:        Benoît Delcour  <[hidden] at gmail dot com>
+To:          [hidden] at bugs dot debian dot org
+Cc:          Robin Gareus <[hidden] at gareus dot org>, [hidden] at lists dot jackaudio dot org, [hidden] at drcomp dot erfurt dot thur dot de
+
+Subject:     Re: [Jack-Devel] Bug#728710: jackd2: Bus error w/ POST_PACKED_STRUCTURE on powerpc G4 32bit
+
+I will recompile jack this weekend to see if I can work that out.
+
+Here are the defines of gcc:
+
+gcc -dM -E - < /dev/null |grep "ppc\|PPC\|powerpc"
+#define _ARCH_PPC 1
+#define __PPC__ 1
+#define __powerpc__ 1
+#define __PPC 1
+#define __powerpc 1
+#define PPC 1
+#define powerpc 1
+
+Can we assume that __powerpc__ is 32 bit only?
+
+On Fri, 21 Mar 2014 12:35:12 +0100
+Robin Gareus <[hidden]> wrote:
+
+> On 03/21/2014 11:25 AM, Adrian Knoth wrote:
+> > On 11/04/13 15:49, Benoît Delcour wrote:
+> > 
+> > Hi!
+> > 
+> >> I just got myself a dual Powermac G4 out of a garbage bin,
+> >> and immediately installed debian and jackd2.
+> >> It fails with an obscure "Bus error"; since I also own a raspberry pi,
+> >> I first tried to patch source with the same fix, and it works.
+> >> See "Usage of __attribute__((__packed__)) causes bus error on ARM":
+> > 
+> > OK, got you.
+> > 
+> >> Modifiying source to #undef & #define it unconditionnally did the trick.
+> >> Bug report tagged as patch, but I don't know the correct flag.
+> >> I can prepare an actual patch if/when I get the __powerpc__ 32bit-only
+> >> thingy
+> > 
+> > Did you ever find the correct macro? We're close to a new jackd release
+> > and would include this fix, if necessary (and correct).
+> 
+> gcc -dM -E - < /dev/null
+> 
+> lists all compiler defines, I hazard a guess that __ppc__ is appropriate
+> (there's also __ppc64__).
+> 
+> But going by compiler defines alone is tricky (OSX for example allows
+> multi-arch builds, even though osx <= 10.5 PPC users are rare these
+> days). This should be really be set/auto-detected during waf configure.
+> 
+> 2c,
+> robin
+
+
+-- 
+Bricolage pour Tous, vendredi, 22h
+Radio Campus, 106,6Mhz
+www.campuslille.com
+
+1395413267.5282_0.ltw:2,a <20140321154724.3850d5d2 at titine>
+________________________________________________________________________________
+

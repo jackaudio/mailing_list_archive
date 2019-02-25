@@ -1,0 +1,157 @@
+Date:        Wed, 21 Dec 2011 15:05:28 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] How to get mplayer and firefox/flash to play (1324474912.7376_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] How to get mplayer and firefox/flash to play (1324481329.12855_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] How to get mplayer and firefox/flash to play
+
+On Wed, Dec 21, 2011 at 08:41:12AM -0500, Paul Davis wrote:
+ 
+> Indeed. The dmix device actually does almost precisely what you
+> describe, and will appear in device listings *if* its configured in
+> the relevant system-wide or per-user ALSA config file. Two years ago,
+> most distributions shipped with dmix configured. With PulseAudio
+> spreading, and more powerful, they tend to no longer do so. I remember
+> Fedora at one point shipping with default=dmix, so that all audio
+> processes that just opened the default device got their audio mixed
+> (in user space, without a server). Note that there is also a
+> server/client based solution too - I don't think its been used much by
+> anyone.
+> 
+> But there's a second problem. Look at the output of aplay -L. Now
+> compare it to the list of devices shown by, say, qjackctl in its setup
+> dialog. You'll note that they are not the same. The real problem here
+> is not the gap between h/w device names and plugin device names. The
+> problem is that there are indeed two namespaces within ALSA, one that
+> references a card number, device number and possibly subdevice number,
+> the other than is an alias for either a plugin or something specified
+> using the first namespace. According to aplay, these two namespaces
+> consist of:
+> 
+>     -l, --list-devices      list all soundcards and digital audio devices
+>     -L, --list-pcms         list device names
+> 
+> So, having defined the "jack" plugin device, aplay -L will list it
+> just like "default" and "hdmi" and "front" and so forth. But you're
+> right that it doesn't show up in the other namespace, because its not
+> a "card".
+
+Now I'm lost. I do have a ~/.asoundrc
+
+----
+
+pcm.!default {
+    type plug
+    slave { pcm "jack" }
+}
+
+pcm.jack {
+    type jack
+    playback_ports {
+        0 system:playback_3
+        1 system:playback_4
+    }
+    capture_ports {
+        0 system:capture_3
+        1 system:capture_4
+    }
+}
+
+----
+
+and it works (mplayer, firefox, even alsaplayer use it).
+
+But it does *not* show up in either aplay -L or -l. So is
+there are third namespace as well ?
+
+BTW, the two lines you quoted from aplay -h illustrate
+another problem. Note the inconsistent use of terms like
+'device', 'card' and 'pcm'. You end up wondering what each
+of those actually means. And what the real difference
+between -L and -l is supposed to be. It gets an order of
+magnitude worse in most of the ALSA docs.
+
+
+> > problem is that the Juce code chokes on 64-ch cards such as the
+> > MADI ones. OK, just define a 'route' ALSA device (IIRC) with
+> > less channels (it needs 8) or us the ALSA->Jack plugin. But that
+> > doesn't work because ALSA doesn't present them as real devices.
+> > By not doing that it misses the whole point of having such plugs
+> > in the first place.
+> 
+> absolutely. but ALSA does present them as "real devices", just in one
+> of two namespaces and the app has no reason to choose the one in which
+> they appear. its pretty pathetic.
+
+Even more if you consider that the app is doing the right thing:
+it provides a list of devices and allows the user to select one.
+That is better than most ALSA apps. That list could have included
+'!default', and in that case things would just work. But why should
+an author add !default if he/she believes the list is complete,
+and !default will be one of those listed anyway ?
+ 
+> > (1) can't be done if the sound card is supposed to be shared
+> > between different apps. Selecting the sample rate, format etc.
+> > should done by the a configuration utility. After that apps are
+> > supposed to use the sound card as it is.
+> 
+> this is the way pro-audio apps work on many platforms (not all - try
+> digital performer sometime on OS X with the h/w running at a different
+> rate from the DP session). its very far from how almost all desktop
+> apps work on most platforms.
+
+See below.
+ 
+> restrictions which ensure that JACK is not adopted by many
+> programmers, and because of the SNAFU'ed state of the rest of Linux,
+> make life complicated for users because RT access is considered
+> "special".
+
+Yes, but Jack could have offered form the start a library, working
+on top of Jack's native interface, that provides resampling, read()
+and write(), buffering to allow non-RT operation, etc. Basically
+allowing the author to define his own private 'soundcard' with a
+fully traditional API. Combine that with a jackd running as a real
+system daemon and you get the most easy-to-use audio system on the
+planet. Could still be done, but probably that space is taken by
+PA today.
+ 
+> you should read the code of libasound (the ALSA library). it does
+> precisely what you're describing (not necessarily optimally) but it
+> really does aspire to be precisely what you're describing.
+
+Believe me, I have. The last time just an hour ago. But AFAICS (and
+please correct me if I'm missing something essential) it provides
+all that only via the 'plugins', which the client apparently can't
+discover in any standard way. In what I propose, the initiative to
+use any conversions, buffering, etc. is taken by the client which
+just specifies what it needs. This is fundamentally different from
+offering predefined plugins which apart from being invisible will
+also either be restrictive, or be forced to be 'too clever for their
+own good'.
+ 
+> I still don't understand how this all works without a server/client
+> architecture. Dmix tries to do this, and its too clever for its own
+> good (or that of users). The server/client nature of JACK and
+> PulseAudio is one of the things that makes them fragile (to whatever
+> extent they are fragile), and thus unloved by people negatively
+> impacted by this sort of architecture (and often unnecessarily).
+
+In what sense do you see a server/client architecture as fundamentally
+different from e.g. open(), read(), write() etc. ? Just the fact that
+there is an 'active' entity (a daemon) involved instead of only system
+calls ? That should be transparent to the user. So I somehow fail to
+see the point you want to make.
+
+Ciao,
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+
+1324479945.11715_0.ltw:2,a <20111221150528.GC26504 at linuxaudio dot org>
+________________________________________________________________________________
+

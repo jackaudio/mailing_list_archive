@@ -1,0 +1,68 @@
+Index: common/netjack.c
+===================================================================
+--- common/netjack.c	(revision 4390)
++++ common/netjack.c	(working copy)
+@@ -355,20 +355,6 @@
+     unsigned int chn;
+     int port_flags;
+ 
+-    if( netj->bitdepth == CELT_MODE ) {
+-#if HAVE_CELT
+-#if HAVE_CELT_API_0_7 || HAVE_CELT_API_0_8 || HAVE_CELT_API_0_11
+-        celt_int32 lookahead;
+-        netj->celt_mode = celt_mode_create( netj->sample_rate, netj->period_size, NULL );
+-#else
+-        celt_int32_t lookahead;
+-        netj->celt_mode = celt_mode_create( netj->sample_rate, 1, netj->period_size, NULL );
+-#endif
+-        celt_mode_info( netj->celt_mode, CELT_GET_LOOKAHEAD, &lookahead );
+-        netj->codec_latency = 2 * lookahead;
+-#endif
+-    }
+-
+     if (netj->handle_transport_sync)
+         jack_set_sync_callback(netj->client, (JackSyncCallback) net_driver_sync_cb, NULL);
+ 
+@@ -391,13 +377,26 @@
+         if( netj->bitdepth == CELT_MODE ) {
+ #if HAVE_CELT
+ #if HAVE_CELT_API_0_11
++            celt_int32 lookahead;
++            netj->celt_mode = celt_mode_create( netj->sample_rate, netj->period_size, NULL );
+             netj->capture_srcs = jack_slist_append(netj->capture_srcs, celt_decoder_create_custom( netj->celt_mode, 1, NULL ) );
+ #elif HAVE_CELT_API_0_7 || HAVE_CELT_API_0_8
++            celt_int32 lookahead;
++            netj->celt_mode = celt_mode_create( netj->sample_rate, netj->period_size, NULL );
+             netj->capture_srcs = jack_slist_append(netj->capture_srcs, celt_decoder_create( netj->celt_mode, 1, NULL ) );
++
+ #else
++            celt_int32_t lookahead;
++            netj->celt_mode = celt_mode_create( netj->sample_rate, 1, netj->period_size, NULL );
+             netj->capture_srcs = jack_slist_append(netj->capture_srcs, celt_decoder_create( netj->celt_mode ) );
+ #endif
++#if HAVE_CELT_API_0_11
++            celt_decoder_ctl(( CELTDecoder * )jack_slist_last(netj->capture_srcs), CELT_GET_LOOKAHEAD_REQUEST, &lookahead);
++#else
++            celt_mode_info( netj->celt_mode, CELT_GET_LOOKAHEAD, &lookahead );
+ #endif
++            netj->codec_latency = 2 * lookahead;
++#endif
+         } else {
+ #if HAVE_SAMPLERATE
+             netj->capture_srcs = jack_slist_append(netj->capture_srcs, src_new(SRC_LINEAR, 1, NULL));
+Index: common/JackNetOneDriver.cpp
+===================================================================
+--- common/JackNetOneDriver.cpp	(revision 4390)
++++ common/JackNetOneDriver.cpp	(working copy)
+@@ -170,7 +170,11 @@
+             CELTMode *celt_mode = celt_mode_create( netj.sample_rate, 1, netj.period_size, NULL );
+             netj.capture_srcs = jack_slist_append(netj.capture_srcs, celt_decoder_create( celt_mode ) );
+ #endif
++#if HAVE_CELT_API_0_11
++            celt_decoder_ctl(( CELTDecoder * )jack_slist_last(netj.capture_srcs), CELT_GET_LOOKAHEAD_REQUEST, &lookahead);
++#else
+             celt_mode_info( celt_mode, CELT_GET_LOOKAHEAD, &lookahead );
++#endif
+             netj.codec_latency = 2 * lookahead;
+ #endif
+         } else {

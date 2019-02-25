@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack crushes after 60 min running without problems</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack crushes after 60 min running without problems</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1532512133.12038_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1532548155.23592_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1532533875.6681_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 25 Jul 2018 10:50:43 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Moritz Balters
+<a href='../1532512133.12038_0.ltw:2,/index.html'>[Jack-Devel] Jack crushes after 60 min running without problems </a></td></tr>
+</table>
+<pre>
+On Wed, July 25, 2018 4:48 am, Moritz Balters wrote:
+&gt; I have a problem with Jack running on my Rapi 3:
+
+Do you mean a Rasberry Pi 3 device?
+That is the processor, but what is the audio device? I wasn't aware
+Rasberry Pi had built in audio, is that new for the 3 device, or did 
+earlier devices have that as well?
+Show the output of aplay -l to see how the device is detected.
+
+This looks unusual:
+&gt; Jack: capture device hw:1
+&gt; Jack: playback device hw:0
+
+Different devices for capture and playback is strange.
+How did you even specify that?  What is the startup command line you use
+for jackd?
+
+&gt; configuring for 32000Hz, period = 128 frames (4.0 ms), buffer = 6 periods
+
+128 frames and 6 periods is an unusual configuration, have you tried 256
+frames and 3 periods?
+
+&gt; JackEngine::XRun: client = MHA was not finished, state = Running
+
+What client is this (MHA)?  This error message means that the client MHA
+did not  finish processing the audio in the amount of time allocated.
+
+&gt; Does anyone has an idea what the reason for this behavior could be?
+
+Seems like the application you are using cannot maintain the audio
+processing.
+Try larger period size like 256 or 512 or even 1024 if you are not running
+something which is very latency sensitive.  Are you using this for real
+time music production (guitar effects, soft synthesizer application), or
+just audio playback?   If just for audio playback you should be able to 
+use 1024 without any problem.  For something like a guitar effects
+processor you would probably want lower latency, but even then 256 may be
+OK.
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1532512133.12038_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1532548155.23592_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1532533875.6681_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1532533875.6681_0.ltw:2,&nbsp;&lt;1ab310e9d55f5483fcd4bb70dde000b0.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

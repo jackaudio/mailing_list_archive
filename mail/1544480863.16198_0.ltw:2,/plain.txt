@@ -1,0 +1,39 @@
+Date:        Mon, 10 Dec 2018 23:27:06 +0100
+From:        Kjetil Matheussen  <[hidden] at gmail dot com>
+To:          [hidden] at microfx dot de
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: [hidden] at microfx dot de Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service (1544480338.15703_0.ltw:2,)
+Follow-Up:   Kjetil Matheussen Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service (1544481397.16871_0.ltw:2,)
+Follow-Up:   [hidden] at microfx dot de Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service (1544481482.16919_0.ltw:2,)
+Follow-Up:   [hidden] at microfx dot de Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service (1544488092.24230_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service
+
+On Mon, Dec 10, 2018 at 11:18 PM [hidden] <[hidden]> wrote:
+>
+> Ah, that seems to be the problem! Thanks for the quick reply!
+>
+> My initial idea was to add this as well as a service but jack_capture needs user input - is this possible with a service? Like an additional script that triggers the recording?
+>
+
+How about letting jack_capture listen to OSC?
+jack_capture --help-osc
+
+Then you can run jack_capture as root like this:
+
+   jack_capture --osc 7777 --filename-prefix
+/recording/directory/jack_capture_recording_
+
+And as a normal user you can run
+
+   oscsend localhost 7777 /jack_capture/tm/start
+   oscsend localhost 7777 /jack_capture/tm/stop
+
+to start and stop recording.
+
+Robin Gareus might help more on this, since he wrote that code.
+I'm not entirely sure if this is the best way to use the OSC interface.
+
+1544480863.16198_0.ltw:2, <CAC6niELPkoFbitwEd=x-g1iZ2M48cpC_q5qnr4n6+bP54tX-Ww at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,89 @@
+Date:        Sat, 06 Jun 2015 10:24:07 +0200
+From:        Matthias Apitz  <[hidden] at unixarea dot de>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Paul Davis Re: [Jack-Devel] Fwd: KDE && jackd flag -l (was: kbiff && zombies) (1433591285.24791_0.ltw:2,)
+
+Subject:     [Jack-Devel] Fwd: KDE && jackd flag -l (was: kbiff && zombies)
+
+Hallo,
+
+I'm an active FreeBSD user and I'm trying to nail down a problem of
+zombies caused by KDE components which make use of jack-audio-connection-kit-0.121.3
+
+To get this debugged I have inserted a wrapper script as
+/usr/local/bin/jackd which does some logging and calls at the end the
+real jackd as jackd.bin (see below). I've stumbled over something in the
+source and man page of jackd which I do not understand:
+
+The man page explains the flag -l as for changing the LISTEN port, while
+the implementation in the C-source use the flag -l to just print the
+actual working directory (/tmp) and do exit(0); see below.
+
+Perhaps, the KDE components do not expect the termination of the forked
+jackd server and resulting to state zombie.
+
+Do I misunderstand something stupidly wrong? Thanks for a helping hand.
+
+	matthias
+
+----- Forwarded message from Matthias Apitz <[hidden]> -----
+
+Date: Fri, 5 Jun 2015 20:04:53 +0200
+From: Matthias Apitz <[hidden]>
+To: Tobias Berner <[hidden]>, [hidden], [hidden]
+Subject: [kde-freebsd] KDE && jackd flag -l (was: kbiff && zombies)
+
+
+I have modified the shell wrapper script for jackd as:
+
+#!/bin/sh
+
+printf "\nnew jackd call, pid: %d\n" $$ >> /tmp/jackd
+echo args: $0 $* >> /tmp/jackd
+/usr/local/bin/jackd.bin $* &
+echo last pg pid: $! >> /tmp/jackd
+ps axl >> /tmp/jackd
+
+and it turns out that all KDE components, already on KDE start the
+/usr/local/bin/knotify4, are calling jackd as
+
+	/usr/local/bin/jackd -l
+
+which is fine according the man page of jackd:
+
+    -l, --listen-port int
+            The socket port we are listening on for sync
+            packets (default: 3000)
+
+but the source of jackd implements with -l only the printout of the
+current working directory and exit(0):
+
+                                                                                                   
+                case 'l':                                                                           
+                        /* special flag to allow libjack to determine                               
+                         * jackd's idea of where tmpdir is */                                       
+                        printf ("%s\n", jack_tmpdir);                                               
+                        exit (0);
+
+I have search in the KDE sources, without any luck, where 'jackd -l' is
+issued to understand the problem; no luck; and for the moment I only can
+say that there is some missimplementation, either in KDE or in jackd.
+
+	matthias
+
+kde-freebsd mailing list
+[hidden]
+https://mail.kde.org/mailman/listinfo/kde-freebsd
+See also http://freebsd.kde.org/ for latest information
+
+----- End forwarded message -----
+
+-- 
+Matthias Apitz, [hidden], http://www.unixarea.de/ +49-170-4527211    +49-176-38902045
+"Wenn der Mensch von den Umständen gebildet wird, so muß man die Umstände menschlich bilden."
+"Si el hombre es formado por las circunstancias entonces es necesario formar humanamente
+las circunstancias", Karl Marx in Die heilige Familie / La sagrada familia (MEW 2, 138)
+
+1433579059.6159_0.ltw:2, <20150606082407.GA2075 at c720-r276659>
+________________________________________________________________________________
+

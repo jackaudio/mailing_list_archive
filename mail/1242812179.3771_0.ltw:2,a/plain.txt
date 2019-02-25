@@ -1,0 +1,102 @@
+Date:        Wed, 20 May 2009 11:32:12 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Jack devel <[hidden] at lists dot jackaudio dot org>, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>
+Follow-Up:   Rui Nuno Capela Re: [LAD] [Jack-Devel] New proposal for the jackd/jackdbus mess (1242813279.5623_0.ltw:2,a)
+Follow-Up:   Krzysztof Foltman Re: [LAD] New proposal for the jackd/jackdbus mess (1242814845.10615_0.ltw:2,a)
+
+Subject:     [LAD] New proposal for the jackd/jackdbus mess
+
+Hi all,
+
+New much simplified proposal, should be "Fons compatible", hopefully  
+"Nedko compatible" (with little work), "Paul one package only  
+compatible", others "keep it simple compatible"...
+
+The first "big" conceptual change compared to the current SVN state is  
+this new "control IPC" scheme. That is the so called control API can  
+be used on client side also. The other conceptual change is that  
+"jackd" process is supposed to be an "always running" daemon that  
+defines an IPC entry point to be used from "clients". This daemon does  
+not "automatically" starts the server (as it does now), but will  when  
+requested (either by the "jackd" code directly using C API ) or by the  
+request of external control font-end using IPC.
+
+
+1) Server side:
+
+- libjackserver.so contains:  server code + C control API  + "new" IPC  
+control API (server side) +  C Jack API  + IPC Jack API (server side)
+
+- jackd executable is linked with libjackserver.so  (nothing new here)
+
+- backends (ALSA, dummy...) are linked with libjackserver.so  (nothing  
+new here)
+
+- a "standalone" client (that wants to embed the server in it's  
+process) is linked with libjackserver.so and directly uses the C  
+control API  to control/start the server and C Jack API to be a client  
+(nothing new here).
+
+2) Client side:
+
+- libjack.so contains :  "new" IPC control API (client side) + IPC  
+Jack API (client side)
+
+- clients are linked to libjack.so (nothing new here)
+
+- new control front-end (jackdbus, jackOSC...) are linked to  
+libjack.so: they control the server using the IPC control API (client  
+side), they can be regular clients using IPC Jack API (client side) to  
+deal with connections management and so on...
+
+- a "default" centralized state for the server is always kept in ~/ 
+jackdrc. When a client wants to auto-start, this "default" state is  
+used. (this is important to keep in mind)
+
+- libjack may have to start the "jackd" executable using the fork+exec  
+way, or the "jackd" process is an "always running + relaunch" process  
+(this has to be more defined later on...)
+
+- Qjakctl stays as a regular client, it can still start the "jackd"  
+process as usual. It can keep its own way of keeping multiple  
+configurations as it does now.
+
+- more sophisticated control front-end (jackdbus, jackOSC...) are now  
+regular clients. They can use the IPC control API (client side) for  
+more sophisticated control of the server. As regular clients, they  
+access the API to control connections... and so on. The important  
+thing is that those clients are *obliged* to deal with this "default"  
+centralized state. Even if they deal with multiple configs in a new  
+format  (XML...) they are supposed to always put a "default" state in  
+~/jackdrc for the client "auto-start"  feature to continue working.
+
+- Ardour can still do it's server control mess on its own... ((-:
+
+3) General:
+
+- a single jack2 package is needed. It contains the "jackd" daemon/ 
+server are before.
+
+- "jackdbus" is now conceptually separated from the Jack source code.  
+It only uses jack.h + control.h and is linked to libjack.so as any  
+regular client. It can be distributed separately as a more  
+sophisticated control front-end available, or be available in the  
+jack2 package.
+
+- old fashion users can keep their habits
+
+- new "D-Bus aware" guys can explore new fields...
+
+This scheme seems to hopefully solve most of the problems we had, and  
+requires only a bit of change for the "jackdbus" front-end to continue  
+working, but not much.
+
+Comments?
+
+Stephane
+* Attachment: '1242812179.3771_0.ltw:2,a/files/jackcontrol1.pdf'
+content-type: application/pdf
+
+1242812179.3771_0.ltw:2,a <2FD68B70-7948-4D07-ABE4-9E2F6DD9BD57 at grame dot fr>
+________________________________________________________________________________
+

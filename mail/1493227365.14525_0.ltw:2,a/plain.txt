@@ -1,0 +1,190 @@
+Date:        Wed, 26 Apr 2017 19:22:28 +0200
+From:        Frodo Jedi  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+
+Subject:     [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2
+
+Hi all,
+I have issues when trying to connect via netjack2 an odroid embedded board
+(with linux debian, real time kernel) and a new macbookpro 2016 with OSX
+Sierra 10.12.4.
+
+My goal is to send audio from the odroid board (master) to the mac (slave)
+using a direct ethernet connection. Basically I want to test the simple
+case of playing a file from the board and listen to the result on the
+loudspekers of the mac.
+
+I verified that multicasting is enabled on both the board and the mac. From
+the mac I connect to the board via SSH. I have set static Ip addresses on
+both the board and the mac.
+
+I am using the latest version of jack2 (jackdmp 1.9.11). Notably, I have
+not compiled jack2 with dbus as I am running jack headless (following the
+advise found on http://jrigg.co.uk/linuxaudio/jack2debian7.html).
+
+
+To implement the netjack2 connection I followed the instructions on the
+jack audio website
+https://github.com/jackaudio/jackaudio.github.com/wiki/WalkThrough_User_NetJack2.
+The result is that the slave keep waiting for a master.
+
+These are the outputs I get:
+
+
+On the master:
+/usr/bin/jackd -P 70 -p96 -t 2000 -dalsa -dhw:CODEC -S -s -r48000 -p128 -n2
+jack_load netmanager
+
+
+jackdmp 1.9.11
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2015 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+no message buffer overruns
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 70
+self-connect-mode is "Don't restrict self connect requests"
+creating alsa driver ...
+hw:CODEC|hw:CODEC|128|2|48000|0|0|nomon|swmeter|soft-mode|16bit
+configuring for 48000Hz, period = 128 frames (2.7 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: 16bit little-endian
+ALSA: use 2 periods for capture
+ALSA: final selected sample format for playback: 16bit little-endian
+ALSA: use 2 periods for playback
+Starting Jack NetManager
+Listening on '225.3.19.154:19000'
+
+
+
+
+on the slave:
+
+jackd -R -d net
+
+
+jackdmp 1.9.11
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2016 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in realtime mode with priority 10
+self-connect-mode is "Don't restrict self connect requests"
+NetDriver started in async mode without Master's transport sync.
+Waiting for a master...
+
+
+
+
+
+
+
+Any advise?
+
+Actually, if can be of any help, I also tried to set the mac as master and
+the linux board as the slave. The result is that they seem to communicate,
+although jack on the mac crashes giving the error "Floating point
+exception: 8":
+
+
+
+
+On the master (mac):
+jackd -P 70 -p96 -t 2000 -dcoreaudio  -s -r48000 -p128 -n2
+jack_load netmanager
+
+
+jackdmp 1.9.11
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2016 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in realtime mode with priority 70
+self-connect-mode is "Don't restrict self connect requests"
+Default input and output devices are not the same !!
+Cannot open default device in duplex mode, so aggregate default input and
+default output
+Separated input = 'Built-in Microphone'
+Separated output = 'Built-in Output'
+Clock drift compensation was asked but is not needed (devices use the same
+clock domain)
+Ignore incorrect channel mapping value = 2
+Input channel = 0 ==> JACK input port = 0
+Input channel = 1 ==> JACK input port = 1
+JACK output port = 0 ==> output channel = 0
+JACK output port = 1 ==> output channel = 1
+CoreAudio driver is running...
+Starting Jack NetManager
+Listening on '225.3.19.154:19000'
+Takes physical 2 audio output(s) for slave
+Takes physical 0 MIDI input(s) for slave
+Takes physical 0 MIDI output(s) for slave
+Sending parameters to ...
+Floating point exception: 8
+
+
+
+
+
+
+
+
+On the slave (linux board):
+jackd -R -d net -a 192.168.117.129 -p 19000
+
+
+jackdmp 1.9.11
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2015 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+no message buffer overruns
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 10
+self-connect-mode is "Don't restrict self connect requests"
+NetDriver started in async mode without Master's transport sync.
+Waiting for a master...
+Initializing connection with ucas-MacBook-Pro-9.local...
+Maximum number of input ports is reached for application ref = 0
+driver: cannot register port for system:midi_playback_769
+Can't allocate ports.
+Initing net driver fails...
+
+
+
+
+Notably the result of jack_lsp on the slave is:
+
+system:capture_1
+system:capture_2
+system:midi_playback_1
+system:midi_playback_2
+system:midi_playback_3
+…..
+system:midi_playback_766
+system:midi_playback_767
+system:midi_playback_768
+
+
+
+It seams that there is a problem with the MIDI ports but I really can't
+understand how to solve this.
+
+
+
+
+
+Thanks in advance
+
+
+Cheers
+
+1493227365.14525_0.ltw:2,a <CAGkY2upU7AHEkHxbjNdm5B5VG00RArG6W_NWCObgrorvk6OiEA at mail dot gmail dot com>
+________________________________________________________________________________
+

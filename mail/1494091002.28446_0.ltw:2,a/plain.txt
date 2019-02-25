@@ -1,0 +1,89 @@
+Date:        Sat, 06 May 2017 19:15:02 +0200
+From:        David Kastrup  <[hidden] at gnu dot org>
+To:          [hidden] at lists dot jackaudio dot org
+
+Subject:     Re: [Jack-Devel] How does --hwmon work?
+
+Ralf Mardorf <[hidden]> writes:
+
+> On Sat, 06 May 2017 17:25:59 +0200, David Kastrup wrote:
+>>Ralf Mardorf <[hidden]> writes:
+>>>Consider to ask RME why they don't support Linux.  
+>>
+>>RME?  The company that provided all the information needed for writing
+>>stable ALSA interfaces for the RME Hammerfall, writing hdspconf, and
+>>writing hdspmixer?  I think they've done everything expected from a
+>>nice player.  The usefulness of what they have done definitely beats
+>>the crap from companies "supporting" Linux like Nvidia, with no
+>>information but proprietary drivers that stop working after a number
+>>of years.
+>>
+>>RME hasn't written hdspconf.  They only made it possible.
+>
+> RME does not support Linux by themselves, so even if they made
+> something possible, there is no support.
+
+So what do you call "support" that is available for other operating
+systems?
+
+> For my RME card hdspmixer works [1],
+
+Interesting: I would have thought that hdspmixer is mostly confined to
+HDSP cards.
+
+> but hdspconf doesn't [2]. That hdspconf doesn't work isn't an issue,
+> but just 2 of 8 ADAT channels are available by the jack ports.
+
+Strange.  The HDSP has 8 channels in Jack.  Assuming that with channel
+you mean one audio signal rather than one ADAT connector.
+
+So I'd have expected either 8 or 0 supported channels.  2 is a strange
+number.  I can't find an "RME AIO" on their web page (either under
+current or legacy cards) so I cannot even guess.
+
+> IMO the best bet nowadays is to use USB class compliant audio
+> interfaces. When I was jobless at the end of last year, I bought the
+> Focusrite. I now have a full-time job for the next 1½ years, so I
+> might replace the Focusrite Scarlett 2nd Gen by an RME USB class
+> compliant audio interface. With my old computer, as well as with my
+> brand-new computer, I get lower latencies when using the USB
+> Focusrite, than when using the RME PCIe card.
+
+Some of the latency is due to digital oversampling filters in A/D&D/A.
+Reducing that latency (about 2ms) is not going to improve sound quality.
+
+> I suspect that with a round trip latency of around 6 ms or much lower,
+> it's possible to even use software monitoring, since around 5 ms is
+> the latency you get, when using one or the other digital guitar stomp
+> box, too. 6 ms is the maximum of latency I get for resource hungry
+> projects, it's possible to get lower. The used mobo, CPU, RAM and a
+> SSD are very cheap [3], it already worked that good, with just half of
+> the available RAM. So IMO, if you don't want to use hdspmixer and/or a
+> mixing console, consider to use software monitoring. The latency isn't
+> that bad anymore, even when using such cheap hardware as I'm using.
+
+I am more concerned with unnecessary full-duplex operation at 96kHz: it
+increases the likelihood of xruns.  Also it feels like additional
+latency in the analog path for a mere relay of a signal is a bad idea.
+Admittedly that argument seems a bit weak when my other way of sound
+production runs through serial Midi first.  But the cost for that at
+3 bytes per note is just 1ms (more for chords).
+
+> [rocketmouse@archlinux ~]$ hwinfo --cpu|grep Mo|sort -u
+>   Model: 6.60.3 "Intel(R) Celeron(R) CPU G1840 @ 2.80GHz"
+> [rocketmouse@archlinux ~]$ hwinfo --memory|grep Si
+>   Memory Size: 7 GB + 512 MB
+
+Well, my specs are 2.5GHz Penryn and 4GB of memory (extending memory to
+8GB with DDR2 SODIMM would be about as expensive as the whole computer
+was, and for audio recording it would not appear to make a difference).
+
+Bottlenecks are more likely bus speed (800MHz I think, but with the RAM
+connected with 667MHz) than anything else.  And current kernels.
+
+-- 
+David Kastrup
+
+1494091002.28446_0.ltw:2,a <87y3u929gp.fsf at fencepost dot gnu dot org>
+________________________________________________________________________________
+

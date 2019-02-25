@@ -1,0 +1,75 @@
+Date:        Tue, 17 Jul 2012 19:46:04 +0000
+From:        Jamie Heilman  <[hidden] at audible dot transient dot net>
+To:          Jan Kohnert <[hidden] at jankoh dot dyndns dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jan Kohnert [Jack-Devel] Connecting alsa-loopback to jack (1342552172.26513_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Connecting alsa-loopback to jack
+
+Jan Kohnert wrote:
+> Hi,
+> 
+> since http://alsa.opensrc.org/Jack_and_Loopback_device_as_Alsa-to-Jack_bridge 
+> seemsdead and gone, I'm asking here, as I believe there are quite a lot of 
+> experts reading the list.
+> 
+> After I finally got jack workingusing jack1 I want to connect the alsa 
+> loopback device with my recording/playback interface to be able to use both 
+> devices with jack.
+> 
+> Jack is just working fine. But trying to playback with the loop device gives 
+> no sound.
+> 
+> I'm sure, this is just aconfiguration problem, but I'm not able to figure out 
+> the correct config.
+> 
+> This is what I got so far:
+> 
+> jankoh@kohni ~ $ cat .asoundrc
+> # playback PCM device: using loopback subdevice 0,0
+> pcm.amix {
+>         type dmix
+>         ipc_key 219345
+>         slave.pcm "hw:Loopback,0,0"
+> }
+> 
+> # capture PCM device: using loopback subdevice 0,1
+> pcm.asnoop {
+>         type dsnoop
+>         ipc_key 219346
+>         slave.pcm "hw:Loopback,0,1"
+> }
+> 
+> # duplex device combining above PCM devices
+> pcm.aduplex {
+>         type asym
+>         playback.pcm "amix"
+>         capture.pcm "asnoop"
+> }
+
+(ignoring pcm.merge for the moment, it's not entirely obvious to me how
+you plan on using that)
+
+Looks like you're missing the connections between pcm.aduplex and jack that use
+card 1.  You'll need something like:
+
+pcm.cloop {
+    type dsnoop
+    ipc_key 219347
+    slave.pcm "hw:Loopback,1,0"
+}
+pcm.ploop {
+    type plug
+    slave.pcm "hw:Loopback,1,1"
+}
+
+Then you can run "alsa_in -d cloop" and/or "alsa_out -d ploop" and
+finally connect them up with jack_connect alsa_in:capture_1 system:playback_1
+jack_connect alsa_in:capture_2 system:playback_2 or similar.
+
+-- 
+Jamie Heilman                     http://audible.transient.net/~jamie/
+
+1342554371.28498_0.ltw:2,a <20120717194604.GB4927 at cucamonga dot audible dot transient dot net>
+________________________________________________________________________________
+

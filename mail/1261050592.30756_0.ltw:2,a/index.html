@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [LAD] Atomic Operations</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [LAD] Atomic Operations</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1261050039.29634_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1261460019.24721_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1261050592.30756_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 17 Dec 2009 12:49:27 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Olivier Guilyardi </span> &lt;[hidden] at samalyse dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Tim Blechmann &lt;[hidden] at klingt dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot linuxaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Olivier Guilyardi
+<a href='../1261050039.29634_0.ltw:2,a/index.html'>Re: [LAD] Atomic Operations </a></td></tr>
+</table>
+<pre>
+On 12/17/2009 12:40 PM, Olivier Guilyardi wrote:
+&gt; On 12/16/2009 06:57 PM, Tim Blechmann wrote:
+&gt; 
+&gt;&gt;&gt; The point is, I wrote ringbuffer stress tests, and someone reported on this list
+&gt;&gt;&gt; that they succeeded on a weakly-ordered (PowerPC SMP) system, even without
+&gt;&gt;&gt; memory barriers. Anyway...
+&gt;&gt; unfortunately stress tests won't necessarily show the race condition
+&gt; 
+&gt; My tests helped to find and fix a race bug in jack ringbuffer. I guess this
+&gt; should have worked for memory barriers too. Unless they need to run for a
+&gt; century before an error occur.. ;)
+&gt; 
+&gt;&gt;&gt;&gt;&gt; See the "ring buffer memory barriers" discussion on jack-devel back in
+&gt;&gt;&gt;&gt;&gt; October of last year for more information; in particular, this article
+&gt;&gt;&gt;&gt;&gt; by Paul E. McKenney is very helpful:
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt; http://www.linuxjournal.com/article/8211
+&gt;&gt;&gt;&gt; memory-barriers.txt of the linux kernel documentation is interesting as
+&gt;&gt;&gt;&gt; well ...
+&gt;&gt;&gt; The portaudio ringbuffer is also a good source of inspiration I think:
+&gt;&gt;&gt; http://portaudio.com/trac/browser/portaudio/trunk/src/common/pa_ringbuffer.c
+&gt;&gt;&gt;
+&gt;&gt;&gt; In short, they use memory barriers at only three places, especially:
+&gt;&gt;&gt;
+&gt;&gt;&gt; - "to ensure that previous writes are seen before we update the write index"
+&gt;&gt;&gt; - "to ensure that previous writes are always seen before updating the (read) index."
+&gt;&gt; the kfifo doesn't look too different, either ...
+&gt; 
+&gt; Okay, I got a patch for Jack1's ringbuffer, it's not finished, but it's a
+&gt; beginning. I think it misses some "read" memory barriers, as described in
+&gt; kernel's memory-barriers.txt (in SMP BARRIER PAIRING) : "A write barrier should
+&gt; always be paired with a data dependency barrier or read barrier[...]".
+&gt; 
+&gt; It's attached. What do you think?
+
+Oups, sorry, ignore my previous patch. It contained an obvious bug in
+jack_ringbuffer_read() and jack_ringbuffer_write(). See the new one, attached.
+
+--
+  Olivier
+Index: libjack/ringbuffer.c
+===================================================================
+--- libjack/ringbuffer.c	(revision 3862)
++++ libjack/ringbuffer.c	(working copy)
+@@ -29,6 +29,15 @@
+ #endif /* USE_MLOCK */
+ #include &lt;jack/ringbuffer.h&gt;
+ 
++#if defined(__APPLE__)
++#include &lt;libkern/OSAtomic.h&gt;
++#define MEMORY_BARRIER() OSMemoryBarrier()
++#elif (__GNUC__ &gt; 4) || (__GNUC__ == 4 &amp;&amp; __GNUC_MINOR__ &gt;= 1)
++#define MEMORY_BARRIER() __sync_synchronize()
++#else
++#warning SMP Danger: memory barriers are not supported on this system
++#endif
++
+ /* Create a new ringbuffer to hold at least `sz' bytes of data. The
+    actual buffer size is rounded up to the next power of two.  */
+ 
+@@ -146,6 +155,7 @@
+ 	size_t cnt2;
+ 	size_t to_read;
+ 	size_t n1, n2;
++	size_t new_ptr;
+ 
+ 	if ((free_cnt = jack_ringbuffer_read_space (rb)) == 0) {
+ 		return 0;
+@@ -164,13 +174,17 @@
+ 	}
+ 
+ 	memcpy (dest, &amp;(rb-&gt;buf[rb-&gt;read_ptr]), n1);
+-	rb-&gt;read_ptr = (rb-&gt;read_ptr + n1) &amp; rb-&gt;size_mask;
++	new_ptr = (rb-&gt;read_ptr + n1) &amp; rb-&gt;size_mask;
+ 
+ 	if (n2) {
+-		memcpy (dest + n1, &amp;(rb-&gt;buf[rb-&gt;read_ptr]), n2);
+-		rb-&gt;read_ptr = (rb-&gt;read_ptr + n2) &amp; rb-&gt;size_mask;
++		memcpy (dest + n1, &amp;(rb-&gt;buf[new_ptr]), n2);
++		new_ptr = (new_ptr + n2) &amp; rb-&gt;size_mask;
+ 	}
+ 
++	/* Ensure that the read pointer gets updated after copying the data */
++	MEMORY_BARRIER();
++	rb-&gt;read_ptr = new_ptr;
++
+ 	return to_read;
+ }
+ 
+@@ -226,6 +240,7 @@
+ 	size_t cnt2;
+ 	size_t to_write;
+ 	size_t n1, n2;
++	size_t new_ptr;
+ 
+ 	if ((free_cnt = jack_ringbuffer_write_space (rb)) == 0) {
+ 		return 0;
+@@ -244,13 +259,17 @@
+ 	}
+ 
+ 	memcpy (&amp;(rb-&gt;buf[rb-&gt;write_ptr]), src, n1);
+-	rb-&gt;write_ptr = (rb-&gt;write_ptr + n1) &amp; rb-&gt;size_mask;
++	new_ptr = (rb-&gt;write_ptr + n1) &amp; rb-&gt;size_mask;
+ 
+ 	if (n2) {
+-		memcpy (&amp;(rb-&gt;buf[rb-&gt;write_ptr]), src + n1, n2);
+-		rb-&gt;write_ptr = (rb-&gt;write_ptr + n2) &amp; rb-&gt;size_mask;
++		memcpy (&amp;(rb-&gt;buf[new_ptr]), src + n1, n2);
++		new_ptr = (new_ptr + n2) &amp; rb-&gt;size_mask;
+ 	}
+ 
++	/* Ensure that the write pointer gets updated after copying the data */
++	MEMORY_BARRIER();
++	rb-&gt;write_ptr = new_ptr;
++
+ 	return to_write;
+ }
+ 
+@@ -260,6 +279,8 @@
+ jack_ringbuffer_read_advance (jack_ringbuffer_t * rb, size_t cnt)
+ {
+ 	size_t tmp = (rb-&gt;read_ptr + cnt) &amp; rb-&gt;size_mask;
++	/* Ensure that the read pointer gets updated after external data change */
++	MEMORY_BARRIER();
+ 	rb-&gt;read_ptr = tmp;
+ }
+ 
+@@ -269,6 +290,8 @@
+ jack_ringbuffer_write_advance (jack_ringbuffer_t * rb, size_t cnt)
+ {
+ 	size_t tmp = (rb-&gt;write_ptr + cnt) &amp; rb-&gt;size_mask;
++	/* Ensure that the write pointer gets updated after external data change */
++	MEMORY_BARRIER();
+ 	rb-&gt;write_ptr = tmp;
+ }
+ 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1261050039.29634_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1261460019.24721_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1261050592.30756_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1261050592.30756_0.ltw:2,a&nbsp;&lt;4B2A1AC7.2000109 at samalyse dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

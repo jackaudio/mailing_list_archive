@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] routing alsa through jack</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] routing alsa through jack</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1388276836.25293_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388313809.5598_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388280323.27449_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 29 Dec 2013 02:44:08 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Dominique Michel </span> &lt;[hidden] at vtxnet dot ch&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Lucio Crusca
+<a href='../1388045974.14857_0.ltw:2,/index.html'>Re: [Jack-Devel] routing alsa through jack </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Lucio Crusca
+<a href='../1388694751.12807_0.ltw:2,/index.html'>Re: [Jack-Devel] routing alsa through jack </a></td></tr>
+</table>
+<pre>
+Le Thu, 26 Dec 2013 09:19:18 +0100,
+Lucio Crusca &lt;[hidden]&gt; a &#xE9;crit :
+
+&gt; In data marted&#xEC; 24 dicembre 2013 15:25:32, Dominique Michel ha
+&gt; scritto:
+&gt; 
+&gt; &gt; That doesn't tell much. Can you post your configuration inclusive
+&gt; &gt; aplay -l output
+&gt; &gt; /etc/modprobe.d/sound.conf content (or whatever file is
+&gt; &gt; appropriated) lsmod | grep aloop output
+&gt; &gt; your .asoudrc content
+&gt; 
+&gt; $ lspci -vv # I only use the analog one, my HDMI monitor lacks
+&gt; loudspeakers [...]
+
+look good
+...
+ 
+&gt; $ aplay -l
+look good
+...
+
+&gt; $ cat /etc/modprobe.d/alsa-base.conf
+&gt; options snd cards_limit=3
+&gt; alias snd-card-0 snd-aloop
+&gt; alias snd-card-1 snd-hda-intel
+Here, I put all the cards, one after the other.
+
+&gt; options snd-aloop index=0 pcm_substreams=2
+&gt; options snd-hda-intel index=1
+Here I put all the cards in the order I want them. You have other cards
+downstairs, all with an index of -2, I never try that.
+
+&gt; # autoloader aliases
+&gt; install sound-slot-0 /sbin/modprobe snd-card-0
+&gt; install sound-slot-1 /sbin/modprobe snd-card-1
+&gt; install sound-slot-2 /sbin/modprobe snd-card-2
+&gt; install sound-slot-3 /sbin/modprobe snd-card-3
+&gt; install sound-slot-4 /sbin/modprobe snd-card-4
+&gt; install sound-slot-5 /sbin/modprobe snd-card-5
+&gt; install sound-slot-6 /sbin/modprobe snd-card-6
+&gt; install sound-slot-7 /sbin/modprobe snd-card-7
+I don't have that part. I don't even know what this is.
+
+&gt; # Cause optional modules to be loaded above generic modules
+&gt; install snd /sbin/modprobe --ignore-install snd &amp;&amp; { /sbin/modprobe
+&gt; --quiet snd-ioctl32 ; /sbin/modprobe --quiet snd-seq ; : ; }
+&gt; install snd-rawmidi /sbin/modprobe --ignore-install snd-rawmidi &amp;&amp; { 
+&gt; /sbin/modprobe --quiet snd-seq-midi ; : ; }
+&gt; install snd-emu10k1 /sbin/modprobe --ignore-install snd-emu10k1 &amp;&amp; { 
+&gt; /sbin/modprobe --quiet snd-emu10k1-synth ; : ; }
+I don't have that part either. And don't know what this is.
+
+&gt; # Keep snd-pcsp from beeing loaded as first soundcard
+&gt; options snd-pcsp index=-2
+&gt; # Keep snd-usb-audio from beeing loaded as first soundcard
+&gt; options snd-usb-audio index=-2
+&gt; # Prevent abnormal drivers from grabbing index 0
+&gt; options bt87x index=-2
+&gt; options cx88_alsa index=-2
+&gt; options snd-atiixp-modem index=-2
+&gt; options snd-intel8x0m index=-2
+&gt; options snd-via82xx-modem index=-2
+See above.
+
+Also, I have the following lines at the end:
+
+# Set this to the correct number of cards.
+options snd cards_limit=4
+
+My whole file use the old style syntax with everything into it. As you
+can see, I have almost the same hardware than yours in my laptop:
+
+# ALSA portion
+alias char-major-116 snd
+# OSS/Free portion
+alias char-major-14 soundcore
+
+# Reserve first slot for snd-aloop
+options snd slots=snd-aloop
+
+##  ALSA portion
+alias snd-card-0 snd-aloop
+alias snd-card-1 snd-hda-intel
+alias snd-card-2 snd-hda-intel
+alias snd-card-3 snd-virmidi
+##  OSS/Free portion
+alias sound-slot-0 snd-card-0
+alias sound-slot-1 snd-card-1
+alias sound-slot-2 snd-card-2
+alias sound-slot-3 snd-card-3
+##
+
+options snd-aloop index=0
+options snd-hda-intel index=1 model=alc271-dmic
+options snd-hda-intel index=2
+options snd-virmidi index=3
+
+# OSS/Free portion - card #1
+alias sound-service-0-0 snd-mixer-oss
+alias sound-service-0-1 snd-seq-oss
+alias sound-service-0-3 snd-pcm-oss
+alias sound-service-0-8 snd-seq-oss
+alias sound-service-0-12 snd-pcm-oss
+##  OSS/Free portion - card #2
+alias sound-service-1-0 snd-mixer-oss
+alias sound-service-1-3 snd-pcm-oss
+alias sound-service-1-12 snd-pcm-oss
+##  OSS/Free portion - card #3
+alias sound-service-2-0 snd-mixer-oss
+alias sound-service-2-3 snd-pcm-oss
+alias sound-service-2-12 snd-pcm-oss
+##  OSS/Free portion - card #4
+alias sound-service-3-0 snd-mixer-oss
+alias sound-service-3-3 snd-pcm-oss
+alias sound-service-3-12 snd-pcm-oss
+
+alias /dev/mixer snd-mixer-oss
+alias /dev/dsp snd-pcm-oss
+alias /dev/midi snd-seq-oss
+
+# Set this to the correct number of cards.
+options snd cards_limit=4
+
+&gt; $ lsmod  | grep aloop
+&gt; snd_aloop              18131  4 
+&gt; snd_pcm                79941  8 
+&gt; snd_pcm_oss,snd_aloop,snd_hda_codec_hdmi,snd_hda_codec,snd_hda_intel
+&gt; snd                    60869  27 
+&gt; snd_hda_codec_realtek,snd_pcm_oss,snd_aloop,snd_hwdep,snd_timer,snd_hda_codec_hdmi,snd_pcm,snd_seq,snd_rawmidi,snd_hda_codec,snd_hda_intel,snd_seq_device,snd_mixer_oss
+
+look good
+
+
+&gt; $ cat $HOME/.asoundrc
+&gt; #------------------------------------------------------
+&gt; # hardware 0,0 : used for ALSA playback
+&gt; pcm.loophw00 {
+&gt;   type hw
+&gt;   card Loopback
+&gt;   device 0
+&gt;   subdevice 0
+&gt;   format S32_LE
+&gt;   rate 48000
+&gt; }
+I don't have that part
+
+&gt; 
+&gt; # ------------------------------------------------------
+&gt; # playback PCM device: using loopback subdevice 0,0
+&gt; # Don't use a buffer size that is too small. Some apps 
+&gt; # won't like it and it will sound crappy 
+&gt; 
+&gt; pcm.amix {
+&gt;   type dmix
+&gt;   ipc_key 219345
+&gt;   slave {
+&gt;     pcm loophw00
+&gt;     period_size 4096
+&gt;     periods 2
+&gt;   }
+&gt; }
+Just:
+pcm.amix {
+  type dmix
+  ipc_key 219345
+  slave.pcm "hw:Loopback,0,0"
+}
+
+
+&gt; 
+&gt; # ------------------------------------------------------
+&gt; # software volume
+&gt; pcm.asoftvol {
+&gt;   type softvol
+&gt;   slave.pcm "amix"
+&gt; 
+&gt;   control { name PCM }
+&gt; 
+&gt;   min_dB -51.0
+&gt;   max_dB   0.0
+&gt; }
+OK
+
+&gt; 
+&gt; # ------------------------------------------------------
+&gt; # for jack alsa_in: looped-back signal at other ends
+&gt; pcm.cloop {
+&gt;   type hw
+&gt;   card Loopback
+&gt;   device 1
+&gt;   subdevice 0
+&gt;   format S32_LE
+&gt;   rate 48000
+&gt; }
+I just have:
+pcm.cloop {
+  type dsnoop
+  ipc_key 219348
+  slave.pcm "hw:Loopback,1,0"
+}
+
+&gt; 
+&gt; # ======================================================
+&gt; # ------------------------------------------------------
+&gt; # hardware 0,1 : used for ALSA capture
+&gt; pcm.loophw01 {
+&gt;   type hw
+&gt;   card Loopback
+&gt;   device 0
+&gt;   subdevice 1
+&gt;   format S32_LE
+&gt;   rate 48000
+&gt; }
+I don't have that part.
+
+&gt; 
+&gt; # ------------------------------------------------------
+&gt; # for jack alsa_out: looped-back signal at other end
+&gt; pcm.ploop {
+&gt;   type hw
+&gt;   card Loopback
+&gt;   device 1
+&gt;   subdevice 1
+&gt;   format S32_LE
+&gt;   rate 48000
+&gt; }
+I just have:
+pcm.ploop {
+  type plug
+  slave.pcm "hw:Loopback,1,1"
+}
+
+
+&gt; 
+&gt; # ======================================================
+&gt; # ------------------------------------------------------
+&gt; # duplex device combining our PCM devices defined above
+&gt; pcm.aduplex {
+&gt;   type asym
+&gt;   playback.pcm "asoftvol"
+&gt;   capture.pcm "loophw01"
+&gt; }
+I have:
+  type asym
+  playback.pcm "asoftvol"
+  capture.pcm "asnoop"
+}
+and it is before the ploop and cloop sections.
+
+&gt; 
+&gt; # ------------------------------------------------------
+&gt; # default device
+&gt; pcm.!default {
+&gt;   type plug
+&gt;   slave.pcm aduplex
+&gt; 
+&gt;   hint {
+&gt;     show on
+&gt;     description "Duplex Loopback"
+&gt;   }
+&gt; }
+I don't have the hint section, but it look good.
+
+Dominique
+
+&gt; 
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1388276836.25293_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388313809.5598_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388280323.27449_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1388280323.27449_0.ltw:2,&nbsp;&lt;20131229024408.6a126b95 at tux dot fritz dot box&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

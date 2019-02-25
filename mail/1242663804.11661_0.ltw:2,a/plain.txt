@@ -1,0 +1,69 @@
+Date:        Mon, 18 May 2009 19:22:20 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>, JACK Developers <[hidden] at jackaudio dot org>
+In-Reply-To: Paul Davis Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments (1242663064.9693_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments
+
+Paul Davis <[hidden]> writes:
+
+> On Mon, May 18, 2009 at 11:57 AM, Rui Nuno Capela <[hidden]> wrote:
+>>
+>> from where i stand, qjackctl does not need jackdbus support whatsoever.
+>> it's kind of the other way around, if i may say. and the way around is not
+>> about qjackctl per se, but to plain old good command-line jackd.
+>
+> i'd like to clarify (again) based on ongoing conversations in #jack.
+>
+> the issue that qjackctl could consider is not jackdbus, or dbus in
+> general. its the JACK control API that was discussed at LAC 2008.
+> right now, qjackctl simply claims to know how to start the JACK
+> server, offers a dialog to let the user pick settings, and then
+> constructs a set of command line arguments for jackd.
+>
+> this will continue to work forever, but it is less flexible than we
+> would like (consider what happens every time JACK gets a new option
+> added (or taken away). the control API allows a control application to
+> query the jack server (actually, its really querying the library that
+> contains the implementation of the jack server that the control app is
+> linked with), and discover what the available parameters are etc. etc.
+>
+> the dbus stuff is really mostly orthogonal to this (i stress the
+> "mostly")  - its just another example of a control app/system. there's
+> no reason why qjackctl would or should want to interact with it.
+>
+> however, the one area where these things overlap is "auto-start". this
+> is because what it means to "auto-start" a JACK server differs in the
+> following two scenarios:
+>
+>     * vanilla JACK install - there is no "jack control" system in
+> place or in use
+>     * with jackdbus - there is a daemon in place listening for
+> requests to start/stop/reconfigure the server
+>
+> in the first scenario, the ~/.jackdrc file (if it exists) takes care
+> of auto-start. but if jackdbus is in use, then auto-start means
+> something really quite different.
+>
+> we are are discussing ways to reconcile these differences on IRC.
+>
+> for those who don't understand why the second scenario is worth
+> considering, i would point to the questions that (relatively)
+> frequently come from users about changing a running JACK system to use
+> another h/w interface, or to start/stop JACK temporarily for some
+> reason. there is one school of opinion that would say that "stop jackd
+> and restart it with the correct parameters" is the correct approach to
+> this question. i think that at LAC2008 it was felt that we could do
+> better.
+
+I confirm this it true (except about LAC2008 because i was not there and
+i dont know). And i want to add that qjackctl can be made more flexible
+if it can detect jackdbus.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: DE1716B0>
+
+1242663804.11661_0.ltw:2,a <87skj2fkjn.fsf at usbix dot spacelabs dot org>
+________________________________________________________________________________
+

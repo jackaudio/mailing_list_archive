@@ -1,0 +1,178 @@
+Date:        Wed, 16 Feb 2011 14:01:21 +0100
+From:        Torben Hohn  <[hidden] at gmx dot de>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Torben Hohn [Jack-Devel] [PATCH 2/2] [core] add jack_port_type_get_buffer_size() (1297861313.10937_0.ltw:2,a)
+
+Subject:     [Jack-Devel] [PATCH 1/2] [core] add BufferSizeChanged callback, with new semantics.
+
+this commit reverts the old buffersize callback to the old semantics,
+its _not_ called during activate.
+
+only the new BufferSizeChanged Callback is called during activate.
+---
+ jack/internal.h      |    1 +
+ jack/jack.h          |   16 ++++++++++++++++
+ jack/types.h         |   17 +++++++++++++++++
+ jackd/clientengine.c |    7 +++++--
+ jackd/engine.c       |    4 ++++
+ libjack/client.c     |   13 +++++++++++++
+ libjack/local.h      |    2 ++
+ 7 files changed, 58 insertions(+), 2 deletions(-)
+
+diff --git a/jack/internal.h b/jack/internal.h
+index 194e8f1..76f32eb 100644
+--- a/jack/internal.h
++++ b/jack/internal.h
+@@ -288,6 +288,7 @@ typedef volatile struct {
+     volatile uint8_t	process_cbset;
+     volatile uint8_t	thread_init_cbset;
+     volatile uint8_t	bufsize_cbset;
++    volatile uint8_t	new_bufsize_cbset;
+     volatile uint8_t	srate_cbset;
+     volatile uint8_t	port_register_cbset;
+     volatile uint8_t	port_connect_cbset;
+diff --git a/jack/jack.h b/jack/jack.h
+index 572e6b8..2e2f427 100644
+--- a/jack/jack.h
++++ b/jack/jack.h
+@@ -350,6 +350,22 @@ int jack_set_buffer_size_callback (jack_client_t *client,
+ 				   void *arg) JACK_OPTIONAL_WEAK_EXPORT;
+ 
+ /**
++ * Tell JACK to call @a bufsize_callback whenever the size of the the
++ * buffer that will be passed to the @a process_callback is about to
++ * change.  Clients that depend on knowing the buffer size must supply
++ * a @a bufsize_callback before activating themselves.
++ *
++ * @param client pointer to JACK client structure.
++ * @param bufsize_callback function to call when the buffer size changes.
++ * @param arg argument for @a bufsize_callback.
++ *
++ * @return 0 on success, otherwise a non-zero error code
++ */
++int jack_set_buffer_size_changed_callback (jack_client_t *client,
++					   JackBufferSizeChangedCallback bufsize_callback,
++					   void *arg) JACK_WEAK_EXPORT;
++
++/**
+  * Tell the Jack server to call @a srate_callback whenever the system
+  * sample rate changes.
+  *
+diff --git a/jack/types.h b/jack/types.h
+index 3f07118..ec66758 100644
+--- a/jack/types.h
++++ b/jack/types.h
+@@ -340,6 +340,23 @@ typedef int  (*JackXRunCallback)(void *arg);
+ typedef int  (*JackBufferSizeCallback)(jack_nframes_t nframes, void *arg);
+ 
+ /**
++ * Prototype for the @a bufsize_callback that is invoked whenever the
++ * JACK engine buffer size changes.  Although this function is called
++ * in the JACK process thread, the normal process cycle is suspended
++ * during its operation, causing a gap in the audio flow.  So, the @a
++ * bufsize_callback can allocate storage, touch memory not previously
++ * referenced, and perform other operations that are not realtime
++ * safe.
++ *
++ * The new buffersizes are obtained using @ref jack_port_type_get_buffer_size()
++ *
++ * @param arg pointer supplied by jack_set_buffer_size_changed_callback().
++ *
++ * @return zero on success, non-zero on error
++ */ 
++typedef int  (*JackBufferSizeChangedCallback)(void *arg);
++
++/**
+  * Prototype for the client supplied function that is called 
+  * when the engine sample rate changes.
+  *
+diff --git a/jackd/clientengine.c b/jackd/clientengine.c
+index bea4a28..80d0a25 100644
+--- a/jackd/clientengine.c
++++ b/jackd/clientengine.c
+@@ -566,6 +566,7 @@ jack_setup_client_control (jack_engine_t *engine, int fd,
+ 
+ 	client->control->process_cbset = FALSE;
+ 	client->control->bufsize_cbset = FALSE;
++	client->control->new_bufsize_cbset = FALSE;
+ 	client->control->srate_cbset = FALSE;
+ 	client->control->xrun_cbset = FALSE;
+ 	client->control->port_register_cbset = FALSE;
+@@ -919,8 +920,10 @@ jack_client_activate (jack_engine_t *engine, jack_client_id_t id)
+ 			jack_deliver_event (engine, client, &event);
+ 		}
+ 
+-		event.type = BufferSizeChange;
+-		jack_deliver_event (engine, client, &event);
++		if (client->control->new_bufsize_cbset) {
++			event.type = BufferSizeChange;
++			jack_deliver_event (engine, client, &event);
++		}
+ 
+ 		// send delayed notifications for ports.
+ 		for (node = client->ports; node; node = jack_slist_next (node)) {
+diff --git a/jackd/engine.c b/jackd/engine.c
+index 9ce7a54..70eecae 100644
+--- a/jackd/engine.c
++++ b/jackd/engine.c
+@@ -2830,6 +2830,10 @@ jack_deliver_event (jack_engine_t *engine, jack_client_internal_t *client,
+ 					(event->x.n,
+ 					 client->private_client->bufsize_arg);
+ 			}
++			if (client->control->new_bufsize_cbset) {
++				client->private_client->new_bufsize
++				       	(client->private_client->new_bufsize_arg);
++			}
+ 			break;
+ 
+ 		case SampleRateChange:
+diff --git a/libjack/client.c b/libjack/client.c
+index 9569284..4535b7c 100644
+--- a/libjack/client.c
++++ b/libjack/client.c
+@@ -1776,6 +1776,9 @@ jack_client_process_events (jack_client_t* client)
+ 					(control->nframes,
+ 					 client->bufsize_arg);
+ 			} 
++			if (control->new_bufsize_cbset) {
++				status = client->new_bufsize (client->new_bufsize_arg);
++			} 
+ 			break;
+ 			
+ 		case SampleRateChange:
+@@ -2737,6 +2740,16 @@ jack_set_buffer_size_callback (jack_client_t *client,
+ }
+ 
+ int
++jack_set_buffer_size_changed_callback (jack_client_t *client,
++			       JackBufferSizeChangedCallback callback, void *arg)
++{
++	client->new_bufsize_arg = arg;
++	client->new_bufsize = callback;
++	client->control->new_bufsize_cbset = (callback != NULL);
++	return 0;
++}
++
++int
+ jack_set_port_registration_callback(jack_client_t *client,
+ 				    JackPortRegistrationCallback callback,
+ 				    void *arg)
+diff --git a/libjack/local.h b/libjack/local.h
+index 9cc3005..f9488e6 100644
+--- a/libjack/local.h
++++ b/libjack/local.h
+@@ -53,6 +53,8 @@ struct _jack_client {
+     void *thread_init_arg;
+     JackBufferSizeCallback bufsize;
+     void *bufsize_arg;
++    JackBufferSizeChangedCallback new_bufsize;
++    void *new_bufsize_arg;
+     JackSampleRateCallback srate;
+     void *srate_arg;
+     JackPortRegistrationCallback port_register;
+-- 
+1.7.2.3
+
+1297861307.10931_0.ltw:2,a <1297861282-8005-1-git-send-email-torbenh at gmx dot de>
+________________________________________________________________________________
+

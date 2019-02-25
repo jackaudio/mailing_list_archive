@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack dsp load calculation</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack dsp load calculation</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1450898995.24104_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1450903721.31950_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1450902073.28946_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 23 Dec 2015 20:20:51 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> John Emmas </span> &lt;[hidden] at tiscali dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1450884943.7202_0.ltw:2,a/index.html'>[Jack-Devel] jack dsp load calculation </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Florian Paul Schmidt
+<a href='../1450903721.31950_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack dsp load calculation </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1451134630.22937_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack dsp load calculation </a></td></tr>
+</table>
+<pre>
+On 23 Dec 2015, at 15:35, Robin Gareus wrote:
+
+&gt; Hi all,
+&gt; 
+&gt; I'd like to propose changing the algorithm how jack calculates the DSP
+&gt; load from averaging to worst-case.
+&gt; 
+&gt; The main reason for having DSP load is to know how much more processing
+&gt; one can safely add without getting x-runs. What matters in this case is
+&gt; the worst-case value.
+&gt; 
+
+Matters to whom..?  As one of the people who implemented the current scheme, let me explain why it was needed...
+
+We implemented the averaging mechanism when Harrison and I ported their Mixbus DAW to Windows.  Windows isn't a real-time OS and one of its drawbacks is that concurrently running apps can have an effect on each other.  Not necessarily a detrimental effect - but an effect nonetheless.
+
+Before averaging, a concurrent (though unrelated) background app could have a very noticeable effect on Mixbus's DSP reading.  A nice reading of (say) 18% DSP could suddenly shoot up to 70% if the user ran some other process in the background.  70% was perfectly manageable - though pretty alarming for a user.  70% DSP for a simple session with only 1 track did nothing for customer confidence.
+
+Currently, Jack DOES report the worst case value - IF - the worst case value is high enough to start causing problems (or if there's a sustained sequence of high values).  But if there's only an occasional high value (which is perfectly manageable) then it just gets factored into the current average.  The advantage of this approach is that Mixbus's DSP reading remains unaffected by other running apps.
+
+The threshold we chose was 95%.  So if any value is 95% or higher, the highest value will always get reported.  There's an argument for saying that we possibly set the bar too high (at 95%) but I don't think there's anything else inherently wrong with the current strategy.
+
+UNLESS - it's causing problems on the other platforms (in which case, there's an argument for keeping the averaging mechanism on Windows but removing it elsewhere).  Or unless (as Paul pointed out) it's introducing measurement errors.  Averaging is bound to introduce some kind of error - though I've never known it to be serious (on Windows, at least).
+
+If people are getting xruns at DSP values lower than 95%, we perhaps just need to change the threshold.
+
+Just my 2 cents...
+
+John
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1450898995.24104_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1450903721.31950_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1450902073.28946_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1450902073.28946_0.ltw:2,a&nbsp;&lt;D7D620C2-2D36-41EA-A9A8-935B5E43615F at tiscali dot co dot uk&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

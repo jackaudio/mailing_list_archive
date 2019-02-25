@@ -1,0 +1,84 @@
+Date:        Sat, 02 Jun 2012 09:16:57 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] [LAU] jack2 turned verbose (1338586425.4283_0.ltw:2,a)
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] [LAU] jack2 turned verbose (1338626586.5707_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] [LAU] jack2 turned verbose (1338638086.11899_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [LAU] jack2 turned verbose
+
+On 06/01/2012 11:33 PM, Fons Adriaensen wrote:
+> On Sat, Jun 02, 2012 at 12:04:52AM +0300, Nedko Arnaudov wrote:
+>  
+>> The default value of "verbose" is set to 10, the default value of
+>> "realtime-priority". libdbus has checks for boolean values that gets
+>> triggered because 10 is neither true (1) not false (0).
+
+I was under the impression that true is usually defined as -1 (not +1).
+Using two's complement -1 would set all bits to on.
+and "if (false)" := "branch if zero"
+
+> How are these checks done ?
+> 
+> I tried this:
+> 
+> 
+> int main (int ac, char *av [])
+> {
+>     int i;
+> 
+>     union
+>     {
+>         bool b;
+>         int  i;
+>     } X;
+> 
+>     puts ("");
+>     for (i = 0; i < 5; i++)
+>     {
+>         X.i = i;
+>         if (X.b) puts ("true");
+>         else     puts ("false");
+>     }
+> 
+>     puts ("");
+>     for (i = 0; i < 5; i++)
+>     {
+>         X.i = i;
+>         if      (X.b == true)   puts ("true");
+>         else if (X.b == false)  puts ("false");
+>         else                    puts ("Neither true or false");
+>     }
+> 
+>     return 0;
+> }
+
+nice. That's indeed what the problem boils down to.
+
+Well, depending what the compiler does, maybe add some explicit
+type-casts:  X.b == false  vs.  ((bool) X.b) == false.
+In POSIX-C 'false' is #define'd as 0
+
+> which prints: 
+> 
+> false
+> true
+> true
+> true
+> true
+> 
+> false
+> true
+> true
+> true
+> true
+
+Is this Arch-Linux, gcc/g++-4.7.0, with "-O2" ?
+The flags to produce the problem with: g++ 4.7.0 are
+CXXFLAGS="-march=i686 -mtune=generic -O2 -pipe -fstack-protector
+--param=ssp-buffer-size=4 -D_FORTIFY_SOURCE=2"
+
+1338621426.3051_0.ltw:2,a <4FC9BDE9.4030206 at gareus dot org>
+________________________________________________________________________________
+

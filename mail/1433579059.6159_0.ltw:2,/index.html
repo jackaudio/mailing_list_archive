@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Fwd: KDE && jackd flag -l (was: kbiff && zombies)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Fwd: KDE && jackd flag -l (was: kbiff && zombies)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1433267792.22758_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1433591285.24791_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1433579059.6159_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 06 Jun 2015 10:24:07 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Matthias Apitz </span> &lt;[hidden] at unixarea dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1433591285.24791_0.ltw:2,/index.html'>Re: [Jack-Devel] Fwd: KDE &amp;&amp; jackd flag -l (was: kbiff &amp;&amp; zombies) </a></td></tr>
+</table>
+<pre>
+Hallo,
+
+I'm an active FreeBSD user and I'm trying to nail down a problem of
+zombies caused by KDE components which make use of jack-audio-connection-kit-0.121.3
+
+To get this debugged I have inserted a wrapper script as
+/usr/local/bin/jackd which does some logging and calls at the end the
+real jackd as jackd.bin (see below). I've stumbled over something in the
+source and man page of jackd which I do not understand:
+
+The man page explains the flag -l as for changing the LISTEN port, while
+the implementation in the C-source use the flag -l to just print the
+actual working directory (/tmp) and do exit(0); see below.
+
+Perhaps, the KDE components do not expect the termination of the forked
+jackd server and resulting to state zombie.
+
+Do I misunderstand something stupidly wrong? Thanks for a helping hand.
+
+	matthias
+
+----- Forwarded message from Matthias Apitz &lt;[hidden]&gt; -----
+
+Date: Fri, 5 Jun 2015 20:04:53 +0200
+From: Matthias Apitz &lt;[hidden]&gt;
+To: Tobias Berner &lt;[hidden]&gt;, [hidden], [hidden]
+Subject: [kde-freebsd] KDE &amp;&amp; jackd flag -l (was: kbiff &amp;&amp; zombies)
+
+
+I have modified the shell wrapper script for jackd as:
+
+#!/bin/sh
+
+printf "\nnew jackd call, pid: %d\n" $$ &gt;&gt; /tmp/jackd
+echo args: $0 $* &gt;&gt; /tmp/jackd
+/usr/local/bin/jackd.bin $* &amp;
+echo last pg pid: $! &gt;&gt; /tmp/jackd
+ps axl &gt;&gt; /tmp/jackd
+
+and it turns out that all KDE components, already on KDE start the
+/usr/local/bin/knotify4, are calling jackd as
+
+	/usr/local/bin/jackd -l
+
+which is fine according the man page of jackd:
+
+    -l, --listen-port int
+            The socket port we are listening on for sync
+            packets (default: 3000)
+
+but the source of jackd implements with -l only the printout of the
+current working directory and exit(0):
+
+                                                                                                   
+                case 'l':                                                                           
+                        /* special flag to allow libjack to determine                               
+                         * jackd's idea of where tmpdir is */                                       
+                        printf ("%s\n", jack_tmpdir);                                               
+                        exit (0);
+
+I have search in the KDE sources, without any luck, where 'jackd -l' is
+issued to understand the problem; no luck; and for the moment I only can
+say that there is some missimplementation, either in KDE or in jackd.
+
+	matthias
+
+kde-freebsd mailing list
+[hidden]
+https://mail.kde.org/mailman/listinfo/kde-freebsd
+See also http://freebsd.kde.org/ for latest information
+
+----- End forwarded message -----
+
+-- 
+Matthias Apitz, [hidden], http://www.unixarea.de/ +49-170-4527211    +49-176-38902045
+"Wenn der Mensch von den Umst&#xE4;nden gebildet wird, so mu&#xDF; man die Umst&#xE4;nde menschlich bilden."
+"Si el hombre es formado por las circunstancias entonces es necesario formar humanamente
+las circunstancias", Karl Marx in Die heilige Familie / La sagrada familia (MEW 2, 138)
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1433267792.22758_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1433591285.24791_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1433579059.6159_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1433579059.6159_0.ltw:2,&nbsp;&lt;20150606082407.GA2075 at c720-r276659&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

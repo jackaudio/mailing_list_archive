@@ -1,0 +1,50 @@
+Date:        Fri, 11 Mar 2016 12:17:50 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Filipe Coelho <[hidden] at gmail dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Filipe Coelho Re: [Jack-Devel] Netjack crashes, alignment broken recently (1457694363.16240_0.ltw:2,a)
+Follow-Up:   Xavier Mendez Re: [Jack-Devel] Netjack crashes, alignment broken recently (1457697066.21362_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Netjack crashes, alignment broken recently
+
+Le 11 mars 2016 à 12:05, Filipe Coelho <[hidden]> a écrit :
+
+> On 10.03.2016 18:41, Xavier Mendez wrote:
+>> Just compiled the latest jackd2, and when using Netjack both manager and driver crash after sending parameters. I traced back to this change from 02f74a659, which modifies the network parameter struct:
+>> 
+>> --- a/common/JackNetTool.h
+>> +++ b/common/JackNetTool.h
+>> @@ -94,9 +94,9 @@ namespace Jack
+>> -        char fName[JACK_CLIENT_NAME_SIZE];
+>> -        char fMasterNetName[JACK_SERVER_NAME_SIZE];
+>> -        char fSlaveNetName[JACK_SERVER_NAME_SIZE];
+>> +        char fName[JACK_CLIENT_NAME_SIZE+1];
+>> +        char fMasterNetName[JACK_SERVER_NAME_SIZE+1];
+>> +        char fSlaveNetName[JACK_SERVER_NAME_SIZE+1];
+>> 
+>> That extra byte for the NUL terminator breaks the alignment, and somehow causes some ints to be sent as little-endian:
+>> 
+>>    Sample rate : 12288000 frames per second
+>>    Period size : 131072 frames per period
+>> 
+>> Reverting the three lines seems to resolve the problem. I don't really see the use for having the NUL terminator go through the network...
+>> 
+>> What do you think?
+> 
+> I can confirm this is an issue for me.
+> The "-d net" option stopped working some time ago and I've been wondering why, that change seems to be the reason.
+> 
+> Reverting it in both client&server makes netmanager work again.
+> 
+> 
+> Please do a pull request against jack2's github repo.
+> That would be the fastest way to get this fixed upstream.
+> 
+
+It would be better to understand why changing the  data structure (which is used both side of the connection… ) caused the crash. Are you sure the code is correctly recompiled everywhere?
+
+Stéphane
+
+1457695079.17624_0.ltw:2, <5BCD890C-E036-488A-95C7-C31F50EFD112 at grame dot fr>
+________________________________________________________________________________
+

@@ -1,0 +1,71 @@
+Date:        Sun, 08 Jan 2012 03:59:52 +0200
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          "Tim E. Real" <[hidden] at rogers dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Tim E. Real Re: [Jack-Devel] ladish + jack autoconnect (1325985995.2896_0.ltw:2,a)
+Follow-Up:   Tim E. Real Re: [Jack-Devel] ladish + jack autoconnect (1326051755.28885_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] ladish + jack autoconnect
+
+"Tim E. Real" <[hidden]> writes:
+
+> To help new users and as a stepping stone to a better configuration system, 
+>  at startup I auto-fill our midi ports with found Jack midi devices now.
+> By that I mean I scan for Jack midi ports and create matching client ports
+>  and then automatically connect them together.
+> Then everything is ready to go, the user can immediately start creating midi 
+>  tracks and doesn't necessarily have to open our midi configuration dlg.
+> Thus as viewed in say qjackctl, we have matching client ports and 
+>  connections for every outside port found.
+>  
+> Not fond of auto-doing anything, it's behaviour can change as our 
+>  configuration system evolves, or be removed (and may very well be). 
+> But previously it was a rather clumsy affair for our users to set up devices.
+>
+> So anyway I actually wanted to have the app /continuously/ watch for new ports
+>  and auto connect them as well, instead of just at startup or on-demand.
+> I didn't, because it seems a bad idea. 
+> It could lead to infinite recursive auto-connecting. Right?
+>
+> Say two apps employ this auto-connecting technique.
+> Then they are both constantly watching for each others' ports.
+> As soon as the second app starts the first app creates matching ports,
+>  then the second app sees these new ports and creates matching ones,
+>  then the first one sees those ports and creates matching ones, and so on.
+>
+> I'm wondering if even the one-time auto-connect at startup is still a bad 
+>  idea. It still kinda WIP, maybe make it more optional (click-to-auto-fill). 
+> (There sure are a lot of ports created!)
+> With this talk of auto-connect and session managers I would like to ask if 
+>  this one-time auto-connect at startup might also interfere with session 
+>  managers like LASH or LADISH, or even say Jack Session? (We only have LASH.) 
+> Maybe I should determine whether it is in fact a session, and bypass
+>  the automatic port creation and auto-connecting at startup...
+
+It will interfere badly with ladish if ladish rooms are in use. Please
+make your app to not autoconnect when it detects that it is started by
+the ladish daemon. Qtractor already implementes such check. The check
+inspects the LADISH_APP_NAME environment variable. The environment
+variables that ladishd sets upon starting app are documented here:
+
+http://ladish.org/wiki/envvars
+
+I'll leave jack-session detection to be described by whom worships it.
+
+AFAIK LASH library initialization success is a sign of LASH server
+availability.
+
+The bad(or good) news here is that at some point ladish will allow self
+connects. For this to work properly jack clients/ports participating in
+given virtual graph should be separated from those participating in
+other virtual graphs. Separated at JACK API level. This is actually a
+good reason to not ban (in political sense) autoconnects at app level
+but to restrict them in the jack server, when user setup actually
+requires it.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1325988047.14741_0.ltw:2,Sa <87k4530x9j.fsf at arnaudov dot name>
+________________________________________________________________________________
+

@@ -1,0 +1,81 @@
+Date:        Sun, 12 May 2013 11:45:21 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Pawel <[hidden] at wp dot pl>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Pawel [Jack-Devel] JackTransport vs VST ppqPos (1368062583.25885_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JackTransport vs VST ppqPos
+
+Le 9 mai 2013 à 03:22, Pawel <[hidden]> a écrit :
+
+> Hi,
+> 
+> I discover strange problem while improving JackTransport support in FSTHost.
+> 
+> Most VST plugins while trying to synchronize with host usually ask for such things:
+> 1) tempo ( == jack_pos.beats_per_minute)
+> 
+> 2) ppqPos - which I understand like "current quarter note" == current jack_pos.beat.
+> 
+> 3) barStartPos .. ok, this one is not a subject in this case ;-)
+> 
+> 4) samplePos == jack_pos.frame
+> 
+> 5) sampleRate == jack_pos.frame_rate
+> 
+> The problem is which pppPos. There are two ideas how to compute this:
+> 
+> 1) Using BBT (which should be a preferred option here, right ?)
+> double ppqBar = (jp.bar - 1) * jp.beats_per_bar;
+> double ppqBeat = jp.beat - 1;
+> double ppqTick = (double) jp.tick / jp.ticks_per_beat;
+> 
+> ppqPos = ppqBar + ppqBeat + ppqTick;
+> 
+> 2) Using sample rate / current frame / tempo - this is a standard way in VST world. We count how much samples is in quarter note (beat) ..
+> 
+> double ppq = jp.frame_rate * 60 / jp.beats_per_minute;
+> ppqPos = jp.frame / ppq;
+> 
+> The problem is that .. this second counter "hurry" (sorry can't find better word for this issue in english ;-)
+> I made really simple , example app for observe this issue - it is included in FSTHost repository:
+> http://sourceforge.net/p/fsthost/code/HEAD/tree/trunk/jt-test.c
+> 
+> Frame: 0013314048 | Bar: 0068 | Beat: 3 | Tick: 1680 | CBFF: 277.38 | CBFBBT: 270.88
+> Frame: 0013410304 | Bar: 0069 | Beat: 1 | Tick: 1600 | CBFF: 279.38 | CBFBBT: 272.83
+> Frame: 0013506048 | Bar: 0069 | Beat: 3 | Tick: 1500 | CBFF: 281.38 | CBFBBT: 274.78
+> Frame: 0013602304 | Bar: 0070 | Beat: 1 | Tick: 1420 | CBFF: 283.38 | CBFBBT: 276.74
+> Frame: 0013698560 | Bar: 0070 | Beat: 3 | Tick: 1340 | CBFF: 285.39 | CBFBBT: 278.70
+> Frame: 0013794304 | Bar: 0071 | Beat: 1 | Tick: 1240 | CBFF: 287.38 | CBFBBT: 280.65
+> Frame: 0013890560 | Bar: 0071 | Beat: 3 | Tick: 1160 | CBFF: 289.39 | CBFBBT: 282.60
+> 
+> Please look that after a while CBFF > CBFBBT, and trend is that difference will grow. I tested this with either Hydrogen and jack_transport as master. The funny thing is that - when I skip location to for example in jack_transport:
+> jack_transport> stop
+> jack_transport> locate 0
+> jack_transport> locate 51111111
+> jack_transport> play
+> 
+> CBFF and CBFBBT back to normal (almost) .. aha - so we know that formulas are good - and problem is in Jack.
+> Frame: 0051936967 | Bar: 0271 | Beat: 2 | Tick: 1184 | CBFF: 1082.02 | CBFBBT: 1081.62
+> Frame: 0052033223 | Bar: 0271 | Beat: 4 | Tick: 1104 | CBFF: 1084.03 | CBFBBT: 1083.58
+> 
+> This was tested only with Jack2 (1.9.8 and 1.9.9.5).
+> 
+> Any ideas ?
+> 
+> Best Regards
+> Pawel / Xj
+> 
+
+
+JACK does not do anything regarding those values: the timebase master *client* is responsible to update extended position information, counting beats, timecode, etc. (see : http://jackaudio.org/files/docs/html/transport-design.html)
+
+I don't see any specific issues here on OSX testing either with jack_transport or Ardour as timebase master (well I see CBFBBT value staying the same while CBFF moving with jack_transport  at very low tempo like 1 or 2)
+
+Can you try with Ardour also?
+
+Stéphane 
+
+1368351936.20406_0.ltw:2, <7386F728-4685-4ABE-85F8-A83815118403 at grame dot fr>
+________________________________________________________________________________
+

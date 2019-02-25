@@ -1,0 +1,110 @@
+Date:        Sun, 28 Jan 2018 15:34:08 +0000
+From:        Benny Alexandar  <[hidden] at outlook dot com>
+To:          David Kastrup <[hidden] at gnu dot org>, "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: David Kastrup Re: [Jack-Devel] Using USB sound card with Jack (1516795001.20446_0.ltw:2,)
+Follow-Up:   John Rigg Re: [Jack-Devel] Using USB sound card with Jack (1517221441.11679_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Using USB sound card with Jack
+
+Hi,
+
+I downloaded  ajbridge (zita-ajbridge-0.7.0.tar.bz2 )
+<https://kokkinizita.linuxaudio.org/linuxaudio/downloads/zita-ajbridge-0.7.0.tar.bz2>
+, resampler version 1.6  and   alsa-pcmi version 0.2.0
+and built all successfully.
+
+However while running zita-a2j I got the following error.
+
+$zita-a2j: error while loading shared libraries: libzita-resampler.so.1: cannot open shared object file: No such file or directory
+
+When checked the installation message, it says it installed under /usr/local/lib64
+
+install -d /usr/local/include/zita-resampler
+install -d /usr/local/lib64
+install -m 644 zita-resampler/resampler.h zita-resampler/resampler-table.h zita-resampler/vresampler.h zita-resampler/cresampler.h /usr/local/include/zita-resampler
+install -m 644 libzita-resampler.so.1.6.0 /usr/local/lib64
+ln -sf libzita-resampler.so.1.6.0 /usr/local/lib64/libzita-resampler.so
+ldconfig
+
+So, I modified the  /etc/ld.so.conf file and added the path for lib64
+/usr/local/lib
+/usr/local/lib64
+
+Then, things started to work.
+
+Now, I connected USB sound card and it shows the sound card as follows,
+
+cat /proc/asound/cards
+ 0 [PCH            ]: HDA-Intel - HDA Intel PCH
+                      HDA Intel PCH at 0xf7d30000 irq 35
+ 1 [HD             ]: USB-Audio - USB Sound Blaster HD
+                      Creative Technology USB Sound Blaster HD at usb-0000:00:14.0-2, full speed
+
+After starting jack server  using qjackctl, opened terminal and
+ran the following cmd
+
+$zita-a2j -d hw:HD  -p 1056  -v
+
+Then in qjackctl connected the graph as shown in the attached picture.
+USB sound card input (line-in) is connected to an audio output from other PC.
+But I can't hear the audio using zita-j2a.
+I mean audio was not heard in PC where zita-j2a is running.
+
+Anything wrong in the connections, how to debug and check why
+no audio is heard.
+
+-ben
+
+
+
+
+________________________________
+From: Jack-Devel <[hidden]> on behalf of David Kastrup <[hidden]>
+Sent: Wednesday, January 24, 2018 5:26 PM
+To: [hidden]
+Subject: Re: [Jack-Devel] Using USB sound card with Jack
+
+Fons Adriaensen <[hidden]> writes:
+
+> On Tue, Jan 23, 2018 at 04:12:16PM +0000, Benny Alexandar wrote:
+>>
+>> >> The simple way to test ajbridge is to measure the delay
+>> of a loop through both soundcards, using e.g. jack_delay.
+>>
+>> How to measure the delay between two sound cards ?
+>> What does the jack_delay measures, the delay between
+>> what and what ?
+>
+> 1. Read available documentation.
+> 2. Think.
+> 3. If after (1) and (2) some things remain unclear proceed to (4).
+> 4. Ask questions on mailing lists.
+>
+> You have a habit of skipping the first three. That is getting
+> on my nerves, and not only on mine.
+
+Well, to be fair it is hard to interpret the results of just trying, and
+"available documentation" could be better in many cases.  It's pretty
+exhaustive in the case of jack_delay's man page I'll admit (though the
+need to differentiate between JACK1 and JACK2 and various behaviors is
+really good for a head ache, requiring more of 2. than users might have
+readily available, probably hard for an insider to the program to
+fathom).
+
+On the LilyPond (batch music typesetter with plain text input language)
+user list I often get puzzled at requests of the "can I do this" kind of
+questions where one wants to shout "why don't you ask LilyPond?".  Some
+people seem more comfortable risking annoying another human rather than
+annoying a program.
+
+At least with regard to latencies it is rather tricky to "just try".
+
+--
+David Kastrup
+* Attachment: '1517153684.31327_0.ltw:2,/files/S45A6J~L.PNG'
+content-type: image/png
+content-description: S45A6J~L.PNG
+
+1517153684.31327_0.ltw:2, <MAXPR0101MB152925FDCA36881DD60B2A088BE60 at MAXPR0101MB1529 dot INDPRD01 dot PROD dot OUTLOOK dot COM>
+________________________________________________________________________________
+

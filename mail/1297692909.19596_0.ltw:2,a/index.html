@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297691732.17940_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297729900.27414_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297692909.19596_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 14 Feb 2011 15:14:47 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>torbenh Hohn &lt;[hidden] at gmx dot de&gt;, Valerio Pilo &lt;[hidden] at akhela dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>"[hidden] at lists dot jackaudio dot org List" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>torbenh
+<a href='../1297691732.17940_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1297947692.32535_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client </a></td></tr>
+</table>
+<pre>
+&gt;&gt;&gt; 
+&gt;&gt; 
+&gt;&gt; Since I cannot reproduce the original issue here on my Linux machine, I cannot go much further. To summarize:
+&gt;&gt; 
+&gt;&gt; - when JACK2 in synchronous mode, the server does : blocking ALSA read (actually, wait + read), graph activation, wait for graph to complete, write ALSA. 
+&gt;&gt; 
+&gt;&gt; - when a client is killed, it may fail to correctly complete a cycle, before the server detect the client has been removed, and cleanup the graph.  The server has a timeout to decide when the graph has really failed before trying to write back in ALSA. Since the server is late, ALSA backend issue a  "ALSA: could not complete playback" error in alsa_driver_write. This is considered as a "non recoverable error" and the backend wrapping thread is just stopped.
+&gt;&gt; 
+&gt;&gt; - how does JACK1 behave is a similar situation? I guess there is a "graph late" problem also? Is there a timeout to decide when the graph has really failed? why is the "ALSA: could not complete playback" error not triggered in this precise case?
+&gt; 
+&gt; jack1 will be late too.
+&gt; but jack1 does not try to write to the driver when the graph is late.
+&gt; the next alsa wait will detect the xrun and recover.
+&gt; so the next cycle, things should be fine again.
+&gt; 
+
+
+OK this makes sense, Valerio here a patch to test that does not write back in the backend if the "graph process" fails:
+
+
+
+
+Can you try is and report?
+
+Thanks
+
+St&#xE9;phane 
+
+<a href='files/AUDIO_DRIVER.diff' target='_blank'>* Attachment: 'AUDIO_DRIVER.diff'</a>
+content-type: application/octet-stream
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297691732.17940_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297729900.27414_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297692909.19596_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1297692909.19596_0.ltw:2,a&nbsp;&lt;77AD61A4-60AD-4905-A34A-65D07BB081DA at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

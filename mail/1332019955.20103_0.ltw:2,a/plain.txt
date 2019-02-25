@@ -1,0 +1,54 @@
+Date:        Sat, 17 Mar 2012 21:32:23 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] Jack shutdown action (1332018928.19495_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Jack shutdown action (1332025744.23494_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack shutdown action
+
+On Sat, Mar 17, 2012 at 05:15:16PM -0400, Paul Davis wrote:
+ 
+> all other exits from within libjack are via pthread_exit() which
+> should not take down a process. running inside gdb() with a breakpoint
+> at _exit and then a backtrace may prove revealing.
+
+Indeed:
+
+jack_client_thread zombified - exiting from JACK
+
+Program received signal SIGPIPE, Broken pipe.
+[Switching to Thread 0xb72bbb40 (LWP 6529)]
+0xb7fdd424 in __kernel_vsyscall ()
+(gdb) where
+#0  0xb7fdd424 in __kernel_vsyscall ()
+#1  0xb7e947db in write () from /lib/libpthread.so.0
+#2  0xb7f9d670 in oop_client_deliver_request (ptr=0x8059008, req=0xb72b9e0a) at client.c:253
+#3  0xb7f9d767 in jack_client_deliver_request (client=0x8059008, req=0xb72b9e0a) at client.c:286
+#4  0xb7fa0e78 in jack_deactivate_aux (client=0x8059008) at client.c:2533
+#5  0xb7fa0eb7 in jack_client_close_aux (client=0x8059008) at client.c:2552
+#6  0xb7fa0085 in jack_client_thread_suicide (client=0x8059008) at client.c:1687
+#7  0xb7fa08bf in jack_client_thread_aux (arg=0x8059008) at client.c:2075
+#8  0xb7fa09a4 in jack_client_thread (arg=0x8059008) at client.c:2125
+#9  0xb7fa5a5f in jack_thread_proxy (varg=0x8058218) at thread.c:136
+#10 0xb7e8dcac in start_thread () from /lib/libpthread.so.0
+#11 0xb7c9378e in clone () from /lib/libc.so.6
+(gdb)
+
+Again, I'm pretty sure that this is something new. And I wouldn't
+have added a shutdown callback to e.g. jaaa if it would terminate
+cleanly without one - there's nothing to save etc.
+
+Could it be that some (relatively recent) changes in jackd result
+in this SIGPIPE while that did not happen before ?
+
+Ciao,
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+
+1332019955.20103_0.ltw:2,a <20120317213223.GC406 at linuxaudio dot org>
+________________________________________________________________________________
+

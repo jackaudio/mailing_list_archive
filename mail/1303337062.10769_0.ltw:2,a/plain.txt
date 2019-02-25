@@ -1,0 +1,76 @@
+Date:        Wed, 20 Apr 2011 22:03:59 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] non-callback API (1303332240.1426_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] non-callback API (1303364465.15335_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] non-callback API
+
+On Wed, Apr 20, 2011 at 10:42:05PM +0200, Stéphane Letz wrote:
+ 
+> I thin, the point of having jack_cycle_wait() and jack_cycle_signal() was to be able to write:
+> 
+> 
+> while(true)
+> {
+> 	jack_cycle_wait()
+> 
+> 	// Do some work the require the new input buffers and produce output buffers
+> 
+> 	 jack_cycle_signal()  // transfer control to next client in the graph *ASAP* (especially important in a multi-core case when next clients can start running)
+> 
+> 	// Possibly do some more work before suspending again until next cycle
+> 
+> }
+
+
+That is correct. But it should be possible to do exactly
+the same when using the callback mode:
+
+int process_callback(int nframes, void *arg)
+{
+    // Do some work.
+    // ...
+    // Input buffer are no longer required, output buffers
+    // are ready.
+
+    jack_cycle_signal(); // Allows the next client to run.
+
+    // Do some other work.
+
+    return 0
+}
+
+which mutatis mutandis is the equivalent of your example using
+the callback mode.
+
+The only requirement for this to work is that returning from the
+callback and calling jack_cycle_wait() are exactly equivalent,
+that is either:
+
+1. They both require jack_cycle_signal() to be called before, or
+
+2. They don't, or
+
+3. They do the equivalent of jack_cycle_signal() if that was not
+   already called.
+
+Currently, returning from the callback does the equivalent of
+calling jack_cycle_signal(), while calling jack_cycle_wait()
+doesn't (in my original proposal it did.). A clean implementation
+would give them exactly the same semantics, and to preserve the
+original callback API that would mean (3). In other words, using
+jack_cycle_signal() should be optional in either mode.
+
+
+Ciao,
+
+-- 
+FA
+
+ 
+
+1303337062.10769_0.ltw:2,a <20110420220359.GC672 at linuxaudio dot org>
+________________________________________________________________________________
+

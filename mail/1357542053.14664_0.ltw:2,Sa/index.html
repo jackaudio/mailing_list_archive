@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357533199.30453_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357548696.25303_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357542053.14664_0.ltw:2,Sa'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 07 Jan 2013 08:00:35 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>John Emmas &lt;[hidden] at tiscali dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK Mailing List &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Emmas
+<a href='../1357573089.29367_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) </a></td></tr>
+</table>
+<pre>
+Le 7 janv. 2013 &#xE0; 00:32, John Emmas a &#xE9;crit :
+
+&gt; On 4 Jan 2013, at 18:54, St&#xE9;phane Letz wrote:
+&gt; 
+&gt;&gt; 
+&gt;&gt; The more difficult issue are the struct that are parts of the jack *public* headers to be used by clients applications  (like jack_position_t type for instance). We want to keep those struct 64/32 bits clean and not have their size change with a new release of libjack.dll, otherwise this would break the application compiled binary.
+&gt;&gt; 
+&gt; 
+&gt; Stephane, that's precisely why I provided you with PRE_PACKED_STRUCT and POST_PACKED_STRUCT a year ago.  The idea was to move to 1-byte packing since most compilers support it and they all agree about the size and alignment of a 1-byte packed struct (which isn't true for any other value).  For example, gcc and MSVC both support 8-byte packing but they don't necessarily produce structs with identical alignment.
+&gt; 
+&gt; Admittedly there's a performance hit for 1-byte packing, given that it's not an optimal value for any modern CPU.  But when you're trying to accommodate different CPUs and platforms, you'll never find a value that's optimal in all cases.  Whatever changes you needed to make for the ARM platform, they've definitely changed the alignment between 1.9.8 and 1.9.10 so I guess that the structure packing concept has been abandoned.  I'd recommend _very strongly_ that you should take this opportunity to re-instate it.  In 1.9.8, the packing concept was deliberately introduced to make life easier from that point onwards but it seems to have been discarded almost immediately from what I've been able to observe in today's testing.
+&gt; 
+&gt; Another important benefit is that packing should allow the server to run clients - even if those clients were built using different compilers.  It's your decision of course, but I'd think that's highly desirable for Jack (in fact, almost essential).
+&gt; 
+&gt; John
+
+
+Thanks for recalling this John. But the point is : how are we going to make jack2 work on ARM (where the PRE_PACKED_STRUCT and POST_PACKED_STRUCT based structs are not working because of alignment issues....) *and* continue to make it work on WIndows, possibly with different compilers?
+
+Have you had a look at the new approach (defining JACK_ALIGN macros then "aligned types" like typedef JACK_ALIGNED_TYPE(double)   jack_double;.....) ? What happens exactly when compiling with different compilers on WIndows. Can you possibly test?
+
+The problem here is to make jack2 evolved with new constraints *and* maintain the existing. We have to find a reasonable solution.
+
+What do others think of those issues? (Paul, Nedko, Robin...)
+
+Thanks.
+
+St&#xE9;phane
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357533199.30453_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357548696.25303_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357542053.14664_0.ltw:2,Sa'>Index</a></td></tr>
+</table>
+<p><small>1357542053.14664_0.ltw:2,Sa&nbsp;&lt;7F8734EC-027F-468C-9C48-9F35B1519884 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

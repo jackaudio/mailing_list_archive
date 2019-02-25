@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1312047664.616_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1312256923.16393_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1312149850.11311_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 01 Aug 2011 00:03:44 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jeroen Van den Keybus </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Dan Swain &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Dan Swain
+<a href='../1312047664.616_0.ltw:2,a/index.html'>[Jack-Devel] Ethernet-based audio interface using (net)jack idea </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Dan Swain
+<a href='../1312256923.16393_0.ltw:2,a/index.html'>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea </a></td></tr>
+</table>
+<pre>
+&gt;
+&gt; I've spoken briefly with Jeri Elsworth (a well-known electrical
+&gt; engineer and general gadget wizard!), and she has made recommendations
+&gt; on what FPGA-based hardware I could tackle this project with, but I
+&gt; think before I can proceed, I need to gather some more of the high-level
+&gt; questions that I'll need to ask and research in order to get started.
+&gt;
+
+
+
+&gt; The basic premise, like leloo's, is to create a multiple channel audio
+&gt; ADC that transports it's data to a slave computer via JACK (over
+&gt; Ethernet) for recording. There seem to be a lot of audio interfaces out
+&gt; there that use either Firewire or USB, but often don't support
+&gt; cross-platform compatibility. I suppose my partial intent is to create
+&gt; something like the Open OpenSound Controller, where the machines can be
+&gt; built by anyone, and tailored to their needs.
+&gt;
+&gt; So, my basic knowledge of JACK so far is that it will communicate with
+&gt; an audio device that it is connected to, and transfer that data to its
+&gt; intended destination. If this were to be done in a FPGA environment,
+&gt; what would be a good approach of connecting the ADCs to JACK?
+
+
+
+&gt; Secondly, what do I need to know in terms of sending JACK's network
+&gt; output over Ethernet? I'm looking at a board that has a built-in
+&gt; Ethernet interface, but will I need to tell the FPGA to send the data
+&gt; in a particular format (say, TCP or UDP)?
+&gt;
+&gt; I've done a couple of weeks of research so far, but I'm sure there are
+&gt; useful resources on the Internet that I've not yet stumbled upon. If
+&gt; anyone has any particular suggestions or advice, please let me know!
+&gt; I'm starting with very little experience as a developer, so this may
+&gt; take a while, but I do hope to come up with something useful and
+&gt; functional, as well as using this project as a learning exercise.
+
+
+I'm just a Jack user, not a developer at all, but I do have some FPGA
+knowledge.
+
+ It looks to me that NetJack only relies on UDP. That will keep memory
+requirements in your IP stack down. But for 128 channels you need to
+transmit at least 4*128*48000 = 25MB/sec (Jack uses floats - just consider
+that part of the 'learning exercise' ;-) ) That's a massive amount of data
+for a network stack, let alone an embedded one running on a softcore. And
+you need GbE.
+
+The hard part is going to be the synchronisation. However, you're in the
+unique position to be able to vary your clock...
+
+Therefore: why not run your system as a *slave*, doing only 8 channels or so
+?
+
+I'm wondering if you would be able to send/receive only broadcast MAC
+traffic (to/from FF:...:FF) to initiate the UDP communications with the
+master and then strip the orig. MAC address from the server's response to
+set up the final link without ARP. You may be able to drop the software IP
+stack entirely in that case, allowing you to keep your program really small.
+
+I think you could get that going on a cheap 144-pin Cyclone III EP3C5 or
+EP3C10 without any external memories, interfacing to e.g. a CS5368 and a
+Fast Ethernet PHY. And a MIDI port.
+
+The hard part (making connections, doing qjackctl) remains on the server.
+
+Need more channels ? Connect more slaves to a (gigabit) Ethernet switch. You
+cannot do that with Jack servers.
+
+Finally, lets you keep away from Gigabit on your board as well.
+
+Just my initial thoughts. Feel free to comment.
+
+
+J.
+
+
+&gt; Thanks in advance for your help!
+&gt;
+&gt; Dan
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1312047664.616_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1312256923.16393_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1312149850.11311_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1312149850.11311_0.ltw:2,a&nbsp;&lt;CAPRPZsAOf6m8rvfoUuj7wBfkRWZNCizvioorLAJN1NM4JAvyWw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

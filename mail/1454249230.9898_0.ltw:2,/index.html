@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] stepping down</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] stepping down</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1454247893.8989_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1454251025.11214_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1454249230.9898_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 31 Jan 2016 15:06:50 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Joakim Hernberg </span> &lt;[hidden] at alchemy dot lu&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1454247893.8989_0.ltw:2,/index.html'>Re: [Jack-Devel] stepping down </a></td></tr>
+</table>
+<pre>
+On Sun, 31 Jan 2016 08:44:42 -0500
+Paul Davis &lt;[hidden]&gt; wrote:
+
+&gt; On Sun, Jan 31, 2016 at 6:33 AM, Kjetil Matheussen
+&gt; &lt;[hidden]
+&gt; &gt; wrote:
+&gt; 
+&gt; &gt;
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; I don't think Jack is the wrong solution for a DAW either. But Jack
+&gt; &gt; never got finished.
+&gt; &gt; It has a wonderful API, but it shouldn't be a struggle for a
+&gt; &gt; program to create a jack client
+&gt; &gt; if a jack server isn't running. (there were a lot of talk about this
+&gt; &gt; around 10 years ago,
+&gt; &gt; but the end result never became as good as it should I think).
+&gt; &gt;
+&gt; 
+&gt; i am not sure what the problem is here. if the client doesn't specify
+&gt; anything, then the server will start automatically with the same
+&gt; parameters as it did last time. this has worked for years. no?
+&gt; 
+&gt; 
+&gt; &gt;
+&gt; &gt; I think the first program trying to create a client also should
+&gt; &gt; start the server. Not
+&gt; &gt; just fork off a process, but actually run the server.
+&gt; &gt; And if another program wants to create a jack client, it connects
+&gt; &gt; to the first client process,
+&gt; &gt; which is the one running the server.
+&gt; &gt;
+&gt; 
+&gt; this seems a bit odd to me. if the first client is really just a
+&gt; client, why would it become the server? what happens when the user
+&gt; closes it (or otherwise resets it)?
+&gt; 
+&gt; that's the whole point of using a control application that exists
+&gt; before (and almost certainly after) all other clients.
+&gt; 
+&gt; 
+&gt; &gt;
+&gt; &gt; Furthermore, GUI should be built into libjack, so that you can call
+&gt; &gt; jack_open_audio_driver_configuration_gui(),
+&gt; &gt; jack_open_audio_connection_configuration_gui(),
+&gt; &gt; etc. inside your client.
+&gt; &gt;
+&gt; &gt; I know there is something called libjackserver, but how many uses
+&gt; &gt; it?
+&gt; &gt;
+&gt; 
+&gt; libjackserver isn't what you think it is. you're thinking of the
+&gt; server API, used to start, stop and otherwise control a JACK server.
+&gt; it is the basis of jack2's dbus support, so basically everything
+&gt; using jack2 is using it. it is also present in jack1, and is also
+&gt; used internally there.
+&gt; 
+&gt; libjackserver is also used *all* the time.
+&gt; 
+&gt; Does it do
+&gt; &gt; all these things? How stable is it? In my opinion, there shouldn't
+&gt; &gt; be any libjackserver, or jackd program, or qjackctl, only libjack.
+&gt; &gt;
+&gt; 
+&gt; this would simply lead *back* to jackd, since lots of people would
+&gt; want a program they could start in order to start jack, that would
+&gt; run before and after other clients. someone would write it, link it
+&gt; to libjack and it would become "jackd".
+&gt; 
+&gt; 
+&gt; &gt;
+&gt; &gt; Another problem with Jack is that it never attempted to do consumer
+&gt; &gt; audio, and then we got pulseaudio in addition to Jack. There should
+&gt; &gt; only be Jack, IMO.
+&gt; &gt;
+&gt; 
+&gt; here we sort of agree.
+
+I'll comment as somewhat of a heretic using reaper in wine together
+with wineasio/jack.  I have a monolithic environment in that reaper is
+the daw, and my plugins are vsts hosted by reaper either in it's own
+process or in separate processes (for bridging/sandboxing).  I also
+enjoy all the benefits in using jack, being able to record/output
+from/to pulseaudio and alsa (mostly using the alsa loopback device in
+combination with zita-a2jbridge as it seems to be the best solution).
+
+In addition I can use zita-n2jbridge to distribute audio over my lan,
+and even use zita-a2jbridge to connect additional soundcards.  Mostly
+features I don't use very often, but very handy to just change output
+in reaper and hear my mix on the laptop or tv speakers (with very
+low latency)...
+
+When I start reaper, wineasio creates the jack client, the server
+autostarts (if not running) and wineasio auto connects the reaper
+outputs to the main soundcard outputs.
+
+When rewriting the wineasio client, it was very handy having the jack
+api and I suspect that it would have been a lot harder to do if I
+had to program using the alsa api instead.
+
+What can I say, I really love the environment and think JACK is working
+fantastically well.  Having the plugins hosted in my daw is clearly
+superior (imo), but the routing flexibilty of jack and the ease of
+programming to the jack api makes jack a great asset in my setup.
+
+As always YMMW.
+
+-- 
+
+   Joakim
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1454247893.8989_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1454251025.11214_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1454249230.9898_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1454249230.9898_0.ltw:2,&nbsp;&lt;20160131150650.4f85a412 at tor dot valhalla dot alchemy dot lu&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,126 @@
+Date:        Fri, 11 Mar 2016 13:49:46 +0100
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Xavier Mendez Re: [Jack-Devel] Netjack crashes, alignment broken recently (1457697066.21362_0.ltw:2,a)
+Follow-Up:   Xavier Mendez Re: [Jack-Devel] Netjack crashes, alignment broken recently (1457704165.1105_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Netjack crashes, alignment broken recently
+
+On 03/11/16 12:50, Xavier Mendez wrote:
+
+>> It would be better to understand why changing the  data structure
+>> (which is used both side of the connection… ) caused the crash. Are
+> And then, instead of the expected 00 00 00 01 for fSendAudioChannels,
+> we have 00 00 00 00 01, which suggests the compiler has added a byte
+> of padding to align the int? I don't know.
+
+I didn't closely look into this, but I guess this is what's happening:
+
+https://github.com/jackaudio/jack2/blob/8b8be738805ae1c5fe3688a49fd696a9f080b59e/common/jack/systemdeps.h#L123
+
+has
+
+#if defined(__arm__) || defined(__ppc__) || defined(__powerpc__)
+     #undef POST_PACKED_STRUCTURE
+     #define POST_PACKED_STRUCTURE
+#endif /* __arm__ || __ppc__ || __powerpc__ */
+
+which disables
+
+    #define POST_PACKED_STRUCTURE __attribute__((__packed__))
+
+on the Raspberry (since it's ARM), but not on the amd64.
+
+We then have
+
+     struct _session_params
+     {
+         char fPacketType[8];                        //packet type ('param')
+         uint32_t fProtocolVersion;                  //version
+         int32_t fPacketID;                          //indicates the 
+packet type
+         char fName[JACK_CLIENT_NAME_SIZE+1];          //slave's name
+         char fMasterNetName[JACK_SERVER_NAME_SIZE+1]; //master hostname 
+(network)
+         char fSlaveNetName[JACK_SERVER_NAME_SIZE+1];  //slave hostname 
+(network)
+         uint32_t fMtu;                              //connection mtu
+         uint32_t fID;                               //slave's ID
+         uint32_t fTransportSync;                    //is the transport 
+synced ?
+         int32_t fSendAudioChannels;                 //number of 
+master->slave channels
+         int32_t fReturnAudioChannels;               //number of 
+slave->master channels
+         int32_t fSendMidiChannels;                  //number of 
+master->slave midi channels
+         int32_t fReturnMidiChannels;                //number of 
+slave->master midi channels
+         uint32_t fSampleRate;                       //session sample rate
+         uint32_t fPeriodSize;                       //period size
+         uint32_t fSampleEncoder;                    //samples encoder
+         uint32_t fKBps;                             //KB per second for 
+CELT encoder
+         uint32_t fSlaveSyncMode;                    //is the slave in 
+sync mode ?
+         uint32_t fNetworkLatency;                   //network latency
+     } POST_PACKED_STRUCTURE;
+
+from
+   <https://github.com/jackaudio/jack2/blob/master/common/JackNetTool.h#L91>
+
+
+Since we're talking arm<->amd64 here, alignment and/or byte ordering
+is different. Been there in 2004 for powerpc<->i386<->amd64, but forgot
+most of it. ;)
+
+JACK_CLIENT_NAME_SIZE+1 is most likely the absolute minimum, since we
+need the space, at least on the host. Not on-wire, though (see (3)
+below).
+
+Options that might work:
+
+(1) Reorder the struct and put char fName, fMasterNetName and
+fSlaveNetName to the end, thus cheating a bit on the alignment issues.
+The resulting strings would most likely be crippled. Just as a first
+test. Or let's not do this, see (2) instead.
+
+(2) Instead of +1, add +8. Since JACK_CLIENT_NAME_SIZE==64 and
+JACK_SERVER_NAME_SIZE==256, we'd be on 8-byte boundaries. This is a
+trivial fix that doesn't rely on (1). Please try and report back.
+
+(3) Define a wire-format that doesn't rely on POST_PACKED_STRUCTURE but
+absolute offsets. Probably not too much work, just get the alignment
+right and remove POST_PACKED_STRUCTURE from all on-wire structs. Use
+union and byte positions instead.
+
+(4) In conjunction with (3), use pahole(1) to clean up the codebase.
+Investigate if dropping POST_PACKED_STRUCTURE entirely is possible.
+
+
+3+4 are obviously heavy, so I'd go for (2) for now and see if it fixes
+the problem.
+
+
+There's another dirty alternative: if you don't want to add +8, your
+only other minimally invasive option is to add +0, effectively reverting
+the commit. For this to work, all write access to the three char fields
+must make sure not to overrun the array and if in doubt drop the last
+character in favour of the terminating NUL byte. It's error-prone and
+should probably only be done via setter functions.
+
+
+Again, my gut feeling from just looking at the struct is that adding +8
+is a quick, safe and moderately clean solution. But don't publically
+quote me on that. ;)
+
+Disclaimer: it's been more than a decade now that I last dealt with that
+stuff. Take everything above with a grain of salt.
+
+
+
+HTH
+
+1457700595.28311_0.ltw:2,a <56E2BEEA.4070902 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

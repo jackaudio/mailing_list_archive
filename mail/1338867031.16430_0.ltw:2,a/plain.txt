@@ -1,0 +1,60 @@
+Date:        Tue, 05 Jun 2012 06:30:13 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Brendan Jones <[hidden] at gmail dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Brendan Jones Re: [Jack-Devel] [LAU] jack2 turned verbose (1338840383.2949_0.ltw:2,a)
+Follow-Up:   Brendan Jones Re: [Jack-Devel] [LAU] jack2 turned verbose (1338869538.18103_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [LAU] jack2 turned verbose
+
+Brendan Jones <[hidden]> writes:
+
+>> http://lists.linuxaudio.org/listinfo/linux-audio-user
+>
+> I've had a closer look at this and this patch seems to be working for
+> me (their's no equivalent bool in jack_driver_param_value_t)
+>
+> diff -Nurp '-x*~' jack-1.9.8.orig/common/JackControlAPI.cpp
+> jack-1.9.8/common/JackControlAPI.cpp
+> --- jack-1.9.8.orig/common/JackControlAPI.cpp	2011-12-19
+> 12:54:02.000000000 +0100
+> +++ jack-1.9.8/common/JackControlAPI.cpp	2012-06-04 21:57:59.264581780 +0200
+> @@ -246,7 +246,7 @@ jackctl_add_driver_parameters(
+>              break;
+>          case JackDriverParamBool:
+>              jackctl_type = JackParamBool;
+> -            jackctl_value.b = descriptor_ptr->value.i;
+> +            jackctl_value.b = (descriptor_ptr->value.i > 0);
+>              break;
+>          default:
+>              jack_error("unknown driver parameter type %i",
+> (int)descriptor_ptr->type);
+
+Does "working for me" mean that verbose is not enabled by default anymore?
+
+The verbose parameter is not driver parameter, so it should not
+be affected by this code at all.
+
+My reading of the C++ standard is that the implicit conversion is
+valid. C++11, section 4.12 states:
+
+"A prvalue of arithmetic, unscoped enumeration, pointer, or pointer to
+member type can be converted to a prvalue of type bool. A zero value,
+null pointer value, or null member pointer value is converted to false;
+any other value is converted to true. A prvalue of type std::nullptr_t
+can be converted to a prvalue of type bool; the resulting value is
+false."
+
+Of course, explicit conversion is valid as well. I still claim that the
+generated code for jackctl_add_parameter() calls for "temporary" and
+"verbose" engine parameters is wrong because it pushes union
+jackctl_parameter_value with value of 10 (for both bool and integer
+members) while it should push false/0. both 1 and 10 are true, not
+false. the default value for both parameters is false.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1338867031.16430_0.ltw:2,a <87aa0ixwoq.fsf at arnaudov dot name>
+________________________________________________________________________________
+

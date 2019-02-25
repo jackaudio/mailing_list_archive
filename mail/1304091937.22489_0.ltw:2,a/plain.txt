@@ -1,0 +1,52 @@
+Date:        Fri, 29 Apr 2011 11:45:18 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Dan Muresan <[hidden] at gmail dot com>
+Cc:          [hidden] at jackaudio dot org
+In-Reply-To: Dan Muresan [Jack-Devel] port callbacks, jack_port_id_t (1304089477.17440_0.ltw:2,a)
+Follow-Up:   Dan Muresan Re: [Jack-Devel] port callbacks, jack_port_id_t (1304092978.24541_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] port callbacks, jack_port_id_t
+
+On Fri, Apr 29, 2011 at 11:04 AM, Dan Muresan <[hidden]> wrote:
+> Hi, I have some questions about the jack1 port API that the
+> documentation and examples don't clarify:
+>
+> 1) how do I translate a jack_port_id_t to a jack_port_t or a port
+> name? When the app gets a JackPortConnectCallback, how does it know
+> which ports it's talking about?
+
+read the API docs:
+
+  jack_port_by_id (jack_client_t*, jack_port_id_t);
+  jack_port_by_name (jack_client_t*, const char* name);
+
+> 2) In what thread do the port callbacks happen?
+
+threads for callbacks are one of the only areas where Jack1 and Jack2
+appear different from a client perspective. they also differ between
+OS X, Windows and other systems on which JACK runs. the following is a
+table that i believe is correct:
+
+1) Process Callback: ALWAYS called from the "process thread". There
+may or may not be an "Other" thread running.
+
+2) Other Server->Client Callbacks
+
+                 OS X    Windows    *nix
+----------------------------------------------
+JACK1   |   Other     n/a            Process
+JACK2   |   Oher      Other        Other
+
+
+Finally, you should probably never make client->server calls from the
+process callback. The API is not clearly marked with indications of
+which functions involve client->server roundtrips. The best rule of
+thumb is that functions involving a jack_client_t* argument are not
+usable from within the process callback. This issue may go away
+if/when Jack1 moves to an "always use 2 threads" model, but the
+programming discipline that the rule provides is a good one. There is
+some documentation on this within the refmanual.
+
+1304091937.22489_0.ltw:2,a <BANLkTinDU4yuGUGxNFg8TrYc4DLx5=HCZw at mail dot gmail dot com>
+________________________________________________________________________________
+

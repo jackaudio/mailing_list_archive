@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] [PATCH 1/4] [alsa] fix initialisation of io functions for capture only mode</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] [PATCH 1/4] [alsa] fix initialisation of io functions for capture only mode</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1300191695.6174_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1300191706.6201_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1300191699.6177_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 15 Mar 2011 13:21:14 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Torben Hohn </span> &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Torben Hohn
+<a href='../1300191695.6174_0.ltw:2,a/index.html'>[Jack-Devel] [PATCH 4/4] [alsa] fix whitespace from previous commits. </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Torben Hohn
+<a href='../1300191706.6201_0.ltw:2,a/index.html'>[Jack-Devel] [PATCH 2/4] [alsa] remove useless copy function. </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Torben Hohn
+<a href='../1300191710.6206_0.ltw:2,a/index.html'>[Jack-Devel] [PATCH 3/4] [alsa] initialise driver-&gt;read_via_copy also for cap PCM_FORMAT_FLOAT_LE </a></td></tr>
+</table>
+<pre>
+this is a quick fix for the problem reported by Felix Pfeifer.
+whitespace cleanup and more thorough fixes of this code follow.
+---
+ drivers/alsa/alsa_driver.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/alsa/alsa_driver.c b/drivers/alsa/alsa_driver.c
+index a883528..05efc07 100644
+--- a/drivers/alsa/alsa_driver.c
++++ b/drivers/alsa/alsa_driver.c
+@@ -233,6 +233,7 @@ alsa_driver_hw_specific (alsa_driver_t *driver, int hw_monitoring,
+ static void
+ alsa_driver_setup_io_function_pointers (alsa_driver_t *driver)
+ {
++	if (driver-&gt;playback_handle) {
+ 	if (SND_PCM_FORMAT_FLOAT_LE == driver-&gt;playback_sample_format) {
+ 		if (driver-&gt;playback_interleaved) {
+ 			driver-&gt;channel_copy = memcpy_interleave_d32_s32;
+@@ -312,7 +313,9 @@ alsa_driver_setup_io_function_pointers (alsa_driver_t *driver)
+ 			exit (1);
+ 		}
+ 	}
++	}
+ 	
++	if (driver-&gt;capture_handle) {
+ 	switch (driver-&gt;capture_sample_bytes) {
+ 	case 2:
+ 		driver-&gt;read_via_copy = driver-&gt;quirk_bswap?
+@@ -330,6 +333,7 @@ alsa_driver_setup_io_function_pointers (alsa_driver_t *driver)
+ 		        sample_move_dS_s32u24;
+ 		break;
+ 	}
++	}
+ }
+ 
+ static int
+-- 
+1.7.2.3
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1300191695.6174_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1300191706.6201_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1300191699.6177_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1300191699.6177_0.ltw:2,a&nbsp;&lt;1300191677-23161-1-git-send-email-torbenh at gmx dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

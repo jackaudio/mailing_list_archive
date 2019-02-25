@@ -1,0 +1,39 @@
+Date:        Tue, 15 Feb 2011 22:31:29 -0600
+From:        Jack O'Quin  <[hidden] at gmail dot com>
+To:          hermann <[hidden] at web dot de>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: hermann Re: [Jack-Devel] buffer size callback, revisit (1297830242.9505_0.ltw:2,a)
+Follow-Up:   hermann Re: [Jack-Devel] buffer size callback, revisit (1297831268.10500_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] buffer size callback, revisit
+
+On Tue, Feb 15, 2011 at 10:22 PM, hermann <[hidden]> wrote:
+
+> Many jack clients cant handle buffersize changes anyway, mostly because
+> the jack_set_buffer_size_callback() isn't involved.
+
+This is true, and worth keeping in mind.
+
+> But anyhow, clients witch handle it, and use internal buffers, have
+> allocate the buffers before they called jack_activate(), so, a change in
+> buffersize in between this time, leads anyway to a new allocation, when
+> the client notice the change, isn't it ?
+
+Paul and Torben are concerned about what happens after allocation and
+before calling jack_activate().
+
+> so wouldn't a call like
+>
+> if (!jack_activate(jack_client))
+>  if(sz != jack_get_buffer_size (jack_client)){buffersize change handle }
+>
+> handle the race condition without change anything in jack ?
+
+No, I don't think so. The process thread could even run while the main
+thread is still returning from jack_activate().
+-- 
+ joq
+
+1297830719.9890_0.ltw:2,a <AANLkTikR7NinU=D80+hEt3b+Yd5_2RZB4s2xQNW0v+k5 at mail dot gmail dot com>
+________________________________________________________________________________
+

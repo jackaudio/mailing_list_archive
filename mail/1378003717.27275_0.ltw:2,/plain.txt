@@ -1,0 +1,78 @@
+Date:        Sun, 01 Sep 2013 12:49:03 +1000
+From:        John Mills  <[hidden] at effect dot net dot au>
+To:          "Val Veirs (R)" <[hidden] at ColoradoCollege dot edu>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Val Veirs (R) [Jack-Devel] FW: Jack beginner question - which files are Jack's library files? (1377994282.6195_0.ltw:2,)
+Follow-Up:   John Mills Re: [Jack-Devel] FW: Jack beginner question correction (1378004278.27603_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] FW: Jack beginner question - which files are Jack's library files?
+
+I'm a beginner myself but:
+
+Have you tried separating the compile and link steps?
+
+gcc -c -o metro.o metro.c
+gcc -o metronome metro.o -ljack
+
+BTW I believe "-L" should point to the include path (e.g., 
+/usr/include/jack) rather than to the libraries (/usr/lib/...).
+You can check the pkg-config with 
+pkg-config --cflags jack
+pkg-config --libs jack
+
+hope this helps
+
+John Mills
+
+---------------------------------------------------------------
+On Sun, Sep 01, 2013 at 12:11:06AM +0000, Val Veirs (R) wrote:
+> Date: Sun, 1 Sep 2013 00:11:06 +0000
+> From: "Val Veirs (R)" <[hidden]>
+> Subject: [Jack-Devel] FW: Jack beginner question - which files are Jack's
+>  library files?
+> To: "[hidden]" <[hidden]>
+> 
+> I a still trying to get a simple Jack program to compile (Ubuntu 13.04 64 bit)
+> 
+> The problem seems to be that even when I point gcc toward the folder where the Jack libraries are, the compiler reports undefined reference errors.
+> 
+> For example,
+> If I run gcc with no libraries, I get undefined reference errors:
+> 
+> val@zar:~/JackFiles/testJack$ gcc -o metronome   metro.c
+> /tmp/cc4akFsZ.o: In function `signal_handler':
+> metro.c:(.text+0x16): undefined reference to `jack_client_close'
+> /tmp/cc4akFsZ.o: In function `process_silence':
+> metro.c:(.text+0x81): undefined reference to `jack_port_get_buffer'
+> /tmp/cc4akFsZ.o: In function `process_audio':
+> ....
+> Here I tried both a -L and a -l parameter:
+> val@zar:~/JackFiles/testJack$ gcc -o metronome -L/usr/lib/x86_64-linux-gnu -ljack metro.c
+> 
+> /tmp/ccksW4it.o: In function `signal_handler':
+> metro.c:(.text+0x16): undefined reference to `jack_client_close'
+> /tmp/ccksW4it.o: In function `process_silence':
+> metro.c:(.text+0x81): undefined reference to `jack_port_get_buffer'
+> /tmp/ccksW4it.o: In function `process_audio':
+> ...
+> 
+> I get the same errors if I omit the -L with path to the libjack.so files
+> val@zar:~/JackFiles/testJack$ gcc -o metronome  -ljack metro.c
+> 
+> /tmp/cc5oyTHv.o: In function `signal_handler':
+> metro.c:(.text+0x16): undefined reference to `jack_client_close'
+> …
+> And the same if I include the -L and omit the -l
+> val@zar:~/JackFiles/testJack$ gcc -o metronome -L/usr/lib/x86_64-linux-gnu  metro.c
+> 
+> /tmp/cchbhuv2.o: In function `signal_handler':
+> metro.c:(.text+0x16): undefined reference to `jack_client_close'
+> ...
+> 
+> All this makes me feel that the files that I think are Jack's library files are not in fact the library files or the files are 'incorrect' in some way.
+...
+---------------------
+
+1378003717.27275_0.ltw:2, <20130901024903.GA11455 at cyberone dot com dot au>
+________________________________________________________________________________
+

@@ -1,0 +1,114 @@
+Date:        Wed, 18 Jul 2012 09:49:12 +0200
+From:        aCOSwt  <[hidden] at orange dot fr>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jan Kohnert [Jack-Devel] Connecting alsa-loopback to jack (1342552172.26513_0.ltw:2,a)
+Follow-Up:   James Warden Re: [Jack-Devel] Connecting alsa-loopback to jack (1342600686.20923_0.ltw:2,a)
+Follow-Up:   Jan Kohnert Re: [Jack-Devel] Connecting alsa-loopback to jack (1342633979.6527_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Connecting alsa-loopback to jack
+
+This is my asound.conf inspired from some thread in LinuxMusicians :
+
+==========================================
+[note 1 : The following line is not compulsory for the redirection to work ]
+defaults.pcm.rate_converter "samplerate_best"
+
+[note 2 : Alsa default is to be concerned because many jack-unaware packages 
+output on the sole Alsa Default. (Adobe-Flash being an example) ]
+
+pcm.!default{
+        type plug
+        slave.pcm "aduplex"
+        hint{
+                show on
+                description "Alsa Default"}}
+
+pcm.aduplex{
+        type asym
+        playback.pcm "amix"
+        capture.pcm "asnoop"}
+
+pcm.amix{
+        type dmix
+        ipc_key 219345
+        slave{
+                pcm "hw:Loopback,0,0"
+                format S32_LE
+
+[note 3 : You absolutely want to adjust the three following values according 
+to your # Jack instance sampling rate and tests you'll have completed on your 
+system.]
+
+                period_size 512
+                buffer_size 16384
+                rate 44100}}
+
+pcm.asnoop{
+        type dsnoop
+        ipc_key 219346
+        slave.pcm "hw:Loopback,0,1"}
+
+pcm.ploop{
+        type plug
+        slave.pcm "hw:Loopback,1,1"}
+
+pcm.cloop{
+        type dsnoop
+        ipc_key 219348
+        slave{
+                pcm "hw:Loopback,1,0"
+                format S32_LE
+
+[note : idem note 3]
+
+                period_size 2048
+                buffer_size 8192
+                rate 44100}}
+
+[note 4 : Of course, you will adapt the values given as ipc_key to your 
+system. I mean, choosing values that won't ever be used by other programs you 
+run. ]
+=========================================
+In addition to this, you must create jack permanent clients => create a script 
+named for example Loop2Jack :
+
+
+/usr/bin/alsa_out -j ploop -dploop -q 1 2>&1 1> /dev/null &
+/usr/bin/alsa_in -j cloop -dcloop -q 1 2>&1 1> /dev/null &
+sleep 1
+jack_connect cloop:capture_1 system:playback_1
+jack_connect cloop:capture_2 system:playback_2
+jack_connect system:capture_1 ploop:playback_1
+jack_connect system:capture_1 ploop:playback_2
+exit 0
+==========================================
+You'll then ensure that this script is executed after jackd's startup.
+Launch it manually or, if you use qjackctl there is an option field for 
+allowing this as part of the setup/options page.
+
+Having (I hope so) helped you to do what you wish, I must tell that having 
+used this facility myself, I came to realize that I was nothing but stupid.
+As a matter of fact, I think we can state that nowadays, the applications not 
+jack-aware are consumer grade applications playing medias of relatively poor 
+audio quality.
+You will have additionally noticed that the dmix plugin was used in the 
+asound.conf with a rather huge buffer that will have the consequence to add 
+some significant latency.
+Why then, would you want to bother you real-time-low-latency sound server with 
+this sort of sound ?
+Because your jackd might almost probably be "wired" to your best quality sound 
+device, why would you want <=22Khz samples from your speech-synth, Skype, DE's 
+sound notifier... to be driven to this device ?
+Worse ! Why would you want these sounds of somehow random occurrence to 
+spuriously pollute your precious 24bits >=96KHz recording ?
+
+OK then, of course this is nothing but an opinion from my personal experience.
+I only suggest you wonder before bothering too much.
+
+Regards,
+
+aCOSwt
+
+1342597751.14534_0.ltw:2,a <201207180949.12949.acoswt at orange dot fr>
+________________________________________________________________________________
+

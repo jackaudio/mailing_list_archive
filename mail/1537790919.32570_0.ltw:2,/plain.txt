@@ -1,0 +1,74 @@
+Date:        Mon, 24 Sep 2018 14:08:06 +0200
+From:        Holger Marzen  <[hidden] at marzen dot de>
+To:          David Kastrup <[hidden] at gnu dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: David Kastrup Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency? (1537789908.31460_0.ltw:2,)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency? (1537795122.4596_0.ltw:2,)
+Follow-Up:   Holger Marzen Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency? (1538160705.30217_0.ltw:2,)
+Follow-Up:   David Kastrup Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency? (1538212032.3934_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency?
+
+On Mon, 24 Sep 2018, David Kastrup wrote:
+
+> Holger Marzen <[hidden]> writes:
+> 
+> > Then I wanted 2 additional outputs to feed my active speakers (Neumann
+> > KH120A plus KH805 sub). Because of my room's damping of the high
+> > frequencies (at least compared to my headphones AKG K812) I need an EQ
+> > before them. So I use a Scarlett 2i2 for this purpose, with CALF
+> > Jackhost and a Calf EQ feeding this outputs.
+> 
+> This may sound defaitist but I'd lean towards just using an analog EQ
+> here.
+
+That was my first approach but I couldn't find an affordable stereo EQ.
+Most affordable devices are 2x15 or 2x31 and not 15 or 31 band stereo.
+I don't want to set the channels seperately.
+
+> > Now I have 2 audio interfaces that can't be synchronized with a
+> > wordclock cable. So I have to drive the 2i2 for the speakers in an async
+> > way. Since I use this output only for mixing/mastering I can live with
+> > some additional latency.
+> >
+> > I tried several ways to use the 2nd interface:
+> > - alsa_out
+> > - zita_j2a
+> > - audioadapter (jack_load -i "-dhw:2 -q0 -n2 -p128 -r48000" 2i2 audioadapter)
+> >
+> > The audioadapter is the most robust solution and doesn't crash when I
+> > resize jackd's bufsize on the fly, so I'd like to stay with it.
+> 
+> Wait, I am missing something here.  "since I use this output only for
+> mixing/mastering".  How does your first audio adapter even come into
+> play here?
+
+The output of the first adapter is used for
+- direct monitoring
+- headphone monitoring and mixing/mastering, but without EQ
+
+> > As I played around with the quality setting (-q0 ... -q4) I noticed an
+> > enormous CPU load with -q4 (sinc) but couldn't hear any differences in
+> > audio quality. -q0 sounds as good as -q4.
+> >
+> > Now my question:
+> > When the audioadapter has to resample to the same frequency (from 48000
+> > to 48000), do higher -q settings improve the audio quality? As I
+> > understand there is no interpolation needed at all so -q0 would be
+> > enough to have a perfect audio quality.
+> >
+> > Any comments/ideas to this?
+> 
+> Interpolation will be needed when the clocks drift.
+
+Or you can simply wait til the "right" moment und use the original
+values. But that would not use more CPU depending on the quality
+setting. So there seems to bee an interpolation happening.
+
+It looks as if I have to do a looptest (play through the 2nd interface
+and record with the 1st) to get an impression how's the signal distorted
+at the different quality settings.
+
+1537790919.32570_0.ltw:2, <alpine.DEB.2.20.1809241357520.6018 at eis dot intern dot marzen dot de>
+________________________________________________________________________________
+

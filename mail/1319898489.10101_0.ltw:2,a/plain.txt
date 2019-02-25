@@ -1,0 +1,62 @@
+Date:        Sat, 29 Oct 2011 10:27:45 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: richard lucassen Re: [Jack-Devel] jackd2 does not start with Terratec 6fire USB (1319898197.9785_0.ltw:2,a)
+Follow-Up:   richard lucassen Re: [Jack-Devel] jackd2 does not start with Terratec 6fire USB (1319899460.10826_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jackd2 does not start with Terratec 6fire USB
+
+On Sat, Oct 29, 2011 at 10:22 AM, richard lucassen
+<[hidden]> wrote:
+> On Sat, 29 Oct 2011 10:07:39 -0400
+> Paul Davis <[hidden]> wrote:
+>
+>> On Sat, Oct 29, 2011 at 9:50 AM, richard lucassen
+>> <[hidden]> wrote:
+>>
+>> > period_size: 600
+>> > buffer_size: 22050
+>>
+>> this is pretty seriously braindead. that means that the overall buffer
+>> in use is 36.75 periods long. every 37th period will be split across
+>> the beginning and end of the buffer. ALSA can handle this kind of
+>> nonsense, and thus JACK can too, except that its not going to ever ask
+>> for an equivalent h/w configuration because it will never ask for a
+>> buffer size that is anything other than the -n value multiplied by the
+>> -p value, and both of them are integral.
+>>
+>> its also fairly braindead in another way too: huge i/o latency (half a
+>> second), yet with no actual decrease in CPU load since the device
+>> keeps waking up the CPU every 600 samples. all the downsides of large
+>> latency with none of the benefits ...
+>>
+>> and in another way: 600 samples isn't a divisor of the USB transfer
+>> frame size, which will cause additional issues with load etc.
+>>
+>> you should definitely find somebody else who has used this with JACK
+>> and/or talk to the author of the driver of this card (except that i
+>> would have guessed that it was a generic USB class 1 audio driver ...
+>> so ... ?)
+>
+> So, I will forward your answer to the author of the driver. It's all
+> here:
+>
+> http://sourceforge.net/projects/sixfireusb/
+>
+> But OTOH: cpu load, that's another story, but could this issue be the
+> cause of jackd not starting?
+
+i'm not sure what "this issue" is. JACK is designed to ask for h/w
+configurations in the "sane, low-ish latency" end of things. it is not
+going to ever try to replicate the settings that mplayer has ended up
+(probably without much work on its part). its likely that the mplayer
+settings are the result of constraints/information in the driver code.
+if they actually reflect real limitation of the device - which i think
+is unlikely - there's a fundamental problem with the device. more
+likely, its a problem with the constraints/information provided by the
+driver that cause it to reject the kind of h/w parameters that JACK
+wants to use.
+
+1319898489.10101_0.ltw:2,a <CAFa_cKkGjHBy7NEEo0LbE4OaKdTCzXshK1vQJr+90suSm+QuEg at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] JACK 0.120.1 is now released</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] JACK 0.120.1 is now released</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1299061125.23994_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1299077121.28285_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1299073881.21466_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 02 Mar 2011 08:51:00 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+    http://jackaudio.org/downloads/jack-audio-connection-kit-0.120.1.tar.gz
+
+JACK 0.120.1 represents more than a year of incremental development on
+JACK1. The majority of the work has been done by Torben Hohn, and
+includes one major API revision and one major API addition, along with
+a quite a few other fixes, API clarifications and new utilities.
+
+The addition is the new Session API that allows for easy management
+(save/restore) of multi-client configurations. The core JACK release
+does not include a session management application, but QJackctl
+already offers this. The session API has already been implemented in
+Jack2. Please see below for links to read about this API.
+
+The revision involves the API used to manage and discover latency in
+JACK signal flow, and unlike the existing one (now marked as
+deprecated)), this one can actually do what it needs to do. Anyone who
+has written a client that used the existing port latency API should
+update their client to use the new one: the old API will be removed
+when we move to API/protocol version 1.0.0 which will be soon.
+
+Please note that the latency API has not been implemented in Jack2 at
+this time.
+
+Usage Changes
+=============
+
+    * add -M command line flag to allow user-specified MIDI buffer
+      sizing The units of the argument to this command line flag are
+      "MIDI events per process() cycle", where an event occupies up to
+      4 bytes (as most common MIDI events do). The default buffer size
+      is same as the one used for audio data, which will store about 2
+      MIDI events per sample. Typical values for event-count will
+      range from 10 to about 500. Be aware that using very high values
+      along with a large number of ports may cause JACK to fail to
+      start because of the amount of memory that would be required.
+
+    * several new utility clients:
+          - jack_midi_dump (Carl Hetherington) (displays MIDI events
+              arriving at its input port as text in its
+              originating terminal window)
+          - jack_iodelay (from the original jdelay in C++ by Fons
+              Adriensen; ported to C by Torben Hohn)
+          - jack_latent_client (for testing latency API)
+          - jack_session_notify (a minimal session manager)
+
+Developer-visible Changes
+=========================
+
+Applications can now request weak linkage for all function symbols in
+the JACK API.
+
+See http://jackaudio.org/files/docs/html/group__WeakLinkage.html for more
+information.
+
+Using Port Buffers before activating a client
+---------------------------------------------
+
+It has always been undefined behaviour to try to use JACK port buffers
+outside of a process callback. This release adds an additional
+limitation: any call to jack_port_get_buffer() before jack_activate()
+will return NULL rather than a usable address. This may cause issues
+in clients which did this - the behaviour was always wrong, but was
+not enforced by JACK.
+
+Determining and tracking port buffer sizes
+-------------------------------------------
+
+A few details about detecting the port buffer sizes have changed:
+
+    * clients should now use jack_port_type_get_buffer_size() if they
+      absolutely must determine buffer sizes before they call
+      jack_activate(). The use of jack_port_get_buffer_size() before
+      calling jack_activate() is now forbidden and may result in the
+      client crashing.
+
+    * clients that care about port buffer sizes should register a
+      buffer size callback. The callback will now always be executed
+      during a call to jack_activate(). This ensures that on return
+      from jack_activate() and before the first call to its process
+      callback, the client definitely knows the buffer size. Future
+      callbacks will occur if the buffer size changes. Note that older
+      versions of JACK do not necessarily call the buffer size
+      callback during jack_activate() - this behaviour should be
+      considered a serious bug in JACK and another reason to upgrade.
+
+Session API
+------------
+
+JACK Session is a new section of the JACK API that is designed to
+allow management of JACK configurations that involve multiple
+clients. Use of the API is optional by clients, but is strongly
+recommended.
+
+The API is fully documented online:
+
+    * API Reference:
+http://jackaudio.org/files/docs/html/group__SessionClientFunctions.html
+    * Walkthrough for client developers:
+http://trac.jackaudio.org/wiki/WalkThrough/Dev/JackSession
+
+Latency API
+------------
+
+The older latency management API is now deprecated because it was
+fundamentally broken (in the sense that it could not do what it
+claimed to be able to do)
+
+The new API is fully documented online
+
+    * API Reference:
+http://jackaudio.org/files/docs/html/group__LatencyFunctions.html
+    * Conceptual diagram: http://jackaudio.org/files/jack-latency.png
+
+All relevant included clients and backends have beem updated to use it.
+
+Bug Fixes, Tweaks Etc. Etc
+==========================
+    * switch all example clients and tools to use jack_client_open()
+    * README emptied to just point at http://jackaudio.org/
+    * replace use of pthread_t in public headers with jack_native_thread_t
+    * offer build time option to make code 100% valgrind clean
+    * shm.c released under LGPL, not GPL, to match the rest of libjack
+    * fixes for rare crashes in alsa_in/out
+    * netjack1 support for Celt 0.9
+    * check arguments given to jack_bufsize, to prevent server lockup
+    * check arguments to jack_set_buffer_size() in server
+    * jack_connect can use client UUIDs
+    * sanitycheck now no longer warms about unlimited lockable memory
+    * sanitycheck no longer mentions nice
+    * fix race conditions near client exit/shutdown/zombiefication
+    * no watchdog operations while freewheeling (JACK will no longer
+die if freewheeling is very, very slow)
+    * (incomplete) new internal client code based on a2jmidid
+(originally by Dmitry Baikov &amp; Nedko Arnaudov)
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1299061125.23994_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1299077121.28285_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1299073881.21466_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1299073881.21466_0.ltw:2,a&nbsp;&lt;AANLkTinAgZuaPM2_Y2yDCKbdOTfmWDW4HFRUHh0SxsNf at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack dsp load calculation</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack dsp load calculation</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1451167900.14252_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1451212476.28653_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1451171138.17453_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 27 Dec 2015 00:05:28 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Joakim Hernberg
+<a href='../1451167386.13765_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack dsp load calculation </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Emmas
+<a href='../1451212476.28653_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack dsp load calculation </a></td></tr>
+</table>
+<pre>
+On 12/26/2015 10:56 PM, Joakim Hernberg wrote:
+[..]
+
+&gt; IME the dsp load is a relatively useless measure as it's not really
+&gt; related to the max value (which is where an xrun occurs)..  You could
+&gt; very well have a system with a very low dsp load xrunning all the
+&gt; time...
+
+exactly.
+
+But if we add a new API, I would not mind if it also included a proper
+statistical average (and maybe min,..) since there seems to be interest.
+
+We might as well leave the old jack_cpu_load() code untouched, but I
+think it should be changed to report the max.
+
+&gt; Maybe a nice idea would be similar to a mixer meter showing rms and
+&gt; peak values, like that everyone could have their cake and eat it too ;)
+
+heh.
+
+&gt; Apart from that there is the xrun callback that indicates that an xrun
+&gt; did indeed occur.  If we only had Jack2 to worry about, I'd suggest
+&gt; leveraging jack2's excellent profiling code, which can give a very good
+&gt; analysis of how the system performs.
+
+JackEngineControl::CalcCPULoad() already uses that API to calculate the
+cycle duration.
+
+My criticism is with the built-in pre-processing in that function.
+
+@John: If libjack were to expose both RMS and peak, the client
+application - in your case Mixbus - can do the same thing as jack
+currently does: Display the max if some conditions are met and the
+average otherwise and also filter the value ad lib, so nothing is lost.
+It could even be some user-preference..
+
+Do you see some issues with this approach?
+
+
+@Joakim: Thanks for the reminder about Timing PDF. This shows that at
+least on POSIX systems the measurement error is small and that there can
+be spikes nearly twice as large of the average value.
+
+Cheers!
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1451167900.14252_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1451212476.28653_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1451171138.17453_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1451171138.17453_0.ltw:2,a&nbsp;&lt;567F1D38.7070202 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

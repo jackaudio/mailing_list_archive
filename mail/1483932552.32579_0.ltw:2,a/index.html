@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Thread realtime priority</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Thread realtime priority</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1483923910.26338_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1483942069.23991_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1483932552.32579_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 08 Jan 2017 19:25:47 -0800 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Yuri </span> &lt;[hidden] at rawbw dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1483986019.18885_0.ltw:2,a/index.html'>Re: [Jack-Devel] Thread realtime priority </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Rigg
+<a href='../1484039243.26478_0.ltw:2,a/index.html'>Re: [Jack-Devel] Thread realtime priority </a></td></tr>
+</table>
+<pre>
+jackd on FreeBSD calls pthread_setschedparam(thread, SCHED_FIFO, 
+&amp;rtparam) with rtparam.sched_priority = 10.
+I am wondering where does 10 come from? The range for SCHED_FIFO is 0 .. 
+31, as returned by sched_get_priority_min() and 
+sched_get_priority_max(). The value 10 seems wrong, since the fastest 
+priority is 0, the slowest is 31.
+
+In controlapi.c sched_get_priority_min()/sched_get_priority_max() are 
+called for OpenBSD. For this purpose FreeBSD should be the same. So it 
+should be #ifndef __OpenBSD__ &amp;&amp; defined(__FreeBSD__).
+
+Another problem is that FreeBSD doesn't allow to set thread priorities 
+for non-root users, but jackd is supposed to run by the regular user. At 
+least that's what libs expect it to be (/tmp/jack-{userid}). I have a 
+suggestion: if the process is run with realtime priority, jackd 
+shouldn't attempt to call pthread_setschedparam at all, because the 
+process realtime priority should be sufficient.
+
+This code:
+
+struct rtprio rtp;
+res = rtprio(RTP_LOOKUP, getpid(), &amp;rtp);
+if (rtp.type != RTP_PRIO_REALTIME) {
+   // call pthread_setschedparam
+}
+
+allows to read priority of the process on FreeBSD.
+
+The process can be run with realtime priority with this command: rtprio 
+0 jackd ...
+
+
+Yuri
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1483923910.26338_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1483942069.23991_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1483932552.32579_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1483932552.32579_0.ltw:2,a&nbsp;&lt;d8ea287f-b91a-f9d4-1692-e51458036766 at rawbw dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

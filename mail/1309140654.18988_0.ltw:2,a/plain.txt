@@ -1,0 +1,85 @@
+Date:        Sun, 26 Jun 2011 19:09:54 -0700
+From:        Devin Anderson  <[hidden] at charityfinders dot com>
+To:          Carlos Eduardo da Fonseca <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Carlos Eduardo da Fonseca [Jack-Devel] JACK midi events lost on 64 bit machines (1309135855.10077_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK midi events lost on 64 bit machines
+
+Hi Carlos,
+
+On Sun, Jun 26, 2011 at 5:50 PM, Carlos Eduardo da Fonseca
+<[hidden]> wrote:
+
+> I have an application using JACK MIDI under Linux. It works perfectly on 32
+> bit machines, but on my new one, which is 64 bits, I get event loss all the
+> time.
+
+Your message doesn't mention which version of JACK you are running on
+your new machine, or which version of JACK you ran on your old
+machine.  That data might be helpful.
+
+> #define MidiMessageSize 3
+>
+> jack_client_t* client;
+> jack_port_t* midi_out_port;
+>
+> char current_message[MidiMessageSize];
+>
+> jack_ringbuffer_t* midi_rb;
+>
+> int process (jack_nframes_t nframes, void *arg) {
+>   void* output_buffer = jack_port_get_buffer(midi_out_port, nframes);
+>   jack_midi_clear_buffer(output_buffer);
+>   int read_space = jack_ringbuffer_read_space(midi_rb);
+>   if (read_space == 0) return 0;
+>   int i;
+>   for (i = 0; i < read_space; i += MidiMessageSize) {
+>     jack_ringbuffer_read(midi_rb, current_message, MidiMessageSize);
+>     jack_midi_event_write(output_buffer, i/MidiMessageSize,
+> 			   (jack_midi_data_t*)current_message, MidiMessageSize);
+>     if (jack_midi_get_lost_event_count(midi_out_port)) {
+>       printf("Lost\n"); /* Never get here on 32 bit but always on 64 */
+>     }
+>   }
+>   jack_ringbuffer_reset(midi_rb);
+>   return 0;
+> }
+
+If your period size is smaller than the amount of messages retrieved
+from your ringbuffer during a process call, then your timestamp (i /
+MidiMessageSize) will become out-of-bounds.  However, at least with
+JACK 2, the error wouldn't increment the lost event count.
+
+With JACK 2, events may be considered "lost" 1.) during mixdown, when
+two or more MIDI buffers are having their contents transferred to
+another MIDI buffer and a MIDI message can't be transferred to the
+MIDI buffer, and 2.) when space cannot be reserved in the MIDI buffer
+for your event when calling 'jack_midi_event_write' or
+'jack_midi_event_reserve'.  You can find the relevant code here:
+
+    http://trac.jackaudio.org/browser/jack2/trunk/jackmp/common/JackMidiAPI.cpp
+
+... and here:
+
+    http://trac.jackaudio.org/browser/jack2/trunk/jackmp/common/JackMidiPort.cpp
+
+The second case is the only case that matters in this situation, as
+you're calling 'jack_midi_clear_buffer' on the output buffer at the
+beginning of every process call, which will reset the lost event count
+to zero. You can check for the second case by checking if the return
+value of 'jack_midi_event_write' is -ENOBUFS.
+
+FYI, 'jack_ringbuffer_reset' is not thread-safe.  Calling it in a
+process callback is probably a bad idea.
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+
+1309140654.18988_0.ltw:2,a <BANLkTik145H8_vfKaTOKyYyB1ngOeW7CHg at mail dot gmail dot com>
+________________________________________________________________________________
+

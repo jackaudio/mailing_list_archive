@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] ladish + jack autoconnect</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] ladish + jack autoconnect</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325982352.28769_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325988047.14741_0.ltw:2,Sa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325985995.2896_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 07 Jan 2012 20:25:59 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Tim E. Real </span> &lt;[hidden] at rogers dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Adrian Knoth
+<a href='../1325980880.27984_0.ltw:2,a/index.html'>Re: [Jack-Devel] ladish + jack autoconnect </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1325988047.14741_0.ltw:2,Sa/index.html'>Re: [Jack-Devel] ladish + jack autoconnect </a></td></tr>
+</table>
+<pre>
+On January 8, 2012 1:01:06 AM Adrian Knoth wrote:
+&gt; On 01/07/2012 09:43 PM, Fons Adriaensen wrote:
+&gt; 
+&gt; Hi!
+&gt; 
+&gt; &gt;&gt; Stephane, Fons et al may provide some [constructive] criticism once
+&gt; &gt;&gt; the
+&gt; &gt;&gt; detailed proposal is out.
+&gt; &gt; 
+&gt; &gt; Constructive or not, this is what I think about the proposal.
+&gt; &gt; 
+&gt; &gt; I'm _not at all_ in favour of adding functionality to Jack
+&gt; &gt; that only serves to resolve problems created by application
+&gt; &gt; authors who either by ignorance or by design do things they
+&gt; &gt; shouldn't do, such as autoconnecting without providing an
+&gt; &gt; option to configure or disable it.
+&gt; &gt; 
+&gt; &gt; Doing this only encourages the creation or continued acceptance
+&gt; &gt; of apps that don't behave as required. The correct course of
+&gt; &gt; action is to discourage the same, and force app authors to
+&gt; &gt; either do their homework or face being excluded.
+&gt; 
+&gt; While I think you clearly have a point here, the discussion reminds me
+&gt; about the glibc memcpy() bug on newer Intel processors: copying
+&gt; backward turned out to be faster on some architectures, and for the
+&gt; sake of efficiency, glibc changed from copying forward to copying
+&gt; backward on these machines.
+&gt; 
+&gt; Though memcpy's manpage is absolutely clear that source and target
+&gt; memory areas must not overlap, some application developers did not worry
+&gt; about it. Overlap was no problem as long as memcpy() was traversing from
+&gt; low to high addresses. Once changed, many applications broke, including
+&gt; flash.
+&gt; 
+&gt; There was a big discussion and blaming of application developers, Adobe
+&gt; in particular, that memmove() should have been used as mentioned all
+&gt; over the place.
+&gt; 
+&gt; Linus' position was rather clear: the user doesn't care who broke it,
+&gt; the user demands a working system. As simple as that, end of the story.
+&gt; 
+&gt; 
+&gt; It's exactly what we're facing here. We could probably continue to argue
+&gt; purity vs. pragmatism for weeks.
+&gt; 
+&gt; How about the following: let's do both - work around the bug to please
+&gt; the user *AND* blame the application developers.
+&gt; 
+&gt; For this to work, I suggest to emit a (rude) warning every time an
+&gt; application tries to self-connect (its output ports) if jackd is running
+&gt; in one of the "compatibility modes" (a.k.a. ladish mode).
+&gt; 
+&gt; Something like:
+&gt; 
+&gt;     "Application foo attempted to self-connect its ports. See
+&gt;      http://some.url.org/faq/... why this is bad and update your
+&gt;      application to a fixed version."
+&gt; 
+&gt; If there are really many broken applications out there, users would
+&gt; hopefully bug the upstream authors until they either do something about
+&gt; it or prove Nedko wrong. ;)
+&gt; 
+&gt; 
+&gt; Just my &#x20AC;0.02
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+Hi list. Sorry late post but I've followed the thread.
+This looks like quite a good place to come in...
+
+Just some experiments with so called 'auto-connect'.
+It may not be the exact same thing as what you're discussing but
+ I hope it's relevant.
+
+To help new users and as a stepping stone to a better configuration system, 
+ at startup I auto-fill our midi ports with found Jack midi devices now.
+By that I mean I scan for Jack midi ports and create matching client ports
+ and then automatically connect them together.
+Then everything is ready to go, the user can immediately start creating midi 
+ tracks and doesn't necessarily have to open our midi configuration dlg.
+Thus as viewed in say qjackctl, we have matching client ports and 
+ connections for every outside port found.
+ 
+Not fond of auto-doing anything, it's behaviour can change as our 
+ configuration system evolves, or be removed (and may very well be). 
+But previously it was a rather clumsy affair for our users to set up devices.
+
+So anyway I actually wanted to have the app /continuously/ watch for new ports
+ and auto connect them as well, instead of just at startup or on-demand.
+I didn't, because it seems a bad idea. 
+It could lead to infinite recursive auto-connecting. Right?
+
+Say two apps employ this auto-connecting technique.
+Then they are both constantly watching for each others' ports.
+As soon as the second app starts the first app creates matching ports,
+ then the second app sees these new ports and creates matching ones,
+ then the first one sees those ports and creates matching ones, and so on.
+
+I'm wondering if even the one-time auto-connect at startup is still a bad 
+ idea. It still kinda WIP, maybe make it more optional (click-to-auto-fill). 
+(There sure are a lot of ports created!)
+With this talk of auto-connect and session managers I would like to ask if 
+ this one-time auto-connect at startup might also interfere with session 
+ managers like LASH or LADISH, or even say Jack Session? (We only have LASH.) 
+Maybe I should determine whether it is in fact a session, and bypass
+ the automatic port creation and auto-connecting at startup...
+
+Thanks. Tim.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325982352.28769_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325988047.14741_0.ltw:2,Sa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325985995.2896_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1325985995.2896_0.ltw:2,a&nbsp;&lt;25021232.SZxW69I6DF at amd64-desktop&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

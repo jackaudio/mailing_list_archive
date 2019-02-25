@@ -1,0 +1,97 @@
+Date:        Sat, 17 Mar 2012 22:09:19 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Iain Duncan <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Iain Duncan [Jack-Devel] dropped midi messages on os x using the IAC driver? at a loss! (1332029279.25290_0.ltw:2,a)
+Follow-Up:   Iain Duncan Re: [Jack-Devel] dropped midi messages on os x using the IAC driver? at a loss! (1332100098.3751_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] dropped midi messages on os x using the IAC driver? at a loss!
+
+you can use jack_midi_dump (it may only be in the jack1 tools
+directory, but it will work with jack2 just as well) to track what
+MIDI data shows up at your JACK port(s).
+
+On 3/17/12, Iain Duncan <[hidden]> wrote:
+> Hi folks, I'm sure this isn't a jack bug or it would have been noticed ages
+> ago, but I'm hoping someone has some advice on how to figure out what the
+> heck's going on.
+>
+> I have a jack app, it sends out midi. Seems to be fine about 99% of the
+> time, and maybe once every hundred messages, a midi message gets dropped. I
+> am sending out the messages using jack_midi_event_reserve, and that seems
+> ok, can't imagine it would work 99% of the time if I'm doing it wrong.  I
+> have some debug printf showing that my app thinks it's written the dropped
+> message to the jack midi buffer.
+>
+> Using jack pilot, I have my app routed to the IAC loopback driver on os x,
+> and I have a vst synth (Zebra2) playing on a channel in Reaper. I also have
+> a midi monitor open spying on the output. The dropped messages are printed
+> in my app, and then don't show up in the midi monitor. So I guess either:
+>
+> - they aren't really going out from my app
+>
+> - or are they aren't really getting through the IAC driver.
+>
+> - or something else I can't fathom.
+>
+> Does anyone have any experience with midi message loss on os x? Suggestions
+> on how to figure this out or even how to debug it would be luverly. I'm
+> pretty new to Jack, OS X, IAC, the works. :-/
+>
+> Below is the code for how the messages are going out in case I did
+> something dumb!
+>
+> Thanks
+> Iain
+>
+>     ... in the jack process audio callback method
+>
+>     // grab our output buffers, needs to happen each time process is called
+>     int num_audio_ports = NUM_AUDIO_PORTS;
+>     sample_t *audio_output_bufs[ num_audio_ports ];
+>     for( int port_index=0; port_index < NUM_AUDIO_PORTS; port_index++ ){
+>         audio_output_bufs[ port_index ] = (sample_t *)
+> jack_port_get_buffer( audio_out_ports[port_index], nframes);
+>     }
+>     for(jack_nframes_t frame_index=0; frame_index < nframes; frame_index++){
+>         // get midi and audio output for each port
+>         // the redundant layer is to keep jack types out of the engine code
+>         DataFloat audio_samples[NUM_AUDIO_PORTS];
+>         int num_midi_messages_from_engine;
+>         // call the engine's process method
+>         // writes num_audio_ports samples into audio_samples
+>         // writes num_midi_messages_from_engine 3 char midi messages into
+> midi_from_engine_buf
+>         engine->processSample(audio_samples, num_audio_ports,
+>             midi_from_engine_buf, num_midi_messages_from_engine );
+>
+>         // if the engine wrote midi output data, send them out
+>         for( int i=0; i < num_midi_messages_from_engine; i++ ){
+>             //cout << "Midi messages from engine: " <<
+> num_midi_messages_from_engine << "\n\n";
+>             // reserve 3 chars of space from the midi out port buffer as
+> the per note buf
+>             midi_out_msg_buf = jack_midi_event_reserve(midi_out_port_buf,
+> frame_index, 3);
+>             // copy the midi message, jack will send this out
+>             midi_out_msg_buf[0] = midi_from_engine_buf[ (i * 3) + 0 ];
+>             midi_out_msg_buf[1] = midi_from_engine_buf[ (i * 3) + 1 ];
+>             midi_out_msg_buf[2] = midi_from_engine_buf[ (i * 3) + 2 ];
+>             printf("    - sending jack midi message: %i %i %i\n",
+> midi_from_engine_buf[ (i * 3) + 0 ],
+>                 midi_from_engine_buf[ (i * 3) + 1 ],  midi_from_engine_buf[
+> (i * 3) + 2 ]);
+>
+>         }
+>
+>         // copy the audio samples from my buff to the jack buff
+>         for( int port_index=0; port_index < NUM_AUDIO_PORTS; port_index++ ){
+>             audio_output_bufs[port_index][frame_index] =
+> (sample_t)audio_samples[port_index];
+>         }
+>     }
+>
+
+1332036585.20231_0.ltw:2,a <CAFa_cK=A+OOMeaM2G5+_7_1c-genRPMpcsv5uP0ks6=RmunhmA at mail dot gmail dot com>
+________________________________________________________________________________
+

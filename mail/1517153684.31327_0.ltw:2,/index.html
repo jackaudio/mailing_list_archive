@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Using USB sound card with Jack</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Using USB sound card with Jack</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1517134464.8707_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1517176839.27915_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1517153684.31327_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 28 Jan 2018 15:34:08 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Benny Alexandar </span> &lt;[hidden] at outlook dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>David Kastrup &lt;[hidden] at gnu dot org&gt;, "[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>David Kastrup
+<a href='../1516795001.20446_0.ltw:2,/index.html'>Re: [Jack-Devel] Using USB sound card with Jack </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Rigg
+<a href='../1517221441.11679_0.ltw:2,/index.html'>Re: [Jack-Devel] Using USB sound card with Jack </a></td></tr>
+</table>
+<pre>
+Hi,
+
+I downloaded  ajbridge (zita-ajbridge-0.7.0.tar.bz2 )
+&lt;https://kokkinizita.linuxaudio.org/linuxaudio/downloads/zita-ajbridge-0.7.0.tar.bz2&gt;
+, resampler version 1.6  and   alsa-pcmi version 0.2.0
+and built all successfully.
+
+However while running zita-a2j I got the following error.
+
+$zita-a2j: error while loading shared libraries: libzita-resampler.so.1: cannot open shared object file: No such file or directory
+
+When checked the installation message, it says it installed under /usr/local/lib64
+
+install -d /usr/local/include/zita-resampler
+install -d /usr/local/lib64
+install -m 644 zita-resampler/resampler.h zita-resampler/resampler-table.h zita-resampler/vresampler.h zita-resampler/cresampler.h /usr/local/include/zita-resampler
+install -m 644 libzita-resampler.so.1.6.0 /usr/local/lib64
+ln -sf libzita-resampler.so.1.6.0 /usr/local/lib64/libzita-resampler.so
+ldconfig
+
+So, I modified the  /etc/ld.so.conf file and added the path for lib64
+/usr/local/lib
+/usr/local/lib64
+
+Then, things started to work.
+
+Now, I connected USB sound card and it shows the sound card as follows,
+
+cat /proc/asound/cards
+ 0 [PCH            ]: HDA-Intel - HDA Intel PCH
+                      HDA Intel PCH at 0xf7d30000 irq 35
+ 1 [HD             ]: USB-Audio - USB Sound Blaster HD
+                      Creative Technology USB Sound Blaster HD at usb-0000:00:14.0-2, full speed
+
+After starting jack server  using qjackctl, opened terminal and
+ran the following cmd
+
+$zita-a2j -d hw:HD  -p 1056  -v
+
+Then in qjackctl connected the graph as shown in the attached picture.
+USB sound card input (line-in) is connected to an audio output from other PC.
+But I can't hear the audio using zita-j2a.
+I mean audio was not heard in PC where zita-j2a is running.
+
+Anything wrong in the connections, how to debug and check why
+no audio is heard.
+
+-ben
+
+
+
+
+________________________________
+From: Jack-Devel &lt;[hidden]&gt; on behalf of David Kastrup &lt;[hidden]&gt;
+Sent: Wednesday, January 24, 2018 5:26 PM
+To: [hidden]
+Subject: Re: [Jack-Devel] Using USB sound card with Jack
+
+Fons Adriaensen &lt;[hidden]&gt; writes:
+
+&gt; On Tue, Jan 23, 2018 at 04:12:16PM +0000, Benny Alexandar wrote:
+&gt;&gt;
+&gt;&gt; &gt;&gt; The simple way to test ajbridge is to measure the delay
+&gt;&gt; of a loop through both soundcards, using e.g. jack_delay.
+&gt;&gt;
+&gt;&gt; How to measure the delay between two sound cards ?
+&gt;&gt; What does the jack_delay measures, the delay between
+&gt;&gt; what and what ?
+&gt;
+&gt; 1. Read available documentation.
+&gt; 2. Think.
+&gt; 3. If after (1) and (2) some things remain unclear proceed to (4).
+&gt; 4. Ask questions on mailing lists.
+&gt;
+&gt; You have a habit of skipping the first three. That is getting
+&gt; on my nerves, and not only on mine.
+
+Well, to be fair it is hard to interpret the results of just trying, and
+"available documentation" could be better in many cases.  It's pretty
+exhaustive in the case of jack_delay's man page I'll admit (though the
+need to differentiate between JACK1 and JACK2 and various behaviors is
+really good for a head ache, requiring more of 2. than users might have
+readily available, probably hard for an insider to the program to
+fathom).
+
+On the LilyPond (batch music typesetter with plain text input language)
+user list I often get puzzled at requests of the "can I do this" kind of
+questions where one wants to shout "why don't you ask LilyPond?".  Some
+people seem more comfortable risking annoying another human rather than
+annoying a program.
+
+At least with regard to latencies it is rather tricky to "just try".
+
+--
+David Kastrup
+
+<a href='files/S45A6J~L.PNG' target='_blank'>* Attachment: 'S45A6J~L.PNG'</a>
+content-type: image/png
+content-description: S45A6J~L.PNG
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1517134464.8707_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1517176839.27915_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1517153684.31327_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1517153684.31327_0.ltw:2,&nbsp;&lt;MAXPR0101MB152925FDCA36881DD60B2A088BE60 at MAXPR0101MB1529 dot INDPRD01 dot PROD dot OUTLOOK dot COM&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,71 @@
+Date:        Sun, 08 Jul 2018 17:10:38 -0400
+From:        Tim  <[hidden] at rogers dot com>
+To:          oleg68 <[hidden] at gmail dot com>, "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Daniel Farmer Re: [Jack-Devel] How to profile jack cpu load? (1531073435.14730_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] How to profile jack cpu load?
+
+>  When I started jackd with -v option, there no message "Engine 
+profiling activated" in the standard output.
+> When I set the brakpoint at JackEngineProfiling::JackEngineProfiling() with a debugger, this breakpoint is never > >reached.
+
+Hi, I'd like to report that out of curiosity, I just built
+  and installed jack2-1.9.12, here on openSUSE Tumbleweed,
+  with the profiling enabled with --profile configure flag.
+
+Here's what I get:
+
+====================================
+/usr/local/bin/jackd -P30 -dalsa -r44100 -p256 -n2 -Xseq -D 
+-Chw:M1010LT,0 '-Phw:M1010LT,0'
+jackdmp 1.9.12
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2016 Grame.
+Copyright 2016-2017 Filipe Coelho.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in realtime mode with priority 30
+self-connect-mode is "Don't restrict self connect requests"
+
+Engine profiling activated, beware 197 MBytes are needed to record 
+profiling points...
+
+creating alsa driver ... hw:M1010LT,0
+|hw:M1010LT,0|256|2|44100|0|0|nomon|swmeter|-|32bit
+configuring for 44100Hz, period = 256 frames (5.8 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: 32bit integer little-endian
+ALSA: use 2 periods for capture
+ALSA: final selected sample format for playback: 32bit integer little-endian
+ALSA: use 2 periods for playback
+port created: Midi-Through:midi/playback_1
+port created: Midi-Through:midi/capture_1
+port created: M-Audio-Delta-1010LT:midi/playback_1
+port created: M-Audio-Delta-1010LT:midi/capture_1
+Jack main caught signal 15
+port deleted: M-Audio-Delta-1010LT:midi/playback_1
+port deleted: Midi-Through:midi/playback_1
+port deleted: M-Audio-Delta-1010LT:midi/capture_1
+port deleted: Midi-Through:midi/capture_1
+Write server and clients timing data...
+JackEngineProfiling::Save cannot open JackEngineProfiling.log file
+JackEngineProfiling::Save cannot open Timing1.plot file
+JackEngineProfiling::Save cannot open Timing2.plot file
+JackEngineProfiling::Save cannot open Timings.html file
+JackEngineProfiling::Save cannot open generate_timings file
+*** Killed process ***
+====================================
+
+Note you must stop the server before the profiling info can be
+  gathered and written, as shown in that .pdf link someone posted.
+I'm not sure if it could not write because I ungracefully
+  killed it, or it's simply a permissions/location thing,
+  probably the latter, I have not looked into it any further
+  yet...
+
+Tim.
+The MusE sequencer project.
+
+1531084282.25594_0.ltw:2, <09774a2d-3fa0-735d-57ef-cacb6fe27f37 at rogers dot com>
+________________________________________________________________________________
+

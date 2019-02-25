@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Problems with audioadapter used with capture only interface</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Problems with audioadapter used with capture only interface</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1388313809.5598_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388324625.16573_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388324554.16550_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 29 Dec 2013 14:42:25 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Wojciech Zabolotny </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Wojciech Zabolotny
+<a href='../1388276836.25293_0.ltw:2,/index.html'>[Jack-Devel] Problems with audioadapter used with capture only interface </a></td></tr>
+</table>
+<pre>
+Hi,
+
+I wanted to use jack2 with an embedded system equipped with capture
+only interface.
+I can start the server with the net backend:
+
+# jackd -r -dnet  -C0 -P1
+jackdmp 1.9.10
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2013 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in non-realtime mode
+NetDriver started in async mode without Master's transport sync.
+Waiting for a master...
+Initializing connection with WZlap...
+**************** Network parameters ****************
+Name : buildroot
+Protocol revision : 7
+MTU : 1500
+Master name : WZlap
+Slave name : buildroot
+ID : 26
+Transport Sync : no
+Send channels (audio - midi) : 0 - 0
+Return channels (audio - midi) : 1 - 0
+Sample rate : 48000 frames per second
+Period size : 256 frames per period
+Network latency : 5 cycles
+SampleEncoder : Float
+Slave mode : async
+****************************************************
+
+However, when I try to load the audioadapter i get:
+
+# jack_load audioadapter -i "-C hw:0,1 -r48000 -p256 -n3 "
+could not load audioadapter, intclient = 0 status = 0x 1
+
+and the server displays:
+Ringbuffer automatic adaptative mode size = 4096 frames
+../linux/alsa/JackAlsaAdapter.h:226, alsa error -2 : No such file or
+directory
+
+I have checked the line ../linux/alsa/JackAlsaAdapter.h:226 and found,
+that the "open" function defined here ALWAYS tries to open the
+soundcard both as capture and playback device.
+
+How can I patch this function so that the playback part is attemted to
+open only if the audiodapter is loaded for playback or both for
+capture and playback?
+
+Probably people wanting to use audioadapter with playback only devices
+will face the similar problem...
+
+--
+TIA &amp; Reagrds,
+Wojciech M. Zabo&#x142;otny
+My GPG/PGP keys:
+standard: B191 ACF0 7909 83FA 3F9B  450C 407E 3C4B 4569 D119
+confidential: 2BF3 F90F 6EA8 7D35 59FD  5080 78ED 33DE 1312 D8F8
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1388313809.5598_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388324625.16573_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388324554.16550_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1388324554.16550_0.ltw:2,&nbsp;&lt;CAMduVEc9wGgmun1mLrvtWvRqGGJKO31tpTAsitfqk6+bonJfjA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

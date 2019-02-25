@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1493243177.29897_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1493305030.21851_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1493249112.3160_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 27 Apr 2017 01:24:55 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Frodo Jedi </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at chriscaudle dot org </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Chris Caudle
+<a href='../1493243177.29897_0.ltw:2,a/index.html'>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Frodo Jedi
+<a href='../1493305030.21851_0.ltw:2,a/index.html'>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Thomas Brand
+<a href='../1493309032.25877_0.ltw:2,a/index.html'>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2 </a></td></tr>
+</table>
+<pre>
+Dear Chris,
+thanks a lot for your prompt reply,
+
+
+On Wed, Apr 26, 2017 at 11:45 PM, Chris Caudle &lt;[hidden]&gt;
+wrote:
+
+&gt; On Wed, April 26, 2017 12:22 pm, Frodo Jedi wrote:
+&gt; &gt; My goal is to send audio from the odroid board (master)
+&gt; &gt; to the mac (slave) using a direct ethernet connection.
+&gt;
+&gt; The jackd master is the device with the audio hardware.  Are your problems
+&gt; perhaps caused because you are following the setup instructions for master
+&gt; on a device with no audio hardware? (saw later on that you tried the other
+&gt; way around, so let's concentrate on that configuration).
+
+
+
+Actually, my goal is that of sending audio from the board to other
+connected devices, for the moment I am using a mac, it could be another pc
+with linux or windows.
+I am going for a wired connection first, with the final aim to test
+netjack2 over wifi, and compare the wired and wireless behaviours under
+various conditions.
+
+The odroid board (configured as master in the first case) has a beheringer
+soundcard perfectly working, I can record and listen audio using it. So I
+should be able to use the odroid + soundcard configuration as a master, and
+the mac as a slave. Right?
+
+
+
+&gt;
+&gt; &gt; On the master:
+&gt; &gt; /usr/bin/jackd -P 70 -p96 -t 2000 -dalsa -dhw:CODEC -S -s
+&gt; &gt; -r48000 -p128 -n2
+&gt;
+&gt; &gt; jack_load netmanager
+&gt;
+&gt;
+&gt; That is on the odroid?
+
+
+
+yes
+
+
+
+&gt; What ALSA compatible hardware is on the odroid?
+&gt;
+&gt;
+U-CONTROL UCA222
+
+https://www.music-group.com/Categories/Behringer/Computer-Audio/Audio-Interfaces/UCA222/p/P0A31
+
+
+
+
+&gt; In any event, the short of it is that ALSA is the driver for the audio
+&gt; hardware, so whichever device has speakers connected better be the device
+&gt; where you are giving the driver argument as "-dalsa" or you won't hear any
+&gt; sound.
+&gt;
+&gt; &gt; Actually, if can be of any help, I also tried to set the mac
+&gt; &gt; as master and the linux board as the slave.
+&gt;
+&gt; That should be the correct configuration if you want to connect the mac to
+&gt; an amplifier and speakers and you want the linux odroid system to just
+&gt; send digital audio information to the mac and have the mac play the audio.
+&gt;
+&gt;
+Ok, but my goal is to have a networked configuration where the linux odroid
+system broadcast
+audio to various connected devices. My understanding is that the odroid
+must be the master and
+all the other devices receiving and reproducing the audio signal must be
+the slave. Am I wrong?
+
+
+
+
+&gt; &gt;  The result is that they seem to communicate,
+&gt; &gt; although jack on the mac crashes giving the error
+&gt; &gt; "Floating point exception: 8":
+&gt;
+&gt; Can you run local jack aware software on the mac and play audio through
+&gt; the mac audio hardware?  Make sure you can get that working first before
+&gt; trying to bring networking into it.
+&gt;
+&gt;
+
+Of course, I successfully used jack2 on the mac, it perfectly works (for
+instance with Audacity or Max/MSP 7).
+
+
+
+&gt; &gt; Default input and output devices are not the same !!
+&gt; &gt; Cannot open default device in duplex mode, so aggregate
+&gt; &gt; default input and default output
+&gt; &gt; Separated input = 'Built-in Microphone'
+&gt; &gt; Separated output = 'Built-in Output'
+&gt;
+&gt; If you aren't going to use "Built-in Microphone" as an input device, you
+&gt; could start with playback only.  That should get rid of the "input and
+&gt; output devices are not the same !!" warning.   I think that would be -P
+&gt; passed the coreaudio driver parameters, or maybe -Cno -Pyes, the manual
+&gt; page is a little vaguely
+&gt; worded and I don't have a machine with coreaudio to play with to try it
+&gt; out.
+&gt;
+&gt; That is assuming you want to use the built in audio for the output,
+&gt; otherwise the wrong device is selected and you need to sort that out
+&gt; first.
+&gt;
+
+
+Ok I will try tomorrow and report to you. At the moment yes the mac's built
+in audio for the output  is what I want to test.
+
+
+&gt;
+&gt; &gt; Takes physical 2 audio output(s) for slave
+&gt; &gt; Takes physical 0 MIDI input(s) for slave
+&gt; &gt; Takes physical 0 MIDI output(s) for slave
+&gt; &gt; Sending parameters to ...
+&gt; &gt; Floating point exception: 8
+&gt;
+&gt; This is a modern mac with Intel processor?  Just making sure.  I don't
+&gt; have a mac myself, but just in case someone else can help, which OS
+&gt; version?
+&gt;
+
+
+Yes, I am using the very last macbook pro, with the very last and updated
+OS X (version 10.12.4).
+
+
+
+
+&gt;
+&gt; This is the default multicast address reported by the master:
+&gt; &gt; Starting Jack NetManager
+&gt; &gt; Listening on '225.3.19.154:19000'
+&gt;
+&gt; But you specified a unicast address in the place where you would usually
+&gt; specify a multicast address different than default:
+&gt; &gt; On the slave (linux board):
+&gt; &gt; jackd -R -d net -a 192.168.117.129 -p 19000
+&gt;
+&gt; From the walk-through you linked:
+&gt; Parameters for driver 'net' (all parameters are optional):
+&gt;         -a, --multicast_ip      Multicast Address (default: 225.3.19.154)
+&gt;
+&gt; You are giving a unicast address as the argument for the multicast address
+&gt; to use.  Why did you think you needed to do that?
+&gt; It seems the unicast address was ignored, because there is a message later
+&gt; showing connected to macbook.
+&gt;
+
+
+I don't have the setup right now, I will re-test tomorrow, but if I
+correctly remember, I used the address 192.168.117.129
+(which is the static address I gave to the mac) because simply using  jackd
+-R -d net (which takes the default) did not work.
+
+
+
+
+&gt;
+&gt; &gt; Maximum number of input ports is reached for application ref = 0
+&gt; &gt; driver: cannot register port for system:midi_playback_769
+&gt; &gt; Can't allocate ports.
+&gt; &gt; Initing net driver fails...
+&gt;
+&gt; That looks like the net backend driver is trying to register MIDI  ports
+&gt; for some reason, but the documentation says the default is no MIDI ports.
+&gt; From the walk-through page "The default configuration is a simple stereo
+&gt; use, with no midi port."  Maybe one of the jack2 devs can comment on
+&gt; whether the behavior and documentation have diverged.
+&gt;
+
+
+Yes it would be great if any jack developer could comment on this. I am
+available to contribute to the jack community
+by doing some tests on the mac if needed.
+
+
+
+&gt;
+&gt; If you do get rid of the internal microphone as an input port, you should
+&gt; probably set the net backend to not expect any input ports.   I think that
+&gt; would be adding -C 0 -P 2 to the arguments after -dnet.
+&gt; I guess for good measure you could add -i 0 -o 0 to specify 0 MIDI in and
+&gt; out ports, although that is supposed to be the default.
+&gt;
+&gt;
+I will try tomorrow and report.
+
+
+However, this is not the main goal I want to pursue, as I want to send
+audio from the linux odroid board.
+Any further insight on this?
+
+
+Cheers
+
+
+
+&gt; --
+&gt; Chris Caudle
+&gt;
+&gt;
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1493243177.29897_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1493305030.21851_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1493249112.3160_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1493249112.3160_0.ltw:2,a&nbsp;&lt;CAGkY2uoGF1f1H1UJnY1FwbYgTJymJ-hr+FJM0sQBtbu1AKOPVw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

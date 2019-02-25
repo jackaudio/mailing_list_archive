@@ -1,0 +1,31 @@
+Date:        Sun, 13 Mar 2016 18:58:31 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Frank Schäfer [Jack-Devel] Cannot access portbuffer memory from C++ (1457884683.14679_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Cannot access portbuffer memory from C++
+
+On 03/13/2016 04:57 PM, Frank Schäfer wrote:
+
+> My program started to produce output the moment when ``jack_activate( client );'' is called.
+> Isn't this a bit waste of CPU due to the fact that the process_audio callback copies plenty of data to a port which is not used yet?
+
+memcpy is really cheap on modern machines (SSE), besides internally jack
+uses zero-copy whenever possible: jack clients get a pointer to the
+actual input/output buffer(s).
+
+The process callback always runs for a couple of reasons: in your case
+the oscillator's phase should advance sample-accurately regardless if
+the output is connected or not.
+
+But more importantly, for DSP one prefers consistent CPU usage.  Ideally
+the process callback will always cause exactly the same CPU load, every
+cycle, for all cycles.  Otherwise there's the potential: "It works
+unless I connect things -> CPU spikes -> x-runs...")
+
+ciao,
+robin
+
+1457891920.24445_0.ltw:2,a <56E5AA47.70209 at gareus dot org>
+________________________________________________________________________________
+

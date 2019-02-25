@@ -1,0 +1,46 @@
+Date:        Tue, 08 Jan 2013 08:10:33 +0000
+From:        John Emmas  <[hidden] at tiscali dot co dot uk>
+To:          JACK List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Chris Caudle Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357602068.15335_0.ltw:2,Sa)
+
+Subject:     Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)
+
+On 7 Jan 2013, at 23:40, Chris Caudle wrote:
+
+> 
+> The documentation for the Microsoft compiler points out that if you pack
+> your data structures, you may need to use the _unaligned attribute when
+> accessing the struct to let the compiler know that extra code needs to be
+> generated to handle the unaligned data.  The _unaligned directive does
+> nothing on some platforms, but adds the additional code on platforms where
+> it is needed.
+> 
+> [...]
+> 
+> GCC does not seem to have the equivalent of the _unaligned directive, so
+> on platforms which can not handle unaligned access, either the programmer
+> must add the additional required code by hand, or avoid packing structures
+> in ways which cause unaligned access.
+> 
+
+Yes, that's exactly right Chris.  What we know now (but didn't know back then) is that some compilers don't perform automatic re-alignment.  I think this is telling us that we'll need to adopt a hybrid approach, with different strategies for different platforms.
+
+For example, I'm 99% certain that JACK_ALIGN won't work with MSVC - not even if we can solve the sizeof() issue.  It'll work if we only use it for data types whose size happens to be a power of 2.  But if we ever needed to implement (for example) a 'jack_long_double' type, JACK_ALIGN would fall over (in fact, that should probably be checked for gcc too).  In any event, it's debatable whether JACK_ALIGN is even needed on Windows, where 1-byte packing alone seems to be sufficient (unless Stephane knows different).  Up to now, 1-byte packing seems to be delivering 32-bit / 64-bit compatibility for us, although the acid test will come when we build a 64-bit version of Mixbus.
+
+Admittedly hybrid, platform-dependent approaches are ugly but I think this is one situation where it's entirely justified.
+
+
+On 8 Jan 2013, at 00:06, Nedko Arnaudov wrote:
+
+> 
+> As for msvc vs gcc on jack2 for windows... You also may have problem
+> with the C++ standard library. I bet they are incompatible.
+> 
+
+Yes, they are incompatible but I think we've largely addressed those issues.  This time last year, Stephane and I had to do a lot of work to eliminate situations where MSVC was trying release memory which gcc had allocated etc.  I think that's all covered now (famous last words!)
+
+John
+
+1357632649.25030_0.ltw:2,a <0FE54F17-F860-41A7-A061-4AC177F921B2 at tiscali dot co dot uk>
+________________________________________________________________________________
+

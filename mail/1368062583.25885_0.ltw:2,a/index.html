@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] JackTransport vs VST ppqPos</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] JackTransport vs VST ppqPos</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1367934491.32315_0.ltw:2,Sa/index.html'>Prev</a></td><td><a href='../1368223129.22212_0.ltw:2,Sa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1368062583.25885_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 09 May 2013 03:22:53 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Pawel </span> &lt;[hidden] at wp dot pl&gt; </td></tr>
+<tr><td class='col1'>To</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1368351936.20406_0.ltw:2,/index.html'>Re: [Jack-Devel] JackTransport vs VST ppqPos </a></td></tr>
+</table>
+<pre>
+Hi,
+
+I discover strange problem while improving JackTransport support in FSTHost.
+
+Most VST plugins while trying to synchronize with host usually ask for such things:
+1) tempo ( == jack_pos.beats_per_minute)
+
+2) ppqPos - which I understand like "current quarter note" == current jack_pos.beat.
+
+3) barStartPos .. ok, this one is not a subject in this case ;-)
+
+4) samplePos == jack_pos.frame
+
+5) sampleRate == jack_pos.frame_rate
+
+The problem is which pppPos. There are two ideas how to compute this:
+
+1) Using BBT (which should be a preferred option here, right ?)
+double ppqBar = (jp.bar - 1) * jp.beats_per_bar;
+double ppqBeat = jp.beat - 1;
+double ppqTick = (double) jp.tick / jp.ticks_per_beat;
+
+ppqPos = ppqBar + ppqBeat + ppqTick;
+
+2) Using sample rate / current frame / tempo - this is a standard way in VST world. We count how much samples is in quarter note (beat) ..
+
+double ppq = jp.frame_rate * 60 / jp.beats_per_minute;
+ppqPos = jp.frame / ppq;
+
+The problem is that .. this second counter "hurry" (sorry can't find better word for this issue in english ;-)
+I made really simple , example app for observe this issue - it is included in FSTHost repository:
+http://sourceforge.net/p/fsthost/code/HEAD/tree/trunk/jt-test.c
+
+Frame: 0013314048 | Bar: 0068 | Beat: 3 | Tick: 1680 | CBFF: 277.38 | CBFBBT: 270.88
+Frame: 0013410304 | Bar: 0069 | Beat: 1 | Tick: 1600 | CBFF: 279.38 | CBFBBT: 272.83
+Frame: 0013506048 | Bar: 0069 | Beat: 3 | Tick: 1500 | CBFF: 281.38 | CBFBBT: 274.78
+Frame: 0013602304 | Bar: 0070 | Beat: 1 | Tick: 1420 | CBFF: 283.38 | CBFBBT: 276.74
+Frame: 0013698560 | Bar: 0070 | Beat: 3 | Tick: 1340 | CBFF: 285.39 | CBFBBT: 278.70
+Frame: 0013794304 | Bar: 0071 | Beat: 1 | Tick: 1240 | CBFF: 287.38 | CBFBBT: 280.65
+Frame: 0013890560 | Bar: 0071 | Beat: 3 | Tick: 1160 | CBFF: 289.39 | CBFBBT: 282.60
+
+Please look that after a while CBFF &gt; CBFBBT, and trend is that difference will grow. I tested this with either Hydrogen and jack_transport as master. The funny thing is that - when I skip location to for example in jack_transport:
+jack_transport&gt; stop
+jack_transport&gt; locate 0
+jack_transport&gt; locate 51111111
+jack_transport&gt; play
+
+CBFF and CBFBBT back to normal (almost) .. aha - so we know that formulas are good - and problem is in Jack.
+Frame: 0051936967 | Bar: 0271 | Beat: 2 | Tick: 1184 | CBFF: 1082.02 | CBFBBT: 1081.62
+Frame: 0052033223 | Bar: 0271 | Beat: 4 | Tick: 1104 | CBFF: 1084.03 | CBFBBT: 1083.58
+
+This was tested only with Jack2 (1.9.8 and 1.9.9.5).
+
+Any ideas ?
+
+Best Regards
+Pawel / Xj
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1367934491.32315_0.ltw:2,Sa/index.html'>Prev</a></td><td><a href='../1368223129.22212_0.ltw:2,Sa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1368062583.25885_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1368062583.25885_0.ltw:2,a&nbsp;&lt;518afa6d189377.98278143 at wp dot pl&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,31 @@
+Date:        Tue, 12 Apr 2011 10:39:39 +0200
+From:        Julien Pommier  <[hidden] at modartt dot com>
+To:          Rui Nuno Capela <[hidden] at rncbc dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Rui Nuno Capela Re: [Jack-Devel] jack session command line (1302559685.17359_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack session command line
+
+On 12 avr. 2011, at 00:08, Rui Nuno Capela wrote:
+>> 
+>> Agreed, but the session manager is still tokenizing the command line
+>> into an array of strings before calling exec(), if it is just splitting
+>> the command line with respect to each whitespace, what should the
+>> session client put in that command line if it has a whitespace in its
+>> own name (or in its path) ?
+>> 
+>> A simple rule stating that in the command-line argument separation is
+>> performed with respect to whitespaces except for those that are escaped
+>> by a backslash would help to prevent these issues, I think.
+>> 
+> 
+> afaics, the client should use ... "${SESSION_DIR}" ... literally, including the double-quotes
+
+Ok, that's because you are using QProcess::startDetached() which interprets double quotes. So, assuming that nobody will ever want to use a double quote char inside its session_dir path or in the application name, I can protect my arguments with that. It looks like pyjacksm uses subprocess.Popen(..., shell=True) to start the clients, so double quotes will work as well (but other characters such as $ () etc will also be interpreted by the shell).
+
+--
+Julien
+
+1302597603.24508_0.ltw:2,a <0BEBD9CC-F7C8-42E9-89FF-4F23F1D48F3F at modartt dot com>
+________________________________________________________________________________
+

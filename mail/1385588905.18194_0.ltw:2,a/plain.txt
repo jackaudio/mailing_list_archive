@@ -1,0 +1,120 @@
+Date:        Wed, 27 Nov 2013 22:48:14 +0100
+From:        Jeremy Jongepier  <[hidden] at autostatic dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fabian Schlieper Re: [Jack-Devel] Jack on ARM with low-latency USB (1385563799.13668_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack on ARM with low-latency USB
+
+On 11/27/2013 03:49 PM, Fabian Schlieper wrote:
+> Hi Jeremy,
+> 
+> Yes mad sampling rate -r4441000 is a typo ;)
+> 
+> Good hint with the jack_bufsize! Distortions temporarly disappear when 
+> increasing the buffer size and setting it back to 128 (jack_bufsize 256 & 
+> jack_bufsize 128)
+> Altough, distortions start again after some time.
+> 
+
+Hello Fabian,
+
+Then something is having a hard time catching up because this looks like
+that xruns appear after a while.
+
+> Here are some more details about the system:
+> Linux Kernel: 3.8.4-rt2 #4 SMP PREEMPT RT Tue Nov 12 11:59:47 CET 2013 
+> armv7l GNU/Linux 
+> CPU governors is performance.
+> 
+
+3.8 might have USB related issues. That's one of the reasons I stick
+with 3.4. Not sure if the USB issues are related to your specific issue
+though.
+
+> Results from https://github.com/raboof/realtimeconfigquickscan all good 
+> except:
+> 
+> Checking access to the high precision event timer... not found - not good
+> /dev/hpet not found.
+> Checking access to the real-time clock... not found - not good
+> /dev/rtc not found.
+> Checking if kernel system timer is set to 1000 hz... not found - not good
+> Try setting CONFIG_HZ to 1000
+> 
+> AFAIK the timers are only relevant for MIDI, so this should not cause any 
+> issues here.
+> 
+
+No. In fact, this whole section of the realtimeconfigquickscan script is
+a bit outdated. Afaik barely any Linux MIDI applications are using
+/dev/rtc or /dev/hpet anymore.
+
+> Content of rtirq.conf:
+> 
+> RTIRQ_NAME_LIST="rtc snd usb i8042"
+> # Highest priority.
+> RTIRQ_PRIO_HIGH=99
+> # Priority decrease step.
+> RTIRQ_PRIO_DECR=2
+> # Lowest priority.
+> RTIRQ_PRIO_LOW=51
+> # Whether to reset all IRQ threads to SCHED_OTHER.
+> RTIRQ_RESET_ALL=1
+> # On kernel configurations that support it,
+> # which services should be NOT threaded
+> # (space separated list).
+> RTIRQ_NON_THREADED="rtc snd"
+> # Process names which will be forced to the
+> # highest realtime priority range (99-91)
+> # (space separated list, from highest to lower priority).
+> # RTIRQ_HIGH_LIST="timer"
+> 
+> Running the script sets the IRQ thread for ehci_usb RT priority to -96, 
+> jackd has -81 and the jack client process -70.
+> The client applies a FIR convolution on the signal. Thats simple though, 
+> keeping CPU usage at 0.x%.
+> After starting jackd, im settings the process priority:
+> sudo chrt --fifo -p 80 `pidof jackd`
+> Although, I'm not 100% sure if this is actually necessary, and passing the -
+> P80 is enough?
+> 
+
+Yes, that's enough, afaik it does almost exactly the same thing as the
+chrt incantation.
+
+> There's only one single ehci USB bus (which shares the IRQ with an ohci USB 
+> OTG bus). No chance to get ethernet and audio on different buses.
+>
+
+Maybe you could try unbinding the driver from the OTG controller.
+
+> What kernel version and realtime patch are you running on the Cubieboard?
+
+3.4.61-rt77
+
+> Did you enable full preemption?
+
+Yes.
+
+ And did you do any further optimizations?
+>
+
+I've tweaked the Ext4 parameters, disabled all unneeded servers, set
+CPU's to performance, slightly overclocked the CPU's. And it's a
+headless installation, no X. I should check if I did any other
+optimizations. If so I'll report back.
+
+Jeremy
+
+> Thanks & Regards
+> Fabian
+> 
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> 
+
+1385588905.18194_0.ltw:2,a <5296689E.4050301 at autostatic dot com>
+________________________________________________________________________________
+

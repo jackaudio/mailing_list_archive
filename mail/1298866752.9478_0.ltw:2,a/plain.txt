@@ -1,0 +1,253 @@
+Date:        Sun, 27 Feb 2011 22:17:54 -0600
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Florian Faber Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2 (1298887307.9085_0.ltw:2,a)
+Follow-Up:   torbenh Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2 (1298889781.11712_0.ltw:2,a)
+Follow-Up:   Duncan Gray Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2 (1298944777.8229_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2
+
+Seems like interest and events are coming together all around.
+Using standard networking hardware to connect audio devices has been
+something
+I have wanted for quite a while, but most solutions were proprietary and
+because
+of that didn't play well in the Linux ecosystem.  NetJack was a notable
+exception, but I just couldn't convince myself that running a jack server
+on my
+ADC was the right way to do it.
+
+Sorry for the length of this, I'm just catching up on several digests.
+
+On Fri, February 25, Christoph Kuhr wrote:
+ Message-ID: <[hidden]
+> There is a new network standard comming up specialized for audio and
+> video transmission, called AVB (Audio Video Bridging -> IEEE 802.1AS,
+> 802.1Qat, 802.1Qav,...).
+
+I have been looking into that over the past couple of weeks, and it seems
+that
+AVB handles network infrastructure requirements, but does not specify higher
+layer protocol.  So the AVB specification handles clock synchronization,
+stream
+bandwidth reservation, and VLAN setup, and as far as I can tell so far,
+that is
+all.  You still have to have session control to discover end points, discover
+how many channels are offered by the end point, set up connections, define
+the
+arrangement of audio samples within the packets, etc.
+
+The proprietary methods cover all those other aspects.  The ones which
+seem to
+lend themselves most readily to software implementation (i.e. should not
+require
+custom hardware on the computer end) seem to be Dante from Audinate and
+Livewire from Axia.  Both are proprietary and not publicly documented.
+Ravenna seems that it will become the best choice given the statements
+that it
+will be published as an open (and I think freely available) standard, but it
+does not seem to be finished yet.  The Ravenna web site contains no
+documentation so far.
+
+> I want do integrate this standard into jack2.
+> I want to choose AVB (not ALSA or NET) from the driver dropdown box.
+
+Is there a particular reason you want to make it native in JACK and not
+incorporate it into the ALSA drivers?  I have been considering the same
+question, whether it is better to have a driver native in JACK, or whether it
+would be better to have it independent of JACK so that it could hopefully
+attract developers from the non-JACK audio world as well.  Having an
+interface
+compatible with ALSA would be attractive from that standpoint, because any
+other
+Linux application should be able to use it, and JACK should still be able
+to use
+it through the ALSA backend.
+
+Florian Faber wrote:
+> And you are aware that you cannot do AVB without proper hardware support?
+
+Do you mean because of the IEEE-1588 based clock synchronization?
+There are software implementations of 1588, are they not accurate enough to
+meet AVB requirements?
+
+Arnold Krille wrote:
+> I started with making normal clients for sending and receiving rtp.
+
+Have you only sent data, or also handled querying for number of channels
+offered, other things required to get general clients connected?  Or just
+simple test applications which always have fixed channels?
+
+Christoph Kuhr wrote:
+> since there is the PTPv2 sw implementation
+> (http://www.bartky.net/products.htm), the endpoint requirements of avb
+> are met by most computer hardware
+
+Have you looked at the PTP implementation with BSD style license?
+http://ptpd.sourceforge.net/
+
+Adrian Knoth wrote:
+> To my knowledge, there are only thee NICs available which make sense to
+> be used with PTP
+
+You can use a software time stamping implementation, but with less accuracy
+and much higher jitter.   So depending on the requirements you may need a
+specialized NIC or you may not.  There will be more available soon, I think
+Broadcom and Marvell are working on some.
+
+Arnold Krille wrote:
+> I have to admit that I haven't looked at the avb-standard-definition yet.
+> But so far I was under the impression that avb is aimed at
+> home-entertainment and the likes
+
+It started out aimed at home entertainment, but expanded to also include
+professional audio and automotive networking.
+
+> and thus neither needs special switches
+> nor special nics.
+
+You need switches which understand VLAN tagging and bandwidth reservation
+for quality-of-service.  I don't think the synchronization adds any
+requirements
+to the switches, just the endpoints, but I'm not positive on that yet.
+
+> Ravenna on the other hand...
+
+Ravenna is just using AVB, as far as I can see from the limited documentation
+that Ravenna has released so far, Ravenna has no requirements beyond AVB.
+
+
+Florian Faber wrote:
+> If you want to provide physical inputs or outputs for Ravenna on your
+> machine, there's nothing you can do without special hardware - for the
+> moment.
+
+Has any documentation on the Ravenna protocol been released publicly yet?
+
+> You have to produce a phase synchronous clock, synced via PtP,
+> and provide a means to timestamp incoming samples and output samples at
+> the correct point in time.
+
+What is the requirement for time stamping incoming samples?
+
+This is the view point from which I ask the question:  I see the
+interesting use
+of networked audio as an inexpensive way to get multiple channels of remote
+audio into or out of a standard PC without a rather expensive card capable of
+MADI or multiple AES3 channels, and in that case the master clock should
+be in
+the ADC or DAC, so the PC only has to send the incoming packets to hard
+drive,
+or send outgoing packets at close enough to the correct time that the DAC
+buffer
+does not have an over or under run.
+
+Does that use case still require hardware timestamp capability on the PC, or
+would a software implementation of 1588/802AS meet the requirements?
+
+Arnold Krille <[hidden]
+> I don't want to be fixed exclusively on the network-peers, I want to use
+> my internal sounddevices to play that sound too.
+
+That should definitely be a separate use case.  Use of independent clock
+domains
+is always a pain, and requires SRC to reconcile all the audio to a single
+clock
+domain at some point.  Single clock domain should definitely be handled
+first,
+and then separate domains can be added as a special case later.
+
+What might be useful is a way to force JACK to use multiple output devices if
+you know that they are all on the same clock domain, e.g. you have two
+different
+devices which are synchronized with word clock or AES11.  I don't think JACK
+currently allows to use two different devices as output, does it?  You
+have to
+use some ALSA trickery to make a composite device?
+
+torbenh wrote:
+> so for the case where you want to slave jack to some avb devices,
+> you need to write a backend.
+> this use-case is particularly interesting, because it will work with
+> normal hardware. (it probably doesnt even need a software ptp
+> implementation)
+
+Torben, can you elaborate on that a bit?  We've gone from Florian saying that
+we need PTP capable hardware, to you saying that we don't even need software
+PTP.
+For that to be the case, would you not need some type of feedback signal from
+an output sink (e.g. DAC) to let you know when the output buffers were too
+low
+or too full? Some network equivalent of the interrupt you get from a PCI
+card,
+and the values in the status register that let you know that it needs more
+buffers to DMA.
+
+> but to just output a stream.... no special hardware is needed.
+
+How to you make sure that the DAC buffers do not underrun, or that you do
+not send too much data too closely together and cause overrun?  I'll
+ignore ADC
+for the moment, that seems the easy case as long as your PC is fast
+enough to keep up with the amount of data that the ADC is sending.
+
+Florian Faber wrote:
+> You mean in the case where jack would only operate on AVB streams and
+> not use any local sound interface?
+
+That is the case I find interesting.  A network attached ADC/DAC, either a
+single device, or possible separate devices which may have an external clock
+synchronization, or which both have hardware PTP capability and synchronize
+their internal clocks that way.  Then a standard PC or server (which all have
+Gb capable network interfaces, often more than one) can be connected to that
+device for audio I/O without requiring to spend an additional $1500 on a MADI
+card.  Something just seems odd about spending $1000 on the computer and
+$1500
+on the audio interface card.  I don't mind spending money on good ADC and
+DAC,
+but it doesn't seem right to spend so much money for (relatively) low bit
+rate
+data transfer between the PC and the data source/sink.
+
+> I was thinking of the case where jack operates on a local backend and
+> does SRC on AVB ports, if neccessary.
+
+That seems to unnecessarily complicate the problem before the first steps are
+even taken.
+
+> It is not I who wants it, it is the spec that demand a phase synchronous
+> clock that matches AES criteria, and bit transparency, amongst other
+> things.
+
+Is the spec available yet?  I only discovered Ravenna very recently, and
+currently on the web site it says that "RAVENNA will be an open technology
+standard without a proprietary licensing policy."  Future tense "will be,"
+not
+current tense "is" an open standard.
+
+>> but to just output a stream.... no special hardware is needed.
+>
+> If you just produce sound (and do not care about synchronization with
+> other sound sources) or want to store the data, yes.
+
+So take the case which is probably pretty common on this list: Ardour running
+on a PC with JACK, connected to one device which has some number of ADC and
+DAC used to record and play audio.  What would be needed in that case?  PTP
+hardware?  PTP software?  Neither?
+
+> In any other case you need a means of hardware synchronization.
+
+Could you describe the cases which would definitely require hardware synch?
+Are those cases effectively the equivalent of having multiple sound cards in
+one computer, which require an external clock to synchronize the audio clocks
+on the cards?  E.g. outputting to two separate network DAC would require
+synchronization.  Would the PC definitely require hardware
+synchronization, or
+would it suffice to have the two audio devices synchronized?
+
+-- 
+Chris Caudle
+
+1298866752.9478_0.ltw:2,a <12ce68531f02859a21f6e75182f63bb8.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

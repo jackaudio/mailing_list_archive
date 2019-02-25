@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Usage feasibility Q</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Usage feasibility Q</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1517090627.17763_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1517092512.19700_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1517091257.18423_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 27 Jan 2018 23:13:43 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Filipe Coelho </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Chris Caudle
+<a href='../1517086589.13871_0.ltw:2,/index.html'>Re: [Jack-Devel] Usage feasibility Q </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Chris Caudle
+<a href='../1517095691.23324_0.ltw:2,/index.html'>Re: [Jack-Devel] Usage feasibility Q </a></td></tr>
+</table>
+<pre>
+On 27.01.2018 21:55, Chris Caudle wrote:
+&gt; On Sat, January 27, 2018 12:42 pm, Filipe Coelho wrote:
+&gt;&gt;&gt; The jack design is not really made for having
+&gt;&gt;&gt; plugins in the server.
+&gt;&gt; The JACK internal clients API disagrees with you ;)
+&gt; OK, I stated too strongly.  Perhaps a better way to state is that
+&gt; implementing the DSP as an external jack program may be more convenient,
+&gt; and would be the more typical way to implement.
+&gt;
+&gt; I'm not completely convinced that what I stated was actually too strong,
+&gt; though.
+&gt; To quote Paul Davis
+&gt; https://lists.linuxaudio.org/pipermail/linux-audio-user/2018-January/109472.html
+&gt; "In-process JACK clients are a very special case and almost nobody
+&gt; implements or uses them. They are like plugins for the JACK server, and
+&gt; that's not really the point of JACK (which was designed to connect distinct
+&gt; processes)."
+&gt;
+&gt; I consider Paul a reasonably good authority on jack programming.
+
+Me too, and what he says is right.
+JACK was made with external clients in mind, and it's what 99.9% of apps 
+use.
+But there are specific scenarios where internal clients are useful.
+
+
+&gt;&gt; Internal clients are faster to run, since they dont require context
+&gt;&gt; switches between different processes.
+&gt; Context switches are only a few microseconds.  Whether to implement as a
+&gt; plugin or external client should be based on development effort and ease
+&gt; of debugging, the context switch time should be less than 0.5% of any
+&gt; reasonably sized period so should not be a consideration.
+&gt;
+&gt;&gt; They're harder to control externally though.
+&gt; Which functions are implemented as jack plugins?  There are several
+&gt; example clients available from the jack source repository, are there
+&gt; example internal plugins?
+
+I responded to these 2 on the reply from Fons.
+But in short, pretty much all of the MOD software runs as internal 
+client (host, peak-meter, serial-midi-handler and file player).
+This makes a real difference on their hardware, and was the way to go to 
+maximize performance.
+
+They're hard to control because you don't have direct access to the 
+process running your client unless you start JACK yourself.
+Typically you make your internal client listen to a known socket or 
+other interface, and connect there.
+
+On the other hand, running as internal client means if your process 
+crashes, JACK crashes too (they're the same process).
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1517090627.17763_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1517092512.19700_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1517091257.18423_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1517091257.18423_0.ltw:2,&nbsp;&lt;bf5f4007-1f02-7084-d9dd-ef38133597f9 at falktx dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

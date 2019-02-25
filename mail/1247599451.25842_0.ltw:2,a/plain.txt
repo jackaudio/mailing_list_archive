@@ -1,0 +1,56 @@
+Date:        Tue, 14 Jul 2009 12:24:06 -0700
+From:        Fernando Lopez-Lezcano  <[hidden] at ccrma dot Stanford dot EDU>
+To:          [hidden] at lists dot linuxaudio dot org, JACK Developers <[hidden] at jackaudio dot org>
+Cc:          [hidden] at ccrma dot Stanford dot EDU
+
+Subject:     [LAD] wrapper script (hack alert!) for jack + pulseaudio
+
+Well, I could not find one so I wrote this simple perl jackd wrapper
+script[*], I really needed something that would enable jack and
+pulseaudio to coexist while the jack + pulseaudio situation stabilizes.
+Not a finished product but seems to work around here (tested lightly on
+Fedora 10). 
+
+If you want to try it out (don't blame me if everything stops working!)
+you should rename your current jackd executable to "/usr/bin/jackd.bin"
+and put the script in its place ("/usr/bin/jackd" by default, don't
+forget to make it executable). You need to have pulseaudio, pacmd and
+pactl available in /usr/bin/. 
+
+If pulseaudio is running the script will suspend it, start the real
+jack, wait for it to be ready and finally load the pulseaudio module
+module-jack-sink (but it does not make it the default). You could then
+manually transfer pulseaudio streams to it. If pulseaudio is not running
+the script just execs the real jackd (set $verbose to 0 in the script if
+you don't want the extra messages). 
+
+The script also traps <ctrl>c and the kill signal, unloads the
+module-jack-sink module, passes the signal to the real jack and when it
+is dead unsuspends pulseaudio. I don't know if trapping more signals
+would be necessary. 
+
+WARNING: if you transfer a pulseaudio stream to the jack sink module and
+then stop jack without unloading it, pulseaudio becomes very very
+unhappy and dies, oh well. You can get it going again with "pulseaudio
+--start" (at least in Fedora 10).
+
+I guess more code could be added to automagically transfer pulse audio
+streams back and forth to the jack sink module when jack starts and
+stops, and also make it the default. It seems it would take a lot of
+parsing of command outputs to do that. 
+
+Anyway, as I said before, just a __temporary__ hack...
+Enjoy!
+-- Fernando
+
+
+[*] why perl? tried bash and could not get the signal stuff to work and
+don't know no python :-) Perl hackers: I could not make exception
+catching work around the open3 call to catch potential errors, help with
+that would be welcome!
+* Attachment: '1247599451.25842_0.ltw:2,a/files/jackd'
+content-type: application/x-perl
+
+1247599451.25842_0.ltw:2,a <1247599446.18611.78.camel at localhost dot localdomain>
+________________________________________________________________________________
+

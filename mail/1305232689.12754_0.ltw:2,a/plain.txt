@@ -1,0 +1,90 @@
+Date:        Thu, 12 May 2011 22:37:48 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Devin Anderson <[hidden] at charityfinders dot com>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Devin Anderson Re: [Jack-Devel] JACK thread priorities on different OSes (1305229530.1810_0.ltw:2,a)
+Follow-Up:   Devin Anderson Re: [Jack-Devel] JACK thread priorities on different OSes (1305233664.15050_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK thread priorities on different OSes
+
+Le 12 mai 2011 à 21:45, Devin Anderson a écrit :
+
+> On Thu, May 12, 2011 at 12:20 PM, Stéphane Letz <[hidden]> wrote:
+> 
+>>> I think the process should run in NORMAL_PRIORITY_CLASS by default,
+>>> and that the process priority should be adjustable via a command line
+>>> argument.
+>>> 
+>>> I'm not totally convinced it will improve the situation either, but,
+>>> given that JACK 2 runs on Windows and is going to continue to run on
+>>> Windows, I would like to see the situation improve as much as it
+>>> possibly can.
+>> 
+>> But you see on the
+>> http://msdn.microsoft.com/en-us/library/ms685100(v=vs.85).aspx table
+>> that *only* process REALTIME_PRIORITY_CLASS will actually change
+>> the actual value of the THREAD_PRIORITY_TIME_CRITICAL right? But
+>> then *all threads* (even GUI ones...) of this process will by higher that any
+>> thread of *any* other lover priority process running on the machine...
+>> 
+>> And the following is clearly written:
+>> 
+>> "You should almost never use REALTIME_PRIORITY_CLASS, because
+>> this interrupts system threads that manage mouse input, keyboard input,
+>> and background disk flushing. This class can be appropriate for
+>> applications that "talk" directly to hardware or that perform brief tasks
+>> that should have limited interruptions."
+> 
+> I do see that.  I also see the absolute thread priority levels that
+> are issued when a process has REALTIME_PRIORITY_CLASS:
+> 
+>    THREAD_PRIORITY_IDLE 16
+>    THREAD_PRIORITY_LOWEST 22
+>    THREAD_PRIORITY_BELOW_NORMAL 23
+>    THREAD_PRIORITY_NORMAL 24
+>    THREAD_PRIORITY_ABOVE_NORMAL 25
+>    THREAD_PRIORITY_HIGHEST 26
+>    THREAD_PRIORITY_TIME_CRITICAL 31
+> 
+> ... and can see the absolute thread priority levels that are issued
+> with MMCSS (from
+> http://msdn.microsoft.com/en-us/library/ms684247%28v=vs.85%29.aspx -
+> see the table at the bottom of the page):
+> 
+>    High
+>    23-26
+>    These threads run at a thread priority that is lower than only certain
+>    system-level tasks. This category is designed for Pro Audio tasks.
+> 
+> ... and I don't see much difference, save for THREAD_PRIORITY_TIME_CRITICAL.
+> 
+> So, perhaps a mapping adjustment can be made when the process has a
+> priority of REALTIME_PRIORITY_CLASS:
+> 
+>   PRIORITY_AUDIO: THREAD_PRIORITY_ABOVE_NORMAL
+>   PRIORITY_CALLBACK: THREAD_PRIORITY_NORMAL
+>   PRIORITY_MIDI_TERMINAL: THREAD_PRIORITY_HIGHEST
+> 
+> It's true that threads that don't need to have realtime priority will
+> have elevated priorities too,
+
+Yes this is the main problem...
+
+> but I think it's important to take into
+> account what those specific threads are doing.
+> 
+> So, uh ... what are those specific threads doing? :)
+
+Any GUI thread, disk access, main thread... Think about any standard audio application (Reason, Live....) that the user start using JackRouter ASIO/JACK bridge. If this process get REALTIME_PRIORITY_CLASS, then it will certainly cause problem for any other running application.
+
+> 
+>> Using MMCSS in the appropriate manner will makes much more
+>> sense... I'll work more in that direction
+> 
+> Very cool. :)
+
+Stéphane 
+
+1305232689.12754_0.ltw:2,a <CB218699-F4B2-4E3E-AA10-DE834C5BB3C0 at grame dot fr>
+________________________________________________________________________________
+

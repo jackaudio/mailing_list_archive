@@ -1,0 +1,187 @@
+Date:        Mon, 28 Feb 2011 11:01:16 +0100
+From:        Florian Faber  <[hidden] at faberman dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Chris Caudle Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2 (1298866752.9478_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2
+
+Chris,
+
+first maybe we should differentiate between AVB and Ravenna. AVB is
+targeting consumers and has pretty relaxed requirements. Ravenna is
+targeting the broadcast sector; it uses some of the basic techniques
+from AVB, but adds proper clocks, device discovery etc. Think of
+connecting a mic to a speaker and all the problems involved. Or changing
+the one defective microphone in a setup with 80 mics. Without the "one
+cable, one signal" paradigm things tend to become ridiculously complicated.
+
+I personally have no interest in AVB.
+
+> Seems like interest and events are coming together all around.
+
+The topic comes up from time to time. It will become more interesting
+with the availability of cheap AVB compliant network hardware. So far it
+is quite expensive, as you probably know - after all, PtP was invented
+at HP. For the price of just one switch with PtP support you can already
+buy a MADI interface.
+
+> I have been looking into that over the past couple of weeks, and it seems that
+> AVB handles network infrastructure requirements, but does not specify higher
+> layer protocol.  So the AVB specification handles clock synchronization,
+> stream bandwidth reservation, and VLAN setup, and as far as I can tell so far,
+> that is all. 
+
+What should be more to it? It creates an environment where you have a
+synchronous media clock and a means to transport data. That's all you
+need to reliably transport any realtime data that might come. Think of
+AVB as a protocol suite, not a protocol itself.
+
+> You still have to have session control to discover end points, discover
+> how many channels are offered by the end point, set up connections, define
+> the arrangement of audio samples within the packets, etc.
+
+All this is handled by other already existing protocols.
+
+> Ravenna seems that it will become the best choice given the statements
+> that it will be published as an open (and I think freely available) standard, 
+> but it does not seem to be finished yet.  The Ravenna web site contains no
+> documentation so far.
+
+There are early-adopter partners to provide a full signal chain from
+microphone to speaker, including infrastructure and DAW. You can already
+buy Ravenna equipment if you want to start and play with it.
+
+The protocol specs will be released to the public, don't worry. It was
+just presented on last year's IBC, give the guys a little time.
+
+> Is there a particular reason you want to make it native in JACK and not
+> incorporate it into the ALSA drivers?  I have been considering the same
+> question, whether it is better to have a driver native in JACK, or whether it
+> would be better to have it independent of JACK so that it could hopefully
+> attract developers from the non-JACK audio world as well.  Having an
+> interface
+> compatible with ALSA would be attractive from that standpoint, because any
+> other
+> Linux application should be able to use it, and JACK should still be able
+> to use it through the ALSA backend.
+
+Sound cards don't tend to change their number of channels all the time,
+as do network devices. ALSA is not very good at coping with variable
+channel numbers, as any RME user knows. Limiting it to the "I just want
+to connect one device!!1" case is not useful.
+
+>> And you are aware that you cannot do AVB without proper hardware support?
+> Do you mean because of the IEEE-1588 based clock synchronization?
+
+Yes.
+
+> There are software implementations of 1588, are they not accurate enough to
+> meet AVB requirements?
+
+It depends what you want to achieve. If you just want to push out data
+and be done, you're ready to go.
+
+> You need switches which understand VLAN tagging and bandwidth reservation
+> for quality-of-service.  I don't think the synchronization adds any
+> requirements
+> to the switches, just the endpoints, but I'm not positive on that yet.
+
+The switches have to support PtP as well, they have to compensate their
+processing and transport latencies as well.
+
+>> Ravenna on the other hand...
+> Ravenna is just using AVB, as far as I can see from the limited documentation
+> that Ravenna has released so far, Ravenna has no requirements beyond AVB.
+
+Ravenna is 'just' another protocol suite that supersets AVB, and has
+much stricter requirements, e.g. the phase synchronous media clock and
+the timestamping. If you somehow manage to implement this in software on
+a general purpose computer, well..
+
+> What is the requirement for time stamping incoming samples?
+
+Very brief: You have to accurately timestamp the moment t_s those
+samples are taken (think of an AES word clock). In a Ravenna clock
+domain, you specify a system latency t_l, so that you have this time
+frame to process and transport your data. Any samples are then output at
+t_s+t_l exactly.
+
+> Does that use case still require hardware timestamp capability on the PC, or
+> would a software implementation of 1588/802AS meet the requirements?
+
+If you just want to throw data to one device (or receive the data), you
+can do it in software alone, sure. In that case all the timestamping
+etc. is done in the hardware. Use the PtP clock to derive your media
+clock and manage the buffers. For AVB, it is even simpler, as there are
+already means for flow control.
+
+> Single clock domain should definitely be handled
+> first, and then separate domains can be added as a special case later.
+
+Ravenna requires bit transparency. IOT: No SRC :)
+
+> What might be useful is a way to force JACK to use multiple output devices if
+> you know that they are all on the same clock domain, e.g. you have two
+> different
+> devices which are synchronized with word clock or AES11.  I don't think JACK
+> currently allows to use two different devices as output, does it?  You
+> have to use some ALSA trickery to make a composite device?
+
+You don't have to. All you need is a simple jack client that speaks RTP
+and that transparently bridges Ravenna ports to jack ports and vice
+versa: Connect a console and magically all the ports pop up in ardour.
+
+> Torben, can you elaborate on that a bit?  We've gone from Florian saying that
+> we need PTP capable hardware, to you saying that we don't even need software
+> PTP.
+
+You mix up AVB and Ravenna, and cases where you just input/output data
+to/from one device, have a sound interface in your computer or talk to
+multiple devices. Make up your mind :)
+
+>> I was thinking of the case where jack operates on a local backend and
+>> does SRC on AVB ports, if neccessary.
+> That seems to unnecessarily complicate the problem before the first steps are
+> even taken.
+
+This would basically be a modified netjack client.
+
+>> If you just produce sound (and do not care about synchronization with
+>> other sound sources) or want to store the data, yes.
+> So take the case which is probably pretty common on this list: Ardour running
+> on a PC with JACK, connected to one device which has some number of ADC and
+> DAC used to record and play audio.  What would be needed in that case?  PTP
+> hardware?  PTP software?  Neither?
+
+If all input and output is performed on the external device and it has
+its own grand master clock, you can do it in software. But this is,
+contrary to your premise, a special use case (in the Ravenna context).
+
+You don't need dedicated ADCs/DACs in the long term, just connect the
+mic to the network. Same for speakers, consoles, ... In the mean time,
+bridges from/to MADI, ADAT, AES will make the migration step easier.
+
+> Are those cases effectively the equivalent of having multiple sound cards in
+> one computer, which require an external clock to synchronize the audio clocks
+> on the cards?  E.g. outputting to two separate network DAC would require
+> synchronization. Would the PC definitely require hardware
+> synchronization, or would it suffice to have the two audio devices synchronized?
+
+Any client that generates audio has to timestamp it, and any client that
+outputs audio has to do it at the t_s+t_l point in time. The
+timestamping has to by synchronous to the grand master clock within the
+AES11 specs.
+
+How you do it, is up to you.
+
+And when you did it, let me break it with a VariSpeed setup :)
+
+
+Flo
+-- 
+Machines can do the work, so people have time to think.
+public key B3B9226C          x-hkp://wwwkeys.eu.pgp.net
+
+1298887307.9085_0.ltw:2,a <4D6B726C.70006 at faberman dot de>
+________________________________________________________________________________
+

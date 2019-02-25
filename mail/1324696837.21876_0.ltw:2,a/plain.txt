@@ -1,0 +1,105 @@
+Date:        Sat, 24 Dec 2011 04:20:06 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          [hidden] at nebelschwaden dot de
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Ede Wolf Re: [Jack-Devel] alsa_in problems (1324679977.21876_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] alsa_in problems
+
+Hi Ede,
+
+On Dec 23, 2011, at 11:39 PM, Ede Wolf wrote:
+> First of all, thanks for your reply. There is a datastream coming from the mic, that's why I've called it armed. Or in other words, it is in record mode, which however is triggered by the OS.
+> 
+> Very likely my feedback problem is related to the software, but since all linux apps behave quite strange,
+
+they do?
+The behaviour of most applications is not so different from most professional apps on other platforms.
+
+> I was not sure wether it is by design or not.
+> At least it seems that by default, when using jack, all inports are directly routed to the outport - what explains the feedback.
+
+JACK does not auto-connect anything, nor does it do any monitoring. The hardware can do monitoring or jack-clients can set it up.
+
+> This is not a matter of qjackctl, as the different application seem to do this automatically when adding an audiotrack. I can break a connection afterwards.
+
+ardour asks on first startup if it should set up software-monitoring for all future sessions. You can change this later in Options->monitoring and options->auto-connect.
+Other apps may provide similar preferences.
+
+> Still, this is without having set up anything yet - just starting up the application and add an audio track.
+
+Setting up a *professional* digital audio workstation requires expertise, time and diligence. On any OS.
+
+As Paul already hinted, there are applications that are easier to use and more convenient to set up; yet also have limitations.
+
+> Normally I would expect that I can choose or will at least be asked which audio in I will assign to a certain track (muse kinda works this way), however, this is not the case with my tested applications. I just add a track and have the loop instantly.
+
+Check the preferences for the apps you use.  search the web "TheAppYouAreUsing auto monitoring".
+For some apps auto-monitoring may be by design, but AFAIK Ardour does not do instant-monitoring unless you explicitly tell it to do so.
+
+> Nevertheless, let that feedback be, this is not application support. I was just intrigued by the different behaviour to alsa, where alsa has a more practical approach in this very case.
+
+from your point-of-view. Others may disagree :) Anyway you're comparing apples and oranges.
+
+> More important anyway: Is there anything I could try about jack closing down the port every now and then? Maybe any recommended settings to alsa_in or jack that could be used as a sane starting point?
+
+qjackctl->Setup timeout (ms)  ; set it to e.g. 3000 = 3seconds.
+
+or the commandline: jackd -realtime -t 3000 ..
+
+> As my new system is not recognizing my Hammerfall for what reason ever,
+
+others may comment on that. IIRC it requires loading a firmware onto the device.
+http://www.linuxjournal.com/article/7024 may be some help or ask on the linux-audio-users list. 
+It's not related to JACK, although someone here may know the answer, anyway. 
+
+> I currently have an USB Soundcard and occasionally the USB microphone, so my jack settings are a bit more relaxed, but I admit, I have not fully understood, what all those periods do.
+> 
+
+see `man jackd` -  The --period defines how many audio-samples are processed at a time. It defines the latency (here: how long does it take from audio-in to audio-out).
+-nperiod is a multiplier that is applied to the period-size only for playback. A simplified explanation for that parameter's existence is, that  some devices require a larger buffer.
+e.g. USB devices can not run with buffers smaller than 32 samples.
+
+The nominal latency is:
+period-size * number-of-periods / sample-rate (Hz). 
+1024 * 2 / 44100Hz = 0.046 seconds = 46ms 
+
+The actual round-trip latency is: nominal input-latency + nominal output-latency + overhead (hardware and OS specific). You can measure it with `jack_delay`.
+
+> Usually jack runs fine with following settings (not really low latency, but stable and currently ok as an intermediate solution):
+> 
+> /usr/bin/jackd --realtime --verbose -d alsa --device hw:4 --rate 44100 --nperiods 4 --period 512 --duplex --hwmon --midi seq
+> 
+
+Try without the '--midi *' - they are known to be buggy (at least for all jack1 versions and jack2 below 1.9.8). Use the stand-alone application a2jmidid instead.
+
+'--hwmon' may actually be responsible for the loopback you're experience - try to uncheck the "HW Monitor" option in Qjackctl->Setup.
+
+From the manual: `man jackd`: hardware-monitoring is a method for obtaining "zero latency" monitoring of audio input. When enabled, requests to monitor capture ports will be satisfied by creating a direct signal path between audio interface input and output connectors, with no processing by the host computer at all.
+
+It requires hardware support. For most sound-cards using this option just does nothing. However it may well be that your USB device does not properly support it or the alsa-driver  for your device does something unexpected,..
+Could you please tell us what audio-interface you are using? run `lsusb` in a terminal to list all usb-devices and their identifiers.
+
+..and do not run jackd in verbose mode. It may put additional stress on the system which in turn causes the drop-out.  (well, it should actually not make any difference because the verbose logging is not done in the real-time thread and is usually lightweight... but..)
+
+-nperiods 4 is also not very common. try 2 or 3. 
+
+> Do I need to go down further with jack or rather tweak alsa_in?
+
+Most likely jackd. Try different period sizes:
+
+   jackd -d alsa -d hw:4 -r 44100 -p 1024 -n 3 
+   alsa_in -d hw:XX -r 44100 -p 1024 -q 1
+
+start with a lightweight system (large period size for jackd, low quality resampling for alsa_in); work your way up. 
+
+Also connect the two USB cards to different USB ports (don't use a USB hub if you can avoid it - if it's a laptop: it may have a built-in hub! re-plug until `lsusb` reports that the devices use different "bus" numbers  - if that works, we can later re-visit this issue.)
+
+With USB devices some combinations work better than others. e.g my Edirol UA-25 works fine with -p 64 -n 2; or -p 1024 -n3; but is prone to x-runs with -p 256 -n 3 or -p512 -n3
+
+HTH,
+robin
+
+1324696837.21876_0.ltw:2,a <3F515B04-EB4B-442D-B073-2EDE051F37B4 at gareus dot org>
+________________________________________________________________________________
+

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack and signals</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack and signals</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305835564.11720_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1305842358.22692_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1305836081.12736_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 19 May 2011 23:13:56 +0300 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Nedko Arnaudov </span> &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at jackaudio dot org, Dan Muresan &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1305623638.6698_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack and signals </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1306156453.13043_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack and signals </a></td></tr>
+</table>
+<pre>
+St&#xE9;phane Letz &lt;[hidden]&gt; writes:
+
+&gt; Le 13 mai 2011 &#xE0; 01:33, Nedko Arnaudov a &#xE9;crit :
+&gt;
+&gt;&gt; Dan Muresan &lt;[hidden]&gt; writes:
+&gt;&gt; 
+&gt;&gt;&gt; Hi,
+&gt;&gt;&gt; 
+&gt;&gt;&gt; I've just noticed that Jack does its own signal handling. Since
+&gt;&gt;&gt; applications may well expect to interact with SIGINT and even
+&gt;&gt;&gt; SIGPIPE, conflicts may arise. Is Jack's use of signals specified
+&gt;&gt;&gt; anywhere? What signals can a client handle and from what threads,
+&gt;&gt;&gt; what signals can it block, are existing handlers chained by Jack,
+&gt;&gt;&gt; etc?
+&gt;&gt;&gt; 
+&gt;&gt;&gt; I also noticed calls to non-multi-threaded signal functions (such
+&gt;&gt;&gt; as signal(), sigprocmask ()) in the jack2 codebase -- mostly in
+&gt;&gt;&gt; examples, but also in common/JackControlAPI.cpp. POSIX specifically
+&gt;&gt;&gt; states that any use of these functions is unspecified in
+&gt;&gt;&gt; multi-threaded programs.  Since their threading-safe counterparts
+&gt;&gt;&gt; (pthread_sigmask(), sigaction()) are used elsewhere in the
+&gt;&gt;&gt; codebase, their use could be easily eliminated.
+&gt;&gt;&gt; 
+&gt;&gt;&gt; BTW, I'm in jack2 now. But such things should be specified for both
+&gt;&gt;&gt; jack1 and jack2.
+&gt;&gt;  I'd be really happy if this gets cleared up. And even happier if
+&gt;&gt; jackdbus finally can catch SIGINT and SIGERM.
+&gt;&gt; 
+&gt;&gt; -- Nedko Arnaudov &lt;GnuPG KeyID: 5D1B58ED&gt;
+&gt;&gt; 
+&gt;
+&gt; I think we should distinguish several things, in JACK2:
+&gt;
+&gt; 1) what happens on server side : the code for signal management is
+&gt; located in two functions jackctl_setup_signals and
+&gt; jackctl_wait_signals (part of the so called "control API")
+&gt;
+&gt; 2) on server side, the desire to precisely control the signal setup,
+&gt; depending of the kind of process that is going to use the
+&gt; "libjackserver" library (up to now: jackd or jackdbus)
+&gt;
+&gt; 3) what happens on client (libjack) side: right now the SIGPIPE signal
+&gt; is filtered to avoid JACK clients receive a SIGPIPE when trying to
+&gt; access a died server (see JackLibGlobals constructor in
+&gt; JackLibGlobals.h)
+&gt;
+&gt; 4) an additional somewhat separated issue is the use of non
+&gt; appropriate API (like "sigprocmask" instead of "pthread_sigmask")
+&gt;
+&gt; We should probably try to refine 1) and 2) to see if
+&gt; jackctl_setup_signals and jackctl_wait_signals have to be redesigned
+&gt; to be more flexible. What are the precise constraints for jackdbus?
+&gt; Nedko can you refine?
+
+jackdbus needs to have a loop. jackd has no loop, it calls
+jackctl_wait_signals(signals). AFAICS jackctl_wait_signals() cannot be
+used for jackdbus because it will block the D-Bus loop.
+
+Maybe dbus loop can be implemented in a separate thread but I'd like to
+avoid this, if possible.
+
+&gt;  3) should be possibly redesigned (is "chaining handlers" mandatory in
+&gt;  this case?)
+&gt;  4) is probably easy (API adaptation).
+
+-- 
+Nedko Arnaudov &lt;GnuPG KeyID: 5D1B58ED&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305835564.11720_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1305842358.22692_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1305836081.12736_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1305836081.12736_0.ltw:2,a&nbsp;&lt;87ei3uqwhn.fsf at arnaudov dot name&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

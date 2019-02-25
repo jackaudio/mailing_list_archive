@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] A couple of questions about Jackdmp</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] A couple of questions about Jackdmp</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303115951.25386_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303119381.32397_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303119157.31846_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 18 Apr 2011 10:32:07 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> John Emmas </span> &lt;[hidden] at tiscali dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1303115951.25386_0.ltw:2,a/index.html'>Re: [Jack-Devel] A couple of questions about Jackdmp </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1303119606.373_0.ltw:2,a/index.html'>Re: [Jack-Devel] A couple of questions about Jackdmp </a></td></tr>
+</table>
+<pre>
+On 18 Apr 2011, at 09:38, St&#xE9;phane Letz wrote:
+
+&gt; 
+&gt;&gt; In recent mailings I've noticed some references to the VC++10 runtime and redistributables.
+&gt; 
+&gt; Only to compile JackRouter ASIO driver, not for jack2 itself.
+&gt; 
+Ah - that's the bit I hadn't realised.  Looking through my code though, although I modified the jackdmp source quite extensively, the vast majority of my changes seem to be for accommodating Cygwin rather than VC++.  For example wherever the code says this:-
+
+#ifdef WIN32
+
+I've needed to change it to this:-
+
+#if (defined(WIN32) &amp;&amp; !defined(__CYGWIN__))
+
+
+With regard to Visual C++ the only major change I needed to implement was to use the threading library 'pthread_win32' as opposed to regular pthread.  The other changes seem to be very simple things (redefining Int64 to be 'long long' for example).
+
+
+&gt;&gt; 
+&gt;&gt; Q2.  If I understand Jackdmp's command line parameters, the parameter "-T" makes Jackdmp "temporary".  I think this means that if a client launches Jackdmp using the "-T" parameter, Jackdmp should unload itself when there are no more clients connected.  Have I understood that correctly?
+&gt; 
+&gt; Yes.
+&gt; 
+&gt;&gt; It's the only thing that doesn't seem to work in my Windows build so I'd like to figure out where I should start looking for the problem.
+&gt;&gt; 
+I'm glad I looked into this.  While browsing through the source I came across this function in JackEngine.cpp:-
+
+void JackEngine::ReleaseRefnum(int ref)
+{
+    fClientTable[ref] = NULL;
+
+    if (fEngineControl-&gt;fTemporary) {
+        int I;
+
+        for (I = REAL_REFNUM; I &lt; CLIENT_NUM; I++) {
+            if (fClientTable[I])
+                break;
+        }
+
+        if (I == CLIENT_NUM) {
+            // last client and temporay case: quit the server
+            jack_log("JackEngine::ReleaseRefnum server quit");
+            fEngineControl-&gt;fTemporary = false;
+
+#ifndef WIN32
+            exit(0);
+#endif
+        }
+    }
+}
+
+I assume that if I removed  #ifndef WIN32  in the above code, my server would magically unload itself when there are no more clients left - but I'm curious to know why the condition was ever there.  Is it still present in the latest code and/or can anyone remember why it's needed?
+
+John
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303115951.25386_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303119381.32397_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303119157.31846_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1303119157.31846_0.ltw:2,a&nbsp;&lt;E2BE758B-0597-4D61-969D-3CFF4B0D7C8A at tiscali dot co dot uk&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

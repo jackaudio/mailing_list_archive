@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] building git / jack2 1.9.9 on Fedora</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] building git / jack2 1.9.9 on Fedora</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1352116613.412_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1352136541.29743_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1352127689.14843_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 05 Nov 2012 16:01:04 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Adrian Knoth </span> &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Ian Malone &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Ian Malone
+<a href='../1352064979.4919_0.ltw:2,a/index.html'>[Jack-Devel] building git / jack2 1.9.9 on Fedora </a></td></tr>
+</table>
+<pre>
+On 11/04/2012 10:36 PM, Ian Malone wrote:
+
+&gt; Hi again,
+
+Hi!
+
+&gt; Firstly doxygen doesn't build, this is an error in waf that traces back to:
+&gt;   File "/home/ian/rpmbuild/BUILD/jack-1.9.9/jack-1.9.9/wscript", line
+&gt; 338, in build
+&gt;     share_dir = bld.env.get_destdir() + bld.env['PREFIX'] +
+&gt; '/share/jack-audio-connection-kit'
+&gt; TypeError: 'list' object is not callable
+
+Confirmed. I wonder how the existing code ever worked. Looks like it
+requires a complete rewrite.
+
+Meanwhile, don't call --doxygen or run doxygen on your own.
+
+
+&gt; [237/269] cprogram: build/example-clients/alsa_in.c.30.o
+&gt; build/common/memops.c.30.o -&gt; build/example-clients/alsa_in
+&gt; 21:05:33 runner ['/usr/bin/gcc', 'example-clients/alsa_in.c.30.o',
+&gt; 'common/memops.c.30.o', '-o',
+&gt; '/home/ian/rpmbuild/BUILD/jack-1.9.9/jack-1.9.9/build/example-clients/alsa_in',
+&gt; '-Wl,-Bstatic', '-Wl,-Bdynamic', '-Lcommon', '-ljack', '-lpthread',
+&gt; '-lcelt0', '-lrt', '-ldl', '-lasound', '-lsamplerate']
+&gt; /usr/bin/ld: example-clients/alsa_in.c.30.o: undefined reference to
+&gt; symbol 'floor@@GLIBC_2.2.5'
+&gt; /usr/bin/ld: note: 'floor@@GLIBC_2.2.5' is defined in DSO
+&gt; /lib64/libm.so.6 so try adding it to the linker command line
+&gt; /lib64/libm.so.6: could not read symbols: Invalid operation
+&gt; collect2: error: ld returned 1 exit status
+&gt; Waf: Leaving directory `/home/ian/rpmbuild/BUILD/jack-1.9.9/jack-1.9.9/build'
+
+&gt; The change that introduced this is
+&gt; https://github.com/jackaudio/jack2/commit/f28523ff5415c96d681551d2b3a614ef851b9b4a
+&gt; which looks like it's meant to use a different method of specifying
+&gt; libraries, but a comment on that suggests it's incomplete wrt. alsa,
+&gt; which I think is what I'm seeing.
+
+Please test the attached patch. The problem is: no matter how often I
+pass -Wl,--as-needed, I cannot reproduce this problem.
+
+So the patch is untested and maybe still incomplete, but maybe it solves
+your problem. If it does the trick, I'll commit it.
+
+&gt; There's one final failure, which is more a Fedora packaging problem,
+&gt; but it seems something has changed in the installed packages:
+&gt; 
+&gt; + chmod 755 '/home/ian/rpmbuild/BUILDROOT/jack-audio-connection-kit-1.9.9-12.fc18.x86_64/usr/lib64/jack/*.so'
+&gt; '/home/ian/rpmbuild/BUILDROOT/jack-audio-connection-kit-1.9.9-12.fc18.x86_64/usr/lib64/libjack*.so.*.*.*'
+&gt; chmod: cannot access
+&gt; '/home/ian/rpmbuild/BUILDROOT/jack-audio-connection-kit-1.9.9-12.fc18.x86_64/usr/lib64/jack/*.so':
+&gt; No such file or directory
+&gt; chmod: cannot access
+&gt; '/home/ian/rpmbuild/BUILDROOT/jack-audio-connection-kit-1.9.9-12.fc18.x86_64/usr/lib64/libjack*.so.*.*.*':
+&gt; No such file or directory
+&gt; error: Bad exit status from /var/tmp/rpm-tmp.DObdrk (%install)
+&gt; 
+&gt; All the libraries now seem to be in:
+&gt; &lt;prefix&gt;/lib64/
+&gt; 
+&gt; Though the following are in &lt;prefix&gt;/usr:
+&gt; bin  include  share
+&gt; 
+&gt; The odd location for lib64 makes me wonder if this is another
+&gt; waf/wscript-related problem. Suggestions about any of these issues
+&gt; welcome.
+
+The semantic of --libdir has changed. You have to change the Fedora spec
+file, too, that is, you have to provide absolute paths now. That's what
+I did in Debian:
+
+
+http://anonscm.debian.org/gitweb/?p=pkg-multimedia/jackd2.git;a=commitdiff;h=6379f70978cd8c7ff74218d316aa623d8eb18584
+
+
+Cheers
+
+<a href='files/jackd-wscript.patch' target='_blank'>* Attachment: 'jackd-wscript.patch'</a>
+content-type: text/x-diff
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1352116613.412_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1352136541.29743_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1352127689.14843_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1352127689.14843_0.ltw:2,a&nbsp;&lt;5097D4B0.9070300 at drcomp dot erfurt dot thur dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

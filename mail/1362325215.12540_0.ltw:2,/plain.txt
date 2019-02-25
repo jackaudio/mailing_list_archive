@@ -1,0 +1,115 @@
+Date:        Sun, 03 Mar 2013 16:40:02 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Tommaso Cucinotta <[hidden] at sssup dot it>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Tommaso Cucinotta Re: [Jack-Devel] Linux to Linux jacknet ? (1362324780.12245_0.ltw:2,a)
+Follow-Up:   Tommaso Cucinotta Re: [Jack-Devel] Linux to Linux jacknet ? (1362337515.24241_0.ltw:2,a)
+Follow-Up:   Tommaso Cucinotta Re: [Jack-Devel] Linux to Linux jacknet ? (1363721930.14801_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Linux to Linux jacknet ?
+
+Le 3 mars 2013 à 16:32, Tommaso Cucinotta <[hidden]> a écrit :
+
+> On 28/02/13 10:46, Roland Mas wrote:
+>> Tommaso Cucinotta, 2013-02-28 09:30:56 +0000 :
+>> 
+>>> On a related note, are the 2 machines constrained to be in the same
+>>> subnet ?
+>> 
+>>  That would be a fair assumption, given the autodiscovery mentioned
+>> above.  But maybe a setup using jack_netsource can be rid of that
+>> constraint.
+> 
+> Thanks for all the info. So, as in my network set-up I may have master
+> and slave on different subnets, I guess I'll drop this connection method,
+> and instead try the other one with jack_netsource where I can specify the
+> slave host IP.
+> 
+> However, it doesn't work again. Let me detail.
+> 
+> slave side:
+> $ jackd -d net
+> jackdmp 1.9.9.5
+> [...]
+> JACK server starting in realtime mode with priority 10
+> NetDriver started in async mode without Master's transport sync.
+> Waiting for a master...
+> 
+> master side:
+> $ jackd -d alsa
+> $ jack_netsource -H <slave-ip> -i2 -o2 -I1 -O1
+> Not Connected
+> 
+> It keeps saying Not Connected, I tried adding "-p19000" (btw, is it correct that the port over which this traffic is bound is 19000 on the slave side ? What about the client side ?).
+> On the server side, it keeps "Waiting for a master...".
+> 
+> I seem to have all iptables chains open here, what can be going wrong ?
+> 
+> I wanted to try both slave and master on the same PC, using -H 127.0.0.1 (and I use a different name for the slave, i.e., jackd -n slave -d net), and in such a case I'm getting a slight different behaviour: when I launch jack_netsource without any -p option, nothing happens as before. But, if I add to jack_netsource the -p19000 option, then I can see something happening on the slave side:
+> 
+> $ jackd -R -n slave -d net
+> jackdmp 1.9.9.5
+> [...]
+> JACK server starting in realtime mode with priority 10
+> NetDriver started in async mode without Master's transport sync.
+> Waiting for a master...
+> Initializing connection with ...
+> **************** Network parameters ****************
+> Name : 
+> Protocol revision : 2
+> MTU : 0
+> Master name : 
+> Slave name : 
+> ID : 0
+> Transport Sync : no
+> Send channels (audio - midi) : 0 - 0
+> Return channels (audio - midi) : 0 - 0
+> Sample rate : 0 frames per second
+> Period size : 0 frames per period
+> Network latency : 0 cycles
+> SampleEncoder : Float
+> Slave mode : async
+> ****************************************************
+> 
+> But, jack_netsource on master side keeps outputting "Not Connected". Also, when I kill jack_netsource, the slave side goes crazy with either infinite Xrun error messages, or with this [1] which I saw happening only once. I tried both the latest Ubuntu jackd and the one recompiled from git master. All non-working the same.
+> 
+> How would you suggest to debug the problem ?
+> 
+> Thanks again,
+> 
+> 	tom.
+> 
+> [1]
+
+
+1) You're "mixing" 2 différent implémentation of netjack 
+
+2) netjack2 can use an explicit IP see, jackd -d net -h
+
+	-a, --multicast-ip 	Multicast address, or explicit IP of the master (default: 225.3.19.154)
+	-p, --udp-net-port 	UDP port (default: 19000)
+	-M, --mtu 	MTU to the master (default: 1500)
+	-C, --input-ports 	Number of audio input ports. If -1, audio physical input from the master (default: -1)
+	-P, --output-ports 	Number of audio output ports. If -1, audio physical output from the master (default: -1)
+	-i, --midi-in-ports 	Number of midi input ports (default: 0)
+	-o, --midi-out-ports 	Number of midi output ports (default: 0)
+	-c, --celt 	Set CELT encoding and number of kBits per channel (default: -1)
+	-n, --client-name 	Name of the jack client (default: 'hostname')
+	-l, --latency 	Network latency (default: 5)
+
+
+3)  So on master side :
+
+jackd -d alsa .
+
+jack_load netmanager
+
+On slave side:
+
+jackd -d net  -a IP_OF_THE_MASTER
+
+Stéphane 
+
+1362325215.12540_0.ltw:2, <E729B02C-30CB-4CC8-AEE3-8700DF5D393B at grame dot fr>
+________________________________________________________________________________
+

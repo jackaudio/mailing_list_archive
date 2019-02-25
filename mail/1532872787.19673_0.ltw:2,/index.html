@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Fwd: Possible error codes for jack_midi_event_get()?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Fwd: Possible error codes for jack_midi_event_get()?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1532802150.3977_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1533991670.13288_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1532872787.19673_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 29 Jul 2018 15:58:47 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Matthias Geier </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Hanspeter Portner &lt;[hidden] at open-music-kontrollers dot ch&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Hanspeter Portner
+<a href='../1532802150.3977_0.ltw:2,/index.html'>Re: [Jack-Devel] Fwd: Possible error codes for jack_midi_event_get()? </a></td></tr>
+</table>
+<pre>
+On Sat, Jul 28, 2018 at 8:21 PM, Hanspeter Portner wrote:
+&gt; On 28.07.2018 16:55, Matthias Geier wrote:
+&gt;&gt; Dear list.
+&gt;&gt;
+&gt;&gt; I'm the author of one of the Python bindings for JACK:
+&gt;&gt; https://jackclient-python.readthedocs.io/
+&gt;&gt;
+&gt;&gt; I was a bit lazy when implementing a generator function that's
+&gt;&gt; supposed to yield all incoming MIDI events one-by-one.
+&gt;&gt;
+&gt;&gt; Here's the code if somebody is interested (it's using CFFI and the
+&gt;&gt; _lib object is a wrapper for the JACK API):
+&gt;&gt;
+&gt;&gt;
+&gt;&gt;     def incoming_midi_events(self):
+&gt;&gt;         event = self._event
+&gt;&gt;         buf = _lib.jack_port_get_buffer(
+&gt;&gt;             self._ptr, self._client.blocksize)
+&gt;&gt;         for i in range(_lib.jack_midi_get_event_count(buf)):
+&gt;&gt;             err = _lib.jack_midi_event_get(event, buf, i)
+&gt;&gt;             # TODO: proper error handling if this ever happens:
+&gt;&gt;             assert not err, err
+&gt;&gt;             yield event.time, _ffi.buffer(event.buffer, event.size)
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; As you can see, I didn't check the return value of
+&gt;&gt; jack_midi_event_get(), I just added an "assert" statement hoping that
+&gt;&gt; somebody would report it if the call to jack_midi_event_get() would
+&gt;&gt; ever fail.
+&gt;&gt;
+&gt;&gt; I didn't hear anything for a long time, but recently I got a bug
+&gt;&gt; report where the assertion was violated:
+&gt;&gt; https://github.com/spatialaudio/jackclient-python/issues/54
+&gt;&gt;
+&gt;&gt; This shows that jack_midi_event_get() can raise an error, even if I
+&gt;&gt; check with jack_midi_get_event_count() beforehand.
+&gt;&gt;
+&gt;&gt; My question is now: how should I react to this error?
+&gt;
+&gt; For JACK1 error is only returned if midi_event_index &gt;= midi_event_count [1].
+&gt;
+&gt; For JACK2 the same is true; additionally it can fail if the MIDI port buffer is
+&gt; invalid (whatever that means...) [2].
+&gt;
+&gt; [1] https://github.com/jackaudio/jack1/blob/master/libjack/midiport.c#L96
+&gt; [2] https://github.com/jackaudio/jack2/blob/master/common/JackMidiAPI.cpp#L67
+
+Thanks a lot for those links, that's very helpful!
+
+So jack_midi_get_event_count() really just returns the (private)
+"event_count" field of the buffer structure.
+
+My follow-up question now is:
+
+Is the "event_count" field ever changed by JACK while a process
+callback is running?
+
+It seems unlikely to me, but it looks this is exactly what is
+happening in the case of the bug report I've received.
+
+Is it possible that the buffer is cleared while a process callback is
+still running?
+
+Of course it would also be possible (but similarly unlikely) that some
+of the user code is writing to the buffer structure.
+
+If I didn't miss anything, jack_midi_event_get() can never write to
+the "event_count" field.
+
+&gt;&gt; Shall I ...
+&gt;&gt;
+&gt;&gt; * discard the current event and continue reading further events?
+&gt;&gt;
+&gt;&gt; * discard the current and all following events in this block?
+&gt;&gt;
+&gt;&gt; * raise an error?
+&gt;&gt;
+&gt;&gt; * do something else?
+&gt;
+&gt; Well, there is no valid event, so ignore it ?
+
+OK.
+
+&gt;&gt; Can I guarantee that no incoming MIDI events get lost?
+&gt;
+&gt; MIDI events can only get lost while multiplexed down from multiple ports into
+&gt; one (and the latter can not take them all), iirc.
+
+OK, good to know.
+
+&gt;&gt; Another related question: what error code is supposed to be returned?
+&gt;&gt; The documentation
+&gt;&gt; (http://www.jackaudio.org/api/group__MIDIAPI.html#ga838c794bd1451bfd47edde1c7cd1ff4f)
+&gt;&gt; mentions ENODATA, but according to my bug report, ENOBUFS (-105) was
+&gt;&gt; returned.
+&gt;&gt;
+&gt;&gt; Is this a bug in JACK or an omission in the documentation?
+&gt;
+&gt; It is in the documentation, that it can fail [3].
+&gt;
+&gt; [3] http://jackaudio.org/api/group__MIDIAPI.html#ga838c794bd1451bfd47edde1c7cd1ff4f
+
+Yes, I've used that same link a few lines above.
+It tells us about the return value:
+
+    0 on success, ENODATA if buffer is empty.
+
+Having looked at the implementations in the meantime, I now know that
+JACK1 returns ENODATA and JACK2 returns -ENOBUFS.
+
+So this is clearly a mismatch between the documentation and the JACK2
+implementation.
+
+This also shows that the user who filed the bug report was using
+JACK2, since they got a return value of -105 (which is -ENOBUFS).
+
+cheers,
+Matthias
+
+&gt;&gt; I don't know which JACK version was used, the OS was Ubuntu 18.04 LTS 64 bits.
+&gt;&gt;
+&gt;&gt; cheers,
+&gt;&gt; Matthias
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1532802150.3977_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1533991670.13288_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1532872787.19673_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1532872787.19673_0.ltw:2,&nbsp;&lt;CAFesC-eMN4FuN+9G4u2sYn=t+JQmgFUHr9epPLdJiLTwGOnKbQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,59 @@
+Date:        Wed, 16 Dec 2009 18:50:42 +0100
+From:        Olivier Guilyardi  <[hidden] at samalyse dot com>
+To:          Tim Blechmann <[hidden] at klingt dot org>
+Cc:          [hidden] at lists dot linuxaudio dot org
+In-Reply-To: Tim Blechmann Re: [LAD] Atomic Operations (1260956688.26220_0.ltw:2,a)
+Follow-Up:   Tim Blechmann Re: [LAD] Atomic Operations (1260986281.19697_0.ltw:2,a)
+
+Subject:     Re: [LAD] Atomic Operations
+
+On 12/16/2009 10:43 AM, Tim Blechmann wrote:
+>>>> this was discussed at some considerable length on jack-devel last  
+>>>> year, IIRC.
+>>>> for single reader/single writer ringbuffers, i believe that we
+>>>> concluded that memory barriers are not necessary.
+>>> No, to me the conclusion was: we can't programmatically prove that  
+>>> memory
+>>> barriers are needed (even on the most vulnerable architectures),  
+>>> but the theory
+>>> say that they are, and they should be added for correctness.
+>> My understanding matches Olivier's.  Intel processors have strong memory
+>> ordering, and so on them the jack ringbuffer is safe without memory
+>> barriers. However, some PPC processors, and SPARC V9s under linux  
+>> (but not
+>> Solaris), use weak memory ordering, and on them, the jack ringbuffer  
+>> code
+>> can theoretically fail.
+> 
+> exactly, the issue may not appear on x86, because of its memory
+> consistency, weakly-ordered machines will need some barriers ...
+
+The point is, I wrote ringbuffer stress tests, and someone reported on this list
+that they succeeded on a weakly-ordered (PowerPC SMP) system, even without
+memory barriers. Anyway...
+
+>> See the "ring buffer memory barriers" discussion on jack-devel back in
+>> October of last year for more information; in particular, this article
+>> by Paul E. McKenney is very helpful:
+>>
+>> http://www.linuxjournal.com/article/8211
+> 
+> memory-barriers.txt of the linux kernel documentation is interesting as
+> well ...
+
+The portaudio ringbuffer is also a good source of inspiration I think:
+http://portaudio.com/trac/browser/portaudio/trunk/src/common/pa_ringbuffer.c
+
+In short, they use memory barriers at only three places, especially:
+
+- "to ensure that previous writes are seen before we update the write index"
+- "to ensure that previous writes are always seen before updating the (read) index."
+
+It shouldn't be so complex to fix in jack I guess.
+
+--
+  Olivier
+
+1260985863.18794_0.ltw:2,a <4B291DF2.2080906 at samalyse dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Avoiding spinlocks in a parallel sequencer</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Avoiding spinlocks in a parallel sequencer</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1427899100.13028_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1428518401.2106_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1428509673.17938_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 08 Apr 2015 18:14:17 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> [hidden] at mailueberfall dot de </span> &lt;[hidden] at mailueberfall dot de </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Markus Seeber
+<a href='../1428522947.9370_0.ltw:2,/index.html'>Re: [Jack-Devel] Avoiding spinlocks in a parallel sequencer </a></td></tr>
+</table>
+<pre>
+Hello,
+
+currently, I am trying to write a sequencer which should be able to contain 40 or more instances of zynaddsubfx, plus some effects. zynaddsubfx outputs data using jack, so for each zynaddsubfx, I'll add a jack client with two ports each, and a ringbuffer. These clients will simply forward zyn's output to the respective ringbuffer.
+
+So far (using jack2 at least), we end up in a parallelized setup. The problem is that I would like the sequencer to output it's final sound via jack, too. So the sequencer gets one more jack client, which is connected to the sequencer's out ports. This client must call process() to do everything except feeding the ringbuffers, e.g.:
+
+ * computing simple effects, like lfo generation, lfo transformation, ...
+ * sending control parameters *to* zynaddsubfx
+ * post-process zyn's audio data by reading the ringbuffers
+
+However, the last points is an issue. If there's nothing to read, I'll need to use a spinlock to wait for zynaddsubfx. Even if that spinlock is atomic-based and lock-free (I think it should be RT safe then), this will cause many unused CPU cycles.
+
+Does anyone have a better idea than using spinlocks?
+
+Thanks + kind regards,
+Johannes
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1427899100.13028_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1428518401.2106_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1428509673.17938_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1428509673.17938_0.ltw:2,&nbsp;&lt;trinity-ed8b1778-8a79-4231-981e-7730cd86031e-1428509657341 at 3capp-gmx-bs71&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

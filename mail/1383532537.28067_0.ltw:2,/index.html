@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] multiple jack crashes in high-load VOIP environment</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] multiple jack crashes in high-load VOIP environment</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1383318780.12928_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1383550925.3026_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1383532537.28067_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 04 Nov 2013 03:35:27 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Marc Waesche </span> &lt;[hidden] at waesche dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1383550925.3026_0.ltw:2,/index.html'>Re: [Jack-Devel] multiple jack crashes in high-load VOIP environment </a></td></tr>
+</table>
+<pre>
+Hi devs,
+
+first of all let us express our gratitude to such a great tool like jackd!
+
+One of our IT projects uses jackd in a high-load VoIP-environment, to 
+transfer and mix audiostreams from an asterisk pbx server to a wowza 
+flash media server. But we're currently experiencing problems with 
+jackd, unfortunately. The issues:
+
+- creating new jack ports failes
+- massive XRuns
+- jackd crashes unconditionally
+- jack_lsp throws errors, unconditionally
+
+Some of the error messages are:
+
+jack_lsp:
+    jack_lsp: no process found
+
+jackd:
+    JackEngine::XRun: client = .... was not finished, state = Triggered
+    JackAudioDriver::ProcessGraphAsyncMaster: Process error
+    CheckRes error
+    Could not write notification
+    ClientNotify fails name = ....  notification = 1 val1 = 0 val2 = 0
+
+ffmpeg client:
+    JACK xrun
+    Cannot open ....  client
+    [jack @ 0x2dde120] Unable to register as a JACK client
+
+
+Of course, jackd was being started before. Further information:
+
+- Cmdline: /usr/bin/jackd -R -p 512 -d dummy -C0 -P0 -p 320 -r 16000
+- All servers are on the same machine
+- Concurrent Streams: up to 100 (but the problems occurs with even a few
+streams like 5 or 10)
+- we do not use jackdbus
+- jackd is started by root
+
+Our internal process:
+
+Asterisk is originating a call (by using a callfile) and will create two 
+jack ports for incoming and outgoing audio. At the same time, ffmpeg is 
+being started, creating an input jack port and sending all audio out to 
+the wowza flash server using the rtmp protocol. Now both ports 
+(asterisk/out and ffmpeg/in) are being connected using jack_connect. 
+During this session, mplayer playes wav-files to tho asterisk/in port.
+
+One problem is that we need to start ffmpeg in the brackground, so we 
+have to wait some seconds before calling jack_connect, because the jack 
+port created by ffmpeg might not to be "ready" at this time. Our current 
+-not very intelligent- solution ist to call jack_lsp in intervals to 
+find out, when the port is available.
+
+But it seems to me, that jack_lsp does not always return the list of 
+jack ports, and even, in some cases, crashes the jackd daemon. Could it 
+be a multithreading-issue, or a kind of race-condition that leads to the 
+crash?
+
+Other issues we run into are the masssive xruns. Is it possible that 
+Wowza (java software) is interfering the realtime jackd processes by 
+acquiring too many CPU ressources? I've never seen Wowza in a "critical 
+state", even when the xruns occur.
+
+
+One last thing to mention:
+Fighting the xruns, I've tried to increase the period parameter, 
+expecting higher latencies. Now there were no more xruns, but the 
+audiostream was scattered/staccato.
+
+
+For every help to solve (or localize) the described problems we are 
+very, very thankful because we work for over a year now at this server 
+solution and did not awaite such a technical problem at the end of the 
+development. That problems became recognizable when we did our last 
+tests after finishing the development. (okay, we THOUGHT we finished the 
+development work ;)
+
+Best regards from Germany
+Andreas Born &amp; Marc Waesche
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1383318780.12928_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1383550925.3026_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1383532537.28067_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1383532537.28067_0.ltw:2,&nbsp;&lt;527707EF.3000000 at waesche dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

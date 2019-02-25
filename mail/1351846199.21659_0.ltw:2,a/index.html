@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] jack_session_notify error handling</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] jack_session_notify error handling</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1351616560.19110_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1351846544.22266_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1351846199.21659_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 02 Nov 2012 09:49:50 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> rev8 </span> &lt;[hidden] at wp dot pl&gt; </td></tr>
+<tr><td class='col1'>To</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>rev8
+<a href='../1352136541.29743_0.ltw:2,a/index.html'>[Jack-Devel] jack_session_notify error handling </a></td></tr>
+</table>
+<pre>
+Hi,
+
+There is a small no compliance with documentation in session_notify.c file. It should handling error (JackSessionFlags).
+
+I have support for this in FSTHost from client side.
+
+I made some patch. There is also fix for save_patch (it should be terminated by '/').
+
+69d68
+&lt; char *last;
+71,78c70
+&lt; strcpy(save_path, argv[2]);
+&lt; 
+&lt; last = save_path + strlen(save_path) - 1;
+&lt; if (*last != '/') {
+&lt; *(++last) = '/';
+&lt; *(++last) = '\0';
+&lt; }
+&lt; 
+---
+&gt; save_path = argv[2];
+130d121
+&lt; save_path = alloca(strlen(argv[2]) + 1);
+134d124
+&lt; int exit_code = 0;
+155,160d144
+&lt; if ( retval[i].flags &amp; JackSessionSaveError) {
+&lt; printf("# %s FAIL\n", retval[i].client_name);
+&lt; exit_code = 1;
+&lt; continue;
+&lt; }
+&lt; 
+169,170d152
+&lt; if ( retval[k].flags &amp; JackSessionSaveError )
+&lt; continue;
+198c180
+&lt; return exit_code;
+---
+&gt; return 0;
+
+Best Regards
+Pawel
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1351616560.19110_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1351846544.22266_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1351846199.21659_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1351846199.21659_0.ltw:2,a&nbsp;&lt;5093892e7248e9.74715753 at wp dot pl&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

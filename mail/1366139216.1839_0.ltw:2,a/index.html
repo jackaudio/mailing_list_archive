@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Cleanup of clients in libjack2 causes crash</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Cleanup of clients in libjack2 causes crash</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1366138591.851_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1366143202.8265_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1366139216.1839_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 16 Apr 2013 21:06:36 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Bob van Loosen &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Bob van Loosen
+<a href='../1366138591.851_0.ltw:2,a/index.html'>[Jack-Devel] Cleanup of clients in libjack2 causes crash </a></td></tr>
+</table>
+<pre>
+Le 16 avr. 2013 &#xE0; 20:56, Bob van Loosen &lt;[hidden]&gt; a &#xE9;crit :
+
+&gt; Hello,
+&gt; 
+&gt; I've written a program that can create multiple jack clients and connect them to jackd.
+&gt; I'm using a callback passed to jack_on_info_shutdown() to know when a jack client has exited,
+
+?? 
+
+jack_on_info_shutdown is called when the *server* quits&#x85;.
+
+&gt; when that happens I deactivate and close the client, and I try to make a new one every second.
+&gt; This way I can restart jackd without having to restart my program.
+
+&gt; 
+&gt; So far so good, until my program started to segfault whenever I closed jackd.
+&gt; After some digging I found this code in JackLibGlobals.h:
+&gt; 
+&gt; if (!JackGlobals::fServerRunning &amp;&amp; fClientCount &gt; 0) {
+&gt; 
+&gt;    // Cleanup remaining clients
+&gt;    jack_error("Jack server was closed but clients are still allocated, cleanup...");
+&gt;    for (int i = 0; i &lt; CLIENT_NUM; i++) {
+&gt;        JackClient* client = JackGlobals::fClientTable[i];
+&gt;        if (client) {
+&gt;            jack_error("Cleanup client ref = %d", i);
+&gt;            client-&gt;Close();
+&gt;            delete client;
+&gt;            JackGlobals::fClientTable[i] = NULL;
+&gt;        }
+&gt;    }
+
+This code was supposed to close clients that the program incorrectly forgot to close. It is sometimes rather necessary&#x85; (you now libjack trying to do the job because developers don't use the API correctly..)
+&gt; 
+&gt; So what happens here is, jackd exits, I deactivate and close a client, I create a new one with jack_client_open(),
+&gt; libjack2 then deletes all the other clients, and my program is then left with several invalid jack_client_t* pointers.
+
+Do you mean double "delete" yes?
+&gt; 
+&gt; What I suggest here instead, is to just call client-&gt;Close() and remove the client from JackGlobals::fClientTable
+&gt; (which JackClient::Close() already does btw), and then leave the dealloc up to the program itself.
+&gt; 
+&gt; Regards,
+
+
+Please send me a test program that shows the problem.
+
+St&#xE9;phane
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1366138591.851_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1366143202.8265_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1366139216.1839_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1366139216.1839_0.ltw:2,a&nbsp;&lt;3420C5DB-8170-4A0A-A86C-3F62E81FB33F at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

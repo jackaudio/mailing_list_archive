@@ -1,0 +1,55 @@
+Date:        Fri, 04 Nov 2011 00:39:31 +0100
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at grame dot fr
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] RFC: jackd portnames (1320341641.23391_0.ltw:2,RSa)
+
+Subject:     Re: [Jack-Devel] RFC: jackd portnames
+
+On 11/03/11 18:33, Adrian Knoth wrote:
+
+Hi!
+
+>> adi@chopin:~$ jack_lsp 
+>> system:capture_1
+>> system:capture_2
+>> system:playback_1
+>> system:playback_2
+>> adi@chopin:~$ ./a.out "system:capture_1" "guitar"
+>> adi@chopin:~$ jack_lsp 
+>> system:guitar
+>> system:capture_2
+>> system:playback_1
+>> system:playback_2
+> 
+> It seems it only works on jackd1 atm, haven't checked why, yet. Maybe
+> jackd2 doesn't allow a client to modify another client's port names, but
+> that's what I need here.
+
+sletz: jack_port_set_name() is "broken" on jackd2.
+
+ if (manager && ((refnum = manager->GetPort(myport)->GetRefNum()) > 0)) {
+     JackClient* client = JackGlobals::fClientTable[refnum];
+     assert(client);
+     return client->PortRename(myport, name);
+
+I only have a vague idea what fRefNum ist (an ID for the client?), so
+the check for ">0" is a bit strong.
+
+Later, client is NULL and the assertion fails.
+
+Everything is fine on jackd1, I can rename system ports to whatever I
+like as shown above.
+
+The documentation doesn't limit jack_port_set_name() to the same client,
+so I think a developer can expect it to work for all port_ids, no matter
+if the port belongs to his own client or not.
+
+Would be neat to have this on jackd2, too. ;)
+
+
+TIA
+
+1320363623.24026_0.ltw:2,a <4EB32633.30906 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

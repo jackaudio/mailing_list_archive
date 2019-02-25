@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JackTransport vs VST ppqPos</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JackTransport vs VST ppqPos</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1368592291.30117_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1368608369.8964_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1368597271.561_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 15 May 2013 07:54:16 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Pawel Xj &lt;[hidden] at wp dot pl&gt;, Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Pawel
+<a href='../1368592291.30117_0.ltw:2,a/index.html'>[Jack-Devel] Odp: Re: JackTransport vs VST ppqPos </a></td></tr>
+</table>
+<pre>
+&gt;&gt; 
+&gt;&gt; 
+&gt;&gt; JACK does not do anything regarding those values: the timebase master *client* is responsible to update extended position information, counting beats, timecode, etc. (see : http://jackaudio.org/files/docs/html/transport-design.html)
+&gt;&gt; 
+&gt;&gt; I don't see any specific issues here on OSX testing either with jack_transport or Ardour as timebase master (well I see CBFBBT value staying the same while CBFF moving with jack_transport  at very low tempo like 1 or 2)
+&gt;&gt; 
+&gt;&gt; Can you try with Ardour also?
+&gt;&gt; 
+&gt;&gt; St&#xE9;phane 
+&gt; 
+&gt; Thanks for answer Stephane.
+&gt; Meantime I dig a little and I think that found a reason of this issue, If you look on this line from transport.c (jack_transport example client):
+&gt; pos-&gt;tick += nframes * pos-&gt;ticks_per_beat * pos-&gt;beats_per_minute / (pos-&gt;frame_rate * 60);
+&gt; 
+&gt; IMHO it mean "how many ticks are in current period". If nframes is 256 and frame rate is 96k  and BPM is 5 (or less) you got 0.928798 ... but pos-&gt;tick is uint32_t .. so you actually got 0 ;-). OFC this is related to your settings and that's way YMMV. Well ... in some cases jack_transport will not push BBT at all ;-)
+&gt; 
+&gt; The problem is in Transport design itself - because BBT master works always in current cycle space/context - I mean - it  doesn't look at the history (anyway it can't if we want to have tempo changes, right ?), and because ticks are uint32_t  we will have always some rounding.
+&gt; 
+&gt; The most simple way to fix this that I see is push tick to double - but this probably made some compatibility issues :(
+&gt; 
+&gt; Or maybe someone have better idea - maybe we can use pos-&gt;frame to adjust pos-&gt;tick in next frame ?
+&gt; 
+&gt; Pawel / Xj
+&gt; 
+
+(this transport design is quite old&#x85;)
+
+If ticks is changed from uint32_t to double then we may have a ABI problem yes...
+
+Comments from other transport guru here? (I was not personally implicated with this design&#x85;)
+
+St&#xE9;phane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1368592291.30117_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1368608369.8964_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1368597271.561_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1368597271.561_0.ltw:2,&nbsp;&lt;42B23749-2CE3-4DFD-BC51-C19FF3DD3352 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

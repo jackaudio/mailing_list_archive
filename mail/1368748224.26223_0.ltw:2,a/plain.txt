@@ -1,0 +1,99 @@
+Date:        Fri, 17 May 2013 01:50:14 +0200
+From:        Florian Paul Schmidt  <[hidden] at gmx dot net>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Niko Efthymiou Re: [Jack-Devel] m-audio FastTrack Ultra 8R no playback with hw device (1367446680.22176_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] m-audio FastTrack Ultra 8R no playback with hw device
+
+On 02.05.2013 00:17, Niko Efthymiou wrote:
+> On 01.05.2013 21:54, John Rigg wrote:
+>
+>> I haven't used the FastTrack, but there are things you could check.
+>> Is hw:2 definitely the correct device?
+> Yes hw:2 is the correct device and it works fine with plughw. Capture
+> with hw:2 and playback oh plughw:2 works. It is just playback on hw:2
+> that does not work.
+>
+> Niko
+
+Hi,
+
+maybe it's a routing problem. The interface looks interesting, so I did 
+a few google searches and this turned up wrt. the routing:
+
+http://linuxmusicians.com/viewtopic.php?f=27&t=7673
+
+Quote (Heikki Ketoharju 
+<http://linuxmusicians.com/memberlist.php?mode=viewprofile&u=7298&sid=1d73719ab4242a047ade802178c8fdef>):
+
+"I used Gnome Alsamixer in AV Linux and alsamixer in Ubuntu. Both tools 
+work similar, so you can use what suits best to you. (Alsamixer is 
+command line software, so open your terminal, type alsamixer and press 
+enter.
+
+When you have alsamixer opened, you should first choose right soundcard. 
+This is done by pressing F6, in command line version, Gnome Alsamixer 
+has separate tabs for different soundcards. After that you should see 
+about 128 faders. Those control the internal routing.
+
+Now, if you are using Gnome Alsamixer, first thing you should do is 
+rename all the 128 faders. (At least I had to, because all faders had 
+same names in GUI) This is quite boring job to do, but once you do it, 
+Gnome Alsamixer remembers it's settings. If you decide to use alsamixer, 
+you don't have to do this.
+
+First 64 faders describe inputs, and last 64 describe outputs. Faders 
+are in the groups of eight. (In commandline version of alsamixer you 
+have to press F5 to see all 128 faders. By default it shows only input 
+faders.) Now you just have to adjust most of the faders to zero (in cli 
+alsamixer this is done by pressing end). PageDown and PageUp buttons can 
+be used to adjust fader's volume. I adjusted DIn1 - Out1 to 100 and all 
+other DIn1 outputs to zero, DIn2 - Out2 to 100 and all other DIn2 
+outputs to zero, and so on. The end result was just 8 outputs being 
+open: every software return channel was routed to one physical output. Nice!
+
+When you are ready, you should save your mixer settings so that your 
+computer remembers them after boot. I did it from the command line by 
+running
+
+Code: Select all <http://linuxmusicians.com/viewtopic.php?f=27&t=7673#>
+    |alsactl -f /var/lib/alsa/asound.state store|
+
+as root.
+
+If you are using Ubuntu, running things as root is done via sudo. So the 
+right command for you is
+
+Code: Select all <http://linuxmusicians.com/viewtopic.php?f=27&t=7673#>
+    |sudo alsactl -f /var/lib/alsa/asound.state store|
+
+
+
+If you don't want to save your settings as root, you can also save them 
+to your home folder like this:
+
+Code: Select all <http://linuxmusicians.com/viewtopic.php?f=27&t=7673#>
+    |alsactl store -f ~/.asoundrc|
+
+
+And to restore your saved settings:
+
+Code: Select all <http://linuxmusicians.com/viewtopic.php?f=27&t=7673#>
+    |alsactl restore -f ~/.asoundrc|
+
+
+
+This way I got my Fast Track Ultra to work properly. Now I can use 
+cueing function in Mixxx and start serious DJ:ing!
+
+Oh, almost forgot: I really haven't tested inputs yet, so I don't know 
+if the same method works for them also. I routed them same way: AIn1 - 
+Out1 to 100 and other AIn1 outputs to zero, and so on. I'll test it 
+someday and update how it works."
+
+Have fun,
+Flo
+
+1368748224.26223_0.ltw:2,a <519570B6.6090001 at gmx dot net>
+________________________________________________________________________________
+

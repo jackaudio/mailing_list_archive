@@ -1,0 +1,45 @@
+Date:        Sun, 17 May 2009 15:48:04 +0300
+From:        Sampo Savolainen  <[hidden] at iki dot fi>
+To:          Fons Adriaensen <[hidden] at kokkinizita dot net>
+Cc:          Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>, JACK Developers <[hidden] at jackaudio dot org>
+In-Reply-To: Fons Adriaensen Re: [LAD] [Jack-Devel] more jack/qjackctl madness (1242563183.25235_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] more jack/qjackctl madness
+
+On Sun, 2009-05-17 at 14:17 +0200, Fons Adriaensen wrote:
+> Anyway, you don't need dbus, just provide a start()
+> function in the control interface, accepting the
+> options in a string, or as an argv[]. Why doesn't
+> this exist ? Why do you have to go through all the
+> movements of scanning parameters, types, ranges,
+> setting them one by one, if you already know the
+> command line (which will be the case in 99.99% of
+> cases jack is started) ?
+
+What I see as the most important thing, is that a client starting jack
+doesn't need to know how jack is supposed to be ran. This is why
+~/.jackrc was made, but this causes several issues for me. The most
+important one of them being that the jackd server process is then
+connected directly to the client starting it. If that client quits,
+jackd dies (or leaves the client process hanging around until jackd is
+no longer needed).
+
+I hope to see from jack d-bus that clients will be able to tell the
+environment (through dbus) that "I want jack". The environment has a
+utility which is responsible for starting jack. This might be totally
+invisible to the user (which fits a lot of people), or it might be a
+more comprehensive tool like qjackctl. A tool that handles multiple jack
+configurations. I run jack frequently with 3 different sound cards with
+different parameters plus the dummy driver to do debugging.
+
+As for execv(char *path, char *argv[]). What Marc meant was that there
+could be (will be? is already) an API to give the client contorl over
+server parameters without teaching every app what command line
+parameters jackd has and how they're used.
+
+
+ Sampo
+
+1242564505.26136_0.ltw:2,a <1242564484.6847.13.camel at mustis>
+________________________________________________________________________________
+

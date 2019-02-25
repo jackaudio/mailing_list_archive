@@ -1,0 +1,39 @@
+Date:        Tue, 08 Jan 2013 09:22:29 +0000
+From:        John Emmas  <[hidden] at tiscali dot co dot uk>
+To:          JACK List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357599288.11033_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357656281.27337_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)
+
+On 7 Jan 2013, at 22:54, Adrian Knoth wrote:
+
+> 
+> When you find some time, could you try the attached patch on top of your
+> existing copy?
+> 
+> Just to find out if it works at all.
+> 
+
+Adrian / Stephane,
+
+When applied completely in isolation, that patch does compile.  However, there are 2 problems:-
+
+        1)  It won't guarantee 1-byte packing which seems to be what we need for Windows.
+        2)  MSVC won't allow alignment of arguments in a function declaration.
+
+Here's an example of problem 2, taken from JackCleint.h but there are literally hundreds of such cases:-
+
+        JackClient.h
+                virtual int SetSyncTimeout(jack_time_t timeout);
+
+        and the error is:-
+                error C2719: 'timeout': formal parameter with __declspec(align('8')) won't be aligned
+
+It's rather annoying that this can't be a warning rather than an error but as you can see, it's an error.  I don't think we should get too despondent about this, since PRE and POST_PACKED_STRUCTURE haven't yet been removed so there's still the possibility of a hybrid solution.  It's much better that we find this our now, before we'd abandoned 1-byte packing altogether.  :-)
+
+John
+
+1357636957.30945_0.ltw:2,Sa <180C4F14-F42E-4BA1-95EC-D72B2FA44676 at tiscali dot co dot uk>
+________________________________________________________________________________
+

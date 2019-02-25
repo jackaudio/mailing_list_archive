@@ -1,0 +1,39 @@
+Date:        Wed, 16 Feb 2011 10:21:42 -0500
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Arne Jacobs <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Arne Jacobs Re: [Jack-Devel] buffer size callback, revisit (1297869213.24885_0.ltw:2,a)
+Follow-Up:   Arne Jacobs Re: [Jack-Devel] buffer size callback, revisit (1297869978.26702_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] buffer size callback, revisit (1297870434.27550_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] buffer size callback, revisit
+
+On Wed, Feb 16, 2011 at 10:12 AM, Arne Jacobs <[hidden]> wrote:
+> On a sidenote:
+>
+> The JACK API documentation states for the buffer size callback, that it
+> is called in a "separate non RT thread", i.e., not in the process
+> thread. Which sounds to me that the process callback and the buffer size
+> callback can run in parallel.
+
+where are you reading this? the docs at jackaudio.org state:
+
+   Tell JACK to call bufsize_callback whenever the size of the the
+buffer that will be passed to the
+   process_callback is about to change. Clients that depend on knowing
+the buffer size must
+   supply a bufsize_callback before activating themselves.
+
+> Is this really the case? It means you'd have to allocate new buffers and
+> then somehow send those to the process thread in a lock-free way...?
+> What if the process callback has already been called with the new buffer
+> size, while the other thread is still reallocating the buffers?
+
+this sounds like an artifact of jack2 calling everything (?) but the
+process callback from a 2nd non-RT client thread. if it does this,
+then its wrong, in the sense that as you noted, its unworkable. buffer
+size changes and the process callback MUST be synchronous, i think.
+
+1297869716.26054_0.ltw:2,a <AANLkTin-pWgK_s9QBW0gu3cg2wJjkfxYHokEn4=6=j=F at mail dot gmail dot com>
+________________________________________________________________________________
+

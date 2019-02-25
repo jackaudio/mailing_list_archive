@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Can't bring F/P below 128</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Can't bring F/P below 128</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324247768.11780_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324251621.14768_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324248850.12599_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 18 Dec 2011 23:53:41 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Clemens Ladisch </span> &lt;[hidden] at ladisch dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Nikos Chantziaras
+<a href='../1324234329.21869_0.ltw:2,a/index.html'>[Jack-Devel] Can't bring F/P below 128 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nikos Chantziaras
+<a href='../1324252219.15218_0.ltw:2,a/index.html'>Re: [Jack-Devel] Can't bring F/P below 128 </a></td></tr>
+</table>
+<pre>
+Nikos Chantziaras wrote:
+&gt; I was using a very old and very cheap Soundblaster Live 24-bit PCI.
+&gt; That card uses a CA0106 chip, ... in JACK (using JACK2 now), I could
+&gt; use an F/P setting of 64 without suffering from XRUNs.
+&gt;
+&gt; I recently got a new mainboard, which came with a recent on-board
+&gt; sound chip, an ALC892 from Realtek.
+
+The interesting part is the HDA controller (part of the chipset).
+
+&gt; it's impossible to use 64 F/P on it.  [...] It's not like I get too
+&gt; many XRUNs at 64 and lower, but rather I can't get anything else than
+&gt; just a static buzz noise.
+
+It's likely that the HDA controller uses a larger burst size to save
+power, and that it is too large for this small a period size.  If I've
+read the Intel documentation correctly, is uses packets of at most
+128 *bytes*, so in theory, it should work.  However, it might be
+worthwhile to try reducing it.  Please try the patch below.
+
+
+Regards,
+Clemens
+
+
+--- a/sound/pci/hda/hda_intel.c
++++ b/sound/pci/hda/hda_intel.c
+@@ -1428,6 +1428,8 @@ static int azx_setup_controller(struct azx *chip, struct azx_dev *azx_dev)
+ 	/* this value needs to be the same as the one programmed */
+ 	azx_sd_writew(azx_dev, SD_FORMAT, azx_dev-&gt;format_val);
+
++	azx_sd_writew(azx_dev, SD_FIFOSIZE, 0x1f);
++
+ 	/* program the stream LVI (last valid index) of the BDL */
+ 	azx_sd_writew(azx_dev, SD_LVI, azx_dev-&gt;frags - 1);
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324247768.11780_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324251621.14768_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324248850.12599_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1324248850.12599_0.ltw:2,a&nbsp;&lt;4EEE6EF5.4080202 at ladisch dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

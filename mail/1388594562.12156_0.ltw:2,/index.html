@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] ardour3, netjack, bandwidth, xruns</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] ardour3, netjack, bandwidth, xruns</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1388505205.2340_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388616481.27592_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388594562.12156_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 01 Jan 2014 11:42:30 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> David Santamauro </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1388747464.2891_0.ltw:2,/index.html'>Re: [Jack-Devel] ardour3, netjack, bandwidth, xruns </a></td></tr>
+</table>
+<pre>
+Hi,
+
+Happy new year ... if this isn't the appropriate list, direct to the
+right one, thanks.
+
+I've started creating my orchestral template using ardour3 (on the
+master) and a slave. When I reach a certain number of tracks the xruns
+start piling up.
+
+Master message(s):
+Wed Jan  1 07:15:08 2014: NetMaster : overloaded, skipping receive from
+'nslave01'
+
+... does this mean the master is overloaded?
+
+The specs:
+   - master is an 8-core/16GB RAM
+   - slave is 4-core/16GB RAM
+
+Goal is to use windows orchestral VSTi(s) whose required 'dongle' is on 
+a windows machine.
+
+   ardour3:midi-track-1 =&gt; slave:midi-input-1
+   slave:audio-out-1    =&gt; ardour3:audio-track-in-1
+   slave:audio-out-2    =&gt; ardour3:audio-track-in-2
+
+Pretty simple, actually, but I'd like 48 channels of audio to come back 
+from the slave.
+
+Both have Gb network interfaces and both are connected to a Gb switch.
+
+ardour3 does take CPU slices but the master load avg is ~ 85% idle and
+DSP load &lt; 20%.
+
+Viewing network traffic using iptraf, I see total usage in the 45Mb/s
+(4% utilization) range for both master and slave -- clearly room to
+spare so I'm assuming there is some other bottleneck somewhere.
+
+I guess the questions are:
+
+   - are there hard limits on the number of tracks that can be used when
+using using jack over the network?
+
+   - Is there a formula to figure out this out, e.g., is there a
+relationship between the size of the jack graph and data per cycle?
+
+   - Are there settings (network or for jack_load netmanager) that would
+help this situation?
+
+Both master and slave jackd versions are the same:
+
+$ jackd -V
+jackdmp 1.9.9.5
+
+I've read this [1] and it appears there are two modes: sync and async.
+I'll try toggling this and see what happens.
+
+... but any other help would be appreciated.
+
+David
+
+[1] http://trac.jackaudio.org/wiki/WalkThrough/User/NetJack2
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1388505205.2340_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388616481.27592_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388594562.12156_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1388594562.12156_0.ltw:2,&nbsp;&lt;52C44576.1060209 at gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

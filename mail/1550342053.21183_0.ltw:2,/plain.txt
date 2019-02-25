@@ -1,0 +1,87 @@
+Date:        Sat, 16 Feb 2019 19:33:46 +0100
+From:        Jörn Nettingsmeier  <[hidden] at stackingdwarves dot net>
+To:          Jack devel <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Thomas Brand Re: [Jack-Devel] segfault in libjack from incorrect regex in jack_get_ports() (1550610372.24962_0.ltw:2,)
+Follow-Up:   Neil C Smith Re: [Jack-Devel] segfault in libjack from incorrect regex in jack_get_ports() (1550612667.27375_0.ltw:2,)
+
+Subject:     [Jack-Devel] segfault in libjack from incorrect regex in jack_get_ports()
+
+Hi guys,
+
+
+I'm seeing segfaults caused by an incorrect regex (found while fooling 
+around to see what syntax is allowed, since it's not really documented).
+
+Turns out the correct answer to that is "regexec.c", and thus, POSIX 
+regexes. Someone might want to put that in the docs somewhere.
+
+Thread 1 "shairport-sync" hit Breakpoint 1, jack_init (argc=<optimized 
+out>, argv=<optimized out>)
+     at audio_jack.c:221
+221	  if (config.jack_autoconnect_pattern != NULL) {
+(gdb) print config.jack_autoconnect_pattern
+$1 = 0x5c8a0 "effect_1:in{L|R}"
+
+                          ^--- this is likely the problem
+
+(gdb) step
+222	    debug(1, "config.jack_autoconnect_pattern is %s.", 
+config.jack_autoconnect_pattern);
+(gdb) next
+223	    const char** port_list = jack_get_ports(client, 
+config.jack_autoconnect_pattern,
+(gdb) step
+
+Thread 1 "shairport-sync" received signal SIGSEGV, Segmentation fault.
+0x76847e8c in __regexec (preg=<optimized out>, string=0x71801e34 
+"system:playback_1", nmatch=0, pmatch=0x0,
+     eflags=0) at regexec.c:243
+243	regexec.c: No such file or directory.
+(gdb) bt
+#0  0x76847e8c in __regexec (preg=<optimized out>, string=0x71801e34 
+"system:playback_1", nmatch=0, pmatch=0x0,
+     eflags=0) at regexec.c:243
+#1  0x76f1d0f4 in ?? () from /usr/lib/arm-linux-gnueabihf/libjack.so.0
+#2  0x76f1d1c4 in ?? () from /usr/lib/arm-linux-gnueabihf/libjack.so.0
+#3  0x0002c988 in jack_init (argc=<optimized out>, argv=<optimized out>) 
+at audio_jack.c:223
+#4  0x00016adc in main (argc=1, argv=0x7efffc54) at shairport.c:1474
+
+It turns out that the return value of regcomp is not checked by libjack. 
+That's the last point where a segfault can be prevented from a simple 
+syntax error. The only way to catch that in the application is to set up 
+an entirely redundant regex scaffold and check the regcomp return value, 
+before throwing it all away and letting libjack do the work all over again.
+
+In the case of configurable auto-connect patterns, which many JACK 
+clients now offer as a sane and useful replacement of auto-connecting to 
+system:playback_N, this SEGV is triggered by end-user action, not 
+programmer mistake. That's a harsh user experience, and should be fixed.
+A brief look at the source seems to indicate the problem also exists in 
+jack1.
+
+I don't really feel qualified to tackle this myself, since it will 
+require lots of error handling in a multi-threaded library, which I 
+don't know too much about... glad to help testing, though.
+
+All best,
+
+
+Jörn
+
+
+
+
+
+
+-- 
+Jörn Nettingsmeier
+Tuinbouwstraat 180, 1097 ZB Amsterdam, Nederland
+Tel. +49 177 7937487
+
+Meister für Veranstaltungstechnik (Bühne/Studio), Tonmeister VDT
+http://stackingdwarves.net
+
+1550342053.21183_0.ltw:2, <d57df24e-3eb9-6036-9c4c-e1fb1e5e1e4f at stackingdwarves dot net>
+________________________________________________________________________________
+

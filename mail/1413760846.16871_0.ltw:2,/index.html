@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack_connect with many channels</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack_connect with many channels</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1413758280.12708_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1413773242.5231_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1413760846.16871_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 20 Oct 2014 01:20:37 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at trellis dot ch </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>[hidden] at trellis dot ch
+<a href='../1413758280.12708_0.ltw:2,/index.html'>[Jack-Devel] jack_connect with many channels </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>[hidden] at trellis dot ch
+<a href='../1413773242.5231_0.ltw:2,/index.html'>Re: [Jack-Devel] jack_connect with many channels </a></td></tr>
+</table>
+<pre>
+&gt; On Oct 19, 2014, at 8:17 PM, [hidden] wrote:
+&gt; 
+&gt; 
+&gt; Hi
+&gt; 
+&gt; i use the following code snippet to connect all available hardware/system
+&gt; capture ports to a client:
+&gt; 
+&gt; --
+&gt; 
+&gt;  if(autoconnect==1)
+&gt;  {
+&gt;    int j=0;
+&gt;    int i=0;
+&gt;    for(i=0;i&lt;input_port_count;i++)
+&gt;    {
+&gt;      if (ports[i]!=NULL)
+&gt;      {
+&gt;        if(!jack_connect (client, ports[i],jack_port_name(ioPortArray[j])))
+
+// what is ioPortArray[],  ports[] and how do you query input_port_count?
+// more context is needed
+
+&gt;        {
+&gt;          fprintf (stderr, "autoconnect: %s -&gt; %s\n",
+&gt;            ports[i],jack_port_name(ioPortArray[j])
+&gt;          );
+&gt;          j++;
+&gt;        }
+&gt;        else
+&gt;        {
+
+// if you get here ports[i] == NULL
+
+&gt;          fprintf (stderr, "autoconnect: failed: %s -&gt; %s\n",
+&gt;            ports[i],jack_port_name(ioPortArray[j])
+&gt;          );
+
+// ..and hence you pass a null pointer to printf. not nice. 
+// (some printf implementation can handle it but don&#x2019;t count on it).
+// This would certainly explain the segfault that you&#x2019;ve pasted below.
+
+&gt;        }
+&gt;      }
+&gt;    }
+&gt;    fprintf (stderr, "\n");
+&gt;  }
+&gt; 
+&gt;  free (ports);
+&gt; &#x2014;
+&gt; 
+
+[..]
+
+&gt; Maybe the client code is buggy. When the client in question is run in gdb,
+&gt; this is the output:
+&gt; 
+&gt; [New Thread 0x7ffff7fa0700 (LWP 6321)]
+&gt; autoconnect: system:capture_1 -&gt; send:input_1
+&gt; autoconnect: system:capture_2 -&gt; send:input_2
+&gt; 
+&gt; Program received signal SIGSEGV, Segmentation fault.
+&gt; 0x00007ffff73278f3 in _IO_vfprintf_internal (s=s@entry=0x7fffffffc840,
+&gt;    format=&lt;optimized out&gt;, format@entry=0x7ffff7bccdbc "%s",
+&gt;    ap=ap@entry=0x7fffffffc9a8) at vfprintf.c:1661
+&gt; 1661	vfprintf.c: No such file or directory.
+
+get a backtrace here.
+
+best,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1413758280.12708_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1413773242.5231_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1413760846.16871_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1413760846.16871_0.ltw:2,&nbsp;&lt;8A1FA1EE-B4A8-4D54-98FB-FC1E5FEC28A8 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

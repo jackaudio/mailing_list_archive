@@ -1,0 +1,56 @@
+Date:        Tue, 15 Mar 2011 15:44:10 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Sampo Savolainen <[hidden] at iki dot fi>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Sampo Savolainen Re: [Jack-Devel] Stack preallocation issues (1300199060.17436_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Stack preallocation issues
+
+On Tue, Mar 15, 2011 at 04:24:01PM +0200, Sampo Savolainen wrote:
+
+> Volatile sounds like a good idea. This
+> 
+>  memset(&foo + ASSUMED_MEMSET_STACK_SIZE, 0, JACK_THREAD_STACK_TOUCH -
+> ASSUMED_MEMSET_STACK_SIZE);
+> 
+> should work as well. Volatile is however much more elegant if it indeed
+> works as assumed with all compilers.
+
+It's two separate issues really.
+
+
+AFAICS, somehting like this should work:
+
+void touch_stack (void)
+{
+    volatile char [STACK_SIZE] p;
+    int i;
+
+    for (i = 0; i < STACK_SIZE); i += STEP) p [i] = 0;
+}
+
+
+void thr_main (...) // library code executed in new thread
+{
+// any local data required
+
+   touch_stack ();
+
+// put thread in RT mode
+
+    user_thr_main (arg)
+}
+
+
+* local data in thr_main() is not touched.
+* the compiler can't ignore 'volatile' and remove the p [i] = 0.
+* touch_stack() and user_thr_main() have the same stack space.
+
+Ciao,
+
+-- 
+FA
+
+1300203877.27657_0.ltw:2,a <20110315154410.GB17058 at linuxaudio dot org>
+________________________________________________________________________________
+

@@ -1,0 +1,52 @@
+Date:        Sat, 18 Nov 2017 00:36:22 +0100
+From:        Markus Grabner  <[hidden] at w42 dot at>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Robin Gareus Re: [Jack-Devel] questions about latency ranges (1510714014.21597_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] questions about latency ranges
+
+Am Mittwoch, 15. November 2017, 03:46:41 CET schrieb Robin Gareus:
+> On 11/14/2017 11:50 PM, Markus Grabner wrote:
+> > So my questions are:
+> > *) What is the rationale behind jack reporting the larger of the two
+> > latencies of "A" and "B" both as the minimum and maximum latency of "C",
+> > and ignoring the smaller one?
+> 
+> In this case it's Ardour (not JACK) that sets the port latencies. I
+> guess you use Ardour5 which [wrongly] always reports the worst-case latency.
+Ok, then it's an Ardour issue. There are actually several opportunities to 
+mess things up when reimplementing jack's latency propagation algorithm in a 
+client's latency callback. What do you think about making jack's original 
+algorithm available to the client such that a client's latency callback (e.g., 
+for adding 100 frames of latency) could be something like
+
+void latency_callback(jack_latency_callback_mode_t mode, void *arg)
+{
+	jack_latency_range_t range;
+	jack_port_compute_latency_range(port, mode, &range);  // new
+	range.min += 100;
+	range.max += 100;
+	jack_port_set_latency_range(port, mode, &range);
+}
+
+I guess this could be useful in many cases when a client needs its own latency 
+callback.
+
+> I guess you use alsa_in or zita-aj2 for port "B", the latter tool has
+> options to set additional systemic latencies.
+Yes (as I stated before), and the systemic latencies are set to the values 
+reported by Jack_delay (http://kokkinizita.linuxaudio.org/linuxaudio).
+
+> Just forcing the values to some different number won't help you.
+> You could add a jack-client in-between that delays the signal and sets
+> port-latencies to include the delay.
+> Or wait for Ardour6 which already does this, but but at this point in
+> time is still far from a release, and the session format is not stable)
+Interesting, I will at least have a look at this.
+
+	Thanks & kind regards,
+		Markus
+
+1510961798.19908_0.ltw:2, <3336564.MBggzDlfKc at mark>
+________________________________________________________________________________
+

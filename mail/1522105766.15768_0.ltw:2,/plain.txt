@@ -1,0 +1,49 @@
+Date:        Mon, 26 Mar 2018 18:08:54 -0500
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          Christopher Obbard <[hidden] at 64studio dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Christopher Obbard Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes (1522102376.12255_0.ltw:2,)
+Follow-Up:   Christopher Obbard Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes (1522192763.26748_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes
+
+On Mon, March 26, 2018 5:12 pm, Christopher Obbard wrote:
+> Ah, I've been running mainline stable 4.14, applied CONFIG_PREEMPT and
+> ran a cyclictest on three threads with no extra load. It was giving me
+> "ok" average latency, and terrible maximum latency.
+
+That is exactly the point of the RT patches.  "Most" of the time latency
+is OK with the standard configuration options.  If you don't mind losing
+some data occasionally the standard kernel config options are probably OK.
+
+> This time I have a printk message of "GBLCTL write error" every few us.
+
+Every few microseconds?  I took a quick look at the McASP documentation
+and that register looks like a control register you would setup once when
+starting the driver, and then not touch it again until you had to
+reconfigure.  If it is being written more than a couple of times something
+is wrong.  It is possible that something is triggering error handling to
+kick in, it looks like that register has to be written again in certain
+cases where clock synch is lost, or possibly lost.  Without knowing more
+details of how you configured clocking and what your hardware looks like I
+can't say much more than that could be something to investigate.
+
+> Lesson learnt: use vendor BSP
+
+Or Robert Nelson's (RCN), his kernel builds are probably at least as good
+as TI and sometimes has additional features included.
+
+> Yeah, the rtirq script is handy. It will need some tweaking for arm
+> boards, I think.
+
+Should only need a change to which devices are included in the
+RTIRQ_NAME_LIST string in /etc/sysconfig/rtirq (or maybe /etc/rtirq, I
+don't remember where it would go in Debian).
+
+
+best regards,
+Chris Caudle
+
+1522105766.15768_0.ltw:2, <53d139407915d2cb7e57e84438a74153.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

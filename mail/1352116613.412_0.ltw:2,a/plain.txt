@@ -1,0 +1,64 @@
+Date:        Mon, 05 Nov 2012 06:56:40 -0500
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          "Cid_Huang[黃懋燁]" <[hidden] at kworld dot com dot tw>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Cid_Huang[黃懋燁] [Jack-Devel] JACK connects only JACK apps or any apps? (1352082549.27448_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK connects only JACK apps or any apps?
+
+On Sun, Nov 4, 2012 at 9:28 PM, Cid_Huang[¶ÀÀ·êM] <[hidden]>wrote:
+
+> ** ** ** ** ** ** **
+>
+> Hi,****
+>
+> ** **
+>
+> I need to confirm if JACK connects only JACK apps or any apps. I need to
+> play a sound in my app with background music, and that sound will be sent
+> only to Skype or any chat apps I choose, but the background music will not
+> be sent to Skype or the chat apps I choose. On Windows, there is a
+> commercial SDK ¡§Virtual Audio Streaming¡š able to do this through
+> establishing a virtual microphone.
+>
+
+actually, this does not connect *any* apps. there are many different audio
+APIs on Windows, and any given solution for "virtual devices" tends to
+support only a subset of them. for example, the one you have found will not
+support pro-audio apps that use the ASIO API (unlike JACK on Windows, which
+conversely will not support apps that use DirectSound, WinMME and others).
+
+
+> On Mac, there is a free app called Soundflower seems able to do this.
+>
+
+JACK exists on the OS X too. There is also Audio HiJack there. Each of them
+uses a different mechanism to provide support for any app on OS X, which is
+relatively simple because CoreAudio is the only native audio API there.
+
+
+> But I have not found any equivalent software on linux. JACK is almost the
+> only close lib I could found. So I need to make sure if it can fit my need.
+>
+
+JACK *is* the equivalent. However, it was not designed to connect arbitrary
+applications, because it was intended for use as part of pro-audio and
+music-creation workflows. This puts more requirements on applications that
+want to share audio streams via JACK, because they must be capable of
+meeting more rigid timing deadlines than those written for other APIs.
+However, many people have found ways to interface most other applications
+on Linux with JACK. There is no single best way to do this, which is why
+the FAQ at jackaudio.org outlines various different methods to use that
+depend on the audio API used by a particular application.
+
+Many Linux distributions now use PulseAudio as an intermediate between
+(desktop) applications and the audio drivers, and it is possible to
+redirect PulseAudio streams to play back via JACK. The JACK FAQ has some
+information on this too, although the arch linux wiki that patrick linked
+to is also good. Note that almost all "pro-audio" and "music creation"
+software on Linux can use JACK natively, and thus these steps are only
+required when connecting desktop/consumer/office apps to other things.
+
+1352116613.412_0.ltw:2,a <CAFa_cK=FZXOA+rqMMjvZKTZnquNsxzy8f-0cuJ=a3Mxt+i4Xmg at mail dot gmail dot com>
+________________________________________________________________________________
+

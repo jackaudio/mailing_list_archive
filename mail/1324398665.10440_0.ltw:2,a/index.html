@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How to get mplayer and firefox/flash to play</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How to get mplayer and firefox/flash to play</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324398554.10245_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324400473.13769_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324398665.10440_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 20 Dec 2011 08:30:49 -0800 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robert M. Riches Jr. </span> &lt;[hidden] at jacob21819 dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1324400473.13769_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to get mplayer and firefox/flash to play </a></td></tr>
+</table>
+<pre>
+&gt; Date: Tue, 20 Dec 2011 10:03:52 -0600
+&gt; From: "Chris Caudle" &lt;[hidden]&gt;
+&gt; To: [hidden]
+&gt;
+&gt; On Mon, December 19, 2011 9:37 pm, Paul Davis wrote:
+&gt; &gt; why are you using netjack rather than just playing directly from
+&gt; &gt; mplayer or firefox to JACK on the same host?
+&gt;
+&gt; Sounds like an X terminal kind of setup.
+&gt;
+&gt; &gt; Robert M. Riches Jr. wrote:
+&gt; &gt;&gt; In setting up a zero-client arrangement
+&gt;
+&gt; I took that to be a setup where the client was very lightweight, and all
+&gt; the apps were running on a remote server but displayed on the client. JACK
+&gt; master would run on the display, and JACK running net backend would run on
+&gt; the server where the applications were running.
+&gt; You know these young ones are always coming up with new terms for
+&gt; reinventing X terminals.
+
+Thanks.  I'll have to remember "young ones" next time I receive
+yet another AARP invitation.  :-)
+
+Yes, zero-client is essentially an X terminal--plus sound, remote
+USB, etc.  JACK master runs on the display.  JACK slave with the
+'net' backend runs on the server where the applications run.  I
+can run aplay (on the server, aka JACK slave) perfectly as far as
+I can tell.  However, with mplayer, at 8.9 seconds into a file,
+the sound becomes akin to a motorboat, and the JACK master
+reports rapid-fire XRUNs.  Firefox, probably playing flash, never
+produces audio.
+
+Regarding the error messages I see with Firefox and flash, I
+mis-wrote in the original posting.  It's stdout/stderr from
+Firefox where I see this:
+
+jack_client_new: deprecated
+Jack: JackClient::SetupDriverSync driver sem in flush mode
+Jack: JackPosixSemaphore::Connect jack_sem.1501_default_alsa-jack.rawjackP.3061.
+0
+Jack: Already connected name = alsa-jack.rawjackP.3061.0
+Jack: Clock source : system clock via clock_gettime
+Jack: JackLibClient::Open name = alsa-jack.rawjackP.3061.0 refnum = 2
+Jack: JackClient::PortRegister ref = 2 name = alsa-jack.rawjackP.3061.0:out_000 
+type = 32 bit float mono audio port_index = 5
+Jack: JackClient::PortRegister ref = 2 name = alsa-jack.rawjackP.3061.0:out_001 
+type = 32 bit float mono audio port_index = 6
+Jack: JackClient::Activate
+Jack: JackClient::StartThread : period = -2147483648 computation = 21333 constra
+int = 500
+Jack: Create non RT thread
+Jack: ThreadHandler: start
+Jack: JackClient::kActivateClient name = alsa-jack.rawjackP.3061.0 ref = 2 
+Jack: JackClient::Connect src =  dst = system:playback_1
+Jack: JackClient::Connect src =  dst = system:playback_2
+Jack: JackGraphManager::GetBuffer : port = 5 is released state
+Jack: JackGraphManager::GetBuffer : port = 6 is released state
+Jack: JackGraphManager::GetBuffer : port = 5 is released state
+Jack: JackGraphManager::GetBuffer : port = 6 is released state
+...
+
+The last pairs of lines repeat at high speed forever.  It appears
+to my untrained eye that 'src' is set to the empty string, which
+would seem to be potentially significant.
+
+At the moment, my uneducated guess is I need some "ctl" entries
+in the server's .asoundrc.  Currently, it has this:
+
+pcm.rawjack {
+    type jack
+    playback_ports {
+        0 system:playback_1
+        1 system:playback_2
+    }
+    capture_ports {
+        0 system:capture_1
+        1 system:capture_2
+    }
+}
+
+pcm.jackplug {
+    type plug
+    slave { pcm "rawjack" }
+}
+
+pcm.!default {
+    type plug
+    slave { pcm "rawjack" }
+}
+
+However, that's essentially what I believe I have seen in
+documentation, with no 'ctl' entries.
+
+Suggestions?
+
+Thanks,
+
+Robert
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324398554.10245_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324400473.13769_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324398665.10440_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1324398665.10440_0.ltw:2,a&nbsp;&lt;20111220163049.A1AB4264C4 at one dot localnet&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

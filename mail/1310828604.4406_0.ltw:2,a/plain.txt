@@ -1,0 +1,98 @@
+Date:        Sat, 16 Jul 2011 17:02:56 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          'Nedko Arnaudov' <[hidden] at arnaudov dot name>, JACK Mailing List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] jackd-logging -- was jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT" (1310821798.23204_0.ltw:2,a)
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] jackd-logging -- was jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT" (1310901937.4169_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jackd-logging -- was jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT"
+
+On 07/16/2011 03:09 PM, Stéphane Letz wrote:
+[..]
+
+>>>> It makes me wonder: Why are the Xrun messages exclusively in 
+>>>> jack.log and the "JackActivationCount" messages exclusively in
+>>>> the application log? Here the latter do not show up in
+>>>> jack.log.
+>>>> 
+>> 
+>> Maybe what all that those apps have in common is that they're
+>> using 'jack_error_callback()'. So the jack-errors do not end up in
+>> jackd's log any more but are handled by the application.
+>> 
+>> jack2 does no queue those messages but passes them directly to the 
+>> configured log-callback:
+>> 
+>> jack_error() | jack_info() -> jack_format_and_log() ->
+>> log_function() -> jack_error_callback() | jack_info_callback()
+>> 
+>> so if jack_error() is called from real-time context (e.g. 
+>> JackActivationCount), also the jack_log_callback() of the 
+>> client-application is invoked with realtime privileges! At least
+>> with the current jackdmp implementation.
+> 
+> I'm a bit lost here.
+
+JackActivationCount::Signal() is called with Sched-FIFO privileges and
+it uses jack_error().
+
+I was under the impression that jack_error() (e.g the
+"JackActivationCount") would invoke the client's error-callback with RT
+privileges - but this is not the case.
+
+> RT threads are supposed to call "set_threaded_log_function" so that
+> "JackMessageBufferAdd" is used for logging, thus no blocking logging
+> functions are used in RT context. Otherwise non RT versions are
+> used.
+
+Good. I've missed that one!
+
+jack_format_and_log() is actually calling JackMessageBufferAdd() instead
+of directly calling the jack_log_function().
+
+All OK.
+
+Thanks for elaborating on this, your comments pushed me in the right
+direction to improve my understanding of jackdmp's code.
+
+> What is the exact problem? (beside the JackActivationCount be printed
+> by "jack_error" and should be moved to "jack_log")
+
+None anymore.
+
+>>> This is in jackdbus right?
+>> 
+>> indeed.
+>> 
+>>> How the info/log/error message are handled can be configurated
+>>> with the jack_set_error_function/jack_set_info_function from
+>>> jack.h API. You should look in how jackdbus configure them.
+>>> And/or ask Nedko...
+>> 
+>> dbus/jackdbus.c does not expose them, but hardcodes internal
+>> handlers that simply append the messages to the log-file.
+>> 
+>> Oh well,
+>> robin
+> 
+> Ask Nedko !!
+
+Hey Nedko (CCed), could you please shed some light on jackdbus logging.
+Is there some [planned] functionality for specifying the log level (e.g.
+a quiet mode). Jack offers 3 levels: _error, _info, _log; "verbose mode"
+only allows to switch on/off the latter.
+
+Furthermore, changing the verbose mode with jack_control requires
+re-starting the client(s) (or backend) in order for the change to take
+effect.
+
+Is it planned to dup messages? If a client sets a callback - i.e.
+jack_set_error_function() -  messages do no longer end up in jackd's
+log, but are only sent only to that client.
+
+Cheers!
+robin
+
+1310828604.4406_0.ltw:2,a <4E21A820.5030308 at gareus dot org>
+________________________________________________________________________________
+

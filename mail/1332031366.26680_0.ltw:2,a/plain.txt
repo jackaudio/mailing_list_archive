@@ -1,0 +1,80 @@
+Date:        Sun, 18 Mar 2012 01:42:32 +0100
+From:        Dénes Almási  <[hidden] at rudanium dot org>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Paul Davis Re: [Jack-Devel] Profiling xruns (1332036706.27099_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] Profiling xruns (1332063641.11728_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Profiling xruns
+
+Hi!
+
+I am developing a jack client that is handling different input devices
+(like joysticks, touch screens, etc.) and capable of using them as
+musical input devices.
+
+The architecture is relatively simple: A directed acyclic graph can be
+made up of different boxes, each of them performing different tasks, 
+like
+reading input, generating oscilating values, passing data to a jack 
+midi
+or audio port, etc. When the graph is modified, a non-rt thread 
+generates
+a topologic ordering of the nodes into a linked list and a pointer to 
+the head
+is passed in a ringbuffer to the process function which at its 
+beginning examines
+the content of the buffer and can store the new list. In each process
+call, the list is iterated and the process function is called for each 
+box.
+The edges have buffers which are read and written by the boxes and the 
+topologic
+ordering ensures that only those edges are read in a cycle whose data 
+are
+already computed.
+
+The problem is: Even without having ANY nodes, thus the process 
+function doing
+practically nothing, sometimes the application does xruns. I am sure 
+that the
+source of these xruns is the application as they show up in the 
+messages
+window of qjackctl with the app's name. Also, I am running in soft 
+mode, which
+I assume, means that xruns indicating that the backend is not fast 
+enough, are
+ignored.
+
+How could I locate the cause of these xruns? Is there a good practice 
+for profiling
+these problems? I think it is hard because using tools like gprof will 
+make the
+app slow and cause xruns which would never occur without the profiling 
+itself.
+
+I am using mlockall and a big memory pool, a thread pool (though 
+currently no threads
+are created when process is called), process shielding for the sound 
+card soft irq,
+jackd and the app.
+
+Jack settings: Rt priority 83, Frames/Period: 128, Sample rate: 48000, 
+Periods/Buffer: 2.
+The latency is 5.33 msec and apps like ardour xrun only very rarely, 
+under heavy usage.
+The machine is a samsung notebook with a core i3 cpu, 3Gb ram and 
+unfortunately an onboard
+soundcard.
+
+Is it better for xrun debugging to use the dummy interface in order to 
+be totally
+independent of the sound card? Also, could it be the problem that I am 
+using
+clutter for gui? I am quite a beginner in developing audio 
+applications...
+
+Thank you in advance,
+Dennis
+
+1332031366.26680_0.ltw:2,a <dc0dcd2dbc3d7fa20727ac57a325dd8c at rudanium dot org>
+________________________________________________________________________________
+

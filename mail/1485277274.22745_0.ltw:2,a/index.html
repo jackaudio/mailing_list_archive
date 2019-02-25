@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1485275481.20704_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1485281532.27043_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1485277274.22745_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 24 Jan 2017 17:59:43 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Thomas Brand </span> &lt;[hidden] at trellis dot ch&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"\"J&#xC3;&#xB6;rg M&#xC3;&#xBC;ller\"" &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>J&#xF6;rg M&#xFC;ller
+<a href='../1485274443.19498_0.ltw:2,a/index.html'>Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels </a></td></tr>
+</table>
+<pre>
+Hi again,
+
+I'd like to throw in a possible alternative for non-resampled audio
+transfer via UDP.
+
+jack_audio_send and jack_audio_receive [1]
+
+These programs have several limitations however for a case with two
+externally synced interfaces both connected to the same host running JACK
+with the same settings it could be worth a try. The number of channels
+that can be transimitted depends on the period size.
+
+For two JACK running at -p64, this *should* work:
+jack_audio_send --in 196 localhost 1234
+jack_audio_receive --out 196 1234
+...
+196 channels are quite heavy and the send/receive aren't possibly robust
+enough so you'd need to see if it works four you or where it breaks.
+
+===
+period size: 64 samples (1.333 ms, 256 bytes)
+channels (capture): 196
+bytes per sample: 4 (32 bit float)
+immediate send, no pause or shutdown: no
+multi-channel period size: 50176 bytes
+message rate: 750.0 messages/s
+message length: 51200 bytes
+transfer length: 52398 bytes (4.2 % overhead)
+/!\ receiver(s) must support message size &gt; 32768
+expected network data rate: 314388.0 kbit/s (39.30 MB/s)
+/!\ high data rate (OK on localhost), use GigE
+===
+-&gt; almost 40 MB/s of data moving on localhost, just in one direction.
+That's a lot for "just" creating a common audio data domain for both devices.
+
+Good Luck
+Thomas
+
+[1] https://github.com/7890/jack_tools/tree/master/audio_rxtx
+
+On Tue, January 24, 2017 17:13, J&#xC3;&#xB6;rg M&#xC3;&#xBC;ller wrote:
+&gt; Thanks for the information.
+&gt;
+&gt;
+&gt; The two MADI FX cards I'm using can be synced via word clock.
+&gt;
+&gt;
+&gt; However, the information needs to be unaltered, no resampling or any
+&gt; modification is allowed for our processing. What command line settings do
+&gt; I
+&gt; have to use to make sure of that? How can I use the official zita-ajbridge
+&gt;  or is there some documentation about it?
+&gt;
+&gt; 2017-01-24 16:36 GMT+01:00 Thomas Brand &lt;[hidden]&gt;:
+&gt;
+&gt;
+&gt;&gt; On Tue, January 24, 2017 16:27, Thomas Brand wrote:
+&gt;&gt;
+&gt;&gt;&gt; On Tue, January 24, 2017 09:22, Ralf Mardorf wrote:
+&gt;&gt;&gt;
+&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; On Tue, 24 Jan 2017 07:41:50 +0000, [hidden] wrote:
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt; On Mon, Jan 23, 2017 at 05:35:57PM +0000, Fons Adriaensen wrote:
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt; With the official zita-ajbridge you can disable resampling.
+&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt; Good to know.
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; Could this be used without word clock, by using a digital interface
+&gt;&gt;&gt;&gt; to sync, e.g. S/PDIF? If so, assuming two identical cards would be
+&gt;&gt;&gt;&gt; used, would sync be hat good, that each combination of IOs, e.g. a
+&gt;&gt;&gt;&gt; channel from one card for the left and of the other card for the
+&gt;&gt;&gt;&gt; right channel of a stereo signal, wouldn't cause phasing issues?
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt; yes i think that works pretty good (drawing from earlier
+&gt;&gt;&gt; experiments). Using S/PDIF just for sync is a cheap alternative to a
+&gt;&gt;&gt; "real" wordclock.
+&gt;&gt;&gt; One of both interfaces will be slaved to the other and then both
+&gt;&gt;&gt; should run the same cycle at the same time (so theoretically no
+&gt;&gt;&gt; phasing issues). You just have to manage to shove forth and back the
+&gt;&gt;&gt; sample data from/to interface at good enough rate which isn't a
+&gt;&gt;&gt; particular problem on
+&gt;&gt; localhost
+&gt;&gt;&gt; using UDP like zita does. If there is no resampling involved, this
+&gt;&gt;&gt; can work for many many channels without hitting the CPU too much.
+&gt;&gt;&gt;
+&gt;&gt;&gt; Greetings
+&gt;&gt;&gt; Thomas
+&gt;&gt;&gt;
+&gt;&gt;&gt;
+&gt;&gt; Even if the interfaces are synchronized with S/PDIF, there will be some
+&gt;&gt;  cycles (hopefully a static number) needed to shove data forth and
+&gt;&gt; back. This needs to be considered to effectively get synchronous
+&gt;&gt; behaviour for input or output to both interfaces.
+&gt;&gt;
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; 
+&gt;&gt; Jack-Devel mailing list
+&gt;&gt; [hidden]
+&gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;&gt;
+&gt;&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1485275481.20704_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1485281532.27043_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1485277274.22745_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1485277274.22745_0.ltw:2,a&nbsp;&lt;0c02a1d5d90d90b81053f9c3cfeb4277.squirrel at ips73 dot ips dot ch&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

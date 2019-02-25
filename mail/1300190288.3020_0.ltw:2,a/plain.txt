@@ -1,0 +1,95 @@
+Date:        Tue, 15 Mar 2011 13:57:41 +0200
+From:        Sampo Savolainen  <[hidden] at iki dot fi>
+To:          Sampo Savolainen <[hidden] at iki dot fi>, [hidden] at lists dot jackaudio dot org
+In-Reply-To: torbenh Re: [Jack-Devel] Stack preallocation issues (1300188177.31229_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] Stack preallocation issues (1300195408.12983_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Stack preallocation issues
+
+Hi,
+
+Would doing this be unsafe?
+
+static void
+jack_thread_touch_stack()
+{
+ char foo;
+ memset(&foo, 0, JACK_THREAD_STACK_TOUCH);
+}
+
+ Sampo
+
+On Tue, Mar 15, 2011 at 1:22 PM, torbenh <[hidden]> wrote:
+
+> On Mon, Mar 14, 2011 at 08:14:04PM +0200, Sampo Savolainen wrote:
+> > On Mon, Mar 14, 2011 at 2:24 PM, torbenh <[hidden]> wrote:
+> > >
+> > > > It *has* to be in a separate function to work as expected.
+> > >
+> > > and we need to prevent that function from being inlined.
+> > > until i havent found the preferred way to do this, you should probably
+> > > deactivate that code.
+> >
+> >
+> > Wouldn't using a function pointer be good enough? It's perhaps not the
+> most
+> > elegant approach, but it should guarantee the function is not inlined. (a
+> > patch proposal is attached)
+>
+> i am currently trying to prevent the optimizer from optimizing the array
+> away. thats not too hard on gcc-4.4 ... but gcc-4.5 is way smarter.
+>
+> >
+> >
+> >  Sampo
+>
+> > Index: libjack/thread.c
+> > ===================================================================
+> > --- libjack/thread.c  (revision 4191)
+> > +++ libjack/thread.c  (working copy)
+> > @@ -99,6 +99,19 @@
+> >  #endif /* USE_CAPABILITIES */
+> >  }
+> >
+> > +static void
+> > +jack_thread_touch_stack()
+> > +{
+> > +     char buf[JACK_THREAD_STACK_TOUCH];
+> > +     int i;
+> > +
+> > +     for (i = 0; i < JACK_THREAD_STACK_TOUCH; i++) {
+> > +             buf[i] = (char) (i & 0xff);
+> > +     }
+> > +}
+> > +
+> > +static void (* ptr_jack_thread_touch_stack)() = jack_thread_touch_stack;
+> > +
+> >  static void*
+> >  jack_thread_proxy (void* varg)
+> >  {
+> > @@ -107,13 +120,8 @@
+> >       void* warg;
+> >       jack_client_t* client = arg->client;
+> >
+> > -     char buf[JACK_THREAD_STACK_TOUCH];
+> > -     int i;
+> > +     ptr_jack_thread_touch_stack();
+> >
+> > -     for (i = 0; i < JACK_THREAD_STACK_TOUCH; i++) {
+> > -                buf[i] = (char) (i & 0xff);
+> > -     }
+> > -
+> >       if (arg->realtime) {
+> >               maybe_get_capabilities (client);
+> >               jack_acquire_real_time_scheduling (pthread_self(),
+> arg->priority);
+> >
+>
+>
+> --
+> torben Hohn
+>
+
+1300190288.3020_0.ltw:2,a <AANLkTi=Ue6dVJ8MQ-y4SAuTD-ydTiKdOm_EzTq+mNY3- at mail dot gmail dot com>
+________________________________________________________________________________
+

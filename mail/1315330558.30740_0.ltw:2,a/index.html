@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Debugging Jack Clients</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Debugging Jack Clients</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1315327545.27630_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1315333811.1763_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1315330558.30740_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 06 Sep 2011 10:35:44 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> ccrome </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1315327545.27630_0.ltw:2,a/index.html'>Re: [Jack-Devel] Debugging Jack Clients </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>ccrome
+<a href='../1315333811.1763_0.ltw:2,a/index.html'>Re: [Jack-Devel] Debugging Jack Clients </a></td></tr>
+</table>
+<pre>
+Thanks Paul.
+
+When I try that, it doesn't work properly.  Here's what happens:
+
+# jackd -r -t 50000 -d alsa .... &gt; jackd_log &amp;
+&gt; jackd 0.120.1
+&gt; Copyright 2001-2009 Paul Davis, Stephane Letz, Jack O'Quinn, Torben Hohn
+&gt; and others.
+&gt; jackd comes with ABSOLUTELY NO WARRANTY
+&gt; This is free software, and you are welcome to redistribute it
+&gt; under certain conditions; see the file COPYING for details
+&gt; JACK compiled with System V SHM support.
+&gt; loading driver ..
+&gt; creating alsa driver ... hw:0|hw:0|1024|2|48000|0|0|nomon|swmeter|-|16bit
+&gt; control device hw:0
+&gt; configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 2 periods
+&gt; ALSA: final selected sample format for capture: 16bit little-endian
+&gt; ALSA: use 2 periods for capture
+&gt; ALSA: final selected sample format for playback: 16bit little-endian
+&gt; ALSA: use 2 periods for playback
+
+
+
+Then,* *I start the debugger
+
+&gt; # gdb client
+&gt; gdb&gt; break process
+&gt; gdb&gt; run
+&gt; Starting program:
+&gt; /home/caleb/mmfx/platform/platform_beagle/puppy_driver/jack_scripts/jack_sine
+&gt; [Thread debugging using libthread_db enabled]
+&gt; [New Thread 0x40a73470 (LWP 22052)]
+&gt; engine sample rate: 48000
+&gt; [New Thread 0x412f6470 (LWP 22055)]
+&gt;   ^C
+&gt; Program received signal SIGINT, Interrupt.
+&gt; 0x401e9f44 in nanosleep () from /lib/arm-linux-gnueabi/libc.so.6
+&gt; (gdb) bad status (254) for client sine handling event (type = 8)
+&gt; bad status (254) for client sine handling event (type = 8)
+&gt; bad status (254) for client sine handling event (type = 8)
+&gt; gdb&gt;
+&gt; gdb&gt; continue
+
+
+The callback 'process' is never called again, and the jackd_log file is
+filled with alsa xruns.
+
+Any thoughts?
+
+BTW, I'm running JACK 1 on an ARM.
+
+Thanks again,
+  -Caleb
+
+
+
+On Tue, Sep 6, 2011 at 9:45 AM, Paul Davis &lt;[hidden]&gt;wrote:
+
+&gt; On Tue, Sep 6, 2011 at 12:41 PM, ccrome &lt;[hidden]&gt; wrote:
+&gt; &gt; Hi,
+&gt; &gt;    Forgive me fi this has been asked before, but the tux archives seem to
+&gt; be
+&gt; &gt; broken (not responding) for me.
+&gt; &gt; I'm developing a Jack client on Linux (using the jackd sever with the
+&gt; ALSA
+&gt; &gt; backend), and need to be able to debug the client application.  How do
+&gt; you
+&gt; &gt; go about this in Jack?  I'm trying this:
+&gt; &gt; # jackd -d alsa .... &lt;startup options&gt;.... &amp;
+&gt;
+&gt; jackd -r -t 50000 -d alsa ......
+&gt;
+&gt; (-r =&gt; not Realtime, -t N =&gt; set client timeout (in msecs))
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1315327545.27630_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1315333811.1763_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1315330558.30740_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1315330558.30740_0.ltw:2,a&nbsp;&lt;CAG5mAdxkRBjVO+4B9F5==FPdSFVEd=bdwJPc=zNTj6GUNm_aOA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

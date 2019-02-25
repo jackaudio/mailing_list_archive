@@ -1,0 +1,392 @@
+Date:        Tue,  01 Jan 2013 13:20:27
+From:        Peter Nelson  <[hidden] at fuzzle dot org>
+To:          [hidden] at jackaudio dot org
+
+Subject:     [Jack-Devel] [PATCH] Test using WITH_OPUS instead of HAVE_OPUS
+
+HAVE_OPUS will be set by waf if Opus is available but opus/opus_custom.h
+is not. WITH_OPUS appears to have been created to resolve this but is
+never tested against.
+---
+ common/JackNetAdapter.cpp   |    4 ++--
+ common/JackNetDriver.cpp    |    4 ++--
+ common/JackNetInterface.cpp |    2 +-
+ common/JackNetOneDriver.cpp |   18 +++++++++---------
+ common/JackNetOneDriver.h   |    2 +-
+ common/JackNetTool.cpp      |    2 +-
+ common/JackNetTool.h        |    2 +-
+ common/netjack.c            |   12 ++++++------
+ common/netjack.h            |    4 ++--
+ common/netjack_packet.c     |    8 ++++----
+ example-clients/netsource.c |    8 ++++----
+ wscript                     |    3 ++-
+ 12 files changed, 35 insertions(+), 34 deletions(-)
+
+diff --git a/common/JackNetAdapter.cpp b/common/JackNetAdapter.cpp
+index 7cc8f05..3db8beb 100644
+--- a/common/JackNetAdapter.cpp
++++ b/common/JackNetAdapter.cpp
+@@ -102,7 +102,7 @@ namespace Jack
+                     }
+                     break;
+             #endif
+-            #if HAVE_OPUS
++            #if WITH_OPUS
+                 case 'O':
+                     if (param->value.i > 0) {
+                         fParams.fSampleEncoder = JackOpusEncoder;
+@@ -429,7 +429,7 @@ extern "C"
+         jack_driver_descriptor_add_parameter(desc, &filler, "celt", 'c', JackDriverParamInt, &value, NULL, "Set CELT encoding and number of kBits per channel", NULL);
+     #endif
+ 
+-    #if HAVE_OPUS
++    #if WITH_OPUS
+         value.i = -1;
+         jack_driver_descriptor_add_parameter(desc, &filler, "opus", 'O', JackDriverParamInt, &value, NULL, "Set Opus encoding and number of kBits per channel", NULL);
+     #endif
+diff --git a/common/JackNetDriver.cpp b/common/JackNetDriver.cpp
+index 12019ba..cf66a3c 100644
+--- a/common/JackNetDriver.cpp
++++ b/common/JackNetDriver.cpp
+@@ -623,7 +623,7 @@ namespace Jack
+             value.i = -1;
+             jack_driver_descriptor_add_parameter(desc, &filler, "celt", 'c', JackDriverParamInt, &value, NULL, "Set CELT encoding and number of kBits per channel", NULL);
+ #endif
+-#if HAVE_OPUS
++#if WITH_OPUS
+             value.i = -1;
+             jack_driver_descriptor_add_parameter(desc, &filler, "opus", 'O', JackDriverParamInt, &value, NULL, "Set Opus encoding and number of kBits per channel", NULL);
+ #endif
+@@ -707,7 +707,7 @@ Deactivated for now..
+                         celt_encoding = param->value.i;
+                         break;
+                     #endif
+-                    #if HAVE_OPUS
++                    #if WITH_OPUS
+                     case 'O':
+                         opus_encoding = param->value.i;
+                         break;
+diff --git a/common/JackNetInterface.cpp b/common/JackNetInterface.cpp
+index 6a04550..dabcbea 100644
+--- a/common/JackNetInterface.cpp
++++ b/common/JackNetInterface.cpp
+@@ -243,7 +243,7 @@ namespace Jack
+             case JackCeltEncoder:
+                 return new NetCeltAudioBuffer(&fParams, nports, buffer, fParams.fKBps);
+             #endif
+-            #if HAVE_OPUS
++            #if WITH_OPUS
+             case JackOpusEncoder:
+                 return new NetOpusAudioBuffer(&fParams, nports, buffer, fParams.fKBps);
+             #endif
+diff --git a/common/JackNetOneDriver.cpp b/common/JackNetOneDriver.cpp
+index 4a8b4ae..36769f5 100644
+--- a/common/JackNetOneDriver.cpp
++++ b/common/JackNetOneDriver.cpp
+@@ -39,7 +39,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ #include <celt/celt.h>
+ #endif
+ 
+-#if HAVE_OPUS
++#if WITH_OPUS
+ #include <opus/opus.h>
+ #include <opus/opus_custom.h>
+ #endif
+@@ -153,7 +153,7 @@ int JackNetOneDriver::AllocPorts()
+             netj.codec_latency = 2 * lookahead;
+ #endif
+         } else if (netj.bitdepth == OPUS_MODE) {
+-#if HAVE_OPUS
++#if WITH_OPUS
+             OpusCustomMode *opus_mode = opus_custom_mode_create(netj.sample_rate, netj.period_size, NULL); // XXX free me in the end
+             OpusCustomDecoder *decoder = opus_custom_decoder_create( opus_mode, 1, NULL );
+             netj.capture_srcs = jack_slist_append(netj.capture_srcs, decoder);
+@@ -204,7 +204,7 @@ int JackNetOneDriver::AllocPorts()
+ #endif
+ #endif
+         } else if (netj.bitdepth == OPUS_MODE) {
+-#if HAVE_OPUS
++#if WITH_OPUS
+             const int kbps = netj.resample_factor;
+             jack_error("NEW ONE OPUS ENCODER 128  <> %d!!", kbps);
+             int err;
+@@ -478,7 +478,7 @@ JackNetOneDriver::FreePorts ()
+         netj.capture_srcs = NULL;
+ #endif
+     } else if (netj.bitdepth == OPUS_MODE) {
+-#if HAVE_OPUS
++#if WITH_OPUS
+         node = netj.playback_srcs;
+         while (node != NULL) {
+             JSList *this_node = node;
+@@ -773,7 +773,7 @@ JackNetOneDriver::render_jack_ports_to_payload_celt (JSList *playback_ports, JSL
+ 
+ #endif
+ 
+-#if HAVE_OPUS
++#if WITH_OPUS
+ #define CDO (sizeof(short)) ///< compressed data offset (first 2 bytes are length)
+ // render functions for Opus.
+ void
+@@ -873,7 +873,7 @@ JackNetOneDriver::render_payload_to_jack_ports (int bitdepth, void *packet_paylo
+         render_payload_to_jack_ports_celt (packet_payload, net_period_down, capture_ports, capture_srcs, nframes);
+     else
+ #endif
+-#if HAVE_OPUS
++#if WITH_OPUS
+     if (bitdepth == OPUS_MODE)
+         render_payload_to_jack_ports_opus (packet_payload, net_period_down, capture_ports, capture_srcs, nframes);
+     else
+@@ -889,7 +889,7 @@ JackNetOneDriver::render_jack_ports_to_payload (int bitdepth, JSList *playback_p
+         render_jack_ports_to_payload_celt (playback_ports, playback_srcs, nframes, packet_payload, net_period_up);
+     else
+ #endif
+-#if HAVE_OPUS
++#if WITH_OPUS
+     if (bitdepth == OPUS_MODE)
+         render_jack_ports_to_payload_opus (playback_ports, playback_srcs, nframes, packet_payload, net_period_up);
+     else
+@@ -942,7 +942,7 @@ extern "C"
+         value.ui = 0U;
+         jack_driver_descriptor_add_parameter(desc, &filler, "celt", 'c', JackDriverParamUInt, &value, NULL, "Set CELT encoding and number of kbits per channel", NULL);
+ #endif
+-#if HAVE_OPUS
++#if WITH_OPUS
+         value.ui = 0U;
+         jack_driver_descriptor_add_parameter(desc, &filler, "opus", 'P', JackDriverParamUInt, &value, NULL, "Set Opus encoding and number of kbits per channel", NULL);
+ #endif
+@@ -1059,7 +1059,7 @@ extern "C"
+                     break;
+ 
+                 case 'P':
+-#if HAVE_OPUS
++#if WITH_OPUS
+                     bitdepth = OPUS_MODE;
+                     resample_factor = param->value.ui;
+                     jack_error("OPUS: %d\n", resample_factor);
+diff --git a/common/JackNetOneDriver.h b/common/JackNetOneDriver.h
+index 2b0e649..2b14516 100644
+--- a/common/JackNetOneDriver.h
++++ b/common/JackNetOneDriver.h
+@@ -46,7 +46,7 @@ class JackNetOneDriver : public JackWaiterDriver
+         void
+         render_jack_ports_to_payload_celt(JSList *playback_ports, JSList *playback_srcs, jack_nframes_t nframes, void *packet_payload, jack_nframes_t net_period_up);
+ #endif
+-#if HAVE_OPUS
++#if WITH_OPUS
+         void
+         render_payload_to_jack_ports_opus(void *packet_payload, jack_nframes_t net_period_down, JSList *capture_ports, JSList *capture_srcs, jack_nframes_t nframes);
+         void
+diff --git a/common/JackNetTool.cpp b/common/JackNetTool.cpp
+index e2aec4b..3937a7e 100644
+--- a/common/JackNetTool.cpp
++++ b/common/JackNetTool.cpp
+@@ -709,7 +709,7 @@ namespace Jack
+ 
+ #endif
+ 
+-#if HAVE_OPUS
++#if WITH_OPUS
+ #define CDO (sizeof(short)) ///< compressed data offset (first 2 bytes are length)
+ 
+     NetOpusAudioBuffer::NetOpusAudioBuffer(session_params_t* params, uint32_t nports, char* net_buffer, int kbps)
+diff --git a/common/JackNetTool.h b/common/JackNetTool.h
+index c622ace..3c6a4f4 100644
+--- a/common/JackNetTool.h
++++ b/common/JackNetTool.h
+@@ -406,7 +406,7 @@ namespace Jack
+ 
+ #endif
+ 
+-#if HAVE_OPUS
++#if WITH_OPUS
+ 
+ #include <opus/opus.h>
+ #include <opus/opus_custom.h>
+diff --git a/common/netjack.c b/common/netjack.c
+index af4943f..03d5a21 100644
+--- a/common/netjack.c
++++ b/common/netjack.c
+@@ -369,7 +369,7 @@ void netjack_attach( netjack_driver_state_t *netj )
+ #endif
+     }
+     if( netj->bitdepth == OPUS_MODE ) {
+-#if HAVE_OPUS
++#if WITH_OPUS
+         netj->opus_mode = opus_custom_mode_create(netj->sample_rate, netj->period_size, NULL);
+ #endif
+     }
+@@ -404,7 +404,7 @@ void netjack_attach( netjack_driver_state_t *netj )
+ #endif
+ #endif
+         } else if( netj->bitdepth == OPUS_MODE ) {
+-#if HAVE_OPUS
++#if WITH_OPUS
+             OpusCustomDecoder *decoder = opus_custom_decoder_create( netj->opus_mode, 1, NULL );
+             netj->capture_srcs = jack_slist_append(netj->capture_srcs, decoder );
+ #endif
+@@ -460,7 +460,7 @@ void netjack_attach( netjack_driver_state_t *netj )
+ #endif
+ #endif
+         } else if( netj->bitdepth == OPUS_MODE ) {
+-#if HAVE_OPUS
++#if WITH_OPUS
+             const int kbps = netj->resample_factor;
+ 						jack_log( "OPUS %dkbps\n", kbps);
+ 
+@@ -516,7 +516,7 @@ void netjack_detach( netjack_driver_state_t *netj )
+             celt_decoder_destroy(decoder);
+         } else
+ #endif
+-#if HAVE_OPUS
++#if WITH_OPUS
+         if ( netj->bitdepth == OPUS_MODE ) {
+             OpusCustomDecoder * decoder = node->data;
+             opus_custom_decoder_destroy(decoder);
+@@ -546,7 +546,7 @@ void netjack_detach( netjack_driver_state_t *netj )
+             celt_encoder_destroy(encoder);
+         } else
+ #endif
+-#if HAVE_OPUS
++#if WITH_OPUS
+         if ( netj->bitdepth == OPUS_MODE ) {
+             OpusCustomEncoder * encoder = node->data;
+             opus_custom_encoder_destroy(encoder);
+@@ -566,7 +566,7 @@ void netjack_detach( netjack_driver_state_t *netj )
+     if( netj->bitdepth == CELT_MODE )
+         celt_mode_destroy(netj->celt_mode);
+ #endif
+-#if HAVE_OPUS
++#if WITH_OPUS
+     if( netj->bitdepth == OPUS_MODE )
+         opus_custom_mode_destroy(netj->opus_mode);
+ #endif
+diff --git a/common/netjack.h b/common/netjack.h
+index b21f5bd..c103abd 100644
+--- a/common/netjack.h
++++ b/common/netjack.h
+@@ -32,7 +32,7 @@
+ #include <celt/celt.h>
+ #endif
+ 
+-#if HAVE_OPUS
++#if WITH_OPUS
+ #include <opus/opus.h>
+ #include <opus/opus_custom.h>
+ #endif
+@@ -117,7 +117,7 @@ extern "C"
+ #if HAVE_CELT
+         CELTMode	   *celt_mode;
+ #endif
+-#if HAVE_OPUS
++#if WITH_OPUS
+         OpusCustomMode* opus_mode;
+ #endif
+     };
+diff --git a/common/netjack_packet.c b/common/netjack_packet.c
+index a4e5b84..29e03ba 100644
+--- a/common/netjack_packet.c
++++ b/common/netjack_packet.c
+@@ -72,7 +72,7 @@
+ #include <celt/celt.h>
+ #endif
+ 
+-#if HAVE_OPUS
++#if WITH_OPUS
+ #include <opus/opus.h>
+ #include <opus/opus_custom.h>
+ #endif
+@@ -1355,7 +1355,7 @@ render_jack_ports_to_payload_celt (JSList *playback_ports, JSList *playback_srcs
+ 
+ #endif
+ 
+-#if HAVE_OPUS
++#if WITH_OPUS
+ #define CDO (sizeof(short)) ///< compressed data offset (first 2 bytes are length)
+ // render functions for Opus.
+ void
+@@ -1451,7 +1451,7 @@ render_payload_to_jack_ports (int bitdepth, void *packet_payload, jack_nframes_t
+     else if (bitdepth == CELT_MODE)
+         render_payload_to_jack_ports_celt (packet_payload, net_period_down, capture_ports, capture_srcs, nframes);
+ #endif
+-#if HAVE_OPUS
++#if WITH_OPUS
+     else if (bitdepth == OPUS_MODE)
+         render_payload_to_jack_ports_opus (packet_payload, net_period_down, capture_ports, capture_srcs, nframes);
+ #endif
+@@ -1470,7 +1470,7 @@ render_jack_ports_to_payload (int bitdepth, JSList *playback_ports, JSList *play
+     else if (bitdepth == CELT_MODE)
+         render_jack_ports_to_payload_celt (playback_ports, playback_srcs, nframes, packet_payload, net_period_up);
+ #endif
+-#if HAVE_OPUS
++#if WITH_OPUS
+     else if (bitdepth == OPUS_MODE)
+         render_jack_ports_to_payload_opus (playback_ports, playback_srcs, nframes, packet_payload, net_period_up);
+ #endif
+diff --git a/example-clients/netsource.c b/example-clients/netsource.c
+index 9386aec..6bb3afb 100644
+--- a/example-clients/netsource.c
++++ b/example-clients/netsource.c
+@@ -62,7 +62,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ #include <celt/celt.h>
+ #endif
+ 
+-#if HAVE_OPUS
++#if WITH_OPUS
+ #include <opus/opus.h>
+ #include <opus/opus_custom.h>
+ #endif
+@@ -154,7 +154,7 @@ alloc_ports (int n_capture_audio, int n_playback_audio, int n_capture_midi, int
+ #endif
+ #endif
+         } else if (bitdepth == 999) {
+-#if HAVE_OPUS
++#if WITH_OPUS
+             int err;
+             OpusCustomMode *opus_mode = opus_custom_mode_create(jack_get_sample_rate( client ), jack_get_buffer_size(client), &err);
+             if (err != OPUS_OK) { printf("OPUS MODE FAILED\n"); }
+@@ -206,7 +206,7 @@ alloc_ports (int n_capture_audio, int n_playback_audio, int n_capture_midi, int
+ #endif
+ #endif
+         } else if( bitdepth == 999 ) {
+-#if HAVE_OPUS
++#if WITH_OPUS
+             const int kbps = factor;
+             printf("new opus encoder %d kbps\n", kbps);
+             int err;
+@@ -648,7 +648,7 @@ main (int argc, char *argv[])
+ #endif
+                 break;
+             case 'P':
+-#if HAVE_OPUS
++#if WITH_OPUS
+                 bitdepth = 999;
+                 factor = atoi (optarg);
+ #else
+diff --git a/wscript b/wscript
+index 568dcf6..a0879b9 100644
+--- a/wscript
++++ b/wscript
+@@ -177,7 +177,6 @@ def configure(conf):
+     conf.env['WITH_OPUS'] = False
+     if conf.check_cfg(package='opus', atleast_version='0.9.0' , args='--cflags --libs', mandatory=False):
+         if conf.check_cc(header_name='opus/opus_custom.h', mandatory=False):
+-            conf.define('HAVE_OPUS', 1)
+             conf.env['WITH_OPUS'] = True
+ 
+ 
+@@ -248,6 +247,8 @@ def configure(conf):
+         conf.define('JACK_DBUS', 1)
+     if conf.env['BUILD_WITH_PROFILE'] == True:
+         conf.define('JACK_MONITOR', 1)
++    if conf.env['WITH_OPUS'] == True:
++        conf.define('WITH_OPUS', 1)
+     conf.write_config_header('config.h', remove=False)
+ 
+     svnrev = None
+-- 
+1.7.10.4
+
+1357046464.2407_0.ltw:2,a <1357046427-9783-1-git-send-email-peter at fuzzle dot org>
+________________________________________________________________________________
+

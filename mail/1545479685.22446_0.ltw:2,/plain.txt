@@ -1,0 +1,109 @@
+Date:        Sat, 22 Dec 2018 12:54:07 +0100
+From:        Christian Affolter  <[hidden] at purplehaze dot ch>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jörn Nettingsmeier [Jack-Devel] Some observations re Jack and systemd (1545423871.8348_0.ltw:2,)
+Follow-Up:   Jörn Nettingsmeier Re: [Jack-Devel] Some observations re Jack and systemd (1545510209.3777_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Some observations re Jack and systemd
+
+Hi Jörn
+
+thanks for sharing this.
+
+Some time ago I've also had to write systemd service units for running a
+headless jackd in combination with "rotter" for a recording solution.
+
+The service file is available at [1] and the documentation at [2] in
+case you're interested. It supports multiple jackd instances (it was
+written as a generic systemd service unit template) and uses the
+"jack_wait" command to wait for jackd to be up and running. It was
+designed to be as generic as possible an let the local administrator
+configure certain settings using systemd service instance overrides (see
+[3] for an example with alsa).
+
+Best regards,
+Chris
+
+[1]
+https://github.com/radiorabe/centos-rpm-rotter/blob/master/jackd%40.service
+[2]
+https://github.com/radiorabe/centos-rpm-rotter#systemd-service-unit-templates-explained
+[3]
+https://github.com/radiorabe/centos-rpm-rotter#running-rotter-through-systemd
+
+
+On 21.12.2018 21:24, Jörn Nettingsmeier wrote:
+> Hi everyone,
+> 
+> 
+> after scratching my head for a long time to make systemd behave when
+> running jack as a service, I thought I'd share my findings:
+> 
+> Example service file:
+> 
+> [Unit]
+> Description=JACK Audio Connection Kit
+> After=sound.target
+> After=ntp.service
+> After=time-sync.target
+> Before=jackd.target
+> Requires=jackd.target
+> 
+> [Service]
+> EnvironmentFile=-/your/config/file/containing/JACKD_OPTIONS
+> LimitRTPRIO=85
+> LimitMEMLOCK=700000000
+> User=nettings
+> Environment="DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket"
+> 
+> ExecStartPre=/bin/sleep 10
+> ExecStart=/usr/bin/jackd $JACKD_OPTIONS
+> RestartSec=5
+> Restart=on-failure
+> 
+> [Install]
+> WantedBy=multi-user.target
+> 
+> 
+> So it's easy to start a service as a user, but that user's environment
+> is not automatically pulled in. That means even though user nettings
+> does have the necessary permissions in /etc/security/limits.conf, you
+> still need to spell them out for systemd.
+> 
+> Another thing to note is that at least on current raspbian, the
+> time-sync.target is broken. Its promise is to only be triggered after
+> ntp has worked its magic and the system time is monotonous. However,
+> I've seen time jumps which combined with cheap USB hardware or the
+> builtin Raspi sound will hang jack. Hence the ugly sleep.
+> 
+> Final goodness: systemd might try to clean up after you. So when you
+> have a jackd service started in your name, all is well, until you have
+> logged in somehow and then closed the last shell, at which point the
+> janitor from hell will happily clear /dev/shm and with it all your jack
+> semaphores, leading to instant dumpster fire and silence.
+> 
+> This magic can be avoided by setting
+> RemoveIPC=no
+> in /etc/systemd/logind.conf
+> 
+> After clearing these hurdles, I've been quite happy with how systemd
+> handles jack clients.  The usecase here is a number of clients running
+> in an embedded appliance, and systemd takes care of restoring them when
+> I cause them to crash, which is good. Not that they crash, but it's good
+> to have defense in depth.
+> Figuring out how to order services is hard because you cannot assume a
+> service is really ready when systemd has fired it off. So I've used a
+> ExecStartPre script that blocks until a downstream jack port has
+> appeared in those cases where I want to start clients in a particular
+> order (matters most for the one job that needs to connect all the ports,
+> so I let it wait on a test port for each client it needs to connect).
+> 
+> Old-time SysV user here, and granted, systemd has given me many a WTF
+> moment, but it does its job. Unfortunately, it does too many other jobs
+> as well, but hey...
+> 
+> 
+
+1545479685.22446_0.ltw:2, <3481cdc6-adf8-7250-86dd-3ce46dfb8869 at purplehaze dot ch>
+________________________________________________________________________________
+

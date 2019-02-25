@@ -1,0 +1,33 @@
+Date:        Thu, 11 Feb 2016 14:48:53 -0800
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          [hidden] at jackaudio dot org
+
+Subject:     [Jack-Devel] [jackaudio/jack1] 7ae3b2: Revert "Set driver port order metadata".
+
+  Branch: refs/heads/master
+  Home:   https://github.com/jackaudio/jack1
+  Commit: 7ae3b2be3c4f77f023f79f67430cf45fb97cab8d
+      https://github.com/jackaudio/jack1/commit/7ae3b2be3c4f77f023f79f67430cf45fb97cab8d
+  Author: Paul Davis <[hidden]>
+  Date:   2016-02-11 (Thu, 11 Feb 2016)
+
+  Changed paths:
+    M jackd/engine.c
+    M libjack/client.c
+
+  Log Message:
+  -----------
+  Revert "Set driver port order metadata".
+
+The "client" argument being passed to jack_set_property() is
+jack_client_internal_t*, not jack_client_t* as expected, which leads
+to a crash. Using client->private_client (which is a jack_client_t*)
+causes deadlock because do_request() is called recursively.
+
+The goal here is good, but it can't be accomplished in this way.
+
+This reverts commit 439e47da1a179f62ce9e6601851b4f90381da0de.
+
+1455230979.11905_0.ltw:2, <56bd0fd578db6_6c813fcbbd66d2bc182185 at hookshot-fe1-cp1-prd dot iad dot github dot net dot mail>
+________________________________________________________________________________
+

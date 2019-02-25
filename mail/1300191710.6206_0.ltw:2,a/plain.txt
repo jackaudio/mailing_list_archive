@@ -1,0 +1,47 @@
+Date:        Tue, 15 Mar 2011 13:21:16 +0100
+From:        Torben Hohn  <[hidden] at gmx dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Torben Hohn [Jack-Devel] [PATCH 1/4] [alsa] fix initialisation of io functions for capture only mode (1300191699.6177_0.ltw:2,a)
+
+Subject:     [Jack-Devel] [PATCH 3/4] [alsa] initialise driver->read_via_copy also for cap PCM_FORMAT_FLOAT_LE
+
+---
+ drivers/alsa/alsa_driver.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/alsa/alsa_driver.c b/drivers/alsa/alsa_driver.c
+index 65bd890..ae26f42 100644
+--- a/drivers/alsa/alsa_driver.c
++++ b/drivers/alsa/alsa_driver.c
+@@ -235,7 +235,6 @@ alsa_driver_setup_io_function_pointers (alsa_driver_t *driver)
+ {
+ 	if (driver->playback_handle) {
+ 	if (SND_PCM_FORMAT_FLOAT_LE == driver->playback_sample_format) {
+-		driver->read_via_copy = sample_move_floatLE_sSs;
+ 		driver->write_via_copy = sample_move_dS_floatLE;
+ 	} else {
+ 
+@@ -293,6 +292,9 @@ alsa_driver_setup_io_function_pointers (alsa_driver_t *driver)
+ 	}
+ 	
+ 	if (driver->capture_handle) {
++	if (SND_PCM_FORMAT_FLOAT_LE == driver->capture_sample_format) {
++		driver->read_via_copy = sample_move_floatLE_sSs;
++	} else {
+ 	switch (driver->capture_sample_bytes) {
+ 	case 2:
+ 		driver->read_via_copy = driver->quirk_bswap?
+@@ -311,6 +313,7 @@ alsa_driver_setup_io_function_pointers (alsa_driver_t *driver)
+ 		break;
+ 	}
+ 	}
++	}
+ }
+ 
+ static int
+-- 
+1.7.2.3
+
+1300191710.6206_0.ltw:2,a <1300191677-23161-3-git-send-email-torbenh at gmx dot de>
+________________________________________________________________________________
+

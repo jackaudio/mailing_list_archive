@@ -1,0 +1,47 @@
+Date:        Mon, 10 Dec 2012 18:41:04 +0000
+From:        John Rigg  <[hidden] at jrigg dot co dot uk>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Devin Anderson Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355133932.5984_0.ltw:2,)
+Follow-Up:   John Rigg Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355164741.4398_0.ltw:2,)
+Follow-Up:   John Rigg Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355174697.16290_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] ALSA PCM multi plugin and xruns
+
+On Sun, Dec 09, 2012 at 09:17:42PM -0800, Devin Anderson wrote:
+> I modified the CPU affinity of the IRQs of the two Layla 3Gs so that
+> they are only handled by one CPU, and modified the `irqbalance`
+> configuration so that it doesn't modify the CPU affinity settings for
+> the IRQs of the Layla 3Gs, and so that it doesn't use the CPU handling
+> the Layla 3G interrupts for other interrupts.
+> 
+> I haven't been able to trigger the onslaught of xruns in the past
+> hour, and I'm doing the same things that produced the xruns before
+> within 5 minutes or so.
+> 
+> @John (and anyone else experiencing tons of xruns with an ALSA PCM
+> multi setup): I suggest that you make the same modifications to your
+> system, and see if the problem goes away.  If you need any assistance,
+> let me know.
+
+I've tried smp_affinity here and it hasn't fixed the problem. It just
+took longer for the xrun messages to show up.
+
+I set the smp_affinity for the two ice1712 cards (which are on IRQ20
+and 21) to CPU1 in my test system with the following:
+echo "2" > /proc/irq/20/smp_affinity
+echo "2" > /proc/irq/21/smp_affinity
+
+Then I started jackd with my pcm_multi device at 96kHz and started
+jamin to generate some load. At first it looked like this had worked,
+but after about 5 minutes the xrun indications in jamin started piling
+up. Both IRQs are definitely handled by CPU1 according to frequent
+checks using cat /proc/interrupts.
+
+My test system uses an AMD 4850e Athlon64x2 2.5GHz CPU. Running jamin at
+96kHz uses 11% CPU according to jamin's load indicator.
+
+John
+
+1355164272.4075_0.ltw:2, <20121210184104.GA2896 at localhost0 dot localdomain>
+________________________________________________________________________________
+

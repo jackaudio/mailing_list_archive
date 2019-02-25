@@ -1,0 +1,162 @@
+Date:        Thu, 25 Aug 2011 10:10:08 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Jeroen Van den Keybus <[hidden] at gmail dot com>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Jeroen Van den Keybus Re: [Jack-Devel] Mixed Windows / Linux system (1314219089.14650_0.ltw:2,a)
+Follow-Up:   steven lawton Re: [Jack-Devel] Mixed Windows / Linux system (1314376367.9430_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Mixed Windows / Linux system
+
+netjack2 is in heady rework in Jack 1.9.8 (with some optimization, like sending data only when JACK ports are really connected to save bandwidth). I hope to have something ready soon.
+
+Stéphane
+
+
+Le 24 août 2011 à 22:51, Jeroen Van den Keybus a écrit :
+
+> I did stay with 1.9.7 for a number of reasons:
+>  
+> - Hauptwerk has a 32-bit version too, which suits me fine.
+> - On Linux, I can build Jack 1.9.8 with no problems but on Windows, I did get all sources, incl. ASIO, but was unable to compile Jack with Code::Blocks. I simply gave up trying to figure out the problems. I also found no useful instructions to build the .dlls (apparently you need MS Visual Studio, and I do not own that).
+> - 1.9.7 is available prepackaged in Debian and Ubuntu, along with scripts to setup the realtime user and to start the Pulse Audio Suspender (pasuspender).
+>  
+> I used netjack2.
+>  
+> On the Linux server side (which has MIDI input from the keyboard and has an audio output) I use:
+>  
+> $ pasuspender -- jackd -R -dalsa -p256 -r44100 -Xseq
+> $ jack_load netmanager
+>  
+> (both commands in a different terminal)
+>  
+>  
+> On the Windows Vista 64 client side, I do:
+>  
+> - Start loopMIDI. Just close its window as it remains running in the system tray.
+> 
+> - Start Hauptwerk. It will complain that some components (the JackRouter) could not be loaded. Click 'continue'. Hauptwerk is now holding the MIDI input, preventing jackd from gobbling it up..
+> 
+> - Open command prompt (cmd.exe) 1 in 'C:\Program Files (x86)\Jack v1.9.7' and run:
+> > jackd -R -S -X winmme -dnet -i1 -C0 -P2
+>   Command prompt 1 is now busy, having been unable to lock down the MIDI port we need (midiInOpen error).
+> 
+> - Leave Hauptwerk.
+> 
+> - Open command prompt 2 in 'C:\Program Files (x86)\Jack v1.9.7'.
+> > jack_load audioadapter
+> 
+> - Restart Hauptwerk.
+> 
+> - In General Settings, select JackRouter.
+> 
+> - Load an instrument. Hauptwerk outputs will now become available.
+> 
+> - In command prompt 2:
+>     jack_connect Hauptwerk:out1 system:playback_1
+>     jack_connect Hauptwerk:out2 system:playback_2
+>     jack_connect system:midi_capture_1 system_midi:playback_2
+>  
+>  
+> And then finally I can route MIDI and audio using qjackctl:
+>  
+> Audio: WindowsClient ==> system
+> MIDI: system:midi_capture_2 ==> WindowsClient:midi_to_slave_1
+>  
+>  
+> When playing the keyboard the Linux Jack server sends the MIDI data using NetJack2 to one end of the Windows client loopMIDI. The other end is held by Hauptwerk, which eventually gets the MIDI command. Hauptwerk makes a sound through the ASIO adapter, which merely sends it to the client's audioadapter, which in turn resamples it to match the sample rate of the master. The master receives this synchronous stream over NetJack2 and feeds it to its local audio card.
+>  
+> Easy as that...
+>  
+> Still, sometimes this setup just ceases to work properly. I haven't been able to figure out what causes the problem.
+>  
+> J.
+>  
+>  
+>  
+>   
+> 2011/8/19 Michaël Van de Borne <[hidden]>
+>  
+> Jeroen Van den Keybus <jeroen.vandenkeybus <at> gmail.com> writes:
+>  
+> >
+> >
+> >
+> >
+> > > oh well... at least i dont need to feel bad, because netjack2 isnt> working
+> either.> i dont really remember why its using netjack_poll()
+> >
+> > the reason why netone fails, is that it calls netjack_poll which is not
+> > implemented for windows, and then bails out because of it.however... it is not
+> necessary to call it.(at least not on Windows) ...
+> >
+> >  
+> > I managed to compile jackd2 1.9.8 from SVN 4473. I removed the Ubuntu 11.04
+> jackd2 package so I could register the shared libraries.
+> >  
+> > I regret to inform Torben that netjack1 on Windows does not connect, whereas
+> netjack2 does.
+> >  
+> > I now have two questions:
+> >  
+> > 1. How do I get qjackctl installed in Ubuntu, without having jackd (1.9.7)
+> installed as well ? (or maybe: how do I replace an installed jackd2 1.9.7 with
+> 1.9.8)
+> >  
+> > 2. I would like to resolve the 'Initing net driver fails...' problem. Any
+> clues for where to look ? What toolchain do I need to build (looks like
+> Code::Blocks is needed) ?
+> >  
+> > Thanks for your help.
+> >  
+> >
+> >
+> > 
+> > Jack-Devel mailing list
+> > Jack-Devel <at> lists.jackaudio.org
+> > http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> >
+>  
+> Hi,
+>  
+> I was looking for a way to use NetJack1 either on a mixed linux/windows
+> environment, or a pure windows environment.
+> I'm experiencing the same "netjack_poll not implemented" problem when launching
+> jack2 on windows with the netone driver. I'm using jack 1.9.7.
+>  
+> It seems that, from your last message, jack2 1.9.8 from SVN doesn't work better.
+> Have you found with any solution/workaround?
+>  
+> One more thing: when running the master on windows, and linux as the "netone"
+> slave, things seems to be well connected, but I cannot get any sound out.
+> Windows firewall is disabled. I just get a lot of "send: No error" in the
+> jack_netsource" output on windows. Versions of jackd are identical on linux and
+> windows. Any clue?
+>  
+> netjack1 seems to be very interesting, and I'm working on a project which aims
+> to popularize it so that every musicians, even under windows, can use it.
+>  
+> any clue appreciated.
+>  
+> Thanks,
+> cheers,
+>  
+>  
+> michaël
+>  
+>  
+>  
+>  
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>  
+>  
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1314259826.2876_0.ltw:2,a <ECBE7BDA-BD3E-4B99-8031-5E0BDC4508F4 at grame dot fr>
+________________________________________________________________________________
+

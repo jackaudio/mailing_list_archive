@@ -1,0 +1,127 @@
+Date:        Mon, 04 Jun 2012 22:06:09 +0200
+From:        Brendan Jones  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot linuxaudio dot org, JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Robin Gareus Re: [Jack-Devel] [LAU] jack2 turned verbose (1338559141.5496_0.ltw:2,a)
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] [LAU] jack2 turned verbose (1338867031.16430_0.ltw:2,a)
+Follow-Up:   Kaspar Bumke Re: [Jack-Devel] [LAU] jack2 turned verbose (1340485112.3666_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [LAU] jack2 turned verbose
+
+On 06/01/2012 03:58 PM, Robin Gareus wrote:
+> Hi David,
+>
+> On 06/01/2012 03:48 PM, David Adler wrote:
+>> On Fri, Jun 1, 2012 at 2:52 PM, Robin Gareus wrote:
+>>>
+>>> It might have to do with Arch's compiler[-flags] and how jack2 uses
+>>> unions .. or scoping: JackGlobals vs Engine-Parameters.. although I
+>>> don't have an explanation.. all seems good.
+>>
+>> Compiler flags (for 32bit) are, (from unaltered /etc/makepkg.conf):
+>> CXXFLAGS="-march=i686 -mtune=generic -O2 -pipe -fstack-protector
+>> --param=ssp-buffer-size=4 -D_FORTIFY_SOURCE=2"
+>>
+>>> A hunch: it could be caused by using 'server_ptr->verbose.b' (a union)
+>>> as boolean. The sever only checks "if (server_ptr->verbose.b)". The
+>>> union itself comprises other uninitialized values that could make it
+>>> evaluate to true (though it shouldn't, but maybe some compiler
+>>> optimization casts it to (int) instead of (bool) )
+>>>
+>>>
+>>> I know this is the '-users' list (I'm ccing jack-devel), but could
+>>> someone who experiences the problem try to track it down?
+>>>
+>>> Basically just add a few printf()'s. Start at: common/JackControlAPI.cpp
+>>> - line 926 - before the call to  "new JackServer(..)" add
+>>>
+>>>   printf("DEBUG verbose: %s\n",(server_ptr->verbose.b)?"on":"off");
+>>>
+>>> recompile, launch jackd. If it prints "verbose: on", sth is wrong with
+>>> parameter initialization in main() or with using unions. If it's "off"
+>>> the problem sits deeper:
+>>
+>> DEBUG verbose: on
+>>
+>>> add a line just after common/JackServer.cpp line 66
+>>>   printf("DEBUG verbose2: %s\n",(JackGlobals::fVerbose)?"on":"off");
+>>> ...
+>>
+>> above, your line number didn't match exactly, so we seem to have
+>> different versions (1.9.7 here). Thus, I wasn't exactly sure where to
+>> add the prinf() and did the following:
+>>
+>> ...
+>>      JackServerGlobals::fUserCount = 1;     // One user
+>>      printf("DEBUG verbose2: %s\n",(JackGlobals::fVerbose)?"on":"off");
+>>      JackGlobals::fVerbose = verbose;
+>>      printf("DEBUG verbose3: %s\n",(JackGlobals::fVerbose)?"on":"off");
+>> }
+>>
+>> which prints:
+>> DEBUG verbose2: off
+>> DEBUG verbose3: on
+>>
+>>> A crude test for the union() hunch would be to change
+>>> common/JackControlAPI.h line 53:
+>>>   replace
+>>>   "union jackctl_parameter_value"
+>>> with
+>>>   "struct jackctl_parameter_value"
+>>> and compile with '-fpermissive' like this:
+>>>
+>>>   CXXFLAGS="-fpermissive" ./waf  configure
+>>>   ./waf
+>>>
+>>
+>> Again, mismatching line numbers. I assume you meant the line:
+>> union jackctl_parameter_value verbose;
+>>
+>> Changing that to struct fixes both issues I reported,
+>> the verbose output and exit on last client close.
+>>
+>> So we seem to be getting somewhere. Nice.
+>>
+>>
+>> thanks Robin,
+>> d
+>
+> just a quick re: the line-numbers refered to git-head
+>    https://github.com/jackaudio/jack2/
+> currently 007cdc37142a
+>
+> It looks like it is indeed caused by using unions to check for /true/.
+>    "if ([bool/int/..]union) ->  always true"
+>
+> But I'm at a loss what'd cause those issues and how to best fix it.
+> Maybe someone else can take it from here. It should be sufficient info
+> to file a bug report at  https://github.com/jackaudio/jack2/issues
+>
+> best,
+> robin
+> 
+> Linux-audio-user mailing list
+> [hidden]
+> http://lists.linuxaudio.org/listinfo/linux-audio-user
+
+I've had a closer look at this and this patch seems to be working for me 
+(their's no equivalent bool in jack_driver_param_value_t)
+
+diff -Nurp '-x*~' jack-1.9.8.orig/common/JackControlAPI.cpp 
+jack-1.9.8/common/JackControlAPI.cpp
+--- jack-1.9.8.orig/common/JackControlAPI.cpp	2011-12-19 
+12:54:02.000000000 +0100
++++ jack-1.9.8/common/JackControlAPI.cpp	2012-06-04 21:57:59.264581780 +0200
+@@ -246,7 +246,7 @@ jackctl_add_driver_parameters(
+              break;
+          case JackDriverParamBool:
+              jackctl_type = JackParamBool;
+-            jackctl_value.b = descriptor_ptr->value.i;
++            jackctl_value.b = (descriptor_ptr->value.i > 0);
+              break;
+          default:
+              jack_error("unknown driver parameter type %i", 
+(int)descriptor_ptr->type);
+
+1338840383.2949_0.ltw:2,a <4FCD1531.2070907 at gmail dot com>
+________________________________________________________________________________
+

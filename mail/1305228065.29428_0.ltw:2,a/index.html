@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK thread priorities on different OSes</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK thread priorities on different OSes</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305227488.27392_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1305229530.1810_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1305228065.29428_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 12 May 2011 21:20:39 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Devin Anderson &lt;[hidden] at charityfinders dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Devin Anderson
+<a href='../1305227128.26082_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK thread priorities on different OSes </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1305229530.1810_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK thread priorities on different OSes </a></td></tr>
+</table>
+<pre>
+Le 12 mai 2011 &#xE0; 21:05, Devin Anderson a &#xE9;crit :
+
+&gt; On Thu, May 12, 2011 at 1:22 AM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+&gt; 
+&gt;&gt; Look at the table at the bottom of
+&gt;&gt; http://msdn.microsoft.com/en-us/library/ms685100(v=vs.85).aspx
+&gt;&gt; (the "Base priority")
+&gt;&gt; 
+&gt;&gt; Basically the way I understand is:
+&gt;&gt; 
+&gt;&gt; - in *any* process priory class, the
+&gt;&gt; THREAD_PRIORITY_TIME_CRITICAL (currently used for audio and
+&gt;&gt; MIDI RT) is actually 15
+&gt;&gt; 
+&gt;&gt; - the only way to boost that value is to move the *entire process* to
+&gt;&gt; REALTIME_PRIORITY_CLASS but then *all other threads* of this
+&gt;&gt; process will get crazy values between 16 and 31, that is *above* any
+&gt;&gt; THREAD_PRIORITY_TIME_CRITICAL value that a process *below*
+&gt;&gt; REALTIME_PRIORITY_CLASS would have taken... this is just wrong.
+&gt; 
+&gt; I'm not convinced that this is wrong in every case.  I think that
+&gt; giving the choice to the user and letting him/her determine the best
+&gt; process priority for his/her system is a good idea.  I think issuing a
+&gt; very obvious warning containing lots of capital letters when running
+&gt; in REALTIME_PRIORITY_CLASS is also a good idea. :)
+&gt; 
+&gt; The process priority is less important if MMCSS is available, but
+&gt; that's not always the case.  It's my understanding that many Windows
+&gt; pro audio users still use Windows XP.
+&gt; 
+&gt;&gt; - in the presence of MIDI and audio thread, what should we do? keep
+&gt;&gt; the process in NORMAL_PRIORITY_CLASS , set the audio RT to
+&gt;&gt; THREAD_PRIORITY_HIGHEST (so actually 10) and the MIDI RT to
+&gt;&gt; THREAD_PRIORITY_TIME_CRITICAL (so actually 15). Not sure it
+&gt;&gt; will improve the situation..
+&gt; 
+&gt; I think the process should run in NORMAL_PRIORITY_CLASS by default,
+&gt; and that the process priority should be adjustable via a command line
+&gt; argument.
+&gt; 
+&gt; I'm not totally convinced it will improve the situation either, but,
+&gt; given that JACK 2 runs on Windows and is going to continue to run on
+&gt; Windows, I would like to see the situation improve as much as it
+&gt; possibly can.
+
+But you see on the http://msdn.microsoft.com/en-us/library/ms685100(v=vs.85).aspx table that *only* process REALTIME_PRIORITY_CLASS will actually change the actual value of the THREAD_PRIORITY_TIME_CRITICAL right? But then *all threads* (even GUI ones...) of this process will by higher that any thread of *any* other lover priority process running on the machine... 
+
+And the following is clearly written:
+
+"You should almost never use REALTIME_PRIORITY_CLASS, because this interrupts system threads that manage mouse input, keyboard input, and background disk flushing. This class can be appropriate for applications that "talk" directly to hardware or that perform brief tasks that should have limited interruptions."
+
+&gt; 
+&gt;&gt;&gt; MMCSS, when it's implemented, adds another sort of priority when the
+&gt;&gt;&gt; -P switch is set to 90 or above.
+&gt;&gt;&gt; 
+&gt;&gt;&gt; I can't help but feel that the current situation is hackish and cheap.
+&gt;&gt; 
+&gt;&gt; So my feeling is that this process/thread priority description is
+&gt;&gt; basically flawed on Windows, and this is probably the reason they
+&gt;&gt; added another flawed concept like MMCSS...
+&gt; 
+&gt; I mostly agree with you, but I think MMCSS does help the situation a
+&gt; bit.  When MMCSS is available, it should definitely be used, as it
+&gt; solves the problem with process priorities that you identified
+&gt; earlier; that is, that a higher process priority changes the priority
+&gt; of *every* thread instead of the changing the priority of the threads
+&gt; that need to have high priorities.
+&gt; 
+&gt; Some possible mappings using MMCSS:
+&gt; 
+&gt; PRIORITY_AUDIO: Task Name - "Pro Audio", AVRT_PRIORITY_HIGH
+&gt; PRIORITY_CALLBACK: no MMCSS, THREAD_PRIORITY_NORMAL
+&gt; PRIORITY_MIDI_TERMINAL: Task Name - "Pro Audio", AVRT_PRIORITY_CRITICAL
+
+Using MMCSS in the appropriate manner will makes much more sense... I'll work more in that direction
+
+&gt; 
+&gt;&gt;&gt; I can think of a potential practical use for this sort of thing.
+&gt;&gt;&gt; Let's assume that someone wanted to write an audio driver for bindings
+&gt;&gt;&gt; that were available on more than one operating system (i.e.
+&gt;&gt;&gt; PortAudio), or wanted to write a MIDI driver for bindings that were
+&gt;&gt;&gt; available on more than one operating system (i.e. PortMIDI, RtMidi).
+&gt;&gt;&gt; Instead of creating a bunch of ugly #ifdef's, the driver could use the
+&gt;&gt;&gt; appropriate constant to set the thread priority.
+&gt;&gt; 
+&gt;&gt; Sure I agree with that, I'm just saying we can improve a bit (abstract
+&gt;&gt; some OS specificities) but not expect miracles...
+&gt; 
+&gt; I don't expect any miracles.  However, since JACK 2 is running on
+&gt; Windows, I would like to see Windows users get a fighting chance.
+&gt; 
+
+And I really don"t think we can do better for XP users BTW.
+
+St&#xE9;phane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305227488.27392_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1305229530.1810_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1305228065.29428_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1305228065.29428_0.ltw:2,a&nbsp;&lt;DFF97C1B-8B2A-4566-B157-DE617C1D3A3F at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

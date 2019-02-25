@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Patches for jack-0.121-3</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Patches for jack-0.121-3</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1332410152.26558_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1332419512.5586_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1332417351.4372_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 22 Mar 2012 11:55:19 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1332410152.26558_0.ltw:2,/index.html'>Re: [Jack-Devel] Patches for jack-0.121-3 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1332419512.5586_0.ltw:2,/index.html'>Re: [Jack-Devel] Patches for jack-0.121-3 </a></td></tr>
+</table>
+<pre>
+On Thu, Mar 22, 2012 at 10:55:18AM +0100, St&#xE9;phane Letz wrote:
+ 
+ 
+&gt; Right now I see two flags that force "re-init" of the DLL: engine-&gt;first_wakeup  and timer-&gt;reset_pending. Those flags are tested in jack_run_cycle (engine-&gt;first_wakeup || timer-&gt;reset_pending).
+&gt; 
+&gt; 1) "first_wakeup" is set in jack_engine_new and in jack_stop_freewheeling. 
+&gt; 
+&gt; 2) "reset_pending" is set in jack_engine_delay
+&gt; 
+&gt; Would it make sense to keep only one flag? and set it in 4 places: first cycle, stop freewheel, XRun handling, buffer size change?
+
+I didn't remove 'reset_pending' because I wasn't sure if 
+'first_wakeup' could be used from the context that sets
+'reset_pending'. The 'pending' part suggested something
+asynchronous, i.e. this flag implicitly being used as a
+sema in combination with some mutexes.
+
+Apart from that there could be just one flag.
+
+But you really want the 'perfect' way, there could be more.
+There are 3 things to initialise:
+
+1. next_wakeup (to the current wakeup time, as the DLL will run)
+2. period_usecs
+3. filter_omega
+
+'First cycle' and 'buffer size change' should set them all.
+For 'xrun' and 'end of freewheeling', just setting (1) is
+enough, as the current value of (2) would be more accurate
+than the initial one, and (3) is a constant.
+
+There are two other matters to consider/check.
+
+For the first, see the comments near the end of jack_run_cycle();
+
+The second concerns Jack1 only IIRC. If a cycle is skipped, 
+the DLL should be run anyway. Jack1-0.121.3 did the right
+thing and I don't think the patches affect this. But it's
+worth checking.
+
+Ciao.
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1332410152.26558_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1332419512.5586_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1332417351.4372_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1332417351.4372_0.ltw:2,&nbsp;&lt;20120322115519.GB28097 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

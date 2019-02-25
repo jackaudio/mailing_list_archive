@@ -1,0 +1,98 @@
+Date:        Sun, 17 Apr 2011 10:48:04 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: torbenh Re: [Jack-Devel] Jack 0.120 - ALSA backend (1302966386.30389_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3 (1303047253.22998_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack 0.120 - ALSA backend
+
+On Sat, Apr 16, 2011 at 05:06:07PM +0200, torbenh wrote:
+> On Sat, Apr 16, 2011 at 09:47:18AM +0000, Fons Adriaensen wrote:
+> > A second quick question: have there been changes to
+> > the ALSA backend recently ?
+> 
+> the diff is attached.
+> i dont really see anything that might cause it.
+> 
+> the most possible i am currently seeing is 
+> http://trac.jackaudio.org/changeset/4126
+> 
+> i dont have a loopback here.
+> but if the problem is easily reproducible, you could just bisect it.
+> 
+> http://eu.kernel.org/pub/software/scm/git/docs/git-bisect.html
+> 
+> i updated the master branch on
+> git://hochstrom.endofinternet.org/jack.git
+> 
+> git bisect start
+> git bisect bad
+> git bisect good 0.118.0 
+> 
+> should get you going.
+ 
+Unfortunately I have already put more time into this than
+I can afford at the moment. The problem seems to be easy
+to reproduce (the procedure below never fails for me),
+it affects Jack's core functionality, so I'd expect the
+Jack devs to look into it. But apart from your reply 
+it doesn't seem to be taken seriously.
+
+ 
+> > I can now trigger the problem reported before quite
+> > easily.
+> > 
+> > 1. Start jack using the ALSA backend and with -n 3.
+> > 
+> > 2. Start and wire up jack_iodelay. Make the required
+> >    external loopback. There is already a chance that
+> >    it will show the latency for -n 2 instead of the
+> >    expected one. In any case leave it running.
+> > 
+> > 3. Start a second jack client, one that will not 
+> >    exit cleanly but trigger a 'subgraph time out'
+> >    when termintated with ctl-C. Jack_iodelay itself
+> >    will do fine. No need to connect its ports.
+> > 
+> > 4. Terminate the second app. There is a good chance
+> >    that the measured delay will switch between the
+> >    expected values for -n 2 and -n 3.
+> > 
+> > 5. When the latency is the -n 2 value, check that
+> >    the signal is still passing via the external
+> >    loopback by disconnecting it for a second.
+> > 
+> > 6. Repeat 3,4,5 to taste.
+> 
+> So it randomly siwtches between 2 and 3 ?
+
+It more or less alternates between the two, with
+some random element being involved as well.
+
+As posted before, what happens is that after a
+subgraph timeout (which is reported) sometimes
+the alsa device is restarted (as it should be),
+and sometimes (when in the '-n 3' state) it
+isn't. Since in the same cycle there was no
+driver->write() (as the result of the timeout),
+things continue to work but with a period shift
+between playback and capture, as if '-n 2'. 
+When a new timeout occurs in that state it will
+trigger a stop/start, restoring the original
+conditions. So the net result is that the system
+almost alternates between the two states.
+
+The key to solving this will be to find out why
+the subgraph timeout does not always trigger a
+restart. I suspect some race condition in the 
+error checking, but I'm not at all familiar with
+those parts of the code.
+
+Ciao,
+
+-- 
+FA
+
+1303037298.3718_0.ltw:2,a <20110417104803.GA18082 at linuxaudio dot org>
+________________________________________________________________________________
+

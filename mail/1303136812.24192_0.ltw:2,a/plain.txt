@@ -1,0 +1,101 @@
+Date:        Mon, 18 Apr 2011 16:26:33 +0200
+From:        torbenh  <[hidden] at gmx dot de>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>, Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: torbenh Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3 (1303135901.23184_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3 (1303144584.6938_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3 (1303155190.27901_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3
+
+On Mon, Apr 18, 2011 at 04:11:06PM +0200, torbenh wrote:
+> On Sun, Apr 17, 2011 at 01:33:50PM +0000, Fons Adriaensen wrote:
+> > On Sun, Apr 17, 2011 at 10:48:04AM +0000, Fons Adriaensen wrote:
+> >  
+> > > > So it randomly siwtches between 2 and 3 ?
+> > > 
+> > > It more or less alternates between the two, with
+> > > some random element being involved as well.
+> > > 
+> > > As posted before, what happens is that after a
+> > > subgraph timeout (which is reported) sometimes
+> > > the alsa device is restarted (as it should be),
+> > > and sometimes (when in the '-n 3' state) it
+> > > isn't. Since in the same cycle there was no
+> > > driver->write() (as the result of the timeout),
+> > > things continue to work but with a period shift
+> > > between playback and capture, as if '-n 2'. 
+> > > When a new timeout occurs in that state it will
+> > > trigger a stop/start, restoring the original
+> > > conditions. So the net result is that the system
+> > > almost alternates between the two states.
+> > 
+> > I found out a bit more.
+> > 
+> > 1. It seems the ALSA device restart is triggered by
+> > an error condition in alsa_driver_wait() and not
+> > by the engine.
+> > 
+> > 2. OTOH the engine, when there is subgraph timeout,
+> > (in this case due to an app not closing down cleanly)
+> > will not call driver->write() for the current cycle. 
+> > 
+> > With -n 3, (2) can happen without (1), as as far as
+> > ALSA is concerned there is no problem - it still has
+> > almost a complete period before anything overruns.
+> > 
+> > Now to keep things in sync either each cycle must be
+> > completed fully, including writing to the ALSA device,
+> > or the device must be restarted. This really should
+> > be enforced 'by design' but it isn't.
+> > 
+> > There seem to be two solutions: 
+> > 
+> > A. Make sure the ALSA device is restarted when the
+> > engine does not complete the cycle. This would 
+> > negate any advantage there is to using -n 3, the
+> > whole point of it is that an occasional single cycle
+> > taking a bit too long is not fatal.
+> > 
+> > B. Always complete the cycle by calling driver-write().
+> 
+> B is the right thing to do, will look into it this evening.
+> i dont remember, why i have changed this.
+
+hmm... i actually did not change this.
+i am still a bit puzzled, why this wasnt triggering before.
+
+i committed (B) to svn.
+its completely untested. please try it. and report back asap.
+just doing a quick build test.
+
+> 
+> 
+> > 
+> > 
+> > Ciao,
+> > 
+> > -- 
+> > FA
+> > 
+> > 
+> > 
+> > 
+> > 
+> > 
+> > Jack-Devel mailing list
+> > [hidden]
+> > http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> 
+> -- 
+> torben Hohn
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+-- 
+torben Hohn
+
+1303136812.24192_0.ltw:2,a <20110418142633.GB13755 at siel dot b>
+________________________________________________________________________________
+

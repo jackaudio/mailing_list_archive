@@ -1,0 +1,185 @@
+diff -aur zita-ajbridge-0.6.0.orig/source/alsathread.cc zita-ajbridge-0.6.0/source/alsathread.cc
+--- zita-ajbridge-0.6.0.orig/source/alsathread.cc	2015-08-09 14:18:39.000000000 +0200
++++ zita-ajbridge-0.6.0/source/alsathread.cc	2016-08-18 21:59:03.984538000 +0200
+@@ -39,8 +39,8 @@
+     _w1 = 2 * M_PI * 0.1 * _dt;
+     _w2 = _w1 * _w1;
+     _w1 *= 1.6;
+-    // Time wraps around after 2^28 usecs.
+-    _jtmod = ldexp (1e-6, 28);
++    // Treat _dt in units of jack timer ticks from now on.
++    _dt *= JACK_TICKS_PER_SECOND;
+ }
+ 
+ 
+@@ -62,7 +62,7 @@
+ }
+ 
+ 
+-void Alsathread::send (int k, double t)
++void Alsathread::send (int k, jack_time_t t)
+ {
+     Adata *D;
+ 
+@@ -152,14 +152,15 @@
+ void Alsathread::thr_main (void)
+ {
+     int     na, nu;
+-    double  tw, er;
++    jack_time_t tw;
++    jack_dtime_t er;
+ 
+     _alsadev->pcm_start ();
+     while (_state != TERM)
+     {
+         // Wait for next cycle, then take timestamp.
+ 	na = _alsadev->pcm_wait ();  
+-        tw = jacktime (jack_get_time ());
++        tw = jack_get_time ();
+ 	// Check for errors - requires restart.
+ 	if (_alsadev->state () && (na == 0))
+ 	{
+@@ -198,7 +199,7 @@
+ 	        else 
+ 	        {
+ 		    // Update the DLL.
+-                    er = modtime (tw - _t1);
++					er = tw - _t1;
+ 		    // If we have more than one period, use
+                     // the time error only for the last one.
+ 	            if (na >= _fsize) er = 0;
+diff -aur zita-ajbridge-0.6.0.orig/source/alsathread.h zita-ajbridge-0.6.0/source/alsathread.h
+--- zita-ajbridge-0.6.0.orig/source/alsathread.h	2015-08-09 14:07:34.000000000 +0200
++++ zita-ajbridge-0.6.0/source/alsathread.h	2016-08-18 21:07:11.824392000 +0200
+@@ -43,22 +43,10 @@
+ 
+ private:
+ 
+-    void send (int k, double t);
++    void send (int k, jack_time_t t);
+     int capture (void);
+     int playback (void);
+ 
+-    double modtime (double d)
+-    {
+-	if (d < -150.0) d += _jtmod;
+-	if (d >  150.0) d -= _jtmod;
+-	return d;
+-    }
+-
+-    double jacktime (jack_time_t t)
+-    {
+-        return 1e-6 * (t & 0x0FFFFFFFLL);
+-    }
+-    
+     Alsa_pcmi    *_alsadev;
+     int           _mode;
+     int           _state;
+@@ -67,9 +55,8 @@
+     Lfq_int32    *_commq;
+     Lfq_adata    *_alsaq;
+     bool          _first;
+-    double        _jtmod;
+-    double        _t0;
+-    double        _t1;
++    jack_time_t   _t0;
++    jack_time_t   _t1;
+     double        _dt;
+     double        _w1;
+     double        _w2;
+diff -aur zita-ajbridge-0.6.0.orig/source/jackclient.cc zita-ajbridge-0.6.0/source/jackclient.cc
+--- zita-ajbridge-0.6.0.orig/source/jackclient.cc	2015-08-23 14:29:15.000000000 +0200
++++ zita-ajbridge-0.6.0/source/jackclient.cc	2016-08-18 21:59:03.984538000 +0200
+@@ -405,7 +405,7 @@
+     jack_time_t     t0, t1;
+     jack_nframes_t  ft;
+     float           us;
+-    double          tj, err, d1, d2, rd;
++    double          err, d1, d2, rd;
+ 
+     // Buffer size change or other evil.
+     if (_state == TERM)
+@@ -430,7 +430,6 @@
+ 
+     // Get the start time of the current cycle.
+     jack_get_cycle_times (_client, &ft, &t0, &t1, &us);
+-    tj = jacktime (t0);
+     
+     // Check for any skipped cycles.
+     if (_state >= SYNC1)
+@@ -486,8 +485,8 @@
+     if (_state >= SYNC2)
+     {
+         // Compute the delay error.
+-        d1 = modtime (tj - _t_a0);
+-        d2 = modtime (_t_a1 - _t_a0);
++        d1 = (jack_dtime_t) (t0 - _t_a0);
++        d2 = (jack_dtime_t) (_t_a1 - _t_a0);
+ 	rd = _resamp ? _resamp->inpdist () : 0.0;
+ 	
+ 	if (_mode == PLAY)
+diff -aur zita-ajbridge-0.6.0.orig/source/jackclient.h zita-ajbridge-0.6.0/source/jackclient.h
+--- zita-ajbridge-0.6.0.orig/source/jackclient.h	2015-08-09 14:08:05.000000000 +0200
++++ zita-ajbridge-0.6.0/source/jackclient.h	2016-08-18 21:07:11.824392000 +0200
+@@ -56,18 +56,6 @@
+     void init (const char *jname, const char *jserv);
+     void fini (void);
+ 
+-    double modtime (double d)
+-    {
+-	if (d < -150.0) d += _jtmod;
+-	if (d >  150.0) d -= _jtmod;
+-	return d;
+-    }
+-
+-    double jacktime (jack_time_t t)
+-    {
+-        return 1e-6 * (t & 0x0FFFFFFFLL);
+-    }
+-    
+     void initwait (int nwait);
+     void initsync (void);
+     void setloop (double bw);
+@@ -105,8 +93,8 @@
+     int             _bstat;
+ 
+     jack_nframes_t  _ft;
+-    double          _t_a0;
+-    double          _t_a1;
++    jack_time_t     _t_a0;
++    jack_time_t     _t_a1;
+     int             _k_a0;
+     int             _k_a1;
+     double          _delay;
+diff -aur zita-ajbridge-0.6.0.orig/source/lfqueue.h zita-ajbridge-0.6.0/source/lfqueue.h
+--- zita-ajbridge-0.6.0.orig/source/lfqueue.h	2015-08-09 12:45:28.000000000 +0200
++++ zita-ajbridge-0.6.0/source/lfqueue.h	2016-08-18 21:07:11.824392000 +0200
+@@ -25,6 +25,19 @@
+ #include <stdint.h>
+ #include <string.h>
+ 
++#include <jack/jack.h>
++
++
++/**
++ * Ticks per second of the free running monotonic clock used by jack.
++ */
++#define JACK_TICKS_PER_SECOND 1000000
++
++/**
++ * Type used to represent the difference of two time values.
++ */
++typedef int64_t jack_dtime_t;
++
+ 
+ class Adata
+ {
+@@ -32,7 +45,7 @@
+ 
+     int32_t  _state;
+     int32_t  _nsamp;
+-    double   _timer;
++    jack_time_t _timer;
+ };
+ 
+ 

@@ -1,0 +1,339 @@
+Date:        Thu, 29 Jan 2015 13:49:14 +0000
+From:        Harry van Haaren  <[hidden] at gmail dot com>
+To:          Marjan Mrak <[hidden] at gmail dot com>, JACK <[hidden] at lists dot jackaudio dot org>
+
+Subject:     Re: [Jack-Devel] Dispersing MIDI messages: one to multiple
+
+JACK processing happens in "buffers" of "nframes" size. When you're
+writing MIDI, you can specific at exactly what audio-frame this event
+took place: that's the time parameter.
+
+Dropouts are bad - regardless of how you want to use the software now,
+design it to not drop out. Also, since audio and MIDI are
+sample-accuratly in sync in JACK, if you drop audio frames, you're
+also dropping MIDI data.
+
+Did you fix the loop midi_event_get() code?
+  for(i = 0;i<n;i++){
+        res = jack_midi_event_get(&jev,in_port_buf,i);
+You're not checking the number of events available - and attempting to
+"get" one event for every frame. The code I posted previously has the
+fix.
+
+Cheers, -Harry
+
+PS: When replying, keep the list in the CC; i made the mistake of a
+direct reply on my first reply too - my bad :)
+
+
+On Thu, Jan 29, 2015 at 1:19 PM, Marjan Mrak <[hidden]> wrote:
+> Hey Harry, thanks for a quick answer.
+>
+> I think, dropout happens on "audio" level, not at MIDI. I recorded output to
+> waw; during recording, sound on speakers "dropped" for a moment, but WAV
+> contents was fine.
+>
+> Thanks for suggestion, however there is a flag in my code (  if(verb == 1)
+> ), through which I can ommit printf-ing completely.
+>
+> Would you be so kind as to explain to me, what jack_nframes_t time parameter
+> in jack_midi_event_write represents? Sequence? Can it be of same value for
+> all calls?
+>
+> Bye,
+> Marjan
+>
+> 2015-01-29 13:46 GMT+01:00 Harry van Haaren <[hidden]>:
+>>
+>> Hey,
+>>
+>> I'm not sure why it would "hang", and I'm not sure quite what you mean
+>> with that: are notes not passed through at all, or is it that certain
+>> notes are skipped?
+>>
+>> I hope its the latter.. because there's a little bug hiding in the
+>> MIDI get code from JACK. It attempts to read *one* event, for every
+>> "nframe" that is available. The following code snippet is taken from
+>> the JACK example-clients - midisine.c
+>>
+>> jack_midi_event_t in_event;
+>> jack_nframes_t event_index = 0;
+>> jack_nframes_t event_count = jack_midi_get_event_count(port_buf);
+>>
+>> if(event_count > 1)
+>> {
+>>    printf(" midisine: have %d events\n", event_count);
+>>    for(i=0; i<event_count; i++)
+>>    {
+>>       jack_midi_event_get(&in_event, port_buf, i);
+>>       printf(" event %d time is %d. 1st byte is 0x%x\n", i,
+>> in_event.time, *(in_event.buffer));
+>>    }
+>> }
+>>
+>> I'm not sure if your code is "production ready" - printf locks a
+>> mutex, a big no-no in RT code. Since MIDI handling and audio are in
+>> the same real-time thread, its not wise to printf in production code.
+>> It could cause xruns in JACK if the printf decides to lock and wait
+>> too long.
+>>
+>> Hope the above helps the issue, cheers, -Harry
+>>
+>>
+>>
+>> On Thu, Jan 29, 2015 at 10:08 AM, Marjan Mrak <[hidden]>
+>> wrote:
+>> > Hello all,
+>> >
+>> > I have following question:
+>> >
+>> > I have developed JACK MIDI client, which grabs midi messages from MIDI
+>> > keyboard on one port, and disperses it according to:
+>> >
+>> > * if message is controlled message (functional button was pressed on
+>> > MIDI
+>> > keyboard), it's changed to "volume control" and to certain channel and
+>> > transmited
+>> > * if message is "key up" or "key down", it's dispersed to channels from
+>> > 1 to
+>> > 4.
+>> >
+>> > It works, but if I am using it, totaly at random sound output "hangs"
+>> > for
+>> > like 10th of second.
+>> >
+>> > I suspect my code is the problem. I would just like someone to examine
+>> > it -
+>> > perhaps I am doiung something wrong here.
+>> >
+>> > Or is there a better way to "disperse" one MIDI message to several
+>> > channels?
+>> >
+>> > I tried to find more detailed description of API than official docs
+>> > (which
+>> > is... basic, I'd say), but no luck.
+>> >
+>> > Thanks for any help or assistance in advanced!
+>> >
+>> > Following is my processing callback:
+>> >
+>> > static int process(jack_nframes_t nframes, void *arg)
+>> > {
+>> >     int res = 0;
+>> >     int i;
+>> >     int j;
+>> >
+>> >     //unsigned char* buffer;
+>> >     unsigned char jbuffer[3];
+>> >
+>> >     void* port_buf = jack_port_get_buffer(output_port, nframes);
+>> >
+>> >     //get events
+>> >     void* in_port_buf = jack_port_get_buffer(input_port, nframes);
+>> >     jack_nframes_t n = jack_midi_get_event_count(in_port_buf);
+>> >
+>> >     jack_midi_clear_buffer(port_buf);
+>> >
+>> >     if(n==0)
+>> >         return 0;
+>> >
+>> >     jack_midi_event_t jev;
+>> >
+>> >
+>> >     if(verb == 1)
+>> >         printf("%i: Data arrived!\n", cnt);
+>> >
+>> >     for(i = 0;i<n;i++){
+>> >
+>> >         res = jack_midi_event_get(&jev,in_port_buf,i);
+>> >         if(res == 0){
+>> >             if(verb == 1){
+>> >                 printf("Got event, %i bytes!\n",(int) jev.size);
+>> >                 for(j=0;j<jev.size;j++)
+>> >                     printf("%i: %i\n",j,jev.buffer[j]);
+>> >             }
+>> >         } else{
+>> >             if(verb == 1)
+>> >                 printf("ERROR getting event!\n");
+>> >             return 0;
+>> >         }
+>> >
+>> >
+>> >         //transmit data
+>> >         cnt++;
+>> >         //buffer = jack_midi_event_reserve(port_buf, i, 3);
+>> >
+>> >
+>> >         //controll to MIDI channel 1!
+>> >         if(jev.buffer[0] == 176 && jev.buffer[1] == 97){
+>> >             if(verb == 1)
+>> >                 printf("MUTE CONTROL CH1 sent\n");
+>> >             //first button: set mute register on channel 1
+>> >             //buffer[0] = 176;
+>> >             //buffer[1] = 7;
+>> >             //buffer[2] = jev.buffer[2];
+>> >             jbuffer[0] = 176;
+>> >             jbuffer[1] = 7;
+>> >             jbuffer[2] = jev.buffer[2];
+>> >             res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+>> >         }
+>> >
+>> >         else if(jev.buffer[0] == 176 && jev.buffer[1] == 96){
+>> >             if(verb == 1)
+>> >                 printf("MUTE CONTROL to CH2 sent\n");
+>> >             //second button: set mute register on channel 2
+>> >             //buffer[0] = 177;
+>> >             //buffer[1] = 7;
+>> >             //buffer[2] = jev.buffer[2];
+>> >             jbuffer[0] = 177;
+>> >             jbuffer[1] = 7;
+>> >             jbuffer[2] = jev.buffer[2];
+>> >             res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+>> >         }
+>> >
+>> >         else if(jev.buffer[0] == 176 && jev.buffer[1] == 66){
+>> >             if(verb == 1)
+>> >                 printf("MUTE CONTROL CH3 sent\n");
+>> >             //third button: set mute register on channel 3
+>> >             //buffer[0] = 176;
+>> >             //buffer[1] = 7;
+>> >             //buffer[2] = jev.buffer[2];
+>> >             jbuffer[0] = 178;
+>> >             jbuffer[1] = 7;
+>> >             jbuffer[2] = jev.buffer[2];
+>> >             res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+>> >         }
+>> >
+>> >         else if(jev.buffer[0] == 176 && jev.buffer[1] == 67){
+>> >             if(verb == 1)
+>> >                 printf("MUTE CONTROL to CH4 sent\n");
+>> >             //fourth button: set mute register on channel 4
+>> >             //buffer[0] = 177;
+>> >             //buffer[1] = 7;
+>> >             //buffer[2] = jev.buffer[2];
+>> >             jbuffer[0] = 179;
+>> >             jbuffer[1] = 7;
+>> >             jbuffer[2] = jev.buffer[2];
+>> >             res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+>> >         }
+>> >
+>> >         else if(jev.buffer[0] == 176 && jev.buffer[1] == 64){
+>> >             if(verb == 1)
+>> >                 printf("MUTE CONTROL to CH5 sent\n");
+>> >             //fifth button: set mute register on channel 5
+>> >             //buffer[0] = 177;
+>> >             //buffer[1] = 7;
+>> >             //buffer[2] = jev.buffer[2];
+>> >             jbuffer[0] = 180;
+>> >             jbuffer[1] = 7;
+>> >             jbuffer[2] = jev.buffer[2];
+>> >             res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+>> >         }
+>> >
+>> >         else if(jev.buffer[0] == 176 && jev.buffer[1] == 65){
+>> >             if(verb == 1)
+>> >                 printf("MUTE CONTROL to CH6 sent\n");
+>> >             //sixth button: set mute register on channel 6
+>> >             //buffer[0] = 177;
+>> >             //buffer[1] = 7;
+>> >             //buffer[2] = jev.buffer[2];
+>> >             jbuffer[0] = 181;
+>> >             jbuffer[1] = 7;
+>> >             jbuffer[2] = jev.buffer[2];
+>> >             res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+>> >         }
+>> >
+>> >         else if(jev.buffer[0] == 176 && jev.buffer[1] == 7){
+>> >             if(verb == 1)
+>> >                 printf("MUTE CONTROL to CH7 sent\n");
+>> >             //seventh button: set mute register on channel 7
+>> >             //buffer[0] = 177;
+>> >             //buffer[1] = 7;
+>> >             //buffer[2] = jev.buffer[2];
+>> >             jbuffer[0] = 182;
+>> >             jbuffer[1] = 7;
+>> >             jbuffer[2] = jev.buffer[2];
+>> >             res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+>> >         }
+>> >
+>> >         else if(jev.buffer[0] == 176 && jev.buffer[1] == 10){
+>> >             if(verb == 1)
+>> >                 printf("MUTE CONTROL to CH8 sent\n");
+>> >             //eighth button: set mute register on channel 8
+>> >             //buffer[0] = 177;
+>> >             //buffer[1] = 7;
+>> >             //buffer[2] = jev.buffer[2];
+>> >             jbuffer[0] = 183;
+>> >             jbuffer[1] = 7;
+>> >             jbuffer[2] = jev.buffer[2];
+>> >             res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+>> >         }
+>> >
+>> >
+>> >
+>> >
+>> >         else if((jev.buffer[0]& 0xF0) == 128 || (jev.buffer[0]& 0xF0) ==
+>> > 144){
+>> >             //note key, pass through
+>> >             if(verb == 1)
+>> >                 printf("SOUND PASSED-THROUGH\n");
+>> >             //notes; let them pass
+>> >             //buffer[0] = jev.buffer[0];
+>> >             //buffer[1] = jev.buffer[1];
+>> >             //buffer[2] = jev.buffer[2];
+>> >             jbuffer[0] = jev.buffer[0];  //CH1
+>> >             jbuffer[1] = jev.buffer[1];
+>> >             jbuffer[2] = jev.buffer[2];
+>> >             res = jack_midi_event_write(port_buf, jev.time , jbuffer,
+>> > 3);
+>> >             jbuffer[0] = jev.buffer[0] + 1; //CH2
+>> >             jbuffer[1] = jev.buffer[1];
+>> >             jbuffer[2] = jev.buffer[2];
+>> >             res = jack_midi_event_write(port_buf, jev.time , jbuffer,
+>> > 3);
+>> >             jbuffer[0] = jev.buffer[0] + 2; //CH3
+>> >             jbuffer[1] = jev.buffer[1];
+>> >             jbuffer[2] = jev.buffer[2];
+>> >             res = jack_midi_event_write(port_buf, jev.time , jbuffer,
+>> > 3);
+>> >             jbuffer[0] = jev.buffer[0] + 3; //CH4
+>> >             jbuffer[1] = jev.buffer[1];
+>> >             jbuffer[2] = jev.buffer[2];
+>> >             res = jack_midi_event_write(port_buf, jev.time , jbuffer,
+>> > 3);
+>> >         }
+>> >
+>> >         //res = jack_midi_event_write(port_buf, i, jev.buffer, 3);
+>> >         //res = jack_midi_event_write(port_buf, jev.time, jbuffer, 3);
+>> >
+>> >
+>> >     }
+>> >
+>> >     return 0;
+>> >
+>> > }
+>> >
+>> >
+>> > 
+>> > Jack-Devel mailing list
+>> > [hidden]
+>> > http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>> >
+>>
+>>
+>>
+>> --
+>>
+>> http://www.openavproductions.com
+>
+>
+
+
+
+-- 
+
+http://www.openavproductions.com
+
+1422539363.22160_0.ltw:2, <CAKudYbOC+-YCVHxYvvD4WQvjVghbUc_uxAOK3x7YO1tDC0H=jg at mail dot gmail dot com>
+________________________________________________________________________________
+

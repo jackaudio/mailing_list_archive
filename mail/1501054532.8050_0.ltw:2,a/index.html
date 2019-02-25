@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Why frame sizes are limited to the powers of 2?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Why frame sizes are limited to the powers of 2?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1501052326.5179_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1501054813.8511_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1501054532.8050_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 26 Jul 2017 09:35:11 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Filipe Coelho </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Yuri
+<a href='../1501052326.5179_0.ltw:2,a/index.html'>[Jack-Devel] Why frame sizes are limited to the powers of 2? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Yuri
+<a href='../1501054813.8511_0.ltw:2,a/index.html'>Re: [Jack-Devel] Why frame sizes are limited to the powers of 2? </a></td></tr>
+</table>
+<pre>
+On 26.07.2017 08:58, Yuri wrote:
+&gt; jack_set_buffer_size limits frame size to the powers of 2.
+&gt;
+&gt; The Opus codec (http://opus-codec.org/) doesn't like such frame sizes. 
+&gt; It defines frame sizes in milliseconds, and allows 5 ms, 10 ms, 20 ms, 
+&gt; 25 ms, ... which in case of 48,000 sample rate are never a power of two.
+&gt;
+&gt; It seems like Jack shouldn't be so strict in limiting frame rates to 
+&gt; the powers of 2.
+&gt;
+&gt;
+&gt; How to solve this problem?
+
+Hi.
+
+Which exact version of jack are you using?
+
+afaik this depends on the driver and soundcard used.
+I just tried here with latest jack2 using alsa hdmi output, I can use 
+1024 buffer size as usual, but also a few non-power-of-2 values as well.
+
+falktx@falkTX-PC:~$ jack_bufsize
+buffer size = 1024  sample rate = 48000
+
+falktx@falkTX-PC:~$ jack_bufsize 1000
+jack_set_buffer_size(): Unknown error -1
+
+falktx@falkTX-PC:~$ jack_bufsize 800
+
+falktx@falkTX-PC:~$ jack_bufsize 802
+jack_set_buffer_size(): Unknown error -1
+
+falktx@falkTX-PC:~$ jack_bufsize 870
+jack_set_buffer_size(): Unknown error -1
+
+falktx@falkTX-PC:~$ jack_bufsize 880
+
+
+So some of those buffer sizes work, some do not.
+GUIs usually show only power of 2 values because they're safer to use (I 
+mean, more likely to actually work).
+Also some jack applications sadly were made with the expectation that 
+power-of-2 buffer sizes will be used...
+But for such cases the application can return an error on start and 
+during the jack-buffersize-callback, to force jack to be under 
+power-of-2 sizes.
+
+Anyway, at least in latest jack2 this is not a problem.
+Not sure about jack1, but I believe the same is true.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1501052326.5179_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1501054813.8511_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1501054532.8050_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1501054532.8050_0.ltw:2,a&nbsp;&lt;5978462F.2090003 at falktx dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

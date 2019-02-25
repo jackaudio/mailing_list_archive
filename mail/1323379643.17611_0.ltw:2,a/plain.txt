@@ -1,0 +1,65 @@
+Date:        Thu, 08 Dec 2011 21:27:02 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis [Jack-Devel] The Situation(s) With JACK (1323349512.4356_0.ltw:2,Sa)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] The Situation(s) With JACK (1323418452.5730_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] The Situation(s) With JACK
+
+On Thu, Dec 08, 2011 at 08:04:57AM -0500, Paul Davis wrote:
+ 
+>                                     It Has To Stop.
+
+What can I say ? For at least the last five years or so
+Jack for me 'just works'. Honestly, I can't remember the
+last time I had any problem with it. Maybe that is because
+I stay away from obese desktops or anything that tries to
+hide or automate system configuration. I may wish it had
+some features that it hasn't, or the inverse, but that is
+a different subject. It just works. 
+
+And yes, a lot of effort is probably wasted in maintaining
+epx(1) versions. 
+
+I've no idea what direction your proposal will take.
+One option would be to restart from scratch, to define
+and implement a 'next generation' Jack that could be
+quite different from the current one, and that could
+replace it in say a year or so. In that case I do have
+some ideas. But I suspect that is not your intention.
+
+One good reason to have a fresh look at what Jack is
+supposed to do is the fact that SMP systems are more
+or less the norm today. And complex apps (A3 being
+the prime example) are taking advantage of that and
+organising their internal processing using multiple
+threads. No doubt more will follow. Yet, scheduling
+in Jack remains on a per-process basis. That means
+that e.g. if app B depends on input from app A, the
+entire B is made to wait until all of A has done its
+work, while the actual dependencies may be much more
+fine-grained. There are several ways to address this.
+One would be to have a single 'audio engine' process
+and delegate all audio processing to it. That would
+of course mean that all security is lost, a single
+rogue audio routine could bring down everything. 
+Another solution would be to make Jack trigger port
+or groups of ports instead of a process. So anything
+in B that depends on A would run as soon as all output
+from A that a part of B depends on is available. In
+other words, the signal graphs becomes global. That
+would also allow B to be a insert of A without adding
+latency etc.
+
+But I'm dreaming. 
+
+Ciao,
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+
+1323379643.17611_0.ltw:2,a <20111208212702.GA8249 at linuxaudio dot org>
+________________________________________________________________________________
+

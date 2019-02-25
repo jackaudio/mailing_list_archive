@@ -1,0 +1,34 @@
+Date:        Fri, 29 Apr 2011 12:37:22 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Dan Muresan <[hidden] at gmail dot com>
+Cc:          [hidden] at jackaudio dot org
+In-Reply-To: Dan Muresan Re: [Jack-Devel] port callbacks, jack_port_id_t (1304092978.24541_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] port callbacks, jack_port_id_t
+
+On Fri, Apr 29, 2011 at 12:02 PM, Dan Muresan <[hidden]> wrote:
+
+>> 1) Process Callback: ALWAYS called from the "process thread". There
+>> may or may not be an "Other" thread running.
+>
+> Sorry, I'm a little confused. By "Other thread" you mean a
+> special-purpose thread that jack creates to send some callbacks to?
+
+libjack is responsible for creating at least one thread to run the
+process callback or the thread function used by the async API.
+
+in JACK1, this is the only thread created by libjack, and all
+server->client callbacks are executed there.
+
+in JACK2, or in JACK1 on OS X, there are 2 threads: 1 handles process
+callbacks, the other handles all other server->client callbacks.
+
+> OK. I will assume jack_cycle_wait() and signal() are excepted in the
+> non-callback model :)
+
+there is no process callback when using the async API, so these are
+not exceptions.
+
+1304095059.28598_0.ltw:2,a <BANLkTikabBfV0s3kmPcOifs_G=xuUs8_5w at mail dot gmail dot com>
+________________________________________________________________________________
+

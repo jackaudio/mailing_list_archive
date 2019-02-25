@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Graph callback and client state</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Graph callback and client state</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1369682211.25304_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1370211945.8372_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1369920707.20802_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 30 May 2013 15:31:32 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Pawel </span> &lt;[hidden] at wp dot pl&gt; </td></tr>
+<tr><td class='col1'>To</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+&gt; Dnia &#x160;roda, 10 Kwietnia 2013 12:46 Peter Nelson &lt;[hidden]&gt; napisa&#xB3;(a) 
+&gt; &gt; On Tue, 2013-04-09 at 15:51 -0400, Paul Davis wrote:
+&gt; &gt; &gt; 
+&gt; &gt; &gt; 
+&gt; &gt; &gt; On Tue, Apr 9, 2013 at 3:33 PM, Harry van Haaren
+&gt; &gt; &gt; &lt;[hidden]&gt; wrote:
+&gt; &gt; &gt;         On Tue, Apr 9, 2013 at 7:45 PM, St&#xE9;phane Letz &lt;[hidden]&gt;
+&gt; &gt; &gt;         wrote:
+&gt; &gt; &gt;         &gt; You can never be sure that ports returned by jack_get_ports
+&gt; &gt; &gt;         are always valid
+&gt; &gt; &gt;         
+&gt; &gt; &gt;         
+&gt; &gt; &gt;         
+&gt; &gt; &gt;         Any chance that adding a flag,  "JackPortIsActive" to
+&gt; &gt; &gt;         JackPortFlags allows the functionality to be implemented?
+&gt; &gt; &gt;         
+&gt; &gt; &gt;         On activation, the JACK server marks all of the client owned
+&gt; &gt; &gt;         ports as "active".
+&gt; &gt; &gt;         
+&gt; &gt; &gt;         Patchbay managers etc call jack_port_flags() and can query if
+&gt; &gt; &gt;         its an "active" port or not?
+&gt; &gt; &gt;         
+&gt; &gt; &gt; 
+&gt; &gt; &gt; there is always a race ... sometime between when you get the ports and
+&gt; &gt; &gt; when you use the information, ports could be added, removed or become
+&gt; &gt; &gt; inactive.
+&gt; &gt; 
+&gt; &gt; Of course its possible that the port is removed in the mean time. In
+&gt; &gt; that case there is absolutely no problem because there is no need to
+&gt; &gt; care about a non-existent port because you can't (dis)connect it anyway.
+&gt; &gt; 
+&gt; &gt; This 'problem' manifests in vastly more complex connection management
+&gt; &gt; code, as connection managers have to additionally monitor that their
+&gt; &gt; connection attempt worked and may have to repeatedly retry making the
+&gt; &gt; connection later because it still may not be active yet.
+&gt; &gt; 
+&gt; &gt; If inactive ports are not listed then connection managers may simply
+&gt; &gt; fire &amp; forget the connect request. If the port no longer exists, so
+&gt; &gt; what, it can't be connected anyway.
+&gt; &gt; 
+&gt; &gt; Of course making this change doesn't fix all problems, but it does help
+&gt; &gt; one. Surely that's an advantage? 
+&gt; 
+&gt; Exactly ;-)
+&gt; 
+&gt; Harry's idea is also valid - we can know is port is active and for example mark it "gray". It's not a problem that this info would be outdated - we already accept this approach in other API calls. As was said by Paul and Stephane - even port name could be outdated on this time i.e. when we call jack_get_ports , we must humbly accept scenario where in some other thread this port is just right now removed ;-) ... but this shouldn't stop us to TRY process this port - because then it will be 
+&gt; paranoid ;-)
+&gt; 
+&gt; Xj
+
+I'm start digging  in a Jack1 code. I think add support JackPortIsActive flag can be rather complex - because then we need to handle it in few calls (e.g. jack_port_register, jack_activate, jack_deactivate ...).
+
+.. but add jack_port_is_active seems to be pretty simple. In my conception jack_port_is_active will be some kind of trick, cause it will return state of entire client, and we will not keep individual port states i.e. there will be not possible for client to have active and inactive ports in same time.
+
+jack_port_t structure already contain client_id field, so  maybe we can somehow get "active" filed from jack_client_control_t from libjack perspective i.e. without call to jackd ?
+
+Here is my question to jack gurus - is this allowed to obtain such info directly from libjack ? Or maybe there is better solution to get "active" state info ?
+
+--
+Pawel
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1369682211.25304_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1370211945.8372_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1369920707.20802_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1369920707.20802_0.ltw:2,a&nbsp;&lt;51a754b4d71c50.14561440 at wp dot pl&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

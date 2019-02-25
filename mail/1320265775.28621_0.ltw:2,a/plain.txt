@@ -1,0 +1,56 @@
+Date:        Wed, 02 Nov 2011 21:28:40 +0100
+From:        Andreas Degert  <[hidden] at papyrus-gmbh dot de>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] (1320263626.24813_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] (1320267004.30186_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash]
+
+On Wed, 2 Nov 2011 15:53:07 -0400
+Paul Davis <[hidden]> wrote:
+
+> On Wed, Nov 2, 2011 at 3:47 PM, hermann <[hidden]> wrote:
+> > Am Mittwoch, den 02.11.2011, 15:33 -0400 schrieb Paul Davis:
+> >> if (function_name)
+> >>
+> >> will evaluate to false.
+> >>
+> >> ardour is doing this all the time.
+> >
+> > Well, we come to a something similar solution,
+> 
+> hopefully just involving:
+> 
+> 
+>     #include <jack/weakjack.h>
+
+Hi Paul, I'm the original author of the mail that hermann forwarded.
+Which part of my mail do you not understand? I thought I explained the
+problem :-)
+
+AFAICS jackweak.h defines JACK_OPTIONAL_WEAK_EXPORT and
+JACK_OPTIONAL_WEAK_DEPRECATED_EXPORT, whereas the mentioned functions
+from jack/session.h use JACK_WEAK_EXPORT, which is defined in
+jack/weakmacros.h, which is included by session.h.
+
+Anyhow, just to be sure I included weakjack.h in the test program,
+but it doesn't change the behaviour.
+
+Short summary:
+
+If the jack function with weak attribute is in the shared lib that
+is used when building the executable, an ELF PLT entry is generated.
+When the executable is used with a shared lib that doesn't contain
+the function, the the function address is still the PLT entry (!= 0)
+but when called will indirectly jump to adress 0.
+
+Btw. I'm using gcc 4.6.1, but I remember the same behaviour with older
+gcc version.
+
+ciao
+Andreas
+
+1320265775.28621_0.ltw:2,a <20111102212840.733213b6 at pluto dot noname>
+________________________________________________________________________________
+

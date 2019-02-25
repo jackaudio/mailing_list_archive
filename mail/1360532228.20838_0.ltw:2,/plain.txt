@@ -1,0 +1,140 @@
+Date:        Sun, 10 Feb 2013 22:36:31 +0100
+From:        Ruslan N. Marchenko  <[hidden] at ruff dot mobi>
+To:          [hidden] at jackaudio dot org
+In-Reply-To: Ruslan N. Marchenko [Jack-Devel] [PATCH 0/4] Multicast interface selection (1360531851.20603_0.ltw:2,)
+
+Subject:     [Jack-Devel] [PATCH 1/4] Added multicast interface selection to SocketUnix
+
+Added method BindMCastIface which walks through interface calling setsockopt
+on matching interface with required option. Option is assumed to be 
+IP_MULTICAST_IF or IP_ADD_MEMBERSHIP since parameter is always ip_mreq.
+
+Added Bind and JoinMCastGroup versions with interface name.
+
+---
+ posix/JackNetUnixSocket.cpp | 61 +++++++++++++++++++++++++++++++++++++++++++--
+ posix/JackNetUnixSocket.h   |  3 +++
+ 2 files changed, 62 insertions(+), 2 deletions(-)
+
+diff --git a/posix/JackNetUnixSocket.cpp b/posix/JackNetUnixSocket.cpp
+index f4a1b94..b70846c 100644
+--- a/posix/JackNetUnixSocket.cpp
++++ b/posix/JackNetUnixSocket.cpp
+@@ -20,6 +20,10 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ #include "JackNetUnixSocket.h"
+ #include "JackError.h"
+ 
++#include <arpa/inet.h>
++#include <sys/socket.h>
++#include <ifaddrs.h>
++#include <net/if.h>
+ #include <unistd.h>
+ #include <fcntl.h>
+ 
+@@ -139,6 +143,16 @@ namespace Jack
+     {
+         return bind(fSockfd, reinterpret_cast<socket_address_t*>(&fRecvAddr), sizeof(socket_address_t));
+     }
++    int JackNetUnixSocket::Bind(const char *if_name)
++    {
++        struct ip_mreq multicast_req;
++	int ret = Bind();
++	if(!ret && strcmp(if_name,"any")) {
++	    multicast_req.imr_multiaddr.s_addr = fSendAddr.sin_addr.s_addr;
++	    ret = BindMCastIface(if_name, IP_MULTICAST_IF, &multicast_req);
++	}
++	return ret;
++    }
+ 
+     int JackNetUnixSocket::BindWith(const char* ip)
+     {
+@@ -232,10 +246,52 @@ namespace Jack
+ 
+     int JackNetUnixSocket::JoinMCastGroup(const char* ip)
+     {
++	return JoinMCastGroup(ip,"any");
++    }
++    int JackNetUnixSocket::JoinMCastGroup(const char* ip, const char *if_name)
++    {
+         struct ip_mreq multicast_req;
+         inet_aton(ip, &multicast_req.imr_multiaddr);
+-        multicast_req.imr_interface.s_addr = htonl(INADDR_ANY);
+-        return SetOption(IPPROTO_IP, IP_ADD_MEMBERSHIP, &multicast_req, sizeof(multicast_req));
++	if(!strcmp(if_name,"any")) {
++	    multicast_req.imr_interface.s_addr = htonl(INADDR_ANY);
++	    return SetOption(IPPROTO_IP, IP_ADD_MEMBERSHIP, &multicast_req, sizeof(multicast_req));
++	} else {
++	    return BindMCastIface(if_name, IP_ADD_MEMBERSHIP, &multicast_req);
++	}
++    }
++    int JackNetUnixSocket::BindMCastIface(const char *if_name, const int option, struct ip_mreq *mreq)
++    {
++	struct ifaddrs *ifas, *ifa;
++	int specific = strcmp("all",if_name);
++	int ret=-1;
++	char *if_last="any";
++
++	if (getifaddrs(&ifas) == -1) {
++		jack_error("JackNetUnixSocket::BindMCastIface error in getifaddrs");
++		return -1;
++	}
++	for (ifa = ifas; ifa != NULL; ifa = ifa->ifa_next) {
++		if (ifa->ifa_addr == NULL)
++		    continue; // Address is mandatory
++		if(!ifa->ifa_name || !strcmp(if_last,ifa->ifa_name))
++		    continue; // Name as well, also skip already enabled interface
++		if(!(ifa->ifa_flags & IFF_MULTICAST) || !(ifa->ifa_flags & IFF_RUNNING))
++		    continue; // And non multicast or down interface
++		if(ifa->ifa_addr->sa_family != AF_INET)
++		    continue; // And for the moment we're dealing with IPv4 only
++		if(!specific || !strcmp(ifa->ifa_name,if_name)) {
++		    mreq->imr_interface.s_addr = ((struct sockaddr_in *)(ifa->ifa_addr))->sin_addr.s_addr;
++		    ret = SetOption(IPPROTO_IP, option, mreq, sizeof(struct ip_mreq));
++		    if(ret)
++			break;
++		    if_last = ifa->ifa_name;
++		    jack_log("JackNetUnixSocket::BindMCastIface attaching to %s", if_last);
++		}
++	}
++	freeifaddrs(ifas);
++	if(!strcmp(if_last,"any"))
++		jack_error("JackNetUnixSocket::BindMCastIface cannot find valid interface");
++	return ret;
+     }
+ 
+     //options************************************************************************************************************
+@@ -409,6 +465,7 @@ namespace Jack
+ 
+     int JackNetUnixSocket::CatchHost(void* buffer, size_t nbytes, int flags)
+     {
++        jack_log("JackNetUnixSocket::CatchHost");
+         socklen_t addr_len = sizeof(socket_address_t);
+     #if defined(__sun__) || defined(sun)
+         if (WaitRead() < 0)
+diff --git a/posix/JackNetUnixSocket.h b/posix/JackNetUnixSocket.h
+index 6476e21..85e7bca 100644
+--- a/posix/JackNetUnixSocket.h
++++ b/posix/JackNetUnixSocket.h
+@@ -64,6 +64,7 @@ namespace Jack
+             //socket management
+             int NewSocket();
+             int Bind();
++	    int Bind(const char *if_name);
+             int BindWith(const char* ip);
+             int BindWith(int port);
+             int Connect();
+@@ -84,6 +85,8 @@ namespace Jack
+             //utility
+             int GetName(char* name);
+             int JoinMCastGroup(const char* mcast_ip);
++            int JoinMCastGroup(const char* mcast_ip, const char* if_name);
++	    int BindMCastIface(const char *if_name, const int option, struct ip_mreq *mreq);
+ 
+             //options management
+             int SetOption(int level, int optname, const void* optval, socklen_t optlen);
+-- 
+1.8.1.2
+
+1360532228.20838_0.ltw:2, <b3b8b512238b9b0caddb06d7707b341887ddefa2.1360530044.git.me at ruff dot mobi>
+________________________________________________________________________________
+

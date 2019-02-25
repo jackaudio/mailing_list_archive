@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack and signals</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack and signals</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1306098576.10401_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1306157871.14353_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1306156453.13043_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 23 May 2011 15:13:42 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Nedko Arnaudov &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at jackaudio dot org, Dan Muresan &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Nedko Arnaudov
+<a href='../1305836081.12736_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack and signals </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1306542921.11043_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack and signals </a></td></tr>
+</table>
+<pre>
+&gt;&gt; 
+&gt;&gt; I think we should distinguish several things, in JACK2:
+&gt;&gt; 
+&gt;&gt; 1) what happens on server side : the code for signal management is
+&gt;&gt; located in two functions jackctl_setup_signals and
+&gt;&gt; jackctl_wait_signals (part of the so called "control API")
+&gt;&gt; 
+&gt;&gt; 2) on server side, the desire to precisely control the signal setup,
+&gt;&gt; depending of the kind of process that is going to use the
+&gt;&gt; "libjackserver" library (up to now: jackd or jackdbus)
+&gt;&gt; 
+&gt;&gt; 3) what happens on client (libjack) side: right now the SIGPIPE signal
+&gt;&gt; is filtered to avoid JACK clients receive a SIGPIPE when trying to
+&gt;&gt; access a died server (see JackLibGlobals constructor in
+&gt;&gt; JackLibGlobals.h)
+&gt;&gt; 
+&gt;&gt; 4) an additional somewhat separated issue is the use of non
+&gt;&gt; appropriate API (like "sigprocmask" instead of "pthread_sigmask")
+&gt;&gt; 
+&gt;&gt; We should probably try to refine 1) and 2) to see if
+&gt;&gt; jackctl_setup_signals and jackctl_wait_signals have to be redesigned
+&gt;&gt; to be more flexible. What are the precise constraints for jackdbus?
+&gt;&gt; Nedko can you refine?
+&gt; 
+&gt; jackdbus needs to have a loop. jackd has no loop, it calls
+&gt; jackctl_wait_signals(signals). AFAICS jackctl_wait_signals() cannot be
+&gt; used for jackdbus because it will block the D-Bus loop.
+&gt; 
+&gt; Maybe dbus loop can be implemented in a separate thread but I'd like to
+&gt; avoid this, if possible.
+
+
+To remember: jackctl_setup_signals/ jackctl_wait_signals was designed as a "restructuration" of jack1 initial signal code handling: the code was just separated as 2 functions. 
+
+If this API is not usable in dbus context, then either 1) you just don't use is at all.. or 2) this signal handling API has to be redesigned to be used in different context. 
+
+I still don't have a clear view of what is the correct approach: do you think 2) will make some sense? if yes, do you have any proposal to change the API?
+
+Thanks.
+
+St&#xE9;phane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1306098576.10401_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1306157871.14353_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1306156453.13043_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1306156453.13043_0.ltw:2,a&nbsp;&lt;27DCA9B1-6030-4856-8FB2-E3950C36220A at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,42 @@
+Date:        Mon, 02 May 2011 06:47:14 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Tim Blechmann <[hidden] at klingt dot org>
+Cc:          [hidden] at jackaudio dot org
+In-Reply-To: Tim Blechmann Re: [Jack-Devel] jack threads (1304328202.11250_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack threads
+
+On Mon, May 2, 2011 at 5:22 AM, Tim Blechmann <[hidden]> wrote:
+>>>>> i just saw, that jack2 launches 3 different threads inside my client.
+>>>>> especially, if i register a JackThreadInitCallback, this callback is called
+>>>>> three times, not only once, as it is documented. is this a bug or are the
+>>>>> docs not up to date?
+>>>>>
+>>>>> thanks, tim
+>>>>>
+>>>>
+>>>> Should be 2 threads and 2 JackThreadInitCallback, what is the third one?
+>>>
+>>> the message buffer thread. at least, its that way in jack1.
+>>
+>>
+>> Ah yes, so 3 threads and 3 JackThreadInitCallback, right.
+>
+> if so, is there a way to determine if the thread init callback is called from
+> the real-time jack thread? i want my thread init function called only from the
+> main thread.
+
+this isn't an option and it isn't the current purpose of the callback.
+it was created to handle systems where any thread might need to be
+"registered" or have some setup done with it before it can run its
+normal work function. there's no model of identifying the thread in
+any way. i think this would be a mistake too, because it would mean
+that if thread semantics changed in the future, your code would likely
+break (imagine a future in which libjack initiates N "realtime"
+threads and not just 1, for example).
+
+--p
+
+1304333248.17102_0.ltw:2,a <BANLkTinmoaA7LK3iL0RxUKomU9WZ1LuywA at mail dot gmail dot com>
+________________________________________________________________________________
+

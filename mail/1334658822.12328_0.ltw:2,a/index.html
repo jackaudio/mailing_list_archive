@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] [PATCH] jackdbus: Fix sigsegv handling segfaulting by itself</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] [PATCH] jackdbus: Fix sigsegv handling segfaulting by itself</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1334565104.5131_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1334710093.1482_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1334658822.12328_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 17 Apr 2012 12:33:21 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> David Henningsson </span> &lt;[hidden] at canonical dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1334710093.1482_0.ltw:2,a/index.html'>Re: [Jack-Devel] [PATCH] jackdbus: Fix sigsegv handling segfaulting by itself </a></td></tr>
+</table>
+<pre>
+In my case, the siginfo code was -6, causing the sigsegv handling
+to crash on its own. This patch adds a range check for siginfo code.
+
+BugLink: https://bugs.launchpad.net/bugs/983835
+Signed-off-by: David Henningsson &lt;[hidden]&gt;
+---
+ dbus/sigsegv.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/dbus/sigsegv.c b/dbus/sigsegv.c
+index 03b1183..8a87dc8 100644
+--- a/dbus/sigsegv.c
++++ b/dbus/sigsegv.c
+@@ -60,6 +60,7 @@ static void signal_segv(int signum, siginfo_t* info, void*ptr) {
+     static const char *si_codes[3] = {"", "SEGV_MAPERR", "SEGV_ACCERR"};
+ 
+     size_t i;
++    const char *si_code_str;
+     ucontext_t *ucontext = (ucontext_t*)ptr;
+ 
+ #if defined(SIGSEGV_STACK_X86) || defined(SIGSEGV_STACK_IA64)
+@@ -94,9 +95,14 @@ static void signal_segv(int signum, siginfo_t* info, void*ptr) {
+         jack_error("Unknown bad signal catched!");
+     }
+ 
++    if (info-&gt;si_code &gt;= 0 &amp;&amp; info-&gt;si_code &lt; 3) 
++        si_code_str = si_codes[info-&gt;si_code];
++    else
++        si_code_str = "unknown";
++
+     jack_error("info.si_signo = %d", signum);
+     jack_error("info.si_errno = %d", info-&gt;si_errno);
+-    jack_error("info.si_code  = %d (%s)", info-&gt;si_code, si_codes[info-&gt;si_code]);
++    jack_error("info.si_code  = %d (%s)", info-&gt;si_code, si_code_str);
+     jack_error("info.si_addr  = %p", info-&gt;si_addr);
+ #if !defined(__alpha__) &amp;&amp; !defined(__ia64__) &amp;&amp; !defined(__FreeBSD_kernel__) &amp;&amp; !defined(__arm__) &amp;&amp; !defined(__hppa__) &amp;&amp; !defined(__sh__)
+     for(i = 0; i &lt; NGREG; i++)
+-- 
+1.7.9.5
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1334565104.5131_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1334710093.1482_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1334658822.12328_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1334658822.12328_0.ltw:2,a&nbsp;&lt;1334658801-14312-1-git-send-email-david.henningsson at canonical dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

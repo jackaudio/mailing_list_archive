@@ -1,0 +1,49 @@
+Date:        Tue, 20 Dec 2016 13:30:47 +0100
+From:        Hanspeter Portner  <[hidden] at airpost dot net>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: ROBERT WOLF [Jack-Devel] jack midi event reserve vs. write (1482232160.13733_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack midi event reserve vs. write
+
+On 20.12.2016 12:09, ROBERT WOLF wrote:
+> What exactly is the difference between *jack_midi_event_reserve* and
+> *jack_midi_event_write* ?
+> In particular, if I call *jack_midi_event_write*, does it actually copy the data
+> from the buffer, which I provide?
+
+For a simple MIDI message
+
+  const size_t sz = 3;
+  const uint8_t src [sz] = {0x90, 0x2f, 0x7f};
+
+think of jack_midi_event_write as a convenience wrapper around
+jack_midi_event_reserve and memcpy
+
+  uint8_t *dst = jack_midi_event_reserve(client, 0, sz);
+  if(dst)
+    memcpy(dst, src, sz);
+  else
+    ; // no space left on buffer
+
+which is equivalent to
+
+  if(jack_midi_event_write(client, 0, src, sz) != 0)
+    ; // no space left on buffer
+
+> Or does it use that same buffer.
+> 
+> Another question is how can I send midi events generated from GUI, (which does
+> not run in the audio callback)?
+> My guess is to cache them somewhere and transmit them inside the callback?
+> Am I guessing correctly?
+
+The common practice is to use lock-free single-reader/single-writer ring buffers
+to exchange data between worker/GUI and audio threads.
+
+JACK readily ships its own implementation of such a structure [1].
+
+[1] http://jackaudio.org/api/ringbuffer_8h.html
+
+1482237060.18915_0.ltw:2,a <f5a07715-b4c1-5504-0afb-f6b09ddfe766 at airpost dot net>
+________________________________________________________________________________
+

@@ -1,0 +1,53 @@
+Date:        Mon, 28 Apr 2014 15:55:35 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Leonardo Gabrielli [Jack-Devel] wrong samplerate (1398692823.10895_0.ltw:2,)
+Follow-Up:   Paul Davis Re: [Jack-Devel] wrong samplerate (1398693463.11445_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] wrong samplerate
+
+On Mon, Apr 28, 2014 at 03:37:56PM +0200, Leonardo Gabrielli wrote:
+
+> Dear devels,
+
+Hi!
+
+> I compiled the latest jack2 from git on an old debian laptop and I'm
+> getting contradictory messages about the sample rate:
+> 
+> cmdline:
+> jackd -dalsa -dhw:0 -r44100 -p128 -n2
+> 
+> output during launch:
+> creating alsa driver ... hw:0|hw:0|128|2|44100|0|0|nomon|swmeter|-|32bit
+> output of jack_samplerate: 48000
+> 
+> the real sample rate is 48000
+> Do you think this is dependent on the sound card, ALSA or Jack?
+
+        frame_rate = driver->frame_rate ;
+        err = snd_pcm_hw_params_set_rate_near (handle, hw_params,
+                                               &frame_rate, NULL) ;
+        driver->frame_rate = frame_rate ;
+        if (err < 0) {
+
+
+and then
+
+   https://gitorious.org/sigrok/libsigrok/commit/0d6ff1039447c35fa8b423ee02468e62a5064cab
+
+There are devices which only support 48k (no 44.1k), so this might be
+the case here.
+
+I'm not entirely sure whether it's a good idea to use
+snd_pcm_hw_set_rate() instead.
+
+
+Cheers
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1398693344.11376_0.ltw:2, <20140428135535.GO23080 at ltw dot loris dot tv>
+________________________________________________________________________________
+

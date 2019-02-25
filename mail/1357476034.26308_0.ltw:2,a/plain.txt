@@ -1,0 +1,45 @@
+Date:        Sun, 06 Jan 2013 13:40:25 +0100
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          Peter Nelson <[hidden] at fuzzle dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Peter Nelson [Jack-Devel] [PATCH] Test using WITH_OPUS instead of HAVE_OPUS (1357080200.30697_0.ltw:2,Sa)
+Follow-Up:   Peter Nelson Re: [Jack-Devel] [PATCH] Test using WITH_OPUS instead of HAVE_OPUS (1357478234.29760_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [PATCH] Test using WITH_OPUS instead of HAVE_OPUS
+
+On Tue, Jan 01, 2013 at 10:42:45PM +0000, Peter Nelson wrote:
+
+Hi!
+
+> HAVE_OPUS will be set by waf if Opus is available but opus/opus_custom.h
+> is not. WITH_OPUS appears to have been created to resolve this but is
+> never tested against.
+
+As far as I understand the code (untested, only read the wscript), the
+current code is correct:
+
+    conf.env['WITH_OPUS'] = False
+    if conf.check_cfg(package='opus', atleast_version='0.9.0' ,
+args='--cflags --libs', mandatory=False):
+        if conf.check_cc(header_name='opus/opus_custom.h',
+mandatory=False):
+            conf.define('HAVE_OPUS', 1)
+            conf.env['WITH_OPUS'] = True
+
+
+So HAVE_OPUS is the C define (as in g++ -DHAVE_OPUS=1) while WITH_OPUS
+is the waf-internal variable.
+
+Which means the C source is correct to check against HAVE_OPUS.
+
+Does it fail to build for you without your patch?
+
+
+Cheers
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1357476034.26308_0.ltw:2,a <20130106124025.GV28562 at ltw dot loris dot tv>
+________________________________________________________________________________
+

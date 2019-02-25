@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] netjack for thinclients instead of pulseaudio.</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] netjack for thinclients instead of pulseaudio.</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1327535065.21783_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1327535366.22144_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1327535355.22136_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 26 Jan 2012 00:48:51 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Daniel Reurich &lt;[hidden] at centurion dot net dot nz&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Daniel Reurich
+<a href='../1327531185.18041_0.ltw:2,a/index.html'>[Jack-Devel] netjack for thinclients instead of pulseaudio. </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>David Nielson
+<a href='../1327541791.8503_0.ltw:2,a/index.html'>Re: [Jack-Devel] netjack for thinclients instead of pulseaudio. </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Daniel Reurich
+<a href='../1327558173.28861_0.ltw:2,a/index.html'>Re: [Jack-Devel] netjack for thinclients instead of pulseaudio. </a></td></tr>
+</table>
+<pre>
+Hi Daniel,
+
+On 01/25/2012 11:39 PM, Daniel Reurich wrote:
+&gt; Hi,
+&gt; 
+&gt; I'm wondering whether netjack could solve a problem I have with some
+&gt; resource constrained thin clients in a ltsp setup.
+
+LTSP? as in Long-Term Surveillance Plan (which superseded Linux Terminal
+Server Projects :))
+
+&gt; The problem I have:
+&gt; 
+&gt; The default ltsp setup uses pulseaudio for pushing the audio for each
+&gt; user to the respective thin client.  However the pulseaudio daemon dies
+&gt; on the thinclients due to resource constraints.  Pulseaudio does all the
+&gt; resampling on the daemon on the thinclient which is probably what is
+&gt; killing it.
+
+That's not the problem _you_ have. That's a problem _pulseaudio_ has :)
+
+What services do you want to provide to users of the terminal-server? Is
+it for audio-production or a general-purpose system?
+
+
+jackd (here jack2) uses ~50-100MB RSS memory, which is also not lightweight.
+
+&gt; The Questions:
+&gt; 
+&gt; Could jack2/netjack be a potential solution to this problem?
+
+maybe, but not out-of-the box.
+
+&gt; *To do so it would need to be able the following:
+&gt; a) run a separate jack daemon for each user in their session on the
+&gt; server and connect via netjack to the jackd running on the thinclient.
+
+AFAIK netjack does not [yet?] include authentication. A client can
+connect to any session on a server.
+
+You can [auto-]start multiple netjack 'slaves' on the server using
+different UDP ports and possibly different multi-cast addresses for each
+session on the terminal server.
+
+You could implement authentication with per-user firewall rules?!
+
+&gt; b) do all the resampling in the jack daemon running in the session on
+&gt; the server
+
+check. but note: JACK does not do any resampling. Ever. The player
+application (mplayer, Flash,...) running on the server needs to do
+resampling before sending data to JACK in the first place.
+
+&gt; c) use minimal resources on the thinclient to interface the netjack
+&gt; sink/sources with the real hardware
+
+check. Here: it's basically only compression/encoding (speex) that
+requires CPU on the thin-client.
+
+&gt; *latency shouldn't be a big issue with 100ms being more then acceptable
+
+actually you will have a hard time to convince jack to run with
+latencies &gt; 100ms :) -- well, only half joking.
+
+&gt; *audio quality can be quite low (headsets on the thinclients) and xruns
+&gt; due to network latency are preferred over daemons stopping
+&gt; 
+&gt; I am assuming that the netjack master should be at the thin-client end.
+
+yes. The master needs to provide the clock. And JACK uses the
+audio-interface's clock/oscillator as source for that (which in your
+case is on the thin-client).
+
+
+http://trac.jackaudio.org/wiki/WalkThrough/User/NetJack2
+
+&gt; Your thoughts would be appreciated.
+
+Unless the main-use case for the terminal server is audio-production; I
+don't think this will fly.
+
+If you provide terminal-services to some radio, music or media company.
+Yes, JACK is the way to go.
+If you build a terminal-server for e.g. a university computer pool or
+general public use: get in touch with the pulseaudio devs and see if
+there's something that can be done about the crashes (you should
+probably do that anyway, at least make them aware of the problem).
+Connecting Desktop-Audio (in-browser playback, flash-applets, live-chat)
+to JACK is not trivial; more so for in multi-user setups.
+
+2c,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1327535065.21783_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1327535366.22144_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1327535355.22136_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1327535355.22136_0.ltw:2,a&nbsp;&lt;4F2094E3.5050908 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

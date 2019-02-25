@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[LAD] jackd/jackdbus : D-Bus or not D-Bus...</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[LAD] jackd/jackdbus : D-Bus or not D-Bus...</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1242721443.32525_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1242722836.2324_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1242722546.1923_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 19 May 2009 10:38:24 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt;, Linux Audio Developers &lt;[hidden] at lists dot linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Rui Nuno Capela
+<a href='../1242725416.6922_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] jackd/jackdbus : D-Bus or not D-Bus... </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>MarcO'Chapeau
+<a href='../1242726442.8586_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] jackd/jackdbus : D-Bus or not D-Bus... </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>drew Roberts
+<a href='../1242734152.23299_0.ltw:2,a/index.html'>Re: [LAD] jackd/jackdbus : D-Bus or not D-Bus... </a></td></tr>
+</table>
+<pre>
+Hi All,
+
+After hours of discussion on #jack IRC, it seems that we are in a  
+completely blocked situation:
+
+1) we currently have 2 "incarnations" of the jack server named "jackd"  
+and "jackdbus". "jackd" is the legacy  "classic" version of the server  
+that  interact with the ~/jackdrc setting file. This setting file may  
+be written by Qjackctl or Ardour. "jackdbus" is the new D-Bus aware  
+version of the server, it use a completely new setting management  
+system using a "conf.xml" file. Il may use a multi-setting system in  
+the future.
+
+2) the *heart" of the problem Fons initially told about is in the way  
+applications "auto-start" the server. This launching strategy is part  
+of libjack and depends of the incarnation of the server (jackd of  
+jackdbus) that is supposed to be used. Right now this strategy is  
+chosen at *compile time*, so that in "classic" mode the "jackd" server  
+will be launched using a fork-exec strategy, or in D-Bus mode the  
+"jackdbus" server will be launched by issuing a D-Bus call.
+
+3) Since the "auto-start" strategy is chosen at compile time and thus  
+is coded in libjack, users will typically encounter all sort of  
+problems as soon as the used applications interact with a "D-Bus based  
+strategy" libjack (that will launch "jackdbus" incarnation) and users  
+still use Qjackctl that interact with the "jackd" incarnation.
+
+4) Different ideas have been proposed  to merge the 2 "jackd" and  
+"jackdbus" incarnations in a unique extended "jackd" exe, but nothing  
+really clear emerged.
+
+4) A possible proposed solution was to define 2 completely separated  
+packages for jack2 : the "classic" one would package the "jackd"  
+incarnation and allow Qjackctl and legacy control applications to be  
+used with it. The "D-Bus" one would package the "jackdbus"  
+incarnation, and provide D-Bus bas control applications (patchage,  
+ladi tools....). The problem of this strategy is that..., it is a kind  
+of complete failure regarding the way jack is supposed to be  
+distributed. It may even get worse if a new "jackosc" incarnation (a  
+one that would allow to control the server using OSC) appears a some  
+point in the future...
+
+5) Another idea would be improve the "choice of auto-start strategy"  
+by providing a runtime choice for that:  a way for the user to select  
+between the "classic", "D-Bus", "OSC", strategy once globally for a  
+given working session...
+
+5) Another idea would be be to completely drops the "auto-start"  
+strategy...This way we don't have multiple strategy anymore, and solve  
+most of the problems... but loose a feature.
+
+Comments?
+
+Stephane
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1242721443.32525_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1242722836.2324_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1242722546.1923_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1242722546.1923_0.ltw:2,a&nbsp;&lt;82343E2E-BDB6-41CF-B67D-92014B431C75 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

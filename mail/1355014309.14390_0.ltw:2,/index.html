@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] ALSA PCM multi plugin and xruns</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] ALSA PCM multi plugin and xruns</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1355010522.12496_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1355034800.2308_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1355014309.14390_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 08 Dec 2012 16:51:41 -0800 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Devin Anderson
+<a href='../1354967833.17917_0.ltw:2,/index.html'>Re: [Jack-Devel] ALSA PCM multi plugin and xruns </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1355034800.2308_0.ltw:2,/index.html'>Re: [Jack-Devel] ALSA PCM multi plugin and xruns </a></td></tr>
+</table>
+<pre>
+On Sat, Dec 8, 2012 at 3:57 AM, Devin Anderson
+&lt;[hidden]&gt; wrote:
+
+&gt; I read through the ALSA multi plugin source a bit.  I now see that
+&gt; poll descriptors are only returned for one device (the *master*
+&gt; device), while the amount of available samples is calculated by
+&gt; looking at all the slave devices and returning the minimum amount of
+&gt; samples available.  This leads me to believe that the poll descriptors
+&gt; indicate that there is data available on the master device, but there
+&gt; isn't any data available on one of the other slave devices.
+
+It turns out I'm wrong about this.
+
+I added some errors messages to the multi plugin in alsa-lib, and have
+found that:
+
+1.) Both of the Layla 3Gs have the same amount of frames available
+regardless of whether the xrun onslaught is happening.  So, when 32 is
+reported back as the amount of frames available, both of the devices
+have 32 frames available, despite the period size being 256.
+2.) When one device has an *actual* xrun (e.g.
+`snd_pcm_multi_avail_update` returns -EPIPE), the other one does too.
+I haven't been able to generate a situation where only one device
+generates an xrun.
+
+This makes me think that the Layla 3Gs are synced, even though
+`snd_pcm_avail_update` is returning a value such that
+(snd_pcm_avail_update() % PERIOD_SIZE) != 0.  I'm confused about this.
+
+Also, I've found that this situation can happen without an xrun.  For
+example, the xrun onslaught sometimes happens immediately after I
+start JACK.
+
+If anyone has any ideas on what might be happening or where I should
+dig next, please let me know.
+
+Thanks,
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+psinsights - http://psinsights.googlecode.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1355010522.12496_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1355034800.2308_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1355014309.14390_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1355014309.14390_0.ltw:2,&nbsp;&lt;CAG7zqTp=ouOqqqTraaG4=7Fzbyj851zBj11=BnkYLoJnTn6Krw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

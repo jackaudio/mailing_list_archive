@@ -1,0 +1,93 @@
+Date:        Wed, 13 Apr 2011 18:15:14 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          "Hampiholi, Vallabha Vasant" <[hidden] at harman dot com>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+
+Subject:     Re: [Jack-Devel] JACK Capabilities
+
+On Wed, Apr 13, 2011 at 05:17:22AM +0200, Hampiholi, Vallabha Vasant wrote:
+
+> Hello Adrian,
+
+Hi!
+
+> I have few more queries based on your feedback :)
+
+I just noticed your e-mail address: are we talking about embedded Linux
+in cars?
+
+If it has to be good, reliable and fast, hire Paul to do the job. He
+knows all the answers, also to questions you don't even know you want to
+ask them. ;)
+
+
+> "There are no different sample rates, all jack clients run at the same
+> samplerate."
+> 
+> Are there any JACK plugins which can do sample rate conversion? Say if
+> I get my speech data from the sound card @ 48 KHz but I want to do
+> some ECNR on this. But to do that I need to convert the 48KHz signal
+> to 8 KHz. Is there a plugin that can do this?
+
+You can use a readily available library to do SRC in your jack client
+(running at 48kHz). libsamplerate jumps to my mind.
+
+If you do all processing at 8kHz and only want to interface to the 48k
+world outside, you can run jackd in dummy mode at 8kHz and use alsa_in
+and alsa_out to resample from/to 48kHz. If you want to do music, then
+this is clearly not an option.
+
+> I have another query now. From my project perspective, say if I have a
+> JACK client which is doing some equalization. Now while this is
+> happening, the user changes the equalizer parameters on the HMI. How
+> will this get communicated to the JACK equalizer client?
+
+The jack client usually is a process, same as any other application. In
+case of a console programme, you'd use ncurses or whatsoever. If it's a
+GUI, you'd use QT/GTK/foo. You can also use sockets, shared memory, OSC
+or any other data to get the user input to your client. It's a fully
+featured programme, you only have to propagate the changes to the
+processing thread. That's simple if you go for a global variable in your
+client.
+
+> 1) I read somewhere that a JACK client failure can stop other clients
+> from running. If true, is there a way to overcome this without
+> introducing major latency/sample drop-outs?
+
+There has been some work for this in jackd2, a client is allowed to be
+late without causing too much trouble.
+
+> 2) How easy/difficult is it to write a JACK plugin. I know that this
+> could be relative, but consider a comparison with PA in terms of
+> effort and testing.
+
+That's the nice thing: pretty easy:
+
+   http://trac.jackaudio.org/browser/trunk/jack/example-clients/simple_client.c
+
+
+> 3) Is there a command line tool to test the JACK plugins like
+> gst-launch for GStreamer?
+
+You don't need any. Your app *is* the command line tool, all GUI
+operations are optional.
+
+And yes, you can operate jackd without a GUI: jack_connect connects
+sinks and sources, jackd is the daemon, jack_lsp lists ports. That's it.
+
+> 4) So according to your reply for the 1st question I will assume that
+> I can create a JACK pipeline that can take input from a source (file,
+> mic, internet etc) and send the same to a output sink (file, speaker,
+> BT etc). 
+
+Yeah, works.
+
+
+Cheers
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1302711342.5016_0.ltw:2,a <20110413161514.GL28811 at ltw dot loris dot tv>
+________________________________________________________________________________
+

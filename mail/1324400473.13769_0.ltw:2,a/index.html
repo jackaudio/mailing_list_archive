@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How to get mplayer and firefox/flash to play</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How to get mplayer and firefox/flash to play</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324398665.10440_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324404138.20255_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324400473.13769_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 20 Dec 2011 18:00:40 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"Robert M. Riches Jr." &lt;[hidden] at jacob21819 dot net&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robert M. Riches Jr.
+<a href='../1324398665.10440_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to get mplayer and firefox/flash to play </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robert M. Riches Jr.
+<a href='../1324404138.20255_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to get mplayer and firefox/flash to play </a></td></tr>
+</table>
+<pre>
+On 12/20/2011 05:30 PM, Robert M. Riches Jr. wrote:
+&gt;&gt; Date: Tue, 20 Dec 2011 10:03:52 -0600
+&gt;&gt; From: "Chris Caudle" &lt;[hidden]&gt;
+&gt;&gt; To: [hidden]
+&gt;&gt;
+&gt;&gt; On Mon, December 19, 2011 9:37 pm, Paul Davis wrote:
+&gt;&gt;&gt; why are you using netjack rather than just playing directly from
+&gt;&gt;&gt; mplayer or firefox to JACK on the same host?
+&gt;&gt;
+&gt;&gt; Sounds like an X terminal kind of setup.
+&gt;&gt;
+&gt;&gt;&gt; Robert M. Riches Jr. wrote:
+&gt;&gt;&gt;&gt; In setting up a zero-client arrangement
+&gt;&gt;
+&gt;&gt; I took that to be a setup where the client was very lightweight, and all
+&gt;&gt; the apps were running on a remote server but displayed on the client. JACK
+&gt;&gt; master would run on the display, and JACK running net backend would run on
+&gt;&gt; the server where the applications were running.
+&gt;&gt; You know these young ones are always coming up with new terms for
+&gt;&gt; reinventing X terminals.
+&gt; 
+&gt; Thanks.  I'll have to remember "young ones" next time I receive
+&gt; yet another AARP invitation.  :-)
+&gt; 
+&gt; Yes, zero-client is essentially an X terminal--plus sound, remote
+&gt; USB, etc.  JACK master runs on the display.  JACK slave with the
+&gt; 'net' backend runs on the server where the applications run.  I
+&gt; can run aplay (on the server, aka JACK slave) perfectly as far as
+&gt; I can tell.  However, with mplayer, at 8.9 seconds into a file,
+&gt; the sound becomes akin to a motorboat, and the JACK master
+&gt; reports rapid-fire XRUNs.  Firefox, probably playing flash, never
+&gt; produces audio.
+&gt; 
+&gt; Regarding the error messages I see with Firefox and flash, I
+&gt; mis-wrote in the original posting.  It's stdout/stderr from
+&gt; Firefox where I see this:
+&gt; 
+&gt; jack_client_new: deprecated
+&gt; Jack: JackClient::SetupDriverSync driver sem in flush mode
+&gt; Jack: JackPosixSemaphore::Connect jack_sem.1501_default_alsa-jack.rawjackP.3061.
+&gt; 0
+&gt; Jack: Already connected name = alsa-jack.rawjackP.3061.0
+&gt; Jack: Clock source : system clock via clock_gettime
+&gt; Jack: JackLibClient::Open name = alsa-jack.rawjackP.3061.0 refnum = 2
+&gt; Jack: JackClient::PortRegister ref = 2 name = alsa-jack.rawjackP.3061.0:out_000 
+&gt; type = 32 bit float mono audio port_index = 5
+&gt; Jack: JackClient::PortRegister ref = 2 name = alsa-jack.rawjackP.3061.0:out_001 
+&gt; type = 32 bit float mono audio port_index = 6
+&gt; Jack: JackClient::Activate
+&gt; Jack: JackClient::StartThread : period = -2147483648 computation = 21333 constra
+&gt; int = 500
+&gt; Jack: Create non RT thread
+&gt; Jack: ThreadHandler: start
+&gt; Jack: JackClient::kActivateClient name = alsa-jack.rawjackP.3061.0 ref = 2 
+&gt; Jack: JackClient::Connect src =  dst = system:playback_1
+&gt; Jack: JackClient::Connect src =  dst = system:playback_2
+&gt; Jack: JackGraphManager::GetBuffer : port = 5 is released state
+&gt; Jack: JackGraphManager::GetBuffer : port = 6 is released state
+&gt; Jack: JackGraphManager::GetBuffer : port = 5 is released state
+&gt; Jack: JackGraphManager::GetBuffer : port = 6 is released state
+&gt; ...
+&gt; 
+&gt; The last pairs of lines repeat at high speed forever.  It appears
+&gt; to my untrained eye that 'src' is set to the empty string, which
+&gt; would seem to be potentially significant.
+&gt; 
+&gt; At the moment, my uneducated guess is I need some "ctl" entries
+&gt; in the server's .asoundrc.  Currently, it has this:
+&gt; 
+&gt; pcm.rawjack {
+&gt;     type jack
+&gt;     playback_ports {
+&gt;         0 system:playback_1
+&gt;         1 system:playback_2
+&gt;     }
+&gt;     capture_ports {
+&gt;         0 system:capture_1
+&gt;         1 system:capture_2
+&gt;     }
+&gt; }
+&gt; 
+&gt; pcm.jackplug {
+&gt;     type plug
+&gt;     slave { pcm "rawjack" }
+&gt; }
+&gt; 
+&gt; pcm.!default {
+&gt;     type plug
+&gt;     slave { pcm "rawjack" }
+&gt; }
+&gt; 
+&gt; However, that's essentially what I believe I have seen in
+&gt; documentation, with no 'ctl' entries.
+&gt; 
+&gt; Suggestions?
+
+I never managed to get a satisfactory system with alsa-jack, jack plug,
+and variants. No matter what, at least one client (skype, flash,
+ekiga,..) always failed. Torben's patch
+http://lalists.stanford.edu/lau/2010/10/0504.html was closest.
+
+
+http://alsa.opensrc.org/Jack_and_Loopback_device_as_Alsa-to-Jack_bridge
+
+just works, and I have not looked back.
+
+Well, it's a tiny bit more CPU intense (alsa_out, alsa_in are running
+all the time) and it has one quirk: I need to kill/restarted those on
+each suspend/resume cycle (done in /etc/pm/sleep.d/) leaving them
+connected would otherwise freeze jackd on resume.
+
+ciao,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324398665.10440_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324404138.20255_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324400473.13769_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1324400473.13769_0.ltw:2,a&nbsp;&lt;4EF0BF38.2020701 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

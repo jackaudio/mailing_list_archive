@@ -1,0 +1,165 @@
+Date:        Sun, 10 Feb 2013 22:42:58 +0100
+From:        Ruslan N. Marchenko  <[hidden] at ruff dot mobi>
+To:          [hidden] at jackaudio dot org
+In-Reply-To: Ruslan N. Marchenko [Jack-Devel] [PATCH 0/4] Multicast interface selection (1360531851.20603_0.ltw:2,)
+
+Subject:     [Jack-Devel] [PATCH 4/4] Added multicast interface selection to NetSlaves
+
+Parameter multicast-if allows to direct a slave to specific or all interfaces to reach the master
+---
+ common/JackNetAdapter.cpp | 18 +++++++++++++++++-
+ common/JackNetDriver.cpp  | 22 +++++++++++++++++++---
+ common/JackNetDriver.h    |  2 +-
+ 3 files changed, 37 insertions(+), 5 deletions(-)
+
+diff --git a/common/JackNetAdapter.cpp b/common/JackNetAdapter.cpp
+index 7cc8f05..d14b690 100644
+--- a/common/JackNetAdapter.cpp
++++ b/common/JackNetAdapter.cpp
+@@ -35,7 +35,7 @@ namespace Jack
+         because we don't have full parametering right now, parameters will be parsed from the param list,
+         and then JackNetSlaveInterface will be filled with proper values.
+         */
+-        char multicast_ip[32];
++        char multicast_ip[32],multicast_if[32];
+         uint udp_port;
+         GetHostName(fParams.fName, JACK_CLIENT_NAME_SIZE);
+         fSocket.GetName(fParams.fSlaveNetName);
+@@ -64,6 +64,13 @@ namespace Jack
+             strcpy(multicast_ip, DEFAULT_MULTICAST_IP);
+         }
+ 
++        const char* default_multicast_if = getenv("JACK_NETJACK_MULTICAST");
++        if (default_multicast_if) {
++            strcpy(multicast_if, default_multicast_if);
++        } else {
++            strcpy(multicast_if, DEFAULT_MULTICAST_IF);
++        }
++
+         //options parsing
+         const JSList* node;
+         const jack_driver_param_t* param;
+@@ -76,6 +83,10 @@ namespace Jack
+                     assert(strlen(param->value.str) < 32);
+                     strcpy(multicast_ip, param->value.str);
+                     break;
++                case 'f' :
++                    assert(strlen(param->value.str) < 32);
++                    strcpy(multicast_if, param->value.str);
++                    break;
+                 case 'p' :
+                     udp_port = param->value.ui;
+                     break;
+@@ -128,6 +139,8 @@ namespace Jack
+         }
+ 
+         strcpy(fMulticastIP, multicast_ip);
++	if(strcmp(multicast_if,DEFAULT_MULTICAST_IF))
++	    strcpy(fMulticastIF, multicast_if);
+ 
+         // Set the socket parameters
+         fSocket.SetPort(udp_port);
+@@ -414,6 +427,9 @@ extern "C"
+         strcpy(value.str, DEFAULT_MULTICAST_IP);
+         jack_driver_descriptor_add_parameter(desc, &filler, "multicast-ip", 'a', JackDriverParamString, &value, NULL, "Multicast address, or explicit IP of the master", NULL);
+ 
++        strcpy(value.str, DEFAULT_MULTICAST_IF);
++        jack_driver_descriptor_add_parameter(desc, &filler, "multicast-if", 'f', JackDriverParamString, &value, NULL, "Multicast interface name, any or all", "Multicast interface to send probes from (any - kernel chosen (default), all - all available, if_name - explicit bind)");
++
+         value.i = DEFAULT_PORT;
+         jack_driver_descriptor_add_parameter(desc, &filler, "udp-net-port", 'p', JackDriverParamInt, &value, NULL, "UDP port", NULL);
+ 
+diff --git a/common/JackNetDriver.cpp b/common/JackNetDriver.cpp
+index 02b2033..73ea8e9 100644
+--- a/common/JackNetDriver.cpp
++++ b/common/JackNetDriver.cpp
+@@ -28,7 +28,7 @@ using namespace std;
+ namespace Jack
+ {
+     JackNetDriver::JackNetDriver(const char* name, const char* alias, JackLockedEngine* engine, JackSynchro* table,
+-                                const char* ip, int udp_port, int mtu, int midi_input_ports, int midi_output_ports,
++                                const char* ip, int udp_port, const char* mcif, int mtu, int midi_input_ports, int midi_output_ports,
+                                 char* net_name, uint transport_sync, int network_latency, int celt_encoding, int opus_encoding)
+             : JackWaiterDriver(name, alias, engine, table), JackNetSlaveInterface(ip, udp_port)
+     {
+@@ -38,6 +38,8 @@ namespace Jack
+         if (strcmp(net_name, "") == 0) {
+             GetHostName(net_name, JACK_CLIENT_NAME_SIZE);
+         }
++	if(strcmp(mcif,DEFAULT_MULTICAST_IF))
++	    strcpy(fMulticastIF,mcif);
+ 
+         fParams.fMtu = mtu;
+         fParams.fSendMidiChannels = midi_input_ports;
+@@ -605,6 +607,9 @@ namespace Jack
+             strcpy(value.str, DEFAULT_MULTICAST_IP);
+             jack_driver_descriptor_add_parameter(desc, &filler, "multicast-ip", 'a', JackDriverParamString, &value, NULL, "Multicast address, or explicit IP of the master", NULL);
+ 
++	    strcpy(value.str, DEFAULT_MULTICAST_IF);
++	    jack_driver_descriptor_add_parameter(desc, &filler, "multicast-if", 'f', JackDriverParamString, &value, NULL, "Multicast interface name, any or all", "Multicast interface to send probes from (any - kernel chosen (default), all - all available, if_name - explicit bind)");
++
+             value.i = DEFAULT_PORT;
+             jack_driver_descriptor_add_parameter(desc, &filler, "udp-net-port", 'p', JackDriverParamInt, &value, NULL, "UDP port", NULL);
+ 
+@@ -644,7 +649,7 @@ Deactivated for now..
+ 
+         SERVER_EXPORT Jack::JackDriverClientInterface* driver_initialize(Jack::JackLockedEngine* engine, Jack::JackSynchro* table, const JSList* params)
+         {
+-            char multicast_ip[32];
++            char multicast_ip[32],multicast_if[32];
+             char net_name[JACK_CLIENT_NAME_SIZE + 1];
+             int udp_port;
+             int mtu = DEFAULT_MTU;
+@@ -676,6 +681,13 @@ Deactivated for now..
+                 strcpy(multicast_ip, DEFAULT_MULTICAST_IP);
+             }
+ 
++            const char* default_multicast_if = getenv("JACK_NETJACK_INTERFACE");
++            if (default_multicast_ip) {
++                strcpy(multicast_if, default_multicast_if);
++            } else {
++                strcpy(multicast_if, DEFAULT_MULTICAST_IF);
++            }
++
+             for (node = params; node; node = jack_slist_next(node)) {
+                 param = (const jack_driver_param_t*) node->data;
+                 switch (param->character)
+@@ -684,6 +696,10 @@ Deactivated for now..
+                         assert(strlen(param->value.str) < 32);
+                         strcpy(multicast_ip, param->value.str);
+                         break;
++                    case 'f' :
++                        assert(strlen(param->value.str) < 32);
++                        strcpy(multicast_if, param->value.str);
++                        break;
+                     case 'p':
+                         udp_port = param->value.ui;
+                         break;
+@@ -734,7 +750,7 @@ Deactivated for now..
+             try {
+ 
+                 Jack::JackDriverClientInterface* driver = new Jack::JackWaitThreadedDriver(
+-                        new Jack::JackNetDriver("system", "net_pcm", engine, table, multicast_ip, udp_port, mtu,
++                        new Jack::JackNetDriver("system", "net_pcm", engine, table, multicast_ip, udp_port, multicast_if, mtu,
+                                                 midi_input_ports, midi_output_ports,
+                                                 net_name, transport_sync,
+                                                 network_latency, celt_encoding, opus_encoding));
+diff --git a/common/JackNetDriver.h b/common/JackNetDriver.h
+index 245a431..65a8290 100644
+--- a/common/JackNetDriver.h
++++ b/common/JackNetDriver.h
+@@ -68,7 +68,7 @@ namespace Jack
+         public:
+ 
+             JackNetDriver(const char* name, const char* alias, JackLockedEngine* engine, JackSynchro* table,
+-                        const char* ip, int port, int mtu, int midi_input_ports, int midi_output_ports,
++                        const char* ip, int port, const char* mcif, int mtu, int midi_input_ports, int midi_output_ports,
+                         char* net_name, uint transport_sync, int network_latency, int celt_encoding, int opus_encoding);
+             virtual ~JackNetDriver();
+ 
+-- 
+1.8.1.2
+
+1360532584.21087_0.ltw:2, <e63d31b077dd92b83393e64a18865003f0d7d536.1360530044.git.me at ruff dot mobi>
+________________________________________________________________________________
+

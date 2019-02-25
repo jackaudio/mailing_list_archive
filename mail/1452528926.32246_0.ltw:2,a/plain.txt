@@ -1,0 +1,64 @@
+Date:        Mon, 11 Jan 2016 17:15:16 +0100
+From:        Benjamin Henrion  <[hidden] at gmail dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Hanspeter Portner Re: [Jack-Devel] dumping MIDI events to a logfile (1452528328.30572_0.ltw:2,a)
+Follow-Up:   Clemens Ladisch Re: [Jack-Devel] dumping MIDI events to a logfile (1452542841.14322_0.ltw:2,a)
+Follow-Up:   Benjamin Henrion Re: [Jack-Devel] dumping MIDI events to a logfile (1452780420.12749_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] dumping MIDI events to a logfile
+
+On Mon, Jan 11, 2016 at 5:05 PM, Hanspeter Portner <[hidden]> wrote:
+> On 11.01.2016 16:11, Benjamin Henrion wrote:
+>> On Mon, Jan 11, 2016 at 3:56 PM, Paul Davis <[hidden]> wrote:
+>>> You have to connect jack_midi_dump to the relevant MIDI port(s). You can
+>>> start JACK using qjackctl or cadence, and then use their connection dialogs.
+>>> You could use jack_connect. There are other ways too.
+>>>
+>>> You could also use gmidimon :)
+>>
+>> I also tried to hook an FTDI in 5V on the MIDI out connector in
+>> 31250bps, I could only see the FE or FC (depending if I would add a
+>> resistor) MIDI messages, and the keyboard would behave differently as
+>> plugged in with the USB:
+>>
+>> https://pastee.org/27xc8
+>>
+>> I thought sniffing midi was easier...
+>
+> If you just want to sniff the raw MIDI transferred via USB, why not simply use amidi [1]?
+> There's no need to fiddle with/route via JACK here, imho.
+>
+> Get the alsa MIDI hardware name for 'UMONE'
+>         export HW=$(amidi -l | grep UMONE | head -n 1 | gawk '{print $2}')
+>
+> Dump to console:
+>         amidi -p ${HW} -d
+>
+> Dump to file:
+>         amidi -p ${HW} -r my_dump.rawmidi
+
+Thanks, it worked!
+
+Sorry never played with MIDI before. I am still interested to dump the
+MIDI from the serial wire, as the original intent was to build an
+ESP8266 serial2wifi module (straight from the MIDI out connector, no
+Roland USB converter), and to encapsulate the MIDI messages over some
+TCP transport.
+
+If anybody has any idea on which circuit to do (I tried with an
+octocopler, but it seems I did not pick the right one)...
+
+--
+Benjamin Henrion <bhenrion at ffii.org>
+FFII Brussels - +32-484-566109 - +32-2-3500762
+"In July 2005, after several failed attempts to legalise software
+patents in Europe, the patent establishment changed its strategy.
+Instead of explicitly seeking to sanction the patentability of
+software, they are now seeking to create a central European patent
+court, which would establish and enforce patentability rules in their
+favor, without any possibility of correction by competing courts or
+democratically elected legislators."
+
+1452528926.32246_0.ltw:2,a <CANjd3nfrExb8SfT4n-o0rcxhSnvNv8mVXnYHKTu=dwdSFuO2xg at mail dot gmail dot com>
+________________________________________________________________________________
+

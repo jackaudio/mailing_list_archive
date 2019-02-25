@@ -1,0 +1,47 @@
+Date:        Tue, 11 Feb 2014 17:38:16 +1100
+From:        Matt Flax  <[hidden] at flatmax dot org>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Paul Davis Re: [Jack-Devel] high sample rates cause unknown client xruns (1392128992.31477_0.ltw:2,a)
+
+Subject:     [Jack-Devel] high sample rates cause unknown client xruns
+
+Hi there,
+
+I am experiencing problems with high sample rates when using jack.
+
+Whilst the driver is more then capable of reading data at high sample 
+rates, it seems that the client falls over when it tries to interact.
+
+I have created a very simple dummy driver :
+https://github.com/flatmax/jack1/blob/master/drivers/iio/iio_driver_dummy.C
+
+When the definition IIO_DEFAULT_READ_FS is set to 48000  it works ok.
+When the definition IIO_DEFAULT_READ_FS is set to 1000000  it generates 
+client based xruns ... when using jack_rec ...
+
+I guess this is to be expected ... however I didn't think the internal 
+glue between clients and servers was going to be so heavy.
+
+I start the server like so :
+jackd -r -d iio -i 4
+
+I would think that jack_rec shouldn't have a problem dumping fast to 
+/dev/null ...
+
+On a desktop the following works :
+$ jack_rec -f /dev/null -B 4096 -d 1 system:capture_1 system:capture_2
+
+On a desktop the following fails :
+$ jack_rec -f /dev/null -B 2048 -d 1 system:capture_1 system:capture_2
+disk thread finished
+jackrec failed with 977 overruns.
+  try a bigger buffer than -B 2048.
+
+
+On an ARM core, neither works ! Even very large buffer sizes.
+
+Matt
+
+1392100923.13839_0.ltw:2,a <52F9C558.4010709 at flatmax dot org>
+________________________________________________________________________________
+

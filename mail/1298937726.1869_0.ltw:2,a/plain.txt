@@ -1,0 +1,98 @@
+Date:        Mon, 28 Feb 2011 18:00:37 -0600
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+
+Subject:     Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2
+
+On Mon, February 28, Florian Faber wrote:
+> after all, PtP was invented at HP.
+
+I think those guys were already split to Agilent at that point.
+
+> For the price of just one switch with PtP support
+> you can already buy a MADI interface.
+...
+> The switches have to support PtP as well, they have
+> to compensate their processing and transport latencies as well.
+
+I was reading the Q-Lan white paper from QSC recently, and they seem to be
+using switches with tagged priority support to make the clock packets
+traverse the switch as quickly as possible, without relying on switches
+which have specific 1588 "transparent clock" ability.  They require 1Gb/s
+switches for Q-Lan, which may help with latency.  If you have
+quality-of-service support in the switch, couldn't you just have the clock
+packets tagged with priority 7, and then use end to end latency
+measurement rather than peer to peer?
+
+Perhaps that would work for some protocols, but not meet the tight
+requirements of Ravenna.  I'll have to look to see if anyone has made
+accuracy and jitter measurements of systems without transparent clock
+support in the switch.
+
+>> AVB handles...infrastructure requirements, but does
+>> not specify higher layer protocol.
+
+> What should be more to it?
+
+I was speaking in the context of the original message, which proposed
+creating an AVB back end for Jack2.  Is it accurate to call that an AVB
+backend, or would you also have to specify which higher layer protocols
+are implemented?  It seems that you could have a backend for Dante, for
+Q-Lan, for Lightwire, for Ravenna, and all those would be AVB compatible. 
+That was all I meant, that the original question posed was not really
+complete without also specifying some additional requirements in addition
+to AVB compliant.
+
+> Sound cards don't tend to change their number of channels all
+> the time, as do network devices.
+
+OK, I can see that as a good argument for making native network device to
+JACK port bridges.
+
+Is the task (of writing a new network interface bridge for JACK) of a size
+that only a few people working on it will be able to keep it maintained? 
+Netjack is one thing, it only has to work with other jack instances, but
+one or two people could not keep up with the number of drivers in ALSA.  I
+hope that with more standardization, the network driver support will have
+much less difference between different vendors implementation than all the
+different ALSA drivers.  That was my primary concern with a JACK-only
+implementation vs. making it ALSA compatible, since only limited
+applications support JACK currently, likely there would be fewer
+developers willing to work on a JACK only implementation compared to
+something which will work more generally.
+
+> You don't have to. All you need is a simple jack client that
+> speaks  RTP and that transparently bridges Ravenna ports to
+> jack ports and vice versa: Connect a console and magically
+> all the ports pop up in ardour.
+
+Yes, that sounds like the ideal case.  Is there a way to quantify "simple"
+client?  How much work would that entail, and what kernel or userspace
+support is assumed?
+
+> You mix up AVB and Ravenna, and cases where you just
+> input/output data to/from one device, have a sound interface
+> in your computer or talk to multiple devices. Make up your mind :)
+
+Partly I was mixing up AVB and Ravenna, but partly the problem is because
+three different people were writing, and I think each of us has different
+ideas about what is required as a minimum, and what is desired beyond that
+minimum.
+
+> If all input and output is performed on the external device
+> and it has its own grand master clock, you can do it in software.
+
+OK, that is a starting point then.
+
+> But this is, contrary to your premise, a special use case
+> (in the Ravenna context).
+
+Yes, I understand, but hopefully Ravenna can scale down to this type of
+small configuration gracefully.
+
+-- 
+Chris Caudle
+
+1298937726.1869_0.ltw:2,a <5275d1b099d5e2761d6912bf8b6a61fa.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

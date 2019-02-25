@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] multiserver jackdbus (Was: jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT")</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] multiserver jackdbus (Was: jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT")</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1310902325.4447_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1310904811.7971_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1310904517.7459_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 17 Jul 2011 18:08:14 +0300 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Nedko Arnaudov </span> &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Robin Gareus &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+&gt;&gt; As for the PEBKAC:
+&gt;&gt; Sometimes, I launch a 2nd non-RT jackd with different server-name in
+&gt;&gt; order to debug ardour3 with gdb. By doing so ~/.config/jack/conf.xml is
+&gt;&gt; overridden (disable sync mode) and next time I suspend/resume the
+&gt;&gt; machine the engine-parameters of the main/default jackdbus get re-set...
+&gt;&gt; I end up running in async mode even though the original server/backend
+&gt;&gt; was started in sync-mode. Weird. IIUC that should not happen: It is an
+&gt;&gt; engine setting not a backend setting, right?
+
+I guess you mean jackdbus not jackd. jackdbus is designed and
+implemented as singleton. It could be extended to allow multiple servers
+but I never got enough info about how this setup is supposed to be used
+and I don't know how to design it properly.
+
+When you set any parameter, engine(server) or driver one, it is recorded
+in jackdbus memory and also saved in the ~/.config/jack/conf.xml
+file. When you start server, parameters that are set in memory are
+used. When jackdbus process is activated it reads settings from the
+config file.
+
+If you somehow manage to start second jackdbus instance, it will use the
+same config and files. Hopefully it is evident why this is not a good
+thing to do.
+
+-- 
+Nedko Arnaudov &lt;GnuPG KeyID: 5D1B58ED&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1310902325.4447_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1310904811.7971_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1310904517.7459_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1310904517.7459_0.ltw:2,a&nbsp;&lt;8739i5eyht.fsf at arnaudov dot name&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

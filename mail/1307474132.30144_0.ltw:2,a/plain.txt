@@ -1,0 +1,56 @@
+Date:        Tue, 07 Jun 2011 14:15:02 -0500
+From:        karthik poduval  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Paul Davis Re: [Jack-Devel] What is Freewheel (1307474584.31030_0.ltw:2,a)
+
+Subject:     [Jack-Devel] What is Freewheel
+
+I was trying to study the way Jack sever works. I was unable to understand
+what Freewheel is. Let me more specific. I added some debugging logs to the
+Jack code to try and understand how exaclty the RT threads(which execute the
+process callback) are woken up when its time for them to run. The test
+program I tried was jack_simple_client. My logs capture the struct
+JackClientTiming data for all active clients.
+
+So after launching the jackd I see the following logs for a while
+
+[2]KK:JackAudioDriver::ProcessAsync cycle[601] <--- cycle number, increments
+for every invocation of ProcessAsync in JackAudioDriver.cpp
+[2]====================================================
+[2]Client[0] name[system] fStatus[Triggered]
+[2]SignalledAt[672413455674] AwakeAt[0] FinishedAt[672413455674]
+[2]---------------------------------------------------
+[2]Client[1] name[freewheel] fStatus[Triggered]
+[2]SignalledAt[672413455679] AwakeAt[0] FinishedAt[672413455679]
+[2]---------------------------------------------------
+
+
+
+once the jack_simple_client is added, i start to see the following
+
+[2]KK:JackAudioDriver::ProcessAsync cycle[617]
+[2]====================================================
+[2]Client[0] name[system] fStatus[Triggered]
+[2]SignalledAt[672413548645] AwakeAt[0] FinishedAt[672413548645]
+[2]---------------------------------------------------
+[2]Client[1] name[freewheel] fStatus[Triggered]
+[2]SignalledAt[672413548918] AwakeAt[0] FinishedAt[672413548658]
+[2]---------------------------------------------------
+[2]Client[2] name[jack_simple_client] fStatus[Finished]
+[2]SignalledAt[672413548658] AwakeAt[672413548851] FinishedAt[672413548918]
+[2]---------------------------------------------------
+
+
+
+In my understanding the cleint named "system" is the audio driver.
+The jack_simple_client appears as cleint no.2.
+
+What exactly is the freewheel here ? What is its purpose ?
+
+-- 
+Regards,
+Karthik Poduval
+
+1307474132.30144_0.ltw:2,a <BANLkTinfpTgYTU0J256X4pzQrX7XAdh0Ng at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,223 @@
+Date:        Mon, 26 Mar 2018 23:12:23 +0100
+From:        Christopher Obbard  <[hidden] at 64studio dot com>
+To:          [hidden] at chriscaudle dot org
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Chris Caudle Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes (1522091218.31304_0.ltw:2,)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes (1522105766.15768_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes
+
+Hi Chris,
+
+>> Big typo! I am running on a TI 1GHz AM3358 processor.
+>
+> Ok, three orders of magnitude is a pretty significant difference.  So is
+> this a BeagleBone Black or something similar?
+
+Yeah, BeagleBone Black. It's quite a nice board!
+
+
+> If so I run the RT kernels from the RCN repo, never had any problem with
+> those so might be a good starting point.
+
+Ah, I've been running mainline stable 4.14, applied CONFIG_PREEMPT and
+ran a cyclictest on three threads with no extra load. It was giving me
+"ok" average latency, and terrible maximum latency. It happened to be
+every few seconds there would be a massive spike. No wonder I've been
+stumped !!!
+
+using 4.14-rt branch from https://github.com/beagleboard/linux/, the
+same cyclictest without load was giving me a maximum of 46. So this is
+looking promising!
+
+Started jackd, all looking OK.
+Can get jack periods down to 64 now, even 32! But some dreaded errors occur.
+This time I have a printk message of "GBLCTL write error" every few us.
+Good news! Looks like a bug in the mcasp driver.
+Message didn't appear on Mainline, it's getting late here so time to
+squish tomorrow.
+I tried my client with the jackd -adummy, I know it's not a real test
+but it managed to run down to 32 frames.
+
+Lesson learnt: use vendor BSP (unless vendor is Chinese. That has
+bitten me before ;-) )
+
+
+>> I've been using CONFIG_PREEMPT also in other places, I have been
+>> wondering whether the full RT patch will cause less throughput for
+>> the jack process.
+>
+> The design of jackd is not about throughput, it is about low latency.  If
+> you want better throughput, use larger period sizes.  That is not really
+> specific to jack, that is just a general principle in computing, if you
+> want the best throughput using a general purpose computer design you
+> should bundle your data into larger groups so that the processor has to
+> handle fewer interrupts and the DMA controller(s) can run in the most
+> efficient configuration.  If you want the lowest latency you will have to
+> trade off some throughput for that.
+> If you want really low latency and high throughput you will likely have to
+> design custom hardware with pipelined processing (e.g. some of the
+> cut-through switch designs used for Infiniband and very low latency HPC
+> Ethernet switches).  That is a more advanced topic than how to get jackd
+> running on an off the shelf processor.
+
+Thanks for your detailed explanation! It really helps for me, been
+diving deep into the kernel for the past year or so.
+Been software/electronic engineer at a higher level for a few years,
+but this is just super interesting to me.
+
+
+>> Both jack and my application are requesting SCHED_FIFO, I am not sure
+>> of the priority of the application but I am thinking of setting them
+> both to 70-80.
+>
+> Why not start off reading the linux audio  and jack FAQs that explain how
+> you should configure your RT system?  It sounds like you are getting ready
+> to re-discover all of that information the long and hard way.  Might be
+> entertaining and educational but probably is no the best use of your time.
+
+Yeah, the system is all setup for Audio to have realtime. I've managed
+to set similar stuff up on a number of different AMD64 systems before,
+but not so much on ARM embedded boards.
+
+
+> I thought there was a page somewhere with suggestions on RT priority
+> settings, but I do not see it on the jackaudio FAQ or wiki pages.   The
+> rtirq script from Rui might be useful:
+> http://www.rncbc.org/jack/
+> (link is toward the bottom)
+
+Yeah, the rtirq script is handy. It will need some tweaking for arm
+boards, I think.
+
+
+> There may be some useful info here:
+> https://wiki.linuxaudio.org/wiki/system_configuration
+> but unfortunately the low latency page is from 2000, there have been quite
+> a few changes in kernel setup since then, so I don't know how useful the
+> low latency wiki page actually is on linuxaudio.org these days.
+
+This is somewhere I want to improve docs after figuring it out a bit better :-).
+
+> The short version is you want the interrupt for your sound hardware to be
+> highest, then jack right after that.  There probably won't be any other RT
+> tasks on a single use system, so it probably won't matter whether you set
+> the sound IRQ and jackd priorities to 90 and 89, or 70 and 69, just make
+> sure they are higher than the default for non-RT tasks, which I think is
+> 50.
+>
+> The applications using jackd actually run the RT audio thread in jackd
+> context, so unless I misunderstood something it should not in principle
+> matter what the priority of the (main thread) of the other applications is
+> set.
+
+Thanks, that kind of matches what I was thinking.
+
+
+>> What about HZ, I currently have this set to HZ_100. Would HZ_1000 be any
+> better?
+>
+> Could be better for scheduling latency, but for IRQ driven tasks like
+> handling the sound hardware I don't know  if it matters or not.
+
+the TI defconfig for RT sets 250Hz, and it seems to do OK.
+
+
+>
+>>> What audio hardware are you running?
+>>> Are you using an ALSA driver from the current kernel tree?
+>>
+>> It's an 6-channel in, 6-channel out card with a simple ALSA driver
+> written by me.
+>
+> There appears to be a TI McASP driver in the kernel tree already, any
+> reason you are not using that?  Just asking, I have not tried to base
+> anything on that driver yet myself.
+> http://processors.wiki.ti.com/index.php/Sitara_Linux_Audio_Driver_Overview
+>
+> From that page it appears you would just need to write the codec driver
+> that handles specifics of the platform driver settings needed, and any
+> control interfaces.
+>
+>> The driver just binds the codecs to the CPU, nothing latent in there.
+>> All of the FIFO stuff is taken care of by the TI McASP driver.
+>
+> OK, it sounds like maybe that is actually what you did, just wrote the
+> codec portion and used the existing McASP driver to handle the I2S/TDM
+> interface pieces.
+
+Exactly that, nothing super clever :-).
+
+
+>> Currently the driver reads & writes to 8 channels but two of the
+>> out channels are unused, I can possibly try to gain some
+>> performance here.
+>
+> Not worth the trouble at this point.   If you get a system that is mostly
+> working and just has an occasional problem it might be worth optimizing,
+> but it sounds like right now the system is pretty broken, so look  for big
+> problems, not small optimizations you could make.
+
+This is the kind of experienced knowledge that is really helpful to me!
+
+
+>> Sorry, I missed out the first part of the log. The LockedTimedWait
+>> error came when my client tried to connect. I think it's to do
+>> with the Kernel scheduling.
+>
+> Make sure you have RT scheduling enabled for whatever user account you are
+> using, try again and get the entire startup log.
+>
+>> It manages to open and all performs fine at 128 frames.
+>
+> OK, then make sure  you are really clear about when you are trying to
+> debug problems with e.g. 32 frame setting vs. problems with the 128 frames
+> setting, since it looks like you have different problems with the
+> different period sizes.
+>
+>> I've not had much luck with PREEMPT_RT in the past, I don't
+>> think I've set the priorities of interrupts properly.
+>
+> Then start with Rui's rtirq script. Some of the devices in the default
+> script are x86 specific, and even some of those are probably outdated, but
+> the framework is great, put the devices you want in the configuration file
+> and run the script, it will set everything for you.
+>
+>> I think I need to chrt the soundcard IRQ highest, then JACK, then my
+> application....
+>> AFAIK, jack already does this with the -R argument & sets the
+>> scheduler priority to SCHED_FIFO.
+>
+> I don't think the application RT priority matters, if I understand
+> correctly jackd will be allocating the thread that the application uses
+> for audio callback, so that thread of the application should run at jackd
+> priority, so for a simple embedded system you would just need to set the
+> sound hardware IRQ the highest, then jackd after that (with the -R
+> argument, default values is probably OK), then everything else can run at
+> non-RT default.  I think non-RT default is 50 and  jackd default is 70
+> based on what I have seen on x86 machines.
+
+That makes sense!
+
+
+>> Have you got any links to information, books etc on RT patch?
+>
+> Just this, but honestly the original jackd developers took care of almost
+> everything for you, you shouldn't need to know much about the low level
+> details just to get it running.
+> https://wiki.linuxfoundation.org/realtime/documentation/start
+
+Hopefully, the bug I have uncovered with the GBLCTL was making me
+loose the plot a little bit :-)
+
+
+Really appreciate your in-depth replies.
+
+
+Cheers!
+
+Chris
+
+1522102376.12255_0.ltw:2, <CAP03XerXkB2GnH55faOKSpVmwwnqJAWKBktefjSmuVdy4neY1A at mail dot gmail dot com>
+________________________________________________________________________________
+

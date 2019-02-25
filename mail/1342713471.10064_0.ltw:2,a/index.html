@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] packed data structures in jack2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] packed data structures in jack2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1342713274.9801_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1342719142.19020_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1342713471.10064_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 19 Jul 2012 11:57:42 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Basil Nutmeg &lt;[hidden] at li95-58 dot members dot linode dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Basil Nutmeg
+<a href='../1342712525.8573_0.ltw:2,a/index.html'>Re: [Jack-Devel] packed data structures in jack2 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Basil Nutmeg
+<a href='../1342719142.19020_0.ltw:2,a/index.html'>Re: [Jack-Devel] packed data structures in jack2 </a></td></tr>
+</table>
+<pre>
+On Thu, Jul 19, 2012 at 11:41 AM, Basil Nutmeg &lt;
+[hidden]&gt; wrote:
+
+On Thu, Jul 19, 2012 at 06:54:41AM +0200, St&#xE9;phane Letz wrote:
+&gt; &gt; The point to pack memory is to allow a 64 bits server to be used with 32
+&gt; bits clients or the contrary. Since shared memory is going to be used by
+&gt; "both sides", the only safe way we found was to use packed memory struct.
+&gt;
+&gt; Ah, thanks, I see now. I see how putting packed on everything does make
+&gt; this easier. However, it also makes the code unusable on some platforms
+&gt; and slow on others. Would you be open to alternative approaches here? I'd
+&gt; be willing to do some work to help out
+
+
+ [ ... ]
+
+
+&gt;
+&gt; /* ... this type has the same layout between 32-bit and 64-bit. */
+&gt; struct A_with_alignment {
+&gt;   aligned_char x;
+&gt;   aligned_int64_t i;
+&gt; };
+&gt;
+
+this translates to:
+
+     struct A_with_alignment {
+          char     x    __attribute__((aligned(sizeof(char));
+          int64_t i     __attribute__((aligned(sizeof(int64_t));
+      };
+
+which i think is not the same as what "packed" does at all. it could be
+enough though, and arguably is better because it preserves aligned access.
+
+however, as stephane noted: far easier to just change the macros that do
+this stuff so that they are no-ops.
+
+
+&gt; As another idea would be to have a source file which simply includes all
+&gt; the important headers and is compiled with -Wpadded and maybe even
+&gt; -Werror, to catch any mistakes.
+&gt;
+
+i don't this is portable to non-gnu compilers. i could be wrong.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1342713274.9801_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1342719142.19020_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1342713471.10064_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1342713471.10064_0.ltw:2,a&nbsp;&lt;CAFa_cK=opzN6Feii206g9wrwxVsCugdDOfNao-O2WDKqAeqZyQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

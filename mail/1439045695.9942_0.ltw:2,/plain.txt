@@ -1,0 +1,34 @@
+Date:        Sat, 08 Aug 2015 16:54:47 +0200
+From:        Kjetil Matheussen  <[hidden] at gmail dot com>
+To:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Paul Davis Re: [Jack-Devel] Calling jack_cycle_wait/jack_cycle_signal from a "third party" thread. (1439078187.13844_0.ltw:2,)
+Follow-Up:   Robin Gareus Re: [Jack-Devel] Calling jack_cycle_wait/jack_cycle_signal from a "third party" thread. (1439162653.7812_0.ltw:2,)
+
+Subject:     [Jack-Devel] Calling jack_cycle_wait/jack_cycle_signal from a "third party" thread.
+
+I.e. the question is about calling jack_cycle_wait/jack_cycle_signal from
+a thread that is NOT created with jack_set_process_thread.
+
+Should that be okay? I don't see anything about it in the documentation.
+
+I'm doing this as a workaround until I figure out why on earth
+the global exception handler on Windows isn't called when
+crashing in the jack thread. (A "global exception handler" in
+windows is called "unhandled exceptions filter", and it is created
+with the "SetUnhandledExceptionFilter" call)
+
+As far as I can see, jack on windows does not implement any type of
+Windows exceptions handler (it's a quite complicated system), except
+for doing some C++ try/catch stuff, but at least if you
+do try/catch stuff in mingw, it doesn't screw up the unhandled
+exceptions filter. Besides, I didn't find any try/catch code for the
+process thread either. So I have no idea what happens...
+
+I've also tried crashing the jack process thread immediately after
+it starts, to eliminate the possibility that it's my code that does
+something strange, but the unhandled exceptions filter isn't called then
+either.
+
+1439045695.9942_0.ltw:2, <CAC6niE+p9bxRS2uJGM=0eaA6RZLaDfdCx+y=WnxMWiDaqZiMAg at mail dot gmail dot com>
+________________________________________________________________________________
+

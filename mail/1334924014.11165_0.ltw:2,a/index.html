@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack2/ubuntu issue: jack2 does not quit</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack2/ubuntu issue: jack2 does not quit</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1334710093.1482_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1334939502.2849_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1334924014.11165_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 20 Apr 2012 14:13:25 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> David Henningsson </span> &lt;[hidden] at canonical dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Tim Blechmann
+<a href='../1333877397.2411_0.ltw:2,a/index.html'>[Jack-Devel] jack2/ubuntu issue: jack2 does not quit </a></td></tr>
+</table>
+<pre>
+On 04/08/2012 11:27 AM, Tim Blechmann wrote:
+&gt; after upgrading to ubuntu 12.04, jackd2 does not quit correctly:
+&gt;
+&gt; hitting `quit' gives me the following message:
+&gt;
+&gt; 11:17:31.920 Client deactivated.
+&gt; 11:17:31.936 D-BUS: JACK server could not be stopped. Sorry
+&gt; 11:17:31.937 ALSA connection graph change.
+&gt; Sun Apr  8 11:17:31 2012: Client 'qjackctl' with PID 3821 is out
+&gt; Sun Apr  8 11:17:31 2012: Stopping jack server...
+&gt; Sun Apr  8 11:17:31 2012: Client 'system' with PID 0 is out
+&gt; Sun Apr  8 11:17:31 2012: Client 'PulseAudio JACK Sink' with PID 2727 is out
+&gt; Sun Apr  8 11:17:31 2012: Client 'PulseAudio JACK Source' with PID 2727 is out
+&gt; Sun Apr  8 11:17:31 2012: [1m[31mERROR: Abort![0m
+&gt; Sun Apr  8 11:17:31 2012: [1m[31mERROR: info.si_signo = 6[0m
+&gt; Sun Apr  8 11:17:31 2012: [1m[31mERROR: info.si_errno = 0[0m
+&gt; Sun Apr  8 11:17:31 2012: [1m[31mERROR: Segmentation Fault![0m
+
+So I got this as well, and the "Segmentation Fault!" here is fixed by 
+the patch I sent a few days ago. But the Abort remains and I can't seem 
+to get to it. I can get a stack trace out of when the abort happens, and 
+I'm attaching that stack trace.
+
+Judging from the trace, it seems like the following happens:
+1) the main thread of jackd sends the cancel signal to the RT thread.
+2) the RT thread starts unwinding (processing "catch" sections in code)
+3) for some reason that I haven't figured out, std::terminate is called, 
+which according to 
+http://www.cplusplus.com/reference/std/exception/terminate/ is "Function 
+automatically called when the exception handling process has to be 
+abandoned for some circumstance that makes impossible to continue with 
+it. The terminate handler by default simply calls abort."
+
+So something goes wrong during the unwinding, or there is no catch-all, 
+or something else happens. Any idea on how to continue the debugging?
+
+
+-- 
+David Henningsson, Canonical Ltd.
+http://launchpad.net/~diwic
+Program received signal SIGABRT, Aborted.
+0x00007f879da4d445 in __GI_raise (sig=&lt;optimized out&gt;) at ../nptl/sysdeps/unix/sysv/linux/raise.c:64
+64	../nptl/sysdeps/unix/sysv/linux/raise.c: Filen eller katalogen finns inte.
+(gdb) bt full
+#0  0x00007f879da4d445 in __GI_raise (sig=&lt;optimized out&gt;) at ../nptl/sysdeps/unix/sysv/linux/raise.c:64
+        resultvar = 0
+        pid = &lt;optimized out&gt;
+        selftid = 4085
+#1  0x00007f879da50bab in __GI_abort () at abort.c:91
+        save_stage = 2
+        act = {__sigaction_handler = {sa_handler = 0x100000000, sa_sigaction = 0x100000000}, sa_mask = {__val = {0, 140220441943112, 
+              140220462752992, 0, 140220457506416, 0, 0, 4294967295, 0, 0, 8, 3051784, 0, 0, 140220455379473, 140220457508864}}, 
+          sa_flags = -1631565964, sa_restorer = 0x5}
+        sigs = {__val = {32, 0 &lt;repeats 15 times&gt;}}
+#2  0x00007f879e9ad69d in __gnu_cxx::__verbose_terminate_handler () at ../../../../src/libstdc++-v3/libsupc++/vterminate.cc:95
+        terminating = true
+        t = &lt;optimized out&gt;
+#3  0x00007f879e9ab846 in __cxxabiv1::__terminate (handler=&lt;optimized out&gt;) at ../../../../src/libstdc++-v3/libsupc++/eh_terminate.cc:40
+No locals.
+#4  0x00007f879e9ab873 in std::terminate () at ../../../../src/libstdc++-v3/libsupc++/eh_terminate.cc:50
+No locals.
+#5  0x00007f879e9ab489 in __cxxabiv1::__gxx_personality_v0 (version=&lt;optimized out&gt;, actions=&lt;optimized out&gt;, exception_class=&lt;optimized out&gt;, 
+    ue_header=&lt;optimized out&gt;, context=0x7f879ece0420) at ../../../../src/libstdc++-v3/libsupc++/eh_personality.cc:669
+        action_record = &lt;optimized out&gt;
+        p = &lt;optimized out&gt;
+        thrown_ptr = &lt;optimized out&gt;
+        info = {Start = 140220455152768, LPStart = 140220455152768, ttype_base = 0, TType = 0x7f879e6ee220 "\377\233\204\001\001h\030\005", 
+          action_table = 0x7f879e6ee211 "\002", ttype_encoding = 155 '\233', call_site_encoding = 1 '\001'}
+        landing_pad = 0
+        ip = &lt;optimized out&gt;
+        handler_switch_value = 0
+        foreign_exception = true
+        found_type = &lt;optimized out&gt;
+        language_specific_data = 0x7f879e6ee1e8 "\377\233\065\001$\034\005"
+        ip_before_insn = 0
+#6  0x00007f879d51668d in ?? () from /lib/x86_64-linux-gnu/libgcc_s.so.1
+No symbol table info available.
+#7  0x00007f879d516a92 in _Unwind_ForcedUnwind () from /lib/x86_64-linux-gnu/libgcc_s.so.1
+No symbol table info available.
+#8  0x00007f879e4546a0 in __GI___pthread_unwind (buf=&lt;optimized out&gt;) at unwind.c:130
+        ibuf = &lt;optimized out&gt;
+        self = &lt;optimized out&gt;
+#9  0x00007f879e44c7da in __do_cancel () at ../nptl/pthreadP.h:265
+No locals.
+---Type &lt;return&gt; to continue, or q &lt;return&gt; to quit---
+#10 sigcancel_handler (sig=&lt;optimized out&gt;, si=&lt;optimized out&gt;, ctx=&lt;optimized out&gt;) at nptl-init.c:221
+        curval = &lt;optimized out&gt;
+#11 sigcancel_handler (sig=&lt;optimized out&gt;, si=&lt;optimized out&gt;, ctx=&lt;optimized out&gt;) at nptl-init.c:174
+        pid = &lt;optimized out&gt;
+        oldval = &lt;optimized out&gt;
+#12 &lt;signal handler called&gt;
+No symbol table info available.
+#13 __lll_lock_wait () at ../nptl/sysdeps/unix/sysv/linux/x86_64/lowlevellock.S:132
+No locals.
+#14 0x00007f879e450080 in _L_lock_903 () from /lib/x86_64-linux-gnu/libpthread.so.0
+No symbol table info available.
+#15 0x00007f879e44ff19 in __pthread_mutex_lock (mutex=0x106de08) at pthread_mutex_lock.c:82
+        __PRETTY_FUNCTION__ = "__pthread_mutex_lock"
+        type = 17227272
+#16 0x00007f879e6b6cc2 in Jack::JackServer::Notify(int, int, int) () from /usr/lib/x86_64-linux-gnu/libjackserver.so.0
+No symbol table info available.
+#17 0x00007f879e6c799f in ?? () from /usr/lib/x86_64-linux-gnu/libjackserver.so.0
+No symbol table info available.
+#18 0x00007f879e6caa1b in ?? () from /usr/lib/x86_64-linux-gnu/libjackserver.so.0
+No symbol table info available.
+#19 0x00007f879e6a87f0 in Jack::JackPosixThread::ThreadHandler(void*) () from /usr/lib/x86_64-linux-gnu/libjackserver.so.0
+No symbol table info available.
+#20 0x00007f879e44de9a in start_thread (arg=0x7f879ece2700) at pthread_create.c:308
+        __res = &lt;optimized out&gt;
+        pd = 0x7f879ece2700
+        now = &lt;optimized out&gt;
+        unwind_buf = {cancel_jmp_buf = {{jmp_buf = {1, 1735969408611266255, 140736620825840, 140220461623744, 17313504, 3, 
+                -1794583953695822129, -1794584999493095729}, mask_was_saved = 0}}, priv = {pad = {0x0, 0x0, 0x0, 0x0}, data = {prev = 0x0, 
+              cleanup = 0x0, canceltype = 0}}}
+        not_first_call = 0
+        pagesize_m1 = &lt;optimized out&gt;
+        sp = &lt;optimized out&gt;
+        freesize = &lt;optimized out&gt;
+        __PRETTY_FUNCTION__ = "start_thread"
+#21 0x00007f879db094bd in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:112
+No locals.
+#22 0x0000000000000000 in ?? ()
+No symbol table info available.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1334710093.1482_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1334939502.2849_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1334924014.11165_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1334924014.11165_0.ltw:2,a&nbsp;&lt;4F9152E5.8070401 at canonical dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

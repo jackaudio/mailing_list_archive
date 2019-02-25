@@ -1,0 +1,61 @@
+Date:        Tue, 06 Mar 2012 18:56:49 +0100
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org, [hidden] at lists dot sf dot net
+In-Reply-To: JoergSorge Re: [Jack-Devel] update jack from 1.9.7 to 1.9.8 (1331055465.15306_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] update jack from 1.9.7 to 1.9.8 (1331143093.23012_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [FFADO-devel] [Jack-Devel] update jack from 1.9.7 to 1.9.8 (1331144067.24504_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] update jack from 1.9.7 to 1.9.8
+
+On Tue, Mar 06, 2012 at 06:02:44PM +0100, JoergSorge wrote:
+
+> > it is known that not-absolutely-current versions of FFADO have
+> > problems restarting after JACK freewheels (which is what ardour tells
+> > it to do when exporting). i do not know what version of FFADO ubuntu
+> > 11.10 is using. if this is the problem (it may not be) then it would
+> > affect Jack 1 and 2 more or less the same.
+> libffado 2.999.0- built Oct 10 2011 08:11:23
+> 
+> and it seems it's up to date!?
+
+As we've learned from one of your previous mails, you are using r1995 of
+FFADO. This is sufficiently recent enough, because the freewheeling
+problem exists in all versions.
+
+Same happens if you try to change the buffer size with jack_bufsize, it
+will kill jackd.
+
+I've tried it with FFADO trunk as of today. What happens behind the
+curtain:
+
+   - ffado_streaming_stop() is called in engine->driver->stop()
+   - ffado_streaming_start() is called in engine->driver->start()
+
+The latter doesn't work, maybe because the stop() command does not what
+it is supposed to do.
+
+Somebody would have to investigate it, it's clearly a problem in FFADO.
+
+We need to fix it anyway if we want to support jack_bufsize one day.
+
+
+In other words: unless you dig into FFADO's code, there's nothing that
+will fix the problem.
+
+
+> On http://www.ffado.org/?q=node/516
+> I read from gscanbus, but it don't work on my machine:
+> Error while reading from IEEE1394: : Resource temporarily unavailable
+
+Forget about gscanbus, it's not related.
+
+
+
+HTH
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1331056632.17602_0.ltw:2,a <20120306175649.GC5534 at ltw dot loris dot tv>
+________________________________________________________________________________
+

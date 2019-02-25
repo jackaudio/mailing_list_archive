@@ -1,0 +1,35 @@
+Date:        Tue, 16 Oct 2018 21:26:22 +0200
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Robin Gareus Re: [Jack-Devel] memory lock (1539639498.30574_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] memory lock
+
+On Mon, Oct 15, 2018 at 11:37:49PM +0200, Robin Gareus wrote:
+ 
+> There is no simple answer, except "depends".
+> 
+> jack2: no.
+> jack1: yes, for client threads.
+
+Does that mean that jack1 does an mlockall (MCL_CURRENT | MCL_FUTURE);
+in the context of the client process ? 
+
+It looks like it does just that. This is what happened recently:
+Archlinux no longer sets and 'unlimited' locking limit when installing
+Jack (a separate package is now required). So after a an upgrade my
+system(s) just had a more restricted ulimit set manually for the audio
+group. When running some of the zita-jacktools examples, things crashed
+rather violently once matplotlib (which can require lots of workspace)
+got into action. Setting the mlock limit to 'unlimited' cured that.
+So it seems that the entire Python process got locked because it
+contained one or more Jack clients.
+
+Ciao,
+
+-- 
+FA
+
+1539718010.5441_0.ltw:2, <20181016192622.wnyfslrtof3ipcwv at mail1 dot linuxaudio dot cyso dot net>
+________________________________________________________________________________
+

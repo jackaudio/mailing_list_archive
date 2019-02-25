@@ -1,0 +1,54 @@
+Date:        Tue, 15 Mar 2011 16:24:01 +0200
+From:        Sampo Savolainen  <[hidden] at iki dot fi>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] Stack preallocation issues (1300195408.12983_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] Stack preallocation issues (1300203877.27657_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Stack preallocation issues
+
+On Tue, Mar 15, 2011 at 3:23 PM, Fons Adriaensen <[hidden]>wrote:
+
+> On Tue, Mar 15, 2011 at 01:57:41PM +0200, Sampo Savolainen wrote:
+>
+> > Would doing this be unsafe?
+> >
+> > static void
+> > jack_thread_touch_stack()
+> > {
+> >  char foo;
+> >  memset(&foo, 0, JACK_THREAD_STACK_TOUCH);
+> > }
+>
+> It would probably overwrite memset's return address,
+> stack frame and internal variables.
+>
+
+Heh. Extremely true..
+
+
+> It could actually work on systems that keep the return
+> address in a register and implement memset() using only
+> registers and without its own stack frame (this would
+> be possible on an ARM for example).
+>
+> Regarding the compiler optimising away the whole stack
+> touching code, it clearly shouldn't do this if it assumes
+> the code can have side effects, i.e. if the array is
+> declared volatile.
+>
+
+Volatile sounds like a good idea. This
+
+ memset(&foo + ASSUMED_MEMSET_STACK_SIZE, 0, JACK_THREAD_STACK_TOUCH -
+ASSUMED_MEMSET_STACK_SIZE);
+
+should work as well. Volatile is however much more elegant if it indeed
+works as assumed with all compilers.
+
+
+  Sampo
+
+1300199060.17436_0.ltw:2,a <AANLkTikf75_Nr-oEVwB6REw8iz53DkxnRs8q9BJvywgF at mail dot gmail dot com>
+________________________________________________________________________________
+

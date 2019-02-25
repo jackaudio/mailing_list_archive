@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] RFC: fix for missing port registration notifications when switching master</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] RFC: fix for missing port registration notifications when switching master</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1304109342.15126_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1304151626.25945_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1304150442.24829_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 30 Apr 2011 10:45:36 +0300 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Nedko Arnaudov </span> &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1304061392.13677_0.ltw:2,a/index.html'>Re: [Jack-Devel] RFC: fix for missing port registration notifications when switching master </a></td></tr>
+</table>
+<pre>
+St&#xE9;phane Letz &lt;[hidden]&gt; writes:
+
+&gt; Le 28 avr. 2011 &#xE0; 23:30, Nedko Arnaudov a &#xE9;crit :
+&gt;
+&gt;&gt; St&#xE9;phane Letz &lt;[hidden]&gt; writes:
+&gt;&gt; 
+&gt;&gt;&gt; Le 24 avr. 2011 &#xE0; 22:38, Nedko Arnaudov a &#xE9;crit :
+&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; The issue was reported in #213 (second issue/patch):
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; jackdbus' internal graph representation is not properly kept in sync
+&gt;&gt;&gt;&gt; with the engine's graph. In particular: ports are not properly removed
+&gt;&gt;&gt;&gt; From the connection list when a client goes away; and ports
+&gt;&gt;&gt;&gt; re-appearing after a "switch-master" are not being updated (Patch
+&gt;&gt;&gt;&gt; 2/2).
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; I think the proposed patch is wrong because AFAIK graph reorder is only
+&gt;&gt;&gt;&gt; for ports present upon client activation. All following port
+&gt;&gt;&gt;&gt; (un)registrations must cause the port registration callback to be
+&gt;&gt;&gt;&gt; called. The proposed changeset [1] adds notification calls in the
+&gt;&gt;&gt;&gt; Attach()/Detach() methods. The changeset is commited to a dedicated
+&gt;&gt;&gt;&gt; branch [2]. The branch is (hopefully) a short living one with a signle
+&gt;&gt;&gt;&gt; commit, so it makes sense to commit it directly to svn trunk (after
+&gt;&gt;&gt;&gt; eventually rebasing it, of the svn trunk moved).
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; Robin, I'd be glad if you can test &amp; report whether my fix works for
+&gt;&gt;&gt;&gt; you.
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; [1] http://repo.or.cz/w/jack2.git/commitdiff/55557d1f74b6d0ca80981bad9cd646d69c896e0e
+&gt;&gt;&gt;&gt; [2] http://repo.or.cz/w/jack2.git/shortlog/refs/heads/switch-master-port-registration-notifications
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; -- 
+&gt;&gt;&gt;&gt; Nedko Arnaudov &lt;GnuPG KeyID: 7862B9E45D1B58ED&gt;
+&gt;&gt;&gt; 
+&gt;&gt;&gt; 
+&gt;&gt;&gt; http://repo.or.cz/w/jack2.git/commitdiff/07d2c64f39634454cb61f26316bdb07d77cf0cfb
+&gt;&gt;&gt; 
+&gt;&gt;&gt; Should be a bit cleaner.
+&gt;&gt;&gt; 
+&gt;&gt;&gt; Can you test?
+&gt;&gt; 
+&gt;&gt; It fails to compile:
+&gt;&gt; 
+&gt;&gt; [114/257] cxx: linux/alsa/JackAlsaDriver.cpp -&gt; build/default/linux/alsa/JackAlsaDriver_2.o
+&gt;&gt; ../linux/alsa/JackAlsaDriver.cpp: In member function 'virtual int Jack::JackAlsaDriver::Attach()':
+&gt;&gt; ../linux/alsa/JackAlsaDriver.cpp:119: error: expected '(' before 'if'
+&gt;&gt; ../linux/alsa/JackAlsaDriver.cpp:134: error: invalid conversion from 'int*' to 'jack_port_id_t*'
+&gt;&gt; ../linux/alsa/JackAlsaDriver.cpp:134: error:   initializing argument 6 of 'int Jack::JackLockedEngine::PortRegister(int, const char*, const char*, unsigned int, unsigned int, jack_port_id_t*)'
+&gt;&gt; ../linux/alsa/JackAlsaDriver.cpp:147: error: invalid conversion from 'int*' to 'jack_port_id_t*'
+&gt;&gt; ../linux/alsa/JackAlsaDriver.cpp:147: error:   initializing argument 6 of 'int Jack::JackLockedEngine::PortRegister(int, const char*, const char*, unsigned int, unsigned int, jack_port_id_t*)'
+&gt;&gt; 
+&gt; Should be fixed.
+
+Almost :) I've made another compilation fix:
+
+http://repo.or.cz/w/jack2.git/commit/bd2d168dc87f01e02567327ac373350be05ce0e3
+
+Switching of the master driver works fine on my machine after the
+AllocatePort =&gt; PortRegister changes.
+
+-- 
+Nedko Arnaudov &lt;GnuPG KeyID: 7862B9E45D1B58ED&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1304109342.15126_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1304151626.25945_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1304150442.24829_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1304150442.24829_0.ltw:2,a&nbsp;&lt;87tydgkwrj.fsf at nuntu dot spacelabs dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,52 @@
+Date:        Thu, 22 Mar 2012 14:26:25 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Dénes Almási <[hidden] at rudanium dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Dénes Almási [Jack-Devel] Mixing midi streams (1332439977.19943_0.ltw:2,)
+Follow-Up:   Dénes Almási Re: [Jack-Devel] Mixing midi streams (1332442291.25197_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Mixing midi streams
+
+On Thu, Mar 22, 2012 at 2:12 PM, Dénes Almási <[hidden]> wrote:
+> Hi!
+>
+> I would like to ask, what is the convenient way for mixing two midi streams?
+> Or more generally, what is the way mixing two streams where trivial methods
+> like adding the two signals don't work? (I will have to do this not only
+> with
+> midi but some other custom protocols.)
+>
+> My best guess would be having the streams in a fixed order and for each
+> period
+> the first stream would be simply copied to an output buffer while for any
+> additional streams if a current position is already occupied in the output,
+> the
+> closest empty places 'in the future' would be filled with the new data. But
+> this
+> seems to be a bit harsh...
+
+you have to do a merge-sort operation on both input sources. in pseudo-code:
+
+src1 = read midi event from first source
+src2 = read midi event from second source
+
+while (1) {
+      if (!src1 && !src2) {
+              break;
+      }
+	
+      if (!src2 || src1->when < src2->when) {
+             write src1 to new output buffer
+             src1 = read next midi event from first source
+             continue;
+      }
+
+      if (!src1 || src2-> when <= src1->when) {
+            write src2 to new output buffer
+            src2 = read next midi event from second source
+      }
+}
+
+1332440805.22016_0.ltw:2, <CAFa_cKmGNga5qGURmDVeFizCSnGgcmUrrkkZZUdSJPvnvKDaPA at mail dot gmail dot com>
+________________________________________________________________________________
+

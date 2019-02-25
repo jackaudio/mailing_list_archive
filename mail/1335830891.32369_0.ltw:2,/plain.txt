@@ -1,0 +1,69 @@
+Date:        Tue, 01 May 2012 09:38:01 +0930
+From:        Jonathan Woithe  <[hidden] at just42 dot net>
+To:          Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>
+Cc:          [hidden] at lists dot jackaudio dot org, [hidden] at just42 dot net, [hidden] at iinet dot net dot au
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] incompatible version of ffado error message (1335792961.7785_0.ltw:2,Sa)
+Follow-Up:   Allan Klinbail Re: [Jack-Devel] incompatible version of ffado error message (1335911921.5512_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] incompatible version of ffado error message
+
+On Mon, Apr 30, 2012 at 03:35:54PM +0200, Adrian Knoth wrote:
+> On Mon, Apr 30, 2012 at 11:26:32PM +1000, Allan Klinbail wrote:
+> > I've been using jack with ffado as the driver for a few years now.
+> > Today, after upgrading ffado to the latest svn , (then tested working).
+> > I then upgraded to the latest jack svn version. Following this I started
+> > receiving the following incompatible error message. 
+> 
+> You were doing it in the wrong order.
+> 
+> FFADO detects the jackd version at compile time. If it's a new jackd
+> version supporting the new API, it switches to the new API.
+
+Similarly, if there is no jackd installed at compile time ffado assumes that
+the jackd which will ultimately be available will support the new API.
+
+So in Allan's case, he compiled a new FFADO against an old jack, which
+resulted in a FFADO which uses the old API.  The old jack was happy with
+this and everything worked.
+
+> You've just told FFADO to adjust itself to an old jackd version.
+> Simply compile FFADO again.
+
+Yep, that should work.
+
+However, from a development point of view I'm a little surprised that the
+latest jackd didn't simply accept FFADO as it was.  The relevant line in
+current jack1 is drivers/firewire/ffado_driver.c, line 786 and following.
+
+  if(ffado_get_api_version() < FIREWIRE_REQUIRED_FFADO_API_VERSION) {
+    printError("Incompatible libffado version! ...
+  }
+
+The same conditional is used in jack2, so the following analysis applies
+equally to that.
+
+In Allen's case, ffado_get_api_version() would return 8 (the old version).
+FIREWIRE_REQUIRED_FFADO_API_VERSION is defined as 8, so this conditional
+*should* have failed and the "Incompatible libffado version" message should
+never have been displayed.
+
+Oh hang on: Allan, you said "the latest jack svn version".  Did you
+literally use jack's subversion repository?  That is no longer carrying the
+latest jackd source as far as I know: if you want the latest jackd you need
+to get it using git.  This is described at
+
+  http://jackaudio.org/download
+
+Look for the "JACK Source Code Repository" section about half-way down.
+
+I don't know the state of jack's ffado driver in the old svn repository, but
+the use of the older jack code (which could be in an unstable intermediate
+state with respect to ffado driver updates) may explain the symptoms
+described.
+
+Regards
+  jonathan
+
+1335830891.32369_0.ltw:2, <20120501000801.GA20808 at marvin dot atrad dot com dot au>
+________________________________________________________________________________
+

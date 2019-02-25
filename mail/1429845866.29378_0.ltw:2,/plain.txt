@@ -1,0 +1,66 @@
+Date:        Thu, 23 Apr 2015 20:24:17 -0700
+From:        Luke Benes  <[hidden] at hotmail dot com>
+To:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Chris Caudle Re: [Jack-Devel] audioadapter.dll Crashing on Win 7 32bit (1429885456.25991_0.ltw:2,)
+
+Subject:     [Jack-Devel] audioadapter.dll Crashing on Win 7 32bit
+
+I'm having a DenverCoder9 week. I'm trying to do exactly what was asked here 2 years ago:
+http://comments.gmane.org/gmane.comp.audio.jackit/25893
+
+Unfortunately, the discussion never ends with a report of success. Is it even possible?
+
+Between that and info here:
+https://blogs.gentoo.org/mgorny/2015/01/16/surround-sound-over-network-with-windows-8/
+https://github.com/jackaudio/jackaudio.github.com/wiki/WalkThrough_User_NetJack2
+
+This is what my plan is:
+
+JACK slave (on PC w/ speaker) Windows 7:
+
+C: jackd.exe -R -S -d net
+C: jack_load audioadapter
+C: jack_connect netadapter:capture_1 system:playback_1
+C: jack_connect netadapter:capture_2 system:playback_2
+
+
+JACK master (Audio source/Line-In) Windows 7:
+
+C: jackd.exe -R -S -d portaudio "ASIO::ASIO4ALL v2"
+C: jack_load netadapter
+In JackControl connect linein1->slave1
+In JackControl connect linein2->slave2
+In JackControl press the play button
+
+
+I only get as far as the second step. When I try to jack_load audioadapter, 
+Jackd says Waiting for a master...
+Ringbugger automatic adaptive mode size =4096
+MMCSS API not used...
+
+and then Jackd crashes within a second with
+Problem signature:
+  Problem Event Name:    APPCRASH
+  Application Name:    jackd.exe
+  Application Version:    1.9.10.0
+  Application Timestamp:    53b56ef3
+  Fault Module Name:    audioadapter.dll
+  Fault Module Version:    1.9.10.0
+  Fault Module Timestamp:    53b56ee4
+  Exception Code:    c0000005
+  Exception Offset:    00003d46
+  OS Version:    6.1.7601.2.1.0.256.1
+  Locale ID:    1033
+  Additional Information 1:    0a9e
+  Additional Information 2:    0a9e372d3b4ad19135b953a78882e789
+  Additional Information 3:    0a9e
+  Additional Information 4:    0a9e372d3b4ad19135b953a78882e789
+
+Jack seems like the perfect way to stream low latency audio around my house. I hope it's just something simple that I'm doing wrong. Thanks guys!
+
+
+ 		 	   		  
+
+1429845866.29378_0.ltw:2, <BLU173-W23FBFCDDA1118D2551CD02A7EC0 at phx dot gbl>
+________________________________________________________________________________
+

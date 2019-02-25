@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Transcoding clients for jack ?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Transcoding clients for jack ?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1301363410.7989_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1301421814.30544_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1301394311.16952_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 29 Mar 2011 03:24:55 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> James Warden </span> &lt;[hidden] at yahoo dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Robin Gareus &lt;[hidden] at gareus dot org&gt;, [hidden] at xs4all dot nl </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>[hidden] at xs4all dot nl
+<a href='../1301363410.7989_0.ltw:2,a/index.html'>Re: [Jack-Devel] Transcoding clients for jack ? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1301432773.19739_0.ltw:2,a/index.html'>Re: [Jack-Devel] Transcoding clients for jack ? </a></td></tr>
+</table>
+<pre>
+&gt; &gt; 3 years old and almost forgotten: `jack-stdout`
+&gt; &gt; http://rg42.org/oss/jackstdout/
+&gt; &gt;
+&gt; &gt;&#xA0;&#xA0;&#xA0;jack-stdout system:capture_1
+&gt; system:capture_2 \
+&gt; &gt;&#xA0;&#xA0;&#xA0;| oggenc -r -R 48000 -B 16 -C 2 - \
+&gt; &gt;&#xA0;&#xA0;&#xA0;&gt; /tmp/my.ogg
+&gt; &gt;
+&gt; &gt; just pipe to sox, aacplusenc, lame, ffmpeg,..
+&gt; &gt;
+&gt; &gt; It's realtime-safe. However: if the internal
+&gt; ringbuffer (64k
+&gt; &gt; stereo-samples - 256kBytes) and the unix-pipe (on
+&gt; Linux: 64kBytes) fill
+&gt; &gt; up, samples will be dropped from the ringbuffer (and
+&gt; you'll get error
+&gt; &gt; messages to stderr.) - The buffers are large enough
+&gt; for most tasks. The
+&gt; &gt; CPU's the limit. YMMV.
+&gt; &gt;
+&gt; &gt; HTH,
+&gt; &gt; robin
+&gt; &gt;
+&gt; 
+&gt; 
+
+works fine here. Just need to replace jack_client_new("") by jack_client_open(...) in the source code. Here is a quick patch:
+
+
+===========
+--- jack-stdout.c~      2011-03-29 12:05:49.945775001 +0200
++++ jack-stdout.c       2011-03-29 12:07:37.840775001 +0200
+@@ -279,11 +279,12 @@
+ {
+        jack_client_t *client;
+        jack_thread_info_t thread_info;
++       jack_status_t jstat;
+ 
+        memset (&amp;thread_info, 0, sizeof (thread_info));
+        thread_info.rb_size = 16384 * 4; //&lt; make this an option
+ 
+-       if ((client = jack_client_new ("jstdout")) == 0) {
++       if ((client = jack_client_open ("jstdout", JackNoStartServer, &amp;jstat)) == 0) {
+                fprintf (stderr, "jack server not running?\n");
+                exit (1);
+        }
+==================
+
+Thanks for the tip, I did not know that tool :)
+
+Cheers!
+J.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1301363410.7989_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1301421814.30544_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1301394311.16952_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1301394311.16952_0.ltw:2,a&nbsp;&lt;436972.30813.qm at web39324 dot mail dot mud dot yahoo dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

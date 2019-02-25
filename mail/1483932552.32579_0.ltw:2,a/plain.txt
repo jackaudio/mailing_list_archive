@@ -1,0 +1,45 @@
+Date:        Sun, 08 Jan 2017 19:25:47 -0800
+From:        Yuri  <[hidden] at rawbw dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] Thread realtime priority (1483986019.18885_0.ltw:2,a)
+Follow-Up:   John Rigg Re: [Jack-Devel] Thread realtime priority (1484039243.26478_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Thread realtime priority
+
+jackd on FreeBSD calls pthread_setschedparam(thread, SCHED_FIFO, 
+&rtparam) with rtparam.sched_priority = 10.
+I am wondering where does 10 come from? The range for SCHED_FIFO is 0 .. 
+31, as returned by sched_get_priority_min() and 
+sched_get_priority_max(). The value 10 seems wrong, since the fastest 
+priority is 0, the slowest is 31.
+
+In controlapi.c sched_get_priority_min()/sched_get_priority_max() are 
+called for OpenBSD. For this purpose FreeBSD should be the same. So it 
+should be #ifndef __OpenBSD__ && defined(__FreeBSD__).
+
+Another problem is that FreeBSD doesn't allow to set thread priorities 
+for non-root users, but jackd is supposed to run by the regular user. At 
+least that's what libs expect it to be (/tmp/jack-{userid}). I have a 
+suggestion: if the process is run with realtime priority, jackd 
+shouldn't attempt to call pthread_setschedparam at all, because the 
+process realtime priority should be sufficient.
+
+This code:
+
+struct rtprio rtp;
+res = rtprio(RTP_LOOKUP, getpid(), &rtp);
+if (rtp.type != RTP_PRIO_REALTIME) {
+   // call pthread_setschedparam
+}
+
+allows to read priority of the process on FreeBSD.
+
+The process can be run with realtime priority with this command: rtprio 
+0 jackd ...
+
+
+Yuri
+
+1483932552.32579_0.ltw:2,a <d8ea287f-b91a-f9d4-1692-e51458036766 at rawbw dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,56 @@
+Date:        Sun, 28 Apr 2013 08:36:11 -0700
+From:        Gabriel M. Beddingfield  <[hidden] at gmail dot com>
+To:          Gene Anderson <[hidden] at cox dot net>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Gene Anderson [Jack-Devel] raspberry pi simple in-out (raw) (1366864098.15897_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] raspberry pi simple in-out (raw)
+
+On 04/24/2013 09:28 PM, Gene Anderson wrote:
+> All:
+>
+> As I RTFM all that jackaudio has, my objective is to sample an A/D
+> channel (10 bit) raw input
+
+...and you're providing your own ADC, right?  (The RPi has none that I 
+know of.)
+
+ > and route each sample to the audio jack at an
+> arbitrarily high rate, like, 50K samples per second; the period is never
+
+...and you're providing your own DAC, right?  The RPi's audio outs are 
+PWM outputs coming from the CPU... so the quality won't be so good and 
+you'll probably be constrained on the sample rates you have available.
+
+> precisely the same and I do not need fidelity or repeatability.  I'm a C
+> coder searching for libraries to get me there from here.  I do not need
+> to store any sampled data for later replay.
+
+You'll need to do kernel driver work in order to get an ADC integrated 
+into the RPi.
+
+After that, using the alsa libs[1] to manually do the loop-back should 
+be fine using a normal read/write API.  However, I find that I can get 
+simple programs running faster using tinyalsa.[2]
+
+> Has this wheel been invented?  I reward with beer, as I am creating labs
+> for a new Raspberry Pi developers course at UCSD.
+
+For an audio loopback experiment you'll want to add another board with 
+an actual audio codec (sound chip) on it.  There might be add-on boards 
+available for this.
+
+Might also consider using a BeagleBone instead... I /know/ there are 
+audio add-on boards you can get.
+
+FYI, a lot of audio chips that do both capture and playback will also 
+have loopback built-in.
+
+-gabriel
+
+[1] http://equalarea.com/paul/alsa-audio.html
+[2] https://github.com/tinyalsa/tinyalsa
+
+1367197135.25617_0.ltw:2,a <517D41EB.3000602 at gmail dot com>
+________________________________________________________________________________
+

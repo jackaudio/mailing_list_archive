@@ -1,0 +1,118 @@
+Date:        Fri, 11 Feb 2011 15:41:57 +0100
+From:        Valerio Pilo  <[hidden] at akhela dot com>
+To:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1297434314.18056_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1297435943.21691_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client
+
+In data venerdì 11 febbraio 2011 15:25:04, Stéphane Letz ha scritto:
+> Le 11 févr. 2011 à 15:08, Valerio Pilo a écrit :
+> > Hello, I've been experiencing a serious stability problem when running
+> > JACK rev 4122 in my ARM box. I set up Jack, a couple clients, and a
+> > couple connections, and all goes well.
+> > 
+> > But as soon as I kill (anything like $(pidof clientname) ), JACK is dead: 
+this is calling jack_lsp after the fact:
+> > > # jack_lsp
+> > > JackSocketClientChannel read fail
+> > > Cannot open lsp client
+> > > jack_client_open() failed, status = 0x21
+> > > #
+> > 
+> > Here's what jackd -v reports when I kill the client:
+> > > Jack: Poll client error err = No such file or directory
+> > > Jack: JackSocketServerChannel::ClientKill ref = 4
+> > > Jack: JackServer::ClientKill ref = 4
+> > > Jack: JackEngine::ClientDeactivate ref = 4 name =
+> > > alsa-jack.jack_NAV_tP.1922.0 Jack: JackEngine::PortDisconnect src = 11
+> > > dst = 65535
+> > > Jack: JackEngine::PortDisconnect src = 12 dst = 65535
+> > > Jack: JackEngine::NotifyClient: no callback for event = 10
+> > > Jack: JackEngine::NotifyClient: no callback for event = 10
+> > > Jack: JackExternalClient::ClientNotify ref = 2 name = busmanager notify
+> > > = 10 Jack: JackEngine::NotifyClient: no callback for event = 10
+> > > Jack: JackEngine::NotifyClient: no callback for event = 10
+> > > Jack: JackEngine::NotifyClient: no callback for event = 10
+> > > Jack: JackEngine::NotifyClient: no callback for event = 10
+> > > Jack: JackExternalClient::ClientNotify ref = 2 name = busmanager notify
+> > > = 10 Jack: JackEngine::NotifyClient: no callback for event = 10
+> > > Jack: JackEngine::NotifyClient: no callback for event = 10
+> > > Jack: JackConnectionManager::DirectDisconnect last: ref1 = 4 ref2 = 1
+> > > Jack: JackGraphManager::DisconnectRefNum cur_index = 10 ref1 = 4 ref2 =
+> > > 1 Jack: JackConnectionManager::DirectDisconnect last: ref1 = 1 ref2 =
+> > > 4 Jack: JackGraphManager::DisconnectRefNum cur_index = 10 ref1 = 1
+> > > ref2 = 4 Jack: JackProcessSync::TimedWait time out = 20000000
+> > 
+> > From that moment and on, jack is MIA until restarted.
+> > I've attached the full log of the session (jackd-test1.log.bz2), where I
+> > marked when I killed the client and ran lsp.
+> > 
+> > I've made the same test with jack_metro, obtained in an even simpler way:
+> > 1) start up jack: /usr/bin/jackd -v -S -r -t 2000 -d alsa -d chrouter -D
+> > -r 44100 -S -p 2048 -n 4 2) jack_lsp to ensure it's up (it is)
+> > 3) jack_metro -b 120
+> > 4) from another shell, pkill -9 jack_metro (SIGKILL, fyi)
+> > 5) jack_lsp to check if it's dead (it's really dead,  "jack_client_open()
+> > failed, status = 0x21") This test's log is jackd-test2.log.bz2 .
+> > 
+> > On my Centrino 64-bit laptop there's no problem, jack simply removes the
+> > dead client and keeps humming happily. But on ARM - an NVIDIA tegra
+> > ARMv7, btw - It's perfectly reproducible, I've tried it tons of times,
+> > with both the ALSA and the dummy plugins.
+> > 
+> > I started digging in the code, but I have no idea where the problem may
+> > be; do you have any idea or suggestion about this issue? Thanks in
+> > advance.
+> 
+> In both log I see:
+> 
+> ALSA: could not complete playback of 2048 frames: error = -32
+> JackAudioDriver::ProcessSync: write error, stopping...
+> 
+> So basically ALSA driver stopped completely, so:
+> 
+> 1) can you provide a log with dummy driver, since it should behave
+> differently?
+> 
+> 2) Backend error handling logic was changed in
+> http://trac.jackaudio.org/changeset/4079, but the log shows that a serious
+> non-revoverable error was detected in ALSA driver... maybe the change in r
+> 4079 is still not correct.
+> 
+> 3) I see that jackd is started in synchronous mode (-S), can you try
+> without -S (asynchronous mode) and send the log?
+> 
+> 
+> Stéphane
+
+1) I've attached a test (jackd-test3-dummydriver.log.bz2) with the dummy 
+driver; which works - no issue. Seems to really be an ALSA driver problem.
+
+2) i'll start from there
+
+3) After the first test run with async mode (no "-S" argument) it seemed to 
+work - but i rebooted and tried some 5 more times and it broke every time. The 
+log of the last attempt is attached (jackd-test4-asyncmode.log.bz2).
+
+Thanks..
+
+-- 
+Valerio Pilo
+Software Engineer
+--
+X O R O V O
+A University of Cagliari spin-off company
+Parco Tecnologico della Sardegna, Edificio 1
+09010 - Pula, loc. Piscinamanna (CA) - Italy
+--
+skype: valerio.pilo
+phone: 070 9243 2663
+* Attachment: '1297435340.20372_0.ltw:2,a/files/jackd-test3-dummydriver.log.bz2'
+content-type: application/x-bzip
+* Attachment: '1297435340.20372_0.ltw:2,a/files/jackd-test4-asyncmode.log.bz2'
+content-type: application/x-bzip
+
+1297435340.20372_0.ltw:2,a <201102111541.57714.valerio.pilo at akhela dot com>
+________________________________________________________________________________
+

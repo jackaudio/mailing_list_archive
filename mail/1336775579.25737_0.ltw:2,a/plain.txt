@@ -1,0 +1,60 @@
+Date:        Fri, 11 May 2012 22:32:43 +0000
+From:        Jamie Heilman  <[hidden] at audible dot transient dot net>
+To:          Athanasios Silis <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Athanasios Silis Re: [Jack-Devel] problem with jack's watchdog killing jackd process after a 3-4 seconds of operation (1336747398.15038_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] problem with jack's watchdog killing jackd process after a 3-4 seconds of operation
+
+Athanasios Silis wrote:
+> My virtualbox host, is a server (slackware too). so no rt kernel, no
+> low-latency desktop and the rest. could that affect the ability of the alsa
+> on the host to provide duplex audio functionality?
+> In virtualbox I am using the 'alsa' driver and exposing the AC97 codec on
+> the guest. HDA intel didn't offer much different results though.
+
+It could, though in my experience the quality of the device emulation
+tends to be the limiting factor.  I use KVM's emulated audio devices
+for portability testing as part of the work I do on aqualung (playback
+software) and I've had the greatest success when I don't
+take the guest driver and the emulated device for granted, but rather
+experiment with the available combinations to see what works best for
+the OS.  With a Linux guest, its less noticable (probably because
+Linux gets the most testing) but I've found, for example, a Windows XP
+guest in KVM works best with the emulated ES1370, where as OpenBSD
+and OpenIndiana runs the smoothest with the AC97 emulation.  I haven't
+had much luck getting anything to work well with FreeBSD (though I
+haven't tried any guest kernel tuning yet).
+
+> Thank you for your help!
+> unfortunately, the plan to have this vm guest as a fx engine can't be
+> utilized :(
+> 
+> BUT (just had a -hopefully- brilliant idea) what if I forget about alsa,
+> and I use this jack server as a slave using the net backend????
+> could i do that and forget about the real hw ports?
+
+Absolutely.  I do that w/kvm regularly, and I'd recommend it vs. using
+emulated hardware in the guest.  Of course it really depends on what
+you're actually trying to achieve ... I do this just to route PCM
+audio from my sandboxes to my workstation, and I don't do anything
+that's terribly performance critical in my sandboxes (one of them is
+for a browser instance, the others are mostly for doing portability
+testing and trying out software I don't trust).  For example, I've
+found I can watch crap on youtube even with X11 forwarding and audio
+routed over netjack1 (via loopback mind you... kvm is running on my
+workstation, though it should work over a gigE network without any
+problems too) with acceptable lag.  I wouldn't try to watch an entire
+movie or TV show that way as av sync issues will eventually become
+irritatingly distracting, but it's fine for casual surfing.  As for
+using a vm for effects processing offload... that's sorta dodgy given
+that guests are subject to sharing their processing time, you're
+likely going to run into bad latency problems.  That said, it never
+hurts to just try it out and see how far you can push things.
+
+-- 
+Jamie Heilman                     http://audible.transient.net/~jamie/
+
+1336775579.25737_0.ltw:2,a <20120511223243.GA5184 at cucamonga dot audible dot transient dot net>
+________________________________________________________________________________
+

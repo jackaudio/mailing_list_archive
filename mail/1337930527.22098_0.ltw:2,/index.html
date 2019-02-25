@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] BUG REPORT : Overflow of XRUNs after a certain time</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] BUG REPORT : Overflow of XRUNs after a certain time</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1337890875.16459_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1337934932.29183_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1337930527.22098_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 25 May 2012 09:22:20 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> aCOSwt </span> &lt;[hidden] at orange dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1337934932.29183_0.ltw:2,/index.html'>Re: [Jack-Devel] BUG REPORT : Overflow of XRUNs after a certain time </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Rigg
+<a href='../1337938966.3062_0.ltw:2,/index.html'>Re: [Jack-Devel] BUG REPORT : Overflow of XRUNs after a certain time </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1337940208.4957_0.ltw:2,/index.html'>Re: [Jack-Devel] BUG REPORT : Overflow of XRUNs after a certain time </a></td></tr>
+</table>
+<pre>
+Symptoms : After a certain amount of time running troublefree and xrun-free 
+the jack daemon, the qjackctl interface starts reporting an always increasing 
+number of xruns while the desktop becomes more or less unresponsive.
+==========
+Reproduceable : Always and irrespective of the number of clients registred
+==========
+System : All Linux kernels from 2.6.34 (at least) up to 3.2 (included)
+Jack : All Jack legacy versions from 0.118.0 up to 0.121.3 (included)
+Audio device : ICE1712 driven M-Audio-Audiophile-24-96
+Jack daemon started as :
+jackd -R -P89 -dalsa -r44100 -p512 -n2 -D -Chw:2 -Phw:2 -s -Xraw -zs
+Or
+jackd -P89 -m -dalsa -dhw:3 -r44100 -p256 -n3 -Xraw -P -zs
+Or at the extreme limit whatever, it does not seem to depend on the parameters 
+apart from, as we will see later on the sampling frequency.
+==========
+Traces when the problem occurs (no client registred)
+
+23:34:39.236 XRUN callback (1).
+delay of 48867.000 usecs exceeds estimated spare time of 11587.000; restart 
+...
+----- preceeding entry repeated 5 times -------
+23:34:40.237 XRUN callback (6).
+delay of 38983.000 usecs exceeds estimated spare time of 11579.000; restart 
+...
+----- preceeding entry repeated 8 times --------
+23:34:42.237 XRUN callback (14).
+..... And so on ad libitum .....
+===========
+First level analysis :
+
+Could be a coincidence but I think it is worth to mention :
+
+If the sampling frequency is set to 44100, then the problem occurs after about 
+13h 31mn 35s
+If the sampling frequency is set to 48000, then the problem occurs after about 
+12h 25mn 36s
+
+Something remarkable is that :
+
+0x7FFFFFFF / 44100 ~= 13h 31mn 35s
+0x7FFFFFFF / 48000 ~= 12h 25mn 36s
+
+This makes me believe that there is somewhere some signed-long counter of 
+samples which obviously overflows.
+===============
+Note : This bug is not critical under a stock Linux kernel as, even if the 
+desktop becomes far less responsive it is still possible to stop jackd via the 
+qjackctl interface.
+It becomes however critical when running a ck-patched kernel. In this case, 
+one cannot even reach the console or trigger the system shutdown by any mean. 
+The only solution being to reset the system.
+
+Regards,
+
+aCOSwt 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1337890875.16459_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1337934932.29183_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1337930527.22098_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1337930527.22098_0.ltw:2,&nbsp;&lt;201205250922.20515.acoswt at orange dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

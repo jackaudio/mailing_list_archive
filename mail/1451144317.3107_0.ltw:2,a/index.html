@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack dsp load calculation</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack dsp load calculation</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1451142645.1418_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1451146307.4907_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1451144317.3107_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 26 Dec 2015 16:38:28 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>John Emmas
+<a href='../1451142645.1418_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack dsp load calculation </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Emmas
+<a href='../1451147237.5755_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack dsp load calculation </a></td></tr>
+</table>
+<pre>
+On 12/26/2015 04:10 PM, John Emmas wrote:
+&gt; On 26/12/2015 14:41, Robin Gareus wrote:
+&gt;&gt; I like Nedko's idea: Allow to query all: min, average, max  over a long
+&gt;&gt; time compared to the process-cycle (think second or seconds).
+&gt;&gt;
+&gt; 
+&gt; Hmm...  I didn't get that email for some reason.  But yes - as a feature
+&gt; update, that sounds promising.  I'm just pointing out that (a) the
+&gt; averaging mechanism / hybrid approach is NOT the underlying cause of the
+&gt; problem you described - and (b) in Mixbus and Ardour, we can already
+&gt; make a solution which wouldn't need us to tinker with Jack.  i.e. the
+&gt; following strategy instead of our current one:-
+&gt; 
+&gt;       if ( the_client-&gt;got_notified_about_an_xrun() ) {
+&gt;             //  We know that an xrun occurred since we last checked
+&gt;             //  the CPU load - so do something to accommodate that.
+
+Why are x-runs (100% usage not) included in the statistics?
+
+&gt;             //  and then reset the notification flag
+&gt;             reset_the_xrun_notification_flag ();
+&gt;       } else {
+&gt;             //  No xrun was encountered - so we can update normally...
+&gt;             update_cpu_load ();
+
+What does "update_cpu_load ();" do?
+
+&gt;       }
+&gt; 
+&gt; That would be very simple to implement and I honestly think we should
+&gt; try that first, before tinkering too much with Jack.
+
+Ardour/Mixbus has an explicit x-run counter since April 2015. Except the
+x-run counter is user-resettable (in the toolbar). But the problem goes
+back further. We've been pushing it off because it's mainly a detail and
+I expected longer discussions...
+
+
+My criticism is that jack's currently algorithm does not satisfy the
+criteria: "an x-run implies 100% reported load".
+
+How can we justify buffer over/under-runs if there is time left to
+process the buffer?
+
+best,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1451142645.1418_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1451146307.4907_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1451144317.3107_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1451144317.3107_0.ltw:2,a&nbsp;&lt;567EB474.4030205 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

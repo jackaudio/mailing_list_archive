@@ -1,0 +1,56 @@
+Date:        Sun, 08 Jan 2017 22:06:31 -0800
+From:        Yuri  <[hidden] at rawbw dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Yuri [Jack-Devel] Recorded from OSS /dev/dsp sound is too high pitched on FreeBSD (1483922610.25185_0.ltw:2,a)
+Follow-Up:   Hans Petter Selasky Re: [Jack-Devel] Recorded from OSS /dev/dsp sound is too high pitched on FreeBSD (1483958383.8135_0.ltw:2,a)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] Recorded from OSS /dev/dsp sound is too high pitched on FreeBSD (1483978639.11607_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Recorded from OSS /dev/dsp sound is too high pitched on FreeBSD
+
+On 01/08/2017 16:43, Yuri wrote:
+> Jack runs on FreeBSD 11 with this command line: jackd -r -doss -r48000 
+> -p1024 -n3 -w16 --capture /dev/dsp6 --playback /dev/dsp2
+> Sound recorded with this command 'jack_rec -f x.wav system:capture_1' 
+> is too high pitched compared to the original.
+> Recording using the 'sweep' app produces the correct pitch.
+>
+> What is wrong? How to fix?
+>
+> jack-0.124.1 installed from the FreeBSD port. 
+
+
+I found what's happening: pretty much what Harry van Haaren described it 
+in his reply.
+
+My OSS device with the mike doesn't accept 48000. During 
+sysctl(SNDCTL_DSP_SPEED) it always falls back to 32000. Jack fails to 
+process this properly and records the signal with the wrong pitch. If 
+the requested speed is >32000 the pitch it is recording is higher, and 
+for requested speeds <32000 the pitch is too low. It only records fine 
+with the speed 32000.
+
+Bug#1: Jack shouldn't create recordings with invalid speed, so this is a 
+bug in Jack.
+
+
+Bug#2: The other DSP device also falls back, but to another speed: 
+48000. So they are always different. Ardour5 app fails to work with Jack 
+in such conditions - sound is always distorted. Depending on how it is 
+supposed to be in such situation, this is either a bug in Jack, or in 
+Ardour. But Ardour assumes all speeds are the same during one session, 
+so Jack probably shoud disallow mismatching speeds.
+
+
+One more thing: turning off SNDCTL_DSP_COOKEDMODE cures the situation 
+completely (probably with the quality tradeoff). Driver converts speeds 
+to the requested ones. Jack should 1) have an option to turn COOKEDMODE 
+off, and 2) recommend such option as a workaround when read/write speeds 
+are different, so that it can be used at all with the low quality audio 
+hardware (purely as a workaround mode).
+
+
+Yuri
+
+1483942069.23991_0.ltw:2,a <ea72b88c-5cee-4e70-e9f0-00dc0e149bd2 at rawbw dot com>
+________________________________________________________________________________
+

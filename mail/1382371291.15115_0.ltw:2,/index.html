@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] major change in jack1 MIDI handling</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] major change in jack1 MIDI handling</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1382362662.6261_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1382371474.15369_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1382371291.15115_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 21 Oct 2013 18:07:07 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Christian Schoenebeck </span> &lt;[hidden] at crudebyte dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Devin Anderson
+<a href='../1381911964.17373_0.ltw:2,/index.html'>Re: [Jack-Devel] major change in jack1 MIDI handling </a></td></tr>
+</table>
+<pre>
+On Wednesday 16 October 2013 10:25:58 Devin Anderson wrote:
+&gt; A few years ago, I would have had more to say (and did, at times,
+&gt; IIRC).  I'm not as familiar with the JACK 2 codebase as I used to be.
+&gt; 
+&gt; And you're right - it's not fair for me to express my dislike of the
+&gt; JACK 2 architecture, design, etc. and not give some specifics.
+&gt; 
+&gt; One problem I remember trying to wrap my head around was the Open
+&gt; functions in the JACK 2 driver system.  Let's take a brief look at
+&gt; those now.
+&gt; 
+&gt; 1.) The JackDriverInterface class has three pure virtual Open()
+&gt; functions.  IIRC, there isn't one driver I've seen that implements all
+&gt; three of these functions.  That's confusing.
+&gt; 
+&gt; 2.) Then there's the JackDriver class that extends the
+&gt; JackDriverInterface class.  The class is meant to be a base class, but
+&gt; it implements all three of the virtual functions.  These
+&gt; implementations are meant to be called by subclasses that override the
+&gt; JackDriver virtual functions, which is an ugly anti-pattern.  If
+&gt; JackDriver's Open functions are called without the overriding wrapper
+&gt; function, then hilarity may ensue when the underlying JackDriver part
+&gt; of the class thinks the driver has been successfully opened.
+
+Yes, it takes a bit to read up on the current driver infrastructure and 
+understanding the exact semantics behind the calls. Three things I found 
+missing were: comments, comments and comments. That would have saved me a lot 
+of time.
+
+I know there are probably a lot of people here who still follow and defend the 
+paradigm "don't read or write comments, the code must say everything, 
+otherwise it's bad code". That was fine in the 70s and 80s, but nowadays 
+that's not appropriate anymore due to rising complexities, constantly changing 
+developer teams, sharper time constraints and so on. My opinion is that every 
+struct/class head and every function/method should have API comments. But as a 
+minimum this should IMO at least apply to all fundamental base classes.
+
+If you read foreign code (with a certain amount of minimum complexity) and i.e 
+just need to understand the semantic of only one single function/method, you 
+often need to invest half an hour or even hours to understand the semantic 
+behind that single function/method precisely enough to perform your actual 
+task (due to the need of also learning the semantics of functions called 
+inside the function of interest), which would have been probably just seconds 
+or minutes if that function/method was sufficiently commented.
+
+And since most code parts are much more often read by many people than 
+actually changed, writing such comments is thus a little overhead for 
+individual developers which pays off quickly in the team's overall time 
+savings. Especially in projects where runtime efficiency is a strong 
+requirement, since clean and intuitive topologies are easily sacrificed for 
+efficiency goals.
+
+CU
+Christian
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1382362662.6261_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1382371474.15369_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1382371291.15115_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1382371291.15115_0.ltw:2,&nbsp;&lt;201310211807.07794.schoenebeck at crudebyte dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

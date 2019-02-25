@@ -1,0 +1,61 @@
+Date:        Thu, 22 Mar 2012 11:55:19 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] Patches for jack-0.121-3 (1332410152.26558_0.ltw:2,)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] Patches for jack-0.121-3 (1332419512.5586_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Patches for jack-0.121-3
+
+On Thu, Mar 22, 2012 at 10:55:18AM +0100, Stéphane Letz wrote:
+ 
+ 
+> Right now I see two flags that force "re-init" of the DLL: engine->first_wakeup  and timer->reset_pending. Those flags are tested in jack_run_cycle (engine->first_wakeup || timer->reset_pending).
+> 
+> 1) "first_wakeup" is set in jack_engine_new and in jack_stop_freewheeling. 
+> 
+> 2) "reset_pending" is set in jack_engine_delay
+> 
+> Would it make sense to keep only one flag? and set it in 4 places: first cycle, stop freewheel, XRun handling, buffer size change?
+
+I didn't remove 'reset_pending' because I wasn't sure if 
+'first_wakeup' could be used from the context that sets
+'reset_pending'. The 'pending' part suggested something
+asynchronous, i.e. this flag implicitly being used as a
+sema in combination with some mutexes.
+
+Apart from that there could be just one flag.
+
+But you really want the 'perfect' way, there could be more.
+There are 3 things to initialise:
+
+1. next_wakeup (to the current wakeup time, as the DLL will run)
+2. period_usecs
+3. filter_omega
+
+'First cycle' and 'buffer size change' should set them all.
+For 'xrun' and 'end of freewheeling', just setting (1) is
+enough, as the current value of (2) would be more accurate
+than the initial one, and (3) is a constant.
+
+There are two other matters to consider/check.
+
+For the first, see the comments near the end of jack_run_cycle();
+
+The second concerns Jack1 only IIRC. If a cycle is skipped, 
+the DLL should be run anyway. Jack1-0.121.3 did the right
+thing and I don't think the patches affect this. But it's
+worth checking.
+
+Ciao.
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+
+1332417351.4372_0.ltw:2, <20120322115519.GB28097 at linuxaudio dot org>
+________________________________________________________________________________
+

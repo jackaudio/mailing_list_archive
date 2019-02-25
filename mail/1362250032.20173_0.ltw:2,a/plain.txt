@@ -1,0 +1,47 @@
+Date:        Sat, 02 Mar 2013 10:47:05 -0800
+From:        Devin Anderson  <[hidden] at gmail dot com>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          jack-devel List <[hidden] at lists dot jackaudio dot org>, Christian Schoenebeck <[hidden] at crudebyte dot com>
+In-Reply-To: Stéphane Letz [Jack-Devel] CoreMIDI driver bug fix (1362238949.13108_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] CoreMIDI driver bug fix
+
+On Sat, Mar 2, 2013 at 7:42 AM, Stéphane Letz <[hidden]> wrote:
+
+> Christian fixed a bug in CoreMIDI driver:
+>
+> https://github.com/jackaudio/jack2/commit/4e5e7a11c3422134e8f63689e0515e0f71d894e7
+>
+> CoreMIDI driver fix: MIDI "running status" was not implemented.
+> ( Added few lines to implement it, transition to
+>   JackMidiRawInputWriteQueue might be a better solution though )
+
+The CoreMIDI spec seems to disallow running status.  The description
+of the MIDIPacket struct:
+
+    https://developer.apple.com/library/mac/documentation/MusicAudio/Reference/CACoreMIDIRef/MIDIServices/CompositePage.html#//apple_ref/c/tag/MIDIPacket
+
+... and the function MIDIPacketListAdd:
+
+    https://developer.apple.com/library/mac/documentation/MusicAudio/Reference/CACoreMIDIRef/MIDIServices/CompositePage.html#//apple_ref/c/func/MIDIPacketListAdd
+
+... both say, "Running status is not [allowed|permitted]".  Is there a
+case where running status is being used?
+
+However, something that I didn't notice before (was it there when I
+implemented the CoreMIDI driver?) is that a MIDIPacket can contain
+multiple MIDI messages.  I don't remember accounting for that when I
+wrote the driver.  That's a bug that will need to be fixed.
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+midisnoop - http://midisnoop.googlecode.com/
+psinsights - http://psinsights.googlecode.com/
+synthclone - http://synthclone.googlecode.com/
+
+1362250032.20173_0.ltw:2,a <CAG7zqTpWKMYxsuU8npOZWhtrVj1msGsHRe=8jLDbNvCnrU_RhA at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,46 @@
+Date:        Sun, 09 Aug 2015 18:38:43 +0200
+From:        Kjetil Matheussen  <[hidden] at gmail dot com>
+To:          Kjetil Matheussen <[hidden] at notam02 dot no>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Kjetil Matheussen Re: [Jack-Devel] Calling jack_cycle_wait/jack_cycle_signal from a "third party" thread. (1439100599.12169_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Calling jack_cycle_wait/jack_cycle_signal from a "third party" thread.
+
+On Sun, Aug 9, 2015 at 8:09 AM, Kjetil Matheussen <[hidden]>
+wrote:
+
+> I'm doing it like this:
+>
+> void *actual_rt_thread(void *arg){
+>    set_realtime_mode();
+>    while(true){
+>       jack_cycle_wait();
+>       ...
+>       jack_cycle_signal();
+>       ...
+>    }
+> }
+>
+> void *jack_rt_thread(void *arg){
+>    wait_forever();
+> }
+>
+> main(){
+>   jack_set_process_thread(jack_rt_thread);
+>   start_thread(actual_rt_thread);
+>   ...
+> }
+>
+>
+>
+Oh, and naturally, in my actual code, the "actual_rt_thread" function
+doesn't start
+until after the "jack_rt_thread" function has been called.
+
+Anyway, I guess this is firstmost a question for Stéphane Letz, since the
+workaround
+is only necessary in windows, where jack2 is the only alternative.
+
+1439138351.17597_0.ltw:2, <CAC6niELLkdV8J18oLnuP-4BSSK738tA59_AD8Nj9iJ=ONFu=TA at mail dot gmail dot com>
+________________________________________________________________________________
+

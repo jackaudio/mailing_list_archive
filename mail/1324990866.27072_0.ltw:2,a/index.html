@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack's timing functions</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack's timing functions</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324986889.23058_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324995095.30775_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324990866.27072_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 27 Dec 2011 13:00:57 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Robin Gareus &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK Mailing List &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1324986889.23058_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack's timing functions </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1324995095.30775_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack's timing functions </a></td></tr>
+</table>
+<pre>
+On Tue, Dec 27, 2011 at 12:54:22PM +0100, Robin Gareus wrote:
+ 
+&gt; How does it compare to rubberband?
+
+Not at all :-) 
+
+In apps like alsa_in and alsa_out the actual resampling ratio is always
+very close to the nominal one, at most plus or minus one percent. So you
+can use a fixed multiphase filter and only the rate of change of the
+filter phase is modified dynamically to change the effective ratio.
+
+For things like rubberband this is quite different - the range of
+resampling ratios can be very wide. As long as you are upsampling the
+filter can stay the same (as the output has more bandwidth than the
+input). When downsampling this is no longer the case: the filter 
+depends on the ratio, unless you use a fixed one corresponding to
+the lowest ratio (which means part of the signal is lost even when
+that is not necessary).
+
+The problem I've been looking at is a different one. When resampling
+between two unrelated clock domains the exact ratio is not know a
+priori, it has to be measured by using the period timing (and some
+other info) of both sides, and it has to adapt to any slow changes.
+The ratio should be nearly constant and change very smoothly to
+avoid adding phase noise to the signal. You also want the latency
+of the resampled signal to be defined and constant. It's not at all
+evident how to this accurately, even without the random errors on the
+timing information, Jack skipping a cycle every now and then (e.g.when
+new apps are started), and xruns on the ALSA stream. 
+ 
+&gt; unless someone can point out a case for individually querying
+&gt; jack_current_wakeup_time() and jack_next_wakeup_time(), your 2nd idea
+&gt; seems best:
+&gt; 
+&gt; int jack_get_cycle_timing (
+&gt;   const jack_client_t* client,
+&gt;   jack_nframes_t*      last_frame_time,
+&gt;   jack_time_t*         current_wakeup_time,
+&gt;   jack_time_t*         next_wakeup_time,
+&gt; );
+
+I'd have one objection to this: since this interface at least _suggests_ 
+that the three values are consistent (i.e. from the same cycle), it 
+should probably use the 'guards' as in jack_read_frame_time() to ensure
+they are in case it would ever be used from an arbitrary thread instead
+of from the process callback. This  means additional overhead and also
+depending on a 'disgusting' hack (see comments in jack_read_frame_time).
+If a better way would be found to ensure an atomic copy I'd be all for
+it. 
+
+&gt; Yet, your first proposal of adding two functions is more conform with
+&gt; the existing JACK API.
+
+Yes. I'd also add 
+
+jack_nframes_t jack_current_wakeup_frames(jack_client *client)  
+
+as an alias for jack_last_frame_time() - that function's name is
+really rather confusing. 
+
+Ciao,
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324986889.23058_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324995095.30775_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324990866.27072_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1324990866.27072_0.ltw:2,a&nbsp;&lt;20111227130056.GA10351 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

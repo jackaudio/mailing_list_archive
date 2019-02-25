@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] incompatible version of ffado error message</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] incompatible version of ffado error message</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1335946029.22068_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1336006291.10178_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1335967197.23963_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 02 May 2012 23:59:47 +1000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Allan Klinbail </span> &lt;[hidden] at iinet dot net dot au&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jonathan Woithe &lt;[hidden] at just42 dot net&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Adrian Knoth &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt;, [hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Jonathan Woithe
+<a href='../1335927103.10239_0.ltw:2,/index.html'>Re: [Jack-Devel] incompatible version of ffado error message </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Jonathan Woithe
+<a href='../1336006291.10178_0.ltw:2,/index.html'>Re: [Jack-Devel] incompatible version of ffado error message </a></td></tr>
+</table>
+<pre>
+&gt; Allan, if convenient, could you run scons again in the libffado directory
+&gt; and post the initial lines reported prior to compilation started?  I'm
+&gt; particularly interested in the "Checking for" lines, especially those
+&gt; relating to jack.  Perhaps libffado was mis-detecting the version of jack on
+&gt; this system.
+
+Checking for jack &gt;= 0.0.0... yes
+Checking for jack &lt; 1.9.0... no
+Checking for jack &gt;= 1.9.9... yes
+
+&gt; 
+&gt; Having written that, I've taken a closer look at the source that gentoo was
+&gt; pulling.  Interestingly enough, it appears that its version is set to 1.9.9. 
+&gt; If this is indeed the version reported on your system (check with 
+&gt; "jackd --version") then that may explain the problem.
+
+daw64p ffado-svn # jackd --version
+jackdmp 1.9.9
+
+&gt; Jackmp 1.9.9 is, as far as I can tell, still in pre-release.  When released
+&gt; it will be the first version to support the new libffado API revision (which
+&gt; adds setbufsize support).  If compiled on a system whose jackmp reports a
+&gt; version of 1.9.9 then libffado will enable the new API version.
+&gt; 
+&gt; On your system, it seems almost certain that jackmp will report a version
+&gt; number of 1.9.9 even though this hasn't been released yet and evidently
+&gt; isn't a true 1.9.9 (since it's lacking all the changes made since jack moved
+&gt; to git from svn).  The libffado configuration script will enable the new API
+&gt; version on this system, since it sees a jackmp version 1.9.9.
+&gt; 
+&gt; With the new API enabled, ffado_get_api_version() will return 9.  That then
+&gt; completely explains why you're getting the "Incompatible libffado version"
+&gt; message.
+&gt; 
+&gt; To work around the issue for now, you could recompile libffado and force the
+&gt; use of the older API revision:
+&gt; 
+&gt;   scons ENABLE_SETBUFFERSIZE_API_VER=false
+&gt; 
+&gt; That should at least get you up and running again until the jackmp issue is
+&gt; resolved.
+
+This works ... 
+
+&gt; 
+&gt; &gt; I will report this back to the gentoo pro-audio list 
+&gt; 
+&gt; That sounds like a good idea.
+&gt; 
+&gt; Regards
+&gt;   jonathan
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1335946029.22068_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1336006291.10178_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1335967197.23963_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1335967197.23963_0.ltw:2,a&nbsp;&lt;1335967187.22315.0.camel at srv3 dot little-wolf dot local&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

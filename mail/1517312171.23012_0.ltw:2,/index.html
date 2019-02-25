@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Capture problems with jack2 on Axia-Alsa device</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Capture problems with jack2 on Axia-Alsa device</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1517221441.11679_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1517314217.25221_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1517312171.23012_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 30 Jan 2018 12:35:08 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Christian Affolter </span> &lt;[hidden] at purplehaze dot ch&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Thomas Brand
+<a href='../1517314217.25221_0.ltw:2,/index.html'>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Kjetil Matheussen
+<a href='../1517315298.26474_0.ltw:2,/index.html'>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device </a></td></tr>
+</table>
+<pre>
+Hi everyone,
+
+capturing from ALSA capture devices via the Jack2 sound server (1.9.12),
+results in too high pitched wav files (they are playing "too fast" and
+sound like the "chipmunks"). If I run the same capture directly from the
+ALSA devices (without Jack involved), everything sounds as expected
+without any problems.
+
+Audio examples:
+Capture via jackrec: https://filebin.ca/3pyMxBw8cexQ/test-jackrec.wav
+Capture via arecord: https://filebin.ca/3pyOPjcKGym5/test-arecord.wav
+
+The device in question is a "virtual" Axia-ALSA (Livewire+) audio device
+on CentOS 7 which operates at a sample rate of 48kHz and a bit depth of
+either 16 or 32. As far as I can see, the sample rate and format
+detection on the Jack side looks correct. I'm therefore looking for some
+guidance on how to further debug this, I most certainly missed something
+obvious.
+
+I've also tried to play an mp3 file via mpg123 over jack (without the
+involvement of the Alsa device) and record it again with jackrec. This
+works and sounds correct.
+
+Here is what I've tried and what the environment looks like:
+
+# Capabilities of the Axia-ALSA device
+arecord -D hw:0 --dump-hw-params
+
+Recording WAVE 'stdin' : Unsigned 8 bit, Rate 8000 Hz, Mono
+HW Params of device "hw:0":
+--------------------
+ACCESS:  MMAP_INTERLEAVED RW_INTERLEAVED
+FORMAT:  S16_LE S32_LE
+SUBFORMAT:  STD
+SAMPLE_BITS: [16 32]
+FRAME_BITS: [16 256]
+CHANNELS: [1 8]
+RATE: 48000
+PERIOD_TIME: (41 1365334)
+PERIOD_SIZE: [2 65536]
+PERIOD_BYTES: [64 131072]
+PERIODS: [1 1024]
+BUFFER_TIME: (41 1365334)
+BUFFER_SIZE: [2 65536]
+BUFFER_BYTES: [64 131072]
+TICK_TIME: ALL
+--------------------
+arecord: set_params:1299: Sample format non available
+Available formats:
+- S16_LE
+- S32_LE
+
+
+# Capture via arecord directly from the ALSA device (without jackd)
+# This works as expected and the WAV file sounds fine
+arecord -D hw:0 -c 2 -d 10 -r 48000 -f S32_LE -v /tmp/test-arecord.wav
+
+Recording WAVE '/tmp/test-arecord.wav' : Signed 32 bit Little Endian,
+Rate 48000 Hz, Stereo
+Hardware PCM card 0 'Axia' device 0 subdevice 0
+Its setup is:
+  stream       : CAPTURE
+  access       : RW_INTERLEAVED
+  format       : S32_LE
+  subformat    : STD
+  channels     : 2
+  rate         : 48000
+  exact rate   : 48000 (48000/1)
+  msbits       : 32
+  buffer_size  : 16384
+  period_size  : 4096
+  period_time  : 85333
+  tstamp_mode  : NONE
+  tstamp_type  : MONOTONIC
+  period_step  : 1
+  avail_min    : 4096
+  period_event : 0
+  start_threshold  : 1
+  stop_threshold   : 16384
+  silence_threshold: 0
+  silence_size : 0
+  boundary     : 4611686018427387904
+  appl_ptr     : 0
+  hw_ptr       : 0
+
+
+# playing arecord wav (via my local notebook's HDA Intel PCH
+# device), sounds correct
+aplay test-arecord.wav
+
+Playing WAVE 'test-arecord.wav' : Signed 32 bit Little Endian, Rate
+48000 Hz, Stereo
+
+
+
+# Starting jackd
+# Verbose output at: https://pastebin.com/YzHEGSnR
+jackd -d alsa -d hw:0
+
+jackdmp 1.9.12
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2016 Grame.
+Copyright 2016-2017 Filipe Coelho.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+no message buffer overruns
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 20
+self-connect-mode is "Don't restrict self connect requests"
+audio_reservation_init
+Acquire audio card Audio0
+creating alsa driver ... hw:0|hw:0|1024|2|48000|0|0|nomon|swmeter|-|32bit
+configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: 32bit integer little-endian
+ALSA: use 2 periods for capture
+ALSA: final selected sample format for playback: 32bit integer little-endian
+ALSA: use 2 periods for playback
+
+
+# Capture via jackrec
+# This results in a too high pitched WAV file
+# Verbose output at: https://pastebin.com/PCnymKLA
+jackrec -f /tmp/test-jackrec.wav -d 10 -b 32 system:capture_1
+system:capture_2
+
+# playing jackrec wav (via my local notebook's HDA Intel PCH
+# device), sounds incorrect
+aplay test-jackrec.wav
+
+Playing WAVE 'test-jackrec.wav' : Signed 32 bit Little Endian, Rate
+48000 Hz, Stereo
+
+
+System environment:
+Distribution: CentOS 7.4.1708
+Kernel:       3.10.0-693.17.1.el7.x86_64
+ALSA Utils:   1.1.3
+Jackd:        1.9.12
+
+The jackd was rebuilt from Fedora source RPM to be able to test with the
+latest version:
+https://build.opensuse.org/package/show/home:radiorabe:audio/jack-audio-connection-kit
+
+
+Many thanks and best regards
+Chris
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1517221441.11679_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1517314217.25221_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1517312171.23012_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1517312171.23012_0.ltw:2,&nbsp;&lt;f0733eb2-e70d-d5d0-9f3e-c99dc3ae6bc4 at purplehaze dot ch&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Testing JACK and PA latency</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Testing JACK and PA latency</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1379519983.30922_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1379680521.13957_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1379572490.19746_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 19 Sep 2013 16:34:39 +1000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Patrick Shirkey </span> &lt;[hidden] at boosthardware dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1379519983.30922_0.ltw:2,/index.html'>Re: [Jack-Devel] Testing JACK and PA latency </a></td></tr>
+</table>
+<pre>
+On Thu, September 19, 2013 1:59 am, Paul Davis wrote:
+&gt; you're trying to measure the time between A and B where you have access to
+&gt; A (or specifically, a way to carry out measurements there) but no access
+&gt; to
+&gt; B.
+&gt;
+&gt; i don't see how this can work. it is a bit like asking "how long does it
+&gt; take to get from paris to brussels" but when you are unable to cross the
+&gt; border between france and belgium, and cannot talk to anyone in brussels.
+&gt;
+
+Yes, exactly. It's a conundrum :-)
+
+Can anyone suggest an app that will provide a round trip back into jack
+via pulse sink/source?
+
+Perhaps I need to write something specifically for that task that will
+communicate with jack and pulse at the same time? Or at least be able to
+retrieve useful information...
+
+
+
+
+
+
+&gt;
+&gt; On Wed, Sep 18, 2013 at 11:29 AM, Patrick Shirkey &lt;
+&gt; [hidden]&gt; wrote:
+&gt;
+&gt;&gt;
+&gt;&gt; On Wed, September 18, 2013 11:36 pm, Paul Davis wrote:
+&gt;&gt; &gt; there isn't any way to separately compute the "outbound" and "inbound"
+&gt;&gt; &gt; latency. in fact, jack_iodelay's message about the value to use for -I
+&gt;&gt; and
+&gt;&gt; &gt; -O is based on the not-entirely-defensible but somewhat reasonable
+&gt;&gt; &gt; assumption that the outbound and inbound latencies are symmetric.
+&gt;&gt; &gt;
+&gt;&gt; &gt; put differently, i don't think there is any way to do what you want.
+&gt;&gt; &gt; someone may prove me wrong.
+&gt;&gt; &gt;
+&gt;&gt;
+&gt;&gt; It's a new one for me too so I'm not expecting a pre-existing solution.
+&gt;&gt;
+&gt;&gt; This is part of a wider test procedure so I am trying to get a method
+&gt;&gt; that
+&gt;&gt; can be considered robust and literal. I'm sure it is viable to calculate
+&gt;&gt; the latency for each step in the process based on configuration settings
+&gt;&gt; but in this case it will be *very* useful (and potentially lucrative for
+&gt;&gt; everyone) to present a definitive result and test procedure.
+&gt;&gt;
+&gt;&gt; Any ideas for how to go about it are welcome.
+&gt;&gt;
+&gt;&gt; To recap I am seeking to define the i/o latency at any period
+&gt;&gt; size/sample
+&gt;&gt; rate when an application that is dependant on PA is sending/receiving
+&gt;&gt; data
+&gt;&gt; via JACK.
+&gt;&gt;
+&gt;&gt; If anyone has thoughts on a method for tweaking the configuration
+&gt;&gt; settings
+&gt;&gt; for both PA and JACK while running (automated) latency tests that would
+&gt;&gt; also be very useful. Piece of cake right?
+&gt;&gt;
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; &gt;
+&gt;&gt; &gt; On Wed, Sep 18, 2013 at 6:55 AM, Patrick Shirkey
+&gt;&gt; &gt; &lt;[hidden]
+&gt;&gt; &gt;&gt; wrote:
+&gt;&gt; &gt;
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt; On Wed, September 18, 2013 4:49 pm, Patrick Shirkey wrote:
+&gt;&gt; &gt;&gt; &gt; Hi,
+&gt;&gt; &gt;&gt; &gt;
+&gt;&gt; &gt;&gt; &gt; Can anyone recommend a rigorous procedure for verifying round trip
+&gt;&gt; &gt;&gt; latency
+&gt;&gt; &gt;&gt; &gt; between i/o using a combination of both JACK and PA?
+&gt;&gt; &gt;&gt; &gt;
+&gt;&gt; &gt;&gt; &gt;
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt; I have the following setup:
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt; jack running in duplex mode (1024/48000/2)
+&gt;&gt; &gt;&gt; pa connected to jack with sink/source plugins
+&gt;&gt; &gt;&gt; skype* running via pa
+&gt;&gt; &gt;&gt; jack_iodelay
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt; I have the following connections
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt;      jack_delay (out) -&gt; pa jack source (1)
+&gt;&gt; &gt;&gt;      system_in (1) -&gt; jack_delay (in)
+&gt;&gt; &gt;&gt;      system_in (1) -&gt; pa jack source (1)
+&gt;&gt; &gt;&gt;      pa jack sink -&gt; system_out (1)
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt; I can hear the output signal from jack_delay in the skype call test
+&gt;&gt; &gt;&gt; service.
+&gt;&gt; &gt;&gt; I can hear the mic input in skype call test service
+&gt;&gt; &gt;&gt; I can hear skype output in my speakers via jack system output
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt; I see the following info in jack_delay console messages:
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt;  22120.239 frames    460.838 ms total roundtrip latency
+&gt;&gt; &gt;&gt;         extra loopback latency: 21096 frames
+&gt;&gt; &gt;&gt;         use 10548 for the backend arguments -I and -O ??
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt; However I don't think this setup is calculating latency details that
+&gt;&gt; I
+&gt;&gt; &gt;&gt; am
+&gt;&gt; &gt;&gt; looking for.
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt; I would like to retrieve the following info:
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt; 1: latency from jack system in -&gt; pa_source -&gt; skype in -&gt; skype
+&gt;&gt; network
+&gt;&gt; &gt;&gt; output (before the data is transmitted to the external receiver)
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt; 2: latency from skype network input (immediately data that is
+&gt;&gt; received
+&gt;&gt; &gt;&gt; from external provider) -&gt; pa_sink -&gt; jack_system out
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt; * skype is used for testing i/o via PA. Any other duplex app could
+&gt;&gt; also
+&gt;&gt; &gt;&gt; be
+&gt;&gt; &gt;&gt; used.
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;&gt; --
+&gt;&gt; &gt;&gt; Patrick Shirkey
+&gt;&gt; &gt;&gt; Boost Hardware Ltd
+&gt;&gt; &gt;&gt; 
+&gt;&gt; &gt;&gt; Jack-Devel mailing list
+&gt;&gt; &gt;&gt; [hidden]
+&gt;&gt; &gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;&gt; &gt;&gt;
+&gt;&gt; &gt;
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; --
+&gt;&gt; Patrick Shirkey
+&gt;&gt; Boost Hardware Ltd
+&gt;&gt; 
+&gt;&gt; Jack-Devel mailing list
+&gt;&gt; [hidden]
+&gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;&gt;
+&gt;
+
+
+--
+Patrick Shirkey
+Boost Hardware Ltd
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1379519983.30922_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1379680521.13957_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1379572490.19746_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1379572490.19746_0.ltw:2,&nbsp;&lt;36869.86.127.135.98.1379572479.squirrel at boosthardware dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

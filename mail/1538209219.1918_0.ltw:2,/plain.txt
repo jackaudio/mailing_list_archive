@@ -1,0 +1,70 @@
+Date:        Sat, 29 Sep 2018 10:19:44 +0200
+From:        Holger Marzen  <[hidden] at marzen dot de>
+To:          David Kastrup <[hidden] at gnu dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Holger Marzen Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency? (1538164256.637_0.ltw:2,)
+Follow-Up:   David Kastrup Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency? (1538209786.2501_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency?
+
+On Fri, 28 Sep 2018, Holger Marzen wrote:
+
+> On Fri, 28 Sep 2018, Holger Marzen wrote:
+> 
+> > q2 (SRC_SINC_FASTEST) showed the desired flat envelope and seems to be
+> > the best compromise between CPU load and quality.
+> > 
+> > -> That's the setting I'll use from now on.
+> 
+> Unfortunately this leads to errors once in a while (although my Core i7
+> has no big CPU load), the ringbuffer increases up to 64k. So it's no
+> stable solution for me.
+
+It seems that playing with jackd's priority can cure the problem. I'll
+play around with the parms but this seems to be a good start. Maybe
+squeezelite, an audioplayer, was the cause because it was running at a
+higher priority than jackd.
+
+jackdmp 1.9.11
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2014 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in realtime mode with priority
+self-connect-mode is "Don't restrict self connect requests"
+audio_reservation_init
+Acquire audio card Audio1
+creating alsa driver ... hw:1|hw:1|128|3|48000|0|0|nomon|swmeter|-|32bit
+configuring for 48000Hz, period = 128 frames (2.7 ms), buffer = 3 periods
+ALSA: final selected sample format for capture: 32bit integer little-endian
+ALSA: use 3 periods for capture
+ALSA: final selected sample format for playback: 32bit integer little-endian
+ALSA: use 3 periods for playback
+port created: Midi-Through:midi/playback_1
+port created: Midi-Through:midi/capture_1
+port created: Scarlett-2i4-USB:midi/playback_1
+port created: Scarlett-2i4-USB:midi/capture_1
+Fixed ringbuffer size = 1024 frames
+Audio Interface Description :
+Sampling Frequency : 48000, Sample Format : S32_LE, buffering : 256, nperiod : 3
+Software inputs :  2, Software outputs :  2
+Hardware inputs :  2, Hardware outputs :  2
+Card info (address : 0x7fd536e242f0)
+	ID         = USB_1
+	Driver     = USB-Audio
+	Name       = Scarlett 2i2 USB
+	LongName   = Focusrite Scarlett 2i2 USB at usb-0000:00:14.0-1.4.3, high speed
+	MixerName  = USB Mixer
+	Components = USB1235:8006
+--------------
+HW Params info (address : 0x7fd52c0bf6e0)
+
+--------------
+HW Params info (address : 0x7fd52c0bf950)
+
+--------------
+
+1538209219.1918_0.ltw:2, <alpine.DEB.2.20.1809291017020.9496 at bubu dot intern dot marzen dot de>
+________________________________________________________________________________
+

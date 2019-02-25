@@ -1,0 +1,96 @@
+Date:        Sat, 02 Apr 2011 12:49:46 +0200
+From:        torbenh  <[hidden] at gmx dot de>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz [Jack-Devel] NetOne driver in JACK2 (1301659924.17949_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] NetOne driver in JACK2
+
+On Fri, Apr 01, 2011 at 02:11:31PM +0200, Stéphane Letz wrote:
+> Hi Torben and jack-dev community.
+> 
+> I received some bugs report (crash in server with "jackd -d netone"), like:
+> 
+> 	• NetOne driver started
+> 	• AutoConfig Override !!!
+> 	• MTU is set to 1400 bytes
+> 	• Cannot read socket fd = 10 err = Interrupted system call
+> 	• [Thread 0xb0862b70 (LWP 6381) exited]
+> 	• NotifyClient fails name = exaile.py event = 18 val1 = 1 val2 = 0
+> 	• netxruns... duration: 11ms
+> 	• jackd: ../common/JackEngine.cpp:932: int Jack::JackEngine::PortConnect(int, jack_port_id_t, jack_port_id_t): Assertion `ref >= 0' failed.
+> 
+> 
+> 	• jof@studio:~$ jack_netsource -c 120 -n 3 -H 192.168.1.13
+> 	• notification: uint decode error
+> 	• Connected :-)
+> 	• netjack: at frame 000085 -> total netxruns 1  (1%) queue time= 23221
+> 	• notification: uint decode error
+> 	• notification: uint decode error
+> 	• notification: uint decode error
+> 	• notification: uint decode error
+> 	• notification: uint decode error
+> 	• notification: uint decode error
+> 	• notification: uint decode error
+> 	• notification: uint decode error
+> 	• notification: uint decode error
+> 	• notification: uint decode error
+> 	• notification: uint decode error
+> 	• notification: uint decode error
+> 	• ^C*** glibc detected *** jack_netsource: double free or corruption (!prev): 0x09bd4830 ***
+> 	• ======= Backtrace: =========
+> 	•
+
+the uint decode error is a celt error.
+That generally happens, when celt versions dont match.
+(This is basically the case why i didnt bother to support later celt
+ versions, adi and me came to the conclusion, that distros should ship 
+ celt-0.7 until celts bitstream was frozen)
+
+celt-0.11 is tagged with a "soft freeze" of the bitstream.
+So maybe celt-0.12 is going to have a real freeze.
+
+
+> 
+> The last thing I did (before jack 1.9.7 release) was to synchronize NetJack1 code from JACK1 to JACK2, hoping I did that correctly (basically updating netjack.h,c  and netjack_packet,h,c)
+> 
+> Reviewing the code I see:
+> 
+>  - using  exit(1); in netjack.c instead of properly returning a proper error.
+
+gonna try to fix that. But it only happens when malicious Packets are
+sent. (its basically just some sanity checks on the autoconfig values)
+
+In jack1 exiting at that point was sensible.
+But with backend switching in place its probably bad.
+
+> 
+> - CELT : celt_mode_create should be matched with celt_mode_destroy. My feeling is that this is not done everywhere it should (especially in JackNetOneDriver.cpp)
+> 
+> This is certainly not the cause of the bugs, but I think this should be fixed (along the "jack_netsource: double free or corruption")n before going anywhere else.
+
+without a valgrind dump, i dont know, where the corruption happens.
+and since celt is seeing a broken bitstream, i suspect its a celt bug.
+(that needs to be fixed too, but maybe it already is in later versions)
+
+i need infos which celt versions are used, or a proper valgrind dump.
+
+> 
+> Could you please have a look? 
+> 
+> or if not Torben someone else?
+> 
+> Thanks.
+> 
+> Stéphane
+> 
+> 
+> 
+> 
+
+-- 
+torben Hohn
+
+1301741418.8465_0.ltw:2,a <20110402104946.GB20002 at siel dot b>
+________________________________________________________________________________
+

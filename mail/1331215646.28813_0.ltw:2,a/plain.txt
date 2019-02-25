@@ -1,0 +1,45 @@
+Date:        Thu, 08 Mar 2012 14:06:28 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Jonathan Woithe <[hidden] at just42 dot net>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jonathan Woithe Re: [Jack-Devel] FFADO issues after freewheeling (was: Re: update jack from 1.9.7 to 1.9.8) (1331213775.25681_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] FFADO issues after freewheeling (was: Re: update jack from 1.9.7 to 1.9.8) (1331216976.31062_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] FFADO issues after freewheeling (was: Re: update jack from 1.9.7 to 1.9.8)
+
+On Fri, Mar 09, 2012 at 12:05:41AM +1030, Jonathan Woithe wrote:
+
+> FFADO isn't aware of freewheeling as such.  However, when freewheeling is
+> started the backend streaming is stopped for the reasons Paul mentioned. 
+> When jack is taken out of freewheeling the backend is restarted again. 
+> FFADO sees the stop/start cycle but doesn't know (or care) that this is
+> because of freewheeling.
+
+Paul didn't give any reasons why freewheeling is implemented that way,
+and I'm somewhat surprised it is. To me the simplest way to do it 
+would be:
+
+1. The RT thread that normally calls the backend's 'wait for next cycle'
+function continues to do so, it feeds silence to the backend and discards
+any input it produces. That way even the backend would be unaware of
+freewheeling.
+
+2. A second non-RT thread runs cycles as fast as it can, substituting
+the backend buffers by dummy ones. Only two extra buffers are required
+to do that, one (silenced) given to all clients that have system:capture
+ports connected, and one for output (which can be shared for all system:
+playback channels as it will be discarded anyway).
+
+I always imagined things worked that way...
+
+
+Ciao,
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+
+1331215646.28813_0.ltw:2,a <20120308140627.GA9695 at linuxaudio dot org>
+________________________________________________________________________________
+

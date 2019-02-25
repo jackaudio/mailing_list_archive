@@ -1,0 +1,117 @@
+Date:        Mon, 27 May 2013 19:45:17 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Dan MacDonald <[hidden] at gmail dot com>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Dan MacDonald [Jack-Devel] ARM JACK2 probs (1369674432.12597_0.ltw:2,a)
+Follow-Up:   Dan MacDonald Re: [Jack-Devel] ARM JACK2 probs (1369677227.17370_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] ARM JACK2 probs
+
+On 05/27/2013 07:07 PM, Dan MacDonald wrote:
+> My poor Pandaboard had lay unused for months until recently when I decided
+> I should try Debian Wheezy on it. I was pleased to discover it runs
+> quicker, boots quicker, performs faster and is more stable than the Ubuntu
+> 12.04 it ran previously - which is what I had hoped for. Wifi and gfx
+> aren't working properly (or at at all, as the case with wifi) yet but
+> that's a discussion for elsewhere.
+> 
+> Like anyone on the JACK mailing list, as soon as I saw the system was
+> running well on the whole, it was time to see how well it runs JACK! I was
+> well aware the Wheezy J2 package is a bit archaic now and I had noticed
+> that some patches had been appled in git recently for ARM so I knew that
+> compiling J2 from git was the way to go so thats what I did a few days back
+> and I've since installed Cadence too to make running it easier.
+> 
+> I have a few USB audio devices but the first I tried with JACK on my
+> Pandaboard was my Philips portable hifi. Running JACK @ 48000/1024/2, I can
+> keep it running pretty much until I pull the plug without any xruns
+> although there is a slight backround pop noise every second or so. Not so
+> bad as to make casual listening impossible but regular and frequent enough
+> to be a deal-breaker for doing any serious audio work. This device works
+> well enough to make me believe J2 on ARM is nearly ready, hopefully!
+> 
+> Sadly, I've not has as much luck with my other 2 USB audio devices but I'm
+> hoping the JACK devs can help me fix those. The one that I've had more
+> success with is the Focusrite 2i4. I have tried various JACK settings but I
+> get the same result - JACK starts and runs xrun-free for just over 3m
+> (about 3m 9s) then the gain input LEDs start blinking in tandem (some sort
+> of error code) and then I get a steady flow of xruns which I can only stop
+> by pulling the USB plug. Here is a JACK log for my 2i4:
+> 
+> Mon May 27 16:30:48 2013: Saving settings to
+> "/home/debian/.config/jack/conf.xml" ...
+> Mon May 27 16:31:13 2013: Starting jack server...
+> Mon May 27 16:31:14 2013: JACK server starting in realtime mode with
+> priority 10
+> Mon May 27 16:31:14 2013: Acquired audio card Audio2
+> Mon May 27 16:31:14 2013: creating alsa driver ...
+> hw:USB,0|hw:USB,0|1024|2|48000|0|0|hwmon|swmeter|-|32bit
+> Mon May 27 16:31:14 2013: configuring for 48000Hz, period = 1024 frames
+> (21.3 ms), buffer = 2 periods
+> Mon May 27 16:31:14 2013: ALSA: final selected sample format for capture:
+> 32bit integer little-endian
+> Mon May 27 16:31:14 2013: ALSA: use 2 periods for capture
+> Mon May 27 16:31:15 2013: ALSA: final selected sample format for playback:
+> 32bit integer little-endian
+> Mon May 27 16:31:15 2013: ALSA: use 2 periods for playback
+> Mon May 27 16:31:16 2013: graph reorder: new port 'system:capture_1'
+> Mon May 27 16:31:16 2013: New client 'system' with PID 0
+> Mon May 27 16:31:16 2013: graph reorder: new port 'system:capture_2'
+> Mon May 27 16:31:16 2013: graph reorder: new port 'system:playback_1'
+> Mon May 27 16:31:16 2013: graph reorder: new port 'system:playback_2'
+> Mon May 27 16:31:16 2013: graph reorder: new port 'system:playback_3'
+> Mon May 27 16:31:16 2013: graph reorder: new port 'system:playback_4'
+> Mon May 27 16:34:33 2013: Stopping jack server...
+> Mon May 27 16:34:38 2013: ERROR: JackPosixProcessSync::LockedTimedWait
+> error usec = 5000000 err = Connection timed out
+> Mon May 27 16:34:38 2013: ERROR: JackEngine::ClientDeactivate wait error
+> ref = 2 name = dbusapi
+> Mon May 27 16:34:38 2013: ERROR: failed to deactivate dbusapi jack client.
+> error is -1
+> Mon May 27 16:34:38 2013: Client 'system' with PID 0 is out
+> Mon May 27 16:34:39 2013: ERROR: JackPosixProcessSync::LockedTimedWait
+> error usec = 1000000 err = Connection timed out
+> Mon May 27 16:34:39 2013: ERROR: JackEngine::ClientCloseAux wait error ref
+> = 2
+> Mon May 27 16:34:57 2013: ERROR: ALSA: prepare error for playback on
+> "hw:USB,0" (Protocol error)
+> Mon May 27 16:34:57 2013: ERROR: JackAudioDriver::ProcessAsync: read error,
+> stopping...
+> 
+> Of course, the 2i4 runs for much longer than 3m with no probs on my x86
+> machines. I've got a 3rd USB audio device (Startech 7.1 - I forget the
+> chipset) that works fine with JACK on my laptop but won't start JACK at all
+> on my Pandaboard.
+> 
+> Thanks for your help!
+> 
+
+The issues you describe are likely not related to jack at all.
+
+Please try to play a long song with alsa's "aplay". ie confirm it's not
+a general USB or audio problem.
+
+My first guess would be power: The 2i4 is USB bus powered. Can your
+panda-board provide 500mA to the USB bus? Is the Phillips device also
+bus-powered? In either case it could explain the behavior (slight
+background noise, pops, unstable USB connection) that you're experiencing.
+
+Also try running with 3 periods of playback latency (-n option). e.g.
+  jackd -d alsa -p 1024 -n 3
+that helps with many USB devices. Try different period-sizes as well.
+
+Check the output of 'dmesg' when jack disconnects. And also watch
+/proc/interrupts (does the audio-device share IRQ with other hardware?)
+
+
+Some other hints which -- are likely unrelated at this stage but -- can
+improve general jack performance (less x-runs at lower latencies) are
+apt-get install rtirq (setup IRQ priorities prefer audio-devices)
+and also try the Debian's rt-preemt realtime kernel...
+
+so long,
+robin
+
+1369676727.16551_0.ltw:2,a <51A39BAD.6040006 at gareus dot org>
+________________________________________________________________________________
+

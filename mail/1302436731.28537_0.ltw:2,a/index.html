@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK2 branching</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK2 branching</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302427039.8687_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302437336.29728_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302436731.28537_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 10 Apr 2011 14:58:20 +0300 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Nedko Arnaudov </span> &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1302427039.8687_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK2 branching </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1302437336.29728_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK2 branching </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1302461837.12234_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK2 branching </a></td></tr>
+</table>
+<pre>
+St&#xE9;phane Letz &lt;[hidden]&gt; writes:
+
+&gt;&gt; Do you think it it a good idea to switch to git only workflow for
+&gt;&gt; them?
+&gt;
+&gt; It would certainly help. How difficult would it be. I we decide to do
+&gt; that, I guess I should rebase form SVN trunk before right?
+&gt;
+&gt;&gt; Do we really have to maintain svn (non-trunk) branches when we can
+&gt;&gt; maintain them as other git only branches?
+&gt;
+&gt; Probably not.
+
+It was easy:
+
+git branch libjacknet refs/remotes/libjacknet
+git branch pipelining refs/remotes/pipelining
+git push cz libjacknet pipelining
+
+To get new stuff from the svn trunk, one would first update the master
+branch to have latest svn trunk, then one would do a regular git merge:
+
+git stash # ensure there are no uncommited changes
+git checkout master
+git svn fetch
+git rebase trunk
+git checkout pipelining
+git merge master -m "merge svn trunk rNNNN"
+git push trunk master pipelining
+
+&gt;&gt;  Is there are need to define the practices used for collaboration
+&gt;&gt; between developers in git branch? This is a pure git workflow and as
+&gt;&gt; such there are less restrictions than when git-svn is involved. I
+&gt;&gt; think that we should favour rebases when for commits that are not
+&gt;&gt; yet pushed and merges for already pushed commits. Still, I've not
+&gt;&gt; actively participated in pure GIT branch collaboration and thus it
+&gt;&gt; makes more sense to document what the current practices are,
+&gt;&gt; especially the good ones. If we manage to define some good GIT
+&gt;&gt; workflow, maybe we will face less GIT mess in future. And yes, with
+&gt;&gt; GIT we can (and did) generate lot of mess because it is powerful and
+&gt;&gt; with few inherent restrictions.
+&gt;&gt; 
+&gt;&gt; Should we delete already merged branches?
+&gt;
+&gt;
+&gt; I guess yes for unused one like:
+&gt;
+&gt; devin-resolving devin-merge-20110405 newer-midi-with-winmme-driver
+&gt; (merge in newer-midi that continue its own life)
+&gt; newer-midi-with-coremidi-driver (merge in newer-midi that continue its
+&gt; own life) server-ctl-proposal (already merged) new-midi ==&gt; replaced
+&gt; by newer-midi
+&gt;
+&gt; mob ??  js-rebase ??  jack-session ?? (Torben ??)
+
+we should not delete "mob". it is special feature of repo.or.cz that
+allows annonymous users to push commits to that branch.
+
+&gt; What is the git command to delete a remote branch?
+
+git push cz :devin-resolving
+
+(notice the ':' before the branch name)
+
+&gt;&gt; Should we have a history log of branching/merging?
+&gt;
+&gt; Would help yes.
+
+In the Changelog spirit, I created one on the wiki:
+
+http://trac.jackaudio.org/wiki/jack2_branching_history
+
+-- 
+Nedko Arnaudov &lt;GnuPG KeyID: 7862B9E45D1B58ED&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302427039.8687_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302437336.29728_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302436731.28537_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1302436731.28537_0.ltw:2,a&nbsp;&lt;87k4f2b9nn.fsf at nuntu dot spacelabs dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

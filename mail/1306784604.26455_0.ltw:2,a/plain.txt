@@ -1,0 +1,54 @@
+Date:        Mon, 30 May 2011 20:43:08 +0100
+From:        Matthew Robbetts  <[hidden] at gmail dot com>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] query jack scaling factor? (1306780162.20976_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] query jack scaling factor?
+
+On 05/30/11 19:29, Fons Adriaensen wrote:
+> On Mon, May 30, 2011 at 08:50:21PM +0300, Dan Muresan wrote:
+> 
+>> So, for now (October 2008) we use 2^(N-1)-1 as the scaling factor.
+>>
+>> Which is part 1 of my point -- unless Jack promises *never* to change
+>> this scaling strategy, it should be available for those apps that need
+>> bit-exactness.
+> 
+> AFAIK, the only point about bit-exactness is for legal purposes,
+> when you have to prove that some data is 'original' by comparing
+> its cryptographic digest to a certified one. Which means you
+> can't modify it in any way, and there's no point sending it
+> throuhg Jack.
+> 
+> Apart from that, there is nothing magical about the bit patterns
+> produced by an AD converter. Change the analog gain by 0.1 dB and
+> you get completely different samples and roundoff errors, for the
+> same input signal. They are neither better nor worse than the
+> original ones.
+
+Well, yes and no. The bits coming off an A/D converter are what they
+are, but whatever they are, the fact remains that a subsequent
+undithered truncation introduces distortion. Also, A/D converters aren't
+the only source of audio data - if you're processing a
+beautifully-mastered recording then you might want to take some degree
+of care with it.
+
+In this regard, I don't see bit-exactness as an end in itself, but it IS
+a means to guaranteeing you don't end up with needless undithered
+truncations in the I/O path. As it stands, the float/int conversion
+performed by JACK is one of these.
+
+(It could be avoided of course by using a power-of-two as the scaling
+factor, but from what I can gather, the majority of developers/users
+value having the full numerical range [-1, 1] available above avoiding
+this error)
+
+I don't want to start a flame war, but FWIW, I will say that by some
+people, and for some applications, bit-exactness IS genuinely valued,
+and is genuinely valuable. I've tried arguing this point in the past
+(possibly it was on the PortAudio list), but few seemed to share my view :)
+
+1306784604.26455_0.ltw:2,a <4DE3F34C.2030008 at gmail dot com>
+________________________________________________________________________________
+

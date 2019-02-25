@@ -1,0 +1,80 @@
+Date:        Thu, 19 May 2011 23:13:56 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          [hidden] at jackaudio dot org, Dan Muresan <[hidden] at gmail dot com>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] jack and signals (1305623638.6698_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] jack and signals (1306156453.13043_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack and signals
+
+Stéphane Letz <[hidden]> writes:
+
+> Le 13 mai 2011 à 01:33, Nedko Arnaudov a écrit :
+>
+>> Dan Muresan <[hidden]> writes:
+>> 
+>>> Hi,
+>>> 
+>>> I've just noticed that Jack does its own signal handling. Since
+>>> applications may well expect to interact with SIGINT and even
+>>> SIGPIPE, conflicts may arise. Is Jack's use of signals specified
+>>> anywhere? What signals can a client handle and from what threads,
+>>> what signals can it block, are existing handlers chained by Jack,
+>>> etc?
+>>> 
+>>> I also noticed calls to non-multi-threaded signal functions (such
+>>> as signal(), sigprocmask ()) in the jack2 codebase -- mostly in
+>>> examples, but also in common/JackControlAPI.cpp. POSIX specifically
+>>> states that any use of these functions is unspecified in
+>>> multi-threaded programs.  Since their threading-safe counterparts
+>>> (pthread_sigmask(), sigaction()) are used elsewhere in the
+>>> codebase, their use could be easily eliminated.
+>>> 
+>>> BTW, I'm in jack2 now. But such things should be specified for both
+>>> jack1 and jack2.
+>>  I'd be really happy if this gets cleared up. And even happier if
+>> jackdbus finally can catch SIGINT and SIGERM.
+>> 
+>> -- Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+>> 
+>
+> I think we should distinguish several things, in JACK2:
+>
+> 1) what happens on server side : the code for signal management is
+> located in two functions jackctl_setup_signals and
+> jackctl_wait_signals (part of the so called "control API")
+>
+> 2) on server side, the desire to precisely control the signal setup,
+> depending of the kind of process that is going to use the
+> "libjackserver" library (up to now: jackd or jackdbus)
+>
+> 3) what happens on client (libjack) side: right now the SIGPIPE signal
+> is filtered to avoid JACK clients receive a SIGPIPE when trying to
+> access a died server (see JackLibGlobals constructor in
+> JackLibGlobals.h)
+>
+> 4) an additional somewhat separated issue is the use of non
+> appropriate API (like "sigprocmask" instead of "pthread_sigmask")
+>
+> We should probably try to refine 1) and 2) to see if
+> jackctl_setup_signals and jackctl_wait_signals have to be redesigned
+> to be more flexible. What are the precise constraints for jackdbus?
+> Nedko can you refine?
+
+jackdbus needs to have a loop. jackd has no loop, it calls
+jackctl_wait_signals(signals). AFAICS jackctl_wait_signals() cannot be
+used for jackdbus because it will block the D-Bus loop.
+
+Maybe dbus loop can be implemented in a separate thread but I'd like to
+avoid this, if possible.
+
+>  3) should be possibly redesigned (is "chaining handlers" mandatory in
+>  this case?)
+>  4) is probably easy (API adaptation).
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1305836081.12736_0.ltw:2,a <87ei3uqwhn.fsf at arnaudov dot name>
+________________________________________________________________________________
+

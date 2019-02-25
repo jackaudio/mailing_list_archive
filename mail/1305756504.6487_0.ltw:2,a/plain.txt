@@ -1,0 +1,104 @@
+Date:        Wed, 18 May 2011 23:10:26 +0100
+From:        Rui Nuno Capela  <[hidden] at rncbc dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: rosea dot grammostola [Jack-Devel] JackSession - feedback (1305728843.18013_0.ltw:2,a)
+Follow-Up:   Arnold Krille Re: [Jack-Devel] JackSession - feedback (1305758897.8637_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] JackSession - feedback (1305791152.16477_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JackSession - feedback
+
+On 05/18/2011 03:26 PM, rosea.grammostola wrote:
+> Hi,
+>
+> Thanks again for your work on JackSession.
+>
+> Some feedback / questions.
+>
+> It's a pitty that you can 't open session saved by qjackctl with
+> pyjacksm and vice versa. We should avoid such compatibility issues in
+> LAU | LAD as much as possible imho.
+>
+
+qjackctl and pyjacksm session description files (session.xml) are *not* 
+compatible with each other. although they both relate the very same 
+things in principle, they just do it with slightly different enough markup.
+
+under qjackctl you can have any directory in your file-system for saving 
+a jack-session. last time i look, pyjacksm does a fixed directory for 
+all jack-sessions as sub-dirs.
+
+
+> Qjackctl:
+>
+> * I find it a bit strange that there is no option to quit the session,
+> like you have in jacksmtray. It's only possible to 'save and quit'.
+
+yes, that's been deliberate: qjackctl does not implement the just-quit 
+jack-session option. what's the use case of it anyway, may i ask?
+
+
+> * When I save a session, I have to make a folder and save it. If I save
+> it a second time, qjackctl session opens the filebrowser *inside* that
+> folder, so I have to go one folder level back and then save it. I think
+> it should open the folder where the session folders are located. (also
+> true for 'load').
+>
+
+yes, that's awful true. but read above: there's no central point "where 
+session folders are located" notion on qjackctl, it just picks on the 
+last one one you saved or loaded.
+
+i reckon the qt4 directory selector dialog is not a prime in 
+intuitiveness for this very purpose. yes, you have to go back one parent 
+folder and hit "new folder.." button there to create a brand new session 
+directory--that's a fact and maybe annoying for some ;)
+
+
+> *
+> A session with Qtractor, did save ok the first time, but not the second
+> time:
+>
+> 16:06:44.793 Session could not be saved to
+> "/home/derick/linuxaudio/JackSessions/qtractortest2/Qtractor/Funk.qtz".
+> Sorry.
+>
+> 16:06:48.009 Save session:
+> "/home/derick/linuxaudio/JackSessions/qtractortest2/Qtractor/Funk.qtz".
+>
+>
+> So reloading the session didn't reload the Funk.qtz file (qtractor has
+> removed that in 'the archive')
+>
+
+WARNING:
+
+there's a serious issue on qtractor 0.4.8 re. saving a jack-session over 
+an existing one that you saved earlier and reloaded as current.
+
+by default and until very recently, qtractor was saving its own session 
+state into a zip-archive which bundles all media content into one single 
+file (.qtz suffix).
+
+adding horror to tragedy, qjackctl wipes out everything under an 
+existing directory after prompting for any jack-session save process. so 
+when you agree to save and replace over that, and there's where it comes 
+to tragedy then horror, all media content will be toast!
+
+again, this is a qtractor 0.4.8 issue, an ugly and serious one--as you 
+might already inferred there's an awful high risk of permanent data loss 
+in there--alas, this has all been already addressed in current svn trunk.
+
+meanwhile, please avoid as much as you can to save and replace a 
+jack-session over an existing directory, specially one which the 
+currently qtractor loaded one participates--ALWAYS create a brand new 
+one (new jack-session directory)--at least until an update from the 
+latest qtractor svn trunk is in place ;)
+
+cheers
+-- 
+rncbc aka Rui Nuno Capela
+[hidden]
+
+1305756504.6487_0.ltw:2,a <4DD443D2.8080309 at rncbc dot org>
+________________________________________________________________________________
+

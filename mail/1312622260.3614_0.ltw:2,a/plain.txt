@@ -1,0 +1,40 @@
+Date:        Sat, 06 Aug 2011 11:17:27 +0200
+From:        Jeroen Van den Keybus  <[hidden] at gmail dot com>
+To:          Dan Swain <[hidden] at gmail dot com>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Dan Swain Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1312599702.22297_0.ltw:2,a)
+Follow-Up:   Mark Constable Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1312639191.27046_0.ltw:2,a)
+Follow-Up:   Dan Swain Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1312647804.7185_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea
+
+In my original post, I proposed slave hardware that would synchronize its
+local clock to sync packets from a regular Jack server (digital PLL),
+advertise a fixed amount of (floating point) and MIDI channels to the
+server, get packet/period/... data from the server and start sending
+receiving data over UDP continuously. The software needs to emulate a
+fixed-configuration NetJack2 client, which can eventually be done without an
+IP stack, since the initial communication is done using broadcasts.
+Therefore: small software footprint ==> no EEPROM or DRAM on the board
+==> low pin-count FPGA ==> low cost. Since we're trying to digitize
+precision analog signals, reduction of power (no high-current
+switching voltage regulators) and omission of memory (no noisy digital
+memory lines) is also a good thing for circuit design.
+
+However, in the meantime we have evolved to implementing the Jack software
+on an embedded CPU. Is this really feasible ? Embedded hardware is usually
+seriously less powerful than a general-purpose desktop CPU. Jack is also a
+fairly large piece of software, relying heavily on all sorts of libraries.
+
+Perhaps we should think in a different direction: why not try and run Jack
+on a compact, cheap but still powerful embedded PC ? An E350 board can be
+had these days for under $200. Some of the industrial embedded boards even
+have a 12V dc power input. Maybe the problem may then be redefined as how to
+get 8 analog audio I/O in and out of such a board (through PCIe). For
+slaves, we can keep disks etc. out of the box if we boot them through the
+network (there IS a Linux server anyway, isn't there, and more than one
+slave may use the same boot image).
+
+1312622260.3614_0.ltw:2,a <CAPRPZsAxZGKVNb28vGLejrn6AaeqMKxUxL_OuvDJ7cFoF38jsw at mail dot gmail dot com>
+________________________________________________________________________________
+

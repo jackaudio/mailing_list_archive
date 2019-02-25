@@ -1,0 +1,71 @@
+Date:        Wed, 10 Jul 2013 08:57:39 +0930
+From:        Jonathan Woithe  <[hidden] at just42 dot net>
+To:          Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>
+Cc:          [hidden] at lists dot sourceforge dot net, [hidden] at just42 dot net
+In-Reply-To: Adrian Knoth Re: [FFADO-devel] Segfault on jackd/ffado shutdown? (1373378327.12750_0.ltw:2,)
+Follow-Up:   Jonathan Woithe Re: Segfault when watchdog object is deleted (1373635797.16821_0.ltw:2,)
+
+Subject:     Re: Segfault when watchdog object is deleted (was: Re: [FFADO-devel] Segfault on jackd/ffado shutdown?)
+
+Hi
+
+Thanks for your thoughts.
+
+I've changed the thread subject to more accurately describe what's going on
+since the segfault is now known to be unrelated to the streaming system.  It
+occurs even when the watchdog object is used without any other ffado
+subsystems.
+
+On Tue, Jul 09, 2013 at 03:57:55PM +0200, Adrian Knoth wrote:
+> On 07/09/2013 03:26 PM, Jonathan Woithe wrote:
+> 
+> > It would appear that there's something about the way Posix threads are
+> > used by FFADO which is causing trouble either due to recent gcc (eg:
+> > 4.7.1) or libc (eg: 2.15).
+> 
+> Debian is at gcc-4.8.1 and libc 2.17, and we haven't received such bug
+> reports, neither in the past nor recently.
+
+Great - that's good to know.  Thanks.
+
+> Which more or less eliminates toolchain issues. Or we patch/configure
+> our toolchain in a certain way that prevents the bug from showing up.
+
+Agreed.
+
+> I vaguely remember a discussion on jack-devel and Paul saying "You must
+> never ever rely on pthread cancellation, it's broken." Maybe you're just
+> seeing this.
+
+Perhaps.  I also recall this discussion, but I don't think the reasons
+behind the statement were ever described in detail (at least not at that
+time).  I might search the list jack archives and see what turns up.
+
+> Or maybe your toolchain got some weird patching.
+
+The toolchain in Slackware 14.0 is very close to being unpatched.  For gcc
+there are two patches: gcc-4.7.1.adalib.pic.diff and
+gcc-no_fixincludes.diff, neither of which affect C/C++ code generation as
+far as I can tell.  Libc has a number of patches, most of which are clearly
+not relevant here.  I might go through these and see if anything crops up.
+
+For reference, I didn't see this segfault under Slackware 13.37 (gcc 4.5.2,
+glibc 2.13).
+
+> Last not least: Check the svn for the commit that fixed a similar issue
+> we had some months ago. Patch was by David Henningsson from Canonical, I
+> guess it was svn r1999.
+
+The symptoms this fixed was quite different and related to the way iterators
+were used in an invalid way to delete lists of objects associated with the
+streaming system.  The watchdog object is deleted with a singular "delete"
+operator.  However, I will take a closer look at the higher level calls
+which lead to the segfault just in case this is another obscure
+iterator-related problem.
+
+Regards
+  jonathan
+
+1373413843.30084_0.ltw:2, <20130709232739.GA21826 at marvin dot atrad dot com dot au>
+________________________________________________________________________________
+

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] [LAU] jack2 turned verbose</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] [LAU] jack2 turned verbose</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1338559106.5422_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1338560578.7500_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338559141.5496_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 01 Jun 2012 15:58:53 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>David Adler &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot linuxaudio dot org, [hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>David Adler
+<a href='../1338558541.4298_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Brendan Jones
+<a href='../1338840383.2949_0.ltw:2,a/index.html'>Re: [Jack-Devel] [LAU] jack2 turned verbose </a></td></tr>
+</table>
+<pre>
+Hi David,
+
+On 06/01/2012 03:48 PM, David Adler wrote:
+&gt; On Fri, Jun 1, 2012 at 2:52 PM, Robin Gareus wrote:
+&gt;&gt;
+&gt;&gt; It might have to do with Arch's compiler[-flags] and how jack2 uses
+&gt;&gt; unions .. or scoping: JackGlobals vs Engine-Parameters.. although I
+&gt;&gt; don't have an explanation.. all seems good.
+&gt; 
+&gt; Compiler flags (for 32bit) are, (from unaltered /etc/makepkg.conf):
+&gt; CXXFLAGS="-march=i686 -mtune=generic -O2 -pipe -fstack-protector
+&gt; --param=ssp-buffer-size=4 -D_FORTIFY_SOURCE=2"
+&gt; 
+&gt;&gt; A hunch: it could be caused by using 'server_ptr-&gt;verbose.b' (a union)
+&gt;&gt; as boolean. The sever only checks "if (server_ptr-&gt;verbose.b)". The
+&gt;&gt; union itself comprises other uninitialized values that could make it
+&gt;&gt; evaluate to true (though it shouldn't, but maybe some compiler
+&gt;&gt; optimization casts it to (int) instead of (bool) )
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; I know this is the '-users' list (I'm ccing jack-devel), but could
+&gt;&gt; someone who experiences the problem try to track it down?
+&gt;&gt;
+&gt;&gt; Basically just add a few printf()'s. Start at: common/JackControlAPI.cpp
+&gt;&gt; - line 926 - before the call to  "new JackServer(..)" add
+&gt;&gt;
+&gt;&gt;  printf("DEBUG verbose: %s\n",(server_ptr-&gt;verbose.b)?"on":"off");
+&gt;&gt;
+&gt;&gt; recompile, launch jackd. If it prints "verbose: on", sth is wrong with
+&gt;&gt; parameter initialization in main() or with using unions. If it's "off"
+&gt;&gt; the problem sits deeper:
+&gt; 
+&gt; DEBUG verbose: on
+&gt; 
+&gt;&gt; add a line just after common/JackServer.cpp line 66
+&gt;&gt;  printf("DEBUG verbose2: %s\n",(JackGlobals::fVerbose)?"on":"off");
+&gt;&gt; ...
+&gt; 
+&gt; above, your line number didn't match exactly, so we seem to have
+&gt; different versions (1.9.7 here). Thus, I wasn't exactly sure where to
+&gt; add the prinf() and did the following:
+&gt; 
+&gt; ...
+&gt;     JackServerGlobals::fUserCount = 1;     // One user
+&gt;     printf("DEBUG verbose2: %s\n",(JackGlobals::fVerbose)?"on":"off");
+&gt;     JackGlobals::fVerbose = verbose;
+&gt;     printf("DEBUG verbose3: %s\n",(JackGlobals::fVerbose)?"on":"off");
+&gt; }
+&gt; 
+&gt; which prints:
+&gt; DEBUG verbose2: off
+&gt; DEBUG verbose3: on
+&gt; 
+&gt;&gt; A crude test for the union() hunch would be to change
+&gt;&gt; common/JackControlAPI.h line 53:
+&gt;&gt;  replace
+&gt;&gt;  "union jackctl_parameter_value"
+&gt;&gt; with
+&gt;&gt;  "struct jackctl_parameter_value"
+&gt;&gt; and compile with '-fpermissive' like this:
+&gt;&gt;
+&gt;&gt;  CXXFLAGS="-fpermissive" ./waf  configure
+&gt;&gt;  ./waf
+&gt;&gt;
+&gt; 
+&gt; Again, mismatching line numbers. I assume you meant the line:
+&gt; union jackctl_parameter_value verbose;
+&gt; 
+&gt; Changing that to struct fixes both issues I reported,
+&gt; the verbose output and exit on last client close.
+&gt; 
+&gt; So we seem to be getting somewhere. Nice.
+&gt; 
+&gt; 
+&gt; thanks Robin,
+&gt; d
+
+just a quick re: the line-numbers refered to git-head
+  https://github.com/jackaudio/jack2/
+currently 007cdc37142a
+
+It looks like it is indeed caused by using unions to check for /true/.
+  "if ([bool/int/..]union) -&gt; always true"
+
+But I'm at a loss what'd cause those issues and how to best fix it.
+Maybe someone else can take it from here. It should be sufficient info
+to file a bug report at  https://github.com/jackaudio/jack2/issues
+
+best,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1338559106.5422_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1338560578.7500_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338559141.5496_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1338559141.5496_0.ltw:2,a&nbsp;&lt;4FC8CA9D.8090406 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

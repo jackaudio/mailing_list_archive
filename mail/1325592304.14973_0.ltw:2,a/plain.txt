@@ -1,0 +1,68 @@
+Date:        Tue, 03 Jan 2012 12:04:56 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] jack_frames_to_time() bug (1325583004.32062_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] jack_frames_to_time() bug (1325628273.17154_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack_frames_to_time() bug
+
+On Tue, Jan 03, 2012 at 10:30:18AM +0100, Stéphane Letz wrote:
+
+> I suggest that you prepare a clean patch with all
+> you proposed "timing related changes" (for jack1
+> for instance)
+
+I'd be happy to, provided someone can tell me _which_ changes
+are wanted.
+
+1. Add the functions to read current and next wakeup times
+   separately, fix jack_frames_to_time().
+
+   Options in that case:
+
+   A. Change the jack_nframes_t parameter or result of jack_frame_time(),
+      jack_frames_since_cycle_start(), jack_frames_to_time() and
+      jack_time_to_frames() to a double to preserve full precision.
+
+   B. Or add new versions keeping the current ones as deprecated.
+
+   C. Fix the anomaly in jack_frames_since_cylce_start() which
+      seems to use an unfiltered current_wakeup time, making
+      it inconsistent with the rest of the timing functions. 
+
+or
+
+2. Add an atomic accessor for all four of current_wakeup_time,
+   next_wakeup_time,  last_frame_time, and the current period
+   time estimate of the DLL. This allows the client to do all
+   calculations to full precision. Leave the other functions as
+   the are as a client wanting full precision is not required
+   to use them. Of course still fix jack_frames_to_time().
+
+   Options in that case:
+
+   A. Same as C above.
+
+As a separate but related issue I'd like to review the DLL
+code as I'm not convinced that the current implementation
+provides full precision.
+
+AFAIK, the decision is postponed until after the 'great
+unification', so I'm not really motivated to write a patch
+ATM.
+
+OTOH, fixing the bug in jack_frames_to_time() just requires
+a cut-and-paste of three lines (and testing it of course).      
+You don't need a patch to do that.
+
+Ciao,
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+
+1325592304.14973_0.ltw:2,a <20120103120456.GA19979 at linuxaudio dot org>
+________________________________________________________________________________
+

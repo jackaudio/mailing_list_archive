@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1544536141.16354_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1544544358.28730_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1544537765.18284_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 11 Dec 2018 15:15:36 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> [hidden] at microfx dot de </span> &lt;[hidden] at microfx dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at notam02 dot no </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>[hidden] at microfx dot de
+<a href='../1544527686.5301_0.ltw:2,/index.html'>Re: [Jack-Devel] Jack_Capture not starting anymore after having Jackd running as systemd service </a></td></tr>
+</table>
+<pre>
+Okay folks. I made it. Thank you sooo much. I have now everything as service and can start / stop it with a shell script. Really good mailing list! 
+
+&gt; On 11. Dec 2018, at 12:27, [hidden] wrote:
+&gt; 
+&gt; It seems like I made a loop with little success but I couldn&#x2019;t get rid of the crackling. So I reverted everything so I get clean sound. But I am still stuck at launching jack_capture - even as root.
+&gt; 
+&gt; sudo jack_capture --daemon -c 5 -mb -tm -f flac 
+&gt; 
+&gt; Cannot read socket fd = 5 err = Success
+&gt; CheckRes error
+&gt; JackSocketClientChannel read fail
+&gt; Cannot open jack_capture client
+&gt; JackShmReadWritePtr1::~JackShmReadWritePtr1 - Init not done for -1, skipping unlock
+&gt; JackShmReadWritePtr::~JackShmReadWritePtr - Init not done for -1, skipping unlock
+&gt; JackShmReadWritePtr::~JackShmReadWritePtr - Init not done for -1, skipping unlock
+&gt; 
+&gt; Any further ideas what I could inspect / try?
+&gt; 
+&gt; 
+&gt;&gt; On 11. Dec 2018, at 02:01, [hidden] wrote:
+&gt;&gt; 
+&gt;&gt; I removed the User / Group part from the .service file and the crackling is gone. Reading this now where it is explained: https://github.com/jackaudio/jackaudio.github.com/wiki/Cgroups &#x2026; Thank you so much for your time and really helpful tips&amp;tricks - learned a lot! 
+&gt;&gt; 
+&gt;&gt; This is my first mailing list and I hope I am not too much of a bugger because not following common rules I don&#x2019;t know yet. 
+&gt;&gt; 
+&gt;&gt;&gt; On 11. Dec 2018, at 01:48, [hidden] wrote:
+&gt;&gt;&gt; 
+&gt;&gt;&gt; somehow the file is not being created - but yes, I can see in journalctl those warnings:
+&gt;&gt;&gt; 
+&gt;&gt;&gt; Dec 11 01:47:07 MICROLABS-P1 jackd[11977]: Jack: JackAlsaDriver::Read warning fBufferSize = 128 nframes = 256
+&gt;&gt;&gt; Dec 11 01:47:10 MICROLABS-P1 jackd[11977]: Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 11
+&gt;&gt;&gt; Dec 11 01:47:14 MICROLABS-P1 jackd[11977]: Jack: JackAlsaDriver::Read warning fBufferSize = 128 nframes = 256
+&gt;&gt;&gt; Dec 11 01:47:20 MICROLABS-P1 jackd[11977]: Jack: JackSocketServerChannel::Execute : fPollTable i = 1 fd = 11
+&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; On 11. Dec 2018, at 01:38, Kjetil Matheussen &lt;[hidden]&gt; wrote:
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; Maybe you can do this in your service configuration:
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; ExecStart=/usr/local/bin/jackd -t 2000 -P 75 -d alsa -d hw:pisound -r
+&gt;&gt;&gt;&gt; 48000 -p 128 -n 2 -X seq -s &gt; /tmp/jackd_output.txt
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; And then check /tmp/jackd_output.txt if there's anything wrong.
+&gt;&gt;&gt;&gt; (by the way, doesn't services log to some file?)
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; On Tue, Dec 11, 2018 at 1:20 AM [hidden] &lt;[hidden]&gt; wrote:
+&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt; Hmm&#x2026; nope. Sorry for the spam. Still crackling after reboot + daemon-reload. This could have been so easy.
+&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt;&gt; On 11. Dec 2018, at 01:17, [hidden] wrote:
+&gt;&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt;&gt; ah.. reboot &#x2026; heh &#x2026; that&#x2019;s it. I just rebooted - but I forgot to systemctl daemon-reload - thanks!
+&gt;&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; On 11. Dec 2018, at 01:14, Kjetil Matheussen &lt;[hidden]&gt; wrote:
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; On Tue, Dec 11, 2018 at 1:12 AM [hidden] &lt;[hidden]&gt; wrote:
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; I just changed it to Group=audio &#x2026;same
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; Maybe this helps:
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; * - rtprio 99
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; * - memlock unlimited
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; You might also have to reboot after changing this file, don't know.
+&gt;&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt;&gt; Jack-Devel mailing list
+&gt;&gt;&gt;&gt;&gt;&gt; [hidden]
+&gt;&gt;&gt;&gt;&gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt; 
+&gt;&gt;&gt; 
+&gt;&gt;&gt; Jack-Devel mailing list
+&gt;&gt;&gt; [hidden]
+&gt;&gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;&gt; 
+&gt;&gt; 
+&gt;&gt; Jack-Devel mailing list
+&gt;&gt; [hidden]
+&gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt; 
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1544536141.16354_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1544544358.28730_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1544537765.18284_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1544537765.18284_0.ltw:2,&nbsp;&lt;AD9D1E48-46D4-458A-A4FC-AECA16B43719 at microfx dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

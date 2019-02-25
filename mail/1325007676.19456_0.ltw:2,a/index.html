@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] SOLVED: Re: How to control playback volume of loopback->JACK chain?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] SOLVED: Re: How to control playback volume of loopback->JACK chain?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325002805.10798_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325037816.11061_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325007676.19456_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 27 Dec 2011 09:41:01 -0800 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robert M. Riches Jr. </span> &lt;[hidden] at jacob21819 dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at yahoo dot com, [hidden] at jacob21819 dot net, [hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robert M. Riches Jr.
+<a href='../1324877144.7078_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to control playback volume of loopback-&gt;JACK chain? </a></td></tr>
+</table>
+<pre>
+&gt; Date: Sun, 25 Dec 2011 21:25:23 -0800
+&gt; To: [hidden], [hidden]
+&gt; From: [hidden] (Robert M. Riches Jr.)
+&gt;
+&gt; &gt; Date: Thu, 22 Dec 2011 05:18:58 -0800 (PST)
+&gt; &gt; From: James Warden &lt;[hidden]&gt;
+&gt; &gt; To: "[hidden]" &lt;[hidden]&gt;
+&gt; &gt;
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; Hello,
+&gt; &gt;
+&gt; &gt; Back in the days when I was hacking my way through to get the loopback method to work, I experimented with the "softvol" ALSA plugin.
+&gt; &gt; If you want to have the volume control on the loopback device, just modify your .asoundrc like this in the !default section (I commented out the former stuff and added a "softvol" section instead, assuming that you are using the same naming as found in my TWIKI page):
+&gt; &gt;
+&gt; &gt; # ------------------------------------------------------
+&gt; &gt; # default device
+&gt; &gt;
+&gt; &gt; pcm.!default {
+&gt; &gt; #&#xA0; type plug
+&gt; &gt; #&#xA0; slave.pcm "aduplex"
+&gt; &gt;
+&gt; &gt; &#xA0; type softvol
+&gt; &gt; &#xA0; slave {
+&gt; &gt; &#xA0;&#xA0;&#xA0;&#xA0;&#xA0; pcm "aduplex"
+&gt; &gt; &#xA0; }
+&gt; &gt;
+&gt; &gt; &#xA0; control {
+&gt; &gt; &#xA0;&#xA0;&#xA0;&#xA0;&#xA0; name "aduplex"
+&gt; &gt; &#xA0; }
+&gt; &gt;
+&gt; &gt; &#xA0; min_dB -51.0&#xA0; # 
+&gt; &gt; &#xA0; max_dB&#xA0;&#xA0; 0.0
+&gt; &gt; }
+&gt; &gt;
+&gt; &gt; # -------------------------------------------------------
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; Try this and see if that fulfils your need.
+&gt;
+&gt; I suppose that would work for a static volume level, to code
+&gt; the gain in the max_dB and min_dB values.  However, alsamixer
+&gt; would not come up when talking with "-D default" or without
+&gt; the -D option.  I tried the above and a few variations on the
+&gt; name in the control {} block based on the URL from an earlier
+&gt; message.  Nothing appeared to allow real-time changes in
+&gt; volume level.
+&gt;
+&gt; Fwiw: I think I have a fall-back plan to exchange a public
+&gt; key at login time on the X terminal (aka zero client) that
+&gt; should allow ssh to run alsamixer on the terminal's physical
+&gt; hardware sound card(s) displaying via an ssh tunnel to the
+&gt; VNC X server running on the server (where all the apps run)
+&gt; that will be viewed by the VNC viewer back on the X terminal.
+&gt; That's insanely complex, but with the VNC viewer in full-screen
+&gt; mode, that's about the only way I can see to do it if softvol
+&gt; can't be connected to by alsamixer.
+
+(Thank you for being patient with my user-level questions on this
+list.  This posting is to close the loop in case anyone else finds
+this thread with a similar problem.)
+
+The solution ended up being softvol on the _client_ side, with
+this .asoundrc:
+
+    pcm.lineout {
+      type hw
+      card Intel
+      device 0
+    }
+    ctl.lineout {
+      type hw
+      card Intel
+      device 0
+    }
+    
+    pcm.monitor {
+      type hw
+      card Intel
+      device 3
+    }
+    ctl.monitor {
+      type hw
+      card Intel
+      device 3
+    }
+    
+    pcm.plugboth {
+      type route;
+      slave.pcm {
+          type multi;
+          slaves.a.pcm "lineout";
+          slaves.b.pcm "monitor";
+          slaves.a.channels 2;
+          slaves.b.channels 2;
+          bindings.0.slave a;
+          bindings.0.channel 0;
+          bindings.1.slave a;
+          bindings.1.channel 1;
+          bindings.2.slave b;
+          bindings.2.channel 0;
+          bindings.3.slave b;
+          bindings.3.channel 1;
+      }
+      ttable.0.0 1;
+      ttable.1.1 1;
+      ttable.0.2 1; # front left
+      ttable.1.3 1; # front right
+    }
+    ctl.plugboth {
+      type hw;
+      card Intel;
+    }
+    
+    pcm.both plug:plugboth
+    ctl.both {
+      type hw;
+      card Intel;
+    }
+    
+    pcm.!default {
+      type softvol
+      slave.pcm "both"
+      control.name "Softmaster"
+      control.card Intel
+    }
+    ctl.!default {
+      type hw;
+      card Intel;
+    }
+
+Everything before the last double stanza existed before adding
+softvol in order to route sound from NetJACK to _both_ the HDMI
+monitor's speakers and the headphone/lineout jacks.  Without
+softvol, alsamixer could control the headphone/lineout volume
+with the 'Master' and 'Front' sliders, but the monitor was only
+controllable via the 'S/PDIF 1' on-off button.  Now, with the
+last double stanza, the 'Softmaster' slider created by softvol
+interactively controls the volume of both headphones and
+monitor speakers together.  With softvol, the system has been
+deployed.
+
+On a side note, the attempt to use softvol on the server was a
+wild ride.  The softvol plugin apparently won't attach to an
+ALSA loopback soundcard.  It will attach only to a real physical
+hardware soundcard.  Doing so causes the control to be permanently
+attached to that physical hardware soundcard, even surviving
+reboots via /var/lib/alsa/asound.state (/etc/asound.state in some
+documentation).  Removing it from the server requires moving
+around init scripts or booting to a Live-CD, mounting the main
+filesystem (a little more difficult with software RAID) and
+editing the asound.state file.  Yikes!
+
+Again, thank you for the help and for your patience with my
+user-level questions.
+
+Robert
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325002805.10798_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325037816.11061_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325007676.19456_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1325007676.19456_0.ltw:2,a&nbsp;&lt;20111227174101.EDDB8264E2 at one dot localnet&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

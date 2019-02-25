@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] A couple of related issues in jackd on ARM</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] A couple of related issues in jackd on ARM</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357673168.23855_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357676372.29073_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357674332.25723_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 08 Jan 2013 20:45:17 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"MONTANARO Luciano (MM)" &lt;[hidden] at magnetimarelli dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>"[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>MONTANARO Luciano (MM)
+<a href='../1357672415.22666_0.ltw:2,a/index.html'>[Jack-Devel] A couple of related issues in jackd on ARM </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>MONTANARO Luciano (MM)
+<a href='../1357720693.6865_0.ltw:2,a/index.html'>[Jack-Devel] R: A couple of related issues in jackd on ARM </a></td></tr>
+</table>
+<pre>
+Le 8 janv. 2013 &#xE0; 20:13, MONTANARO Luciano (MM) a &#xE9;crit :
+
+&gt; Hi all again,
+&gt; I am having new problems with jackd2, after our embedded platform switched to the 3.1 kernel.
+&gt; Actually, I think they were present with our previous kernel as well, but they have become systematic while once they were sporadic.
+&gt; 
+&gt; I think I have found the problematic code, but I need some insight from someone that knows the code.
+&gt; The first problem I am seeing is a very high number of xrun notifications, tens of them a second.
+&gt; They is due to alsa_driver_wait() returning with 0 as its frame number, which normally means an xrun has occurred, but in this case what seems to be happening is that jack_wait returns "normally", but with a capture_avail of 0 and a playback_avail of 512 on 9 calls out of 10. The tenth call I get both capture_avail and playback_avail set to 512. The wait_status is set to 0, as in "everything normal", I guess, and so I tried to modify JackAlsaDriver to skip the notification in this case, and things seem to be working fine, no noticeable glitches in the audio playback at all.
+
+Cannot answer here: what ALSA gurus think of the possible fix?
+
+&gt; 
+&gt; The second problem I was referring to is that this high number of notifications is triggering a problem in the JackRequest code:
+&gt; The CheckRes() macro checks for errors from the Read/Write calls, but these calls may silently fail: they can return without writing or reading, and this is accounted as success, but then Read() may return uninitialized data or Write is not retried when it should.
+&gt; 
+&gt; There is code like this:
+&gt; 
+&gt;         CheckRes(JackRequest::Write(trans));
+&gt;         CheckRes(trans-&gt;Write(&amp;fName, sizeof(fName)));
+&gt;         CheckRes(trans-&gt;Write(&amp;fProtocol, sizeof(int)));
+&gt;         CheckRes(trans-&gt;Write(&amp;fOptions, sizeof(int)));
+&gt;         CheckRes(trans-&gt;Write(&amp;fUUID, sizeof(int)));
+&gt; 
+&gt; Where I think after each Write there is potential for a needed retry, which is not done at all. Am I missing something?
+
+CheckRes was supposed to fail in case of error?
+
+Any log of the problem to show?
+
+St&#xE9;phane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357673168.23855_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357676372.29073_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357674332.25723_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1357674332.25723_0.ltw:2,a&nbsp;&lt;48F7C588-39F8-4983-A384-5EAB28DE3F1C at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,40 @@
+Date:        Thu, 12 May 2011 23:10:36 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Devin Anderson <[hidden] at charityfinders dot com>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Devin Anderson Re: [Jack-Devel] JACK thread priorities on different OSes (1305233664.15050_0.ltw:2,a)
+Follow-Up:   Devin Anderson Re: [Jack-Devel] JACK thread priorities on different OSes (1305307076.24783_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK thread priorities on different OSes
+
+Le 12 mai 2011 à 22:54, Devin Anderson a écrit :
+
+> On Thu, May 12, 2011 at 1:37 PM, Stéphane Letz <[hidden]> wrote:
+> 
+>>> but I think it's important to take into
+>>> account what those specific threads are doing.
+>>> 
+>>> So, uh ... what are those specific threads doing? :)
+>> 
+>> Any GUI thread, disk access, main thread... Think about any standard
+>> audio application (Reason, Live....) that the user start using JackRouter
+>> ASIO/JACK bridge. If this process get REALTIME_PRIORITY_CLASS,
+>> then it will certainly cause problem for any other running application.
+> 
+> Oh!  I see where there's a miscommunication.
+> 
+> I'm not saying that JACK 2 should set the process priority of client
+> processes; I'm saying that JACK 2 should allow its *own* process
+> priority to be set via a command line argument.
+
+OK this could make more sense, and would help for the audio/MIDI threads. 
+
+But then I guess all other threads of JACK server (like the server/client communication one) should be lowered, possibly to THREAD_PRIORITY_IDLE ( which is finally still 16, that is again... over THREAD_PRIORITY_TIME_CRITICAL thread of any other process...) Hum... (1)
+
+Then the Audio RT thread of clients should be handled in another process class,... hum (2) and we also have the issue that internal JACK clients running in the server process would be "boosted" so possibly behave differently than other out of process JACK clients Hum (3)...
+
+Stéphane
+
+1305234660.18427_0.ltw:2,a <30F15002-3D7F-4D79-833D-C09A7D17DB8A at grame dot fr>
+________________________________________________________________________________
+

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] R: A couple of related issues in jackd on ARM</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] R: A couple of related issues in jackd on ARM</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357720138.6042_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357725261.14479_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357720693.6865_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 09 Jan 2013 09:37:57 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> MONTANARO Luciano (MM) </span> &lt;[hidden] at magnetimarelli dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>"[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1357674332.25723_0.ltw:2,a/index.html'>Re: [Jack-Devel] A couple of related issues in jackd on ARM </a></td></tr>
+</table>
+<pre>
+&gt; -----Messaggio originale-----&#13;
+&gt; Da: St&#xE9;phane Letz [mailto:[hidden]]&#13;
+&gt; Inviato: marted&#xEC; 8 gennaio 2013 20:45&#13;
+&gt; A: MONTANARO Luciano (MM)&#13;
+&gt; Cc: [hidden]&#13;
+&gt; Oggetto: Re: [Jack-Devel] A couple of related issues in jackd on ARM&#13;
+&gt;&#13;
+&gt;&#13;
+&gt; Le 8 janv. 2013 &#xE0; 20:13, MONTANARO Luciano (MM) a &#xE9;crit :&#13;
+&gt;&#13;
+&gt; &gt; Hi all again,&#13;
+&gt; &gt; I am having new problems with jackd2, after our embedded platform&#13;
+&gt; switched to the 3.1 kernel.&#13;
+&gt; &gt; Actually, I think they were present with our previous kernel as&#13;
+&gt; &gt; well, but&#13;
+&gt; they have become systematic while once they were sporadic.&#13;
+&gt; &gt;&#13;
+&gt; &gt; I think I have found the problematic code, but I need some insight&#13;
+&gt; &gt; from&#13;
+&gt; someone that knows the code.&#13;
+&gt; &gt; The first problem I am seeing is a very high number of xrun&#13;
+&gt; &gt; notifications,&#13;
+&gt; tens of them a second.&#13;
+&gt; &gt; They is due to alsa_driver_wait() returning with 0 as its frame&#13;
+&gt; &gt; number,&#13;
+&gt; which normally means an xrun has occurred, but in this case what seems&#13;
+&gt; to be happening is that jack_wait returns "normally", but with a&#13;
+&gt; capture_avail of&#13;
+&gt; 0 and a playback_avail of 512 on 9 calls out of 10. The tenth call I&#13;
+&gt; get both capture_avail and playback_avail set to 512. The wait_status&#13;
+&gt; is set to 0, as in "everything normal", I guess, and so I tried to&#13;
+&gt; modify JackAlsaDriver to skip the notification in this case, and&#13;
+&gt; things seem to be working fine, no noticeable glitches in the audio playback at all.&#13;
+&gt;&#13;
+&gt; Cannot answer here: what ALSA gurus think of the possible fix?&#13;
+&gt;&#13;
+&gt; &gt;&#13;
+&gt; &gt; The second problem I was referring to is that this high number of&#13;
+&gt; notifications is triggering a problem in the JackRequest code:&#13;
+&gt; &gt; The CheckRes() macro checks for errors from the Read/Write calls,&#13;
+&gt; &gt; but&#13;
+&gt; these calls may silently fail: they can return without writing or&#13;
+&gt; reading, and this is accounted as success, but then Read() may return&#13;
+&gt; uninitialized data or Write is not retried when it should.&#13;
+&gt; &gt;&#13;
+&gt; &gt; There is code like this:&#13;
+&gt; &gt;&#13;
+&gt; &gt;         CheckRes(JackRequest::Write(trans));&#13;
+&gt; &gt;         CheckRes(trans-&gt;Write(&amp;fName, sizeof(fName)));&#13;
+&gt; &gt;         CheckRes(trans-&gt;Write(&amp;fProtocol, sizeof(int)));&#13;
+&gt; &gt;         CheckRes(trans-&gt;Write(&amp;fOptions, sizeof(int)));&#13;
+&gt; &gt;         CheckRes(trans-&gt;Write(&amp;fUUID, sizeof(int)));&#13;
+&gt; &gt;&#13;
+&gt; &gt; Where I think after each Write there is potential for a needed&#13;
+&gt; &gt; retry, which&#13;
+&gt; is not done at all. Am I missing something?&#13;
+&gt;&#13;
+&gt; CheckRes was supposed to fail in case of error?&#13;
+&gt;&#13;
+&#13;
+Yes, but the JackClientSocket::Read/Write functions return 0 if len != returned length.&#13;
+So CheckRes is fine with them.&#13;
+&#13;
+&gt; Any log of the problem to show?&#13;
+&gt;&#13;
+&#13;
+A log showing the problem is attached.&#13;
+The interesting lines are near the end, but maybe you can spot something else that is useful.&#13;
+&#13;
+The cause of the abort is that Jack seem to receive ConnectPorts with a -1 port id, but as you can see, at line 10311, there is an "Unknown Request -1", and a similar one at line 10125.&#13;
+&#13;
+Thank you,&#13;
+Luciano&#13;
+&#13;
+&gt; St&#xE9;phane&#13;
+&#13;
+Confidential Notice: This message - including its attachments - may contain proprietary, confidential and/or legally protected information and is intended solely for the use of the designated addressee(s) above. If you are not the intended recipient be aware that any downloading, copying, disclosure, distribution or use of the contents of the above information is strictly prohibited.&#13;
+If you have received this communication by mistake, please forward the message back to the sender at the email address above, delete the message from all mailboxes and any other electronic storage medium and destroy all copies.&#13;
+Disclaimer Notice: Internet communications cannot be guaranteed to be safe or error-free. Therefore we do not assure that this message is complete or accurate and we do not accept liability for any errors or omissions in the contents of this message.&#13;
+
+<a href='files/jack_aborting.zip' target='_blank'>* Attachment: 'jack_aborting.zip'</a>
+content-type: application/x-zip-compressed
+content-description: jack_aborting.zip
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357720138.6042_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357725261.14479_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357720693.6865_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1357720693.6865_0.ltw:2,a&nbsp;&lt;67BA5DEFFBE7BF46B4C53F7E5FC5AD4419E7205367 at MXCL13 dot fgremc dot it&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] "Stuck" sound when a Youtube audio stream terminates</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] "Stuck" sound when a Youtube audio stream terminates</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1363029618.21528_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1363033429.27367_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1363032243.25503_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 11 Mar 2013 16:03:51 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> jordan </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Harry van Haaren &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>jack-devel &lt;[hidden] at jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Harry van Haaren
+<a href='../1363029618.21528_0.ltw:2,a/index.html'>Re: [Jack-Devel] "Stuck" sound when a Youtube audio stream terminates </a></td></tr>
+</table>
+<pre>
+Hi,
+
+&gt;&gt; If i play a youtube video with this set up it plays fine. Half the time
+&gt;&gt; though if i pause it, stop it or close the tab while it's playing, the last
+&gt;&gt; second of it repeats over and over like a stuck record. Sometimes around 6
+&gt;&gt; times, sometimes indefinitely If i stop then start jack (via the interface)
+&gt;&gt; it goes back to normal. This is a buffer issue right?
+&gt;
+&gt; I have a similar issue with libflashsupport-jack, where upon start / stop of
+&gt; a flash video a short (tenth of a sec or so) burst of noise is audible.
+&gt; I imagine its something to do with the client setting up / quitting, not
+&gt; zeroing, and JACK calling process() on the non-zero'ed buffer.
+
+Have you guys tried using zita-a2j (drop-in replacement for
+alsa_in/out) + ALSA's snd-aloop kernel module (loopback device)
+instead?  I used to experience the same sort of bursts/pops, but now
+that i switched to/use zita-a2j things seem to be working much better,
+no pops on videos or anything like that. (i've been using it for a
+year or two now).
+
+zita-a2j manual: http://manned.org/zita-a2j/5ceefb08
+
+it's pretty simple to setup
+
+1, you just have to make sure the snd-aloop module is loaded, before
+using zita-a2j;
+
+'sudo modprobe snd-aloop'
+
+2. then check which device it is numerated as (ie: hw:x,y). in my case;
+
+$ cat /proc/asound/cards
+
+0 [Loopback       ]: Loopback - Loopback
+                           Loopback 1
+
+3. then for zita-a2j (as an example), i am only interested in
+receiving the outputs (no input devices);
+
+/usr/bin/zita-a2j -j ALSA-in -dhw:0,1
+
+...after this, all videos (in browser) work flawlessly :) from what i
+understand/heard zita-a2j also handles resampling nicer than other
+soutions, although i am not dead-positive on this. (citation needed).
+
+&gt;&gt; Obviously, i don't need to be playing youtube videos with jack.
+&gt;
+&gt; Me niether, but convinience of not having to stop JACK every youtube video /
+&gt; browser playback far outweights the hassle of a little noise... :)
+
+It's definitely a must to not have to stop/disable jackd in any
+situation on my desktop machine, anyway. ~ since Jackd is my default
+soundserver. -&gt; ie: no pulseaudio + i'm using ffado backend, so only
+ALSA for midi keyboards/devices and loopback device for youtube, or
+for the odd legacy (ALSA) app.
+
+plus, i learn music on youtube too, so i couldn't disable jackd / not
+a viable option ~ not if i plan on using my midi keys + soft-synth or
+what to use any guitar amp modelling, while learning, anyway. ;)
+
+&gt;&gt; What might be happening to cause this and how can i fix it?
+&gt;
+&gt; That I don't know I'm afraid :) Good luck!
+
+zita-a2j + snd-aloop may be worth a try, there may even be a detailed
+guide somewhere ~ although, someone else on the list can speak up, if
+they know where one is. (i don't off hand).
+
+cheerz
+
+Jordan
+
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1363029618.21528_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1363033429.27367_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1363032243.25503_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1363032243.25503_0.ltw:2,a&nbsp;&lt;CAOcfFMyhsUYzjm5UKnmgmkL0+JigyOj6ME7S1NvT=c=pkqKJCg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

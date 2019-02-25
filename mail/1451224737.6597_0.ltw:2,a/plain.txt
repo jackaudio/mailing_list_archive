@@ -1,0 +1,81 @@
+Date:        Sun, 27 Dec 2015 14:58:47 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          John Emmas <[hidden] at tiscali dot co dot uk>, JACK devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: John Emmas Re: [Jack-Devel] jack dsp load calculation (1451222035.4534_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack dsp load calculation
+
+On 12/27/2015 02:13 PM, John Emmas wrote:
+> On 27 Dec 2015, at 12:13, Robin Gareus wrote:
+> 
+>>
+>> How can one have buffer under/over-runs if there is sufficient time left
+>> to process the buffers?
+>>
+> 
+> This can happen (or rather, appear to happen) if the application
+> isn't updating the buffer status frequently enough.
+[..]
+
+Ok, so you were still thinking about the *current* reporting mechanism.
+
+Do you agree that this current behavior is not ideal?
+
+> However as I keep saying, this is NOT being caused by the averaging
+mechanism.
+
+Right, it's caused by the overall semantics of that API, which is why
+I'm saying that the API is not good.
+
+>> Some facts would be nice and an explanation of thoughts and that lead to
+>> the current implementation. Why keep 32 cycles history? Why not a
+>> rolling-average? Why add a first order low-pass filter after averaging
+>> with a fixed time-constant of 0.5 ? Why 0.5 ?
+>>
+> 
+> I can't answer those questions.  The history buffer and LPF already existed.
+> 
+>>
+>> Would you mind commenting on or answering the questions from other emails?
+>>
+>> eg.  What is lost - in your case for Mixbus - if jack were to report
+>> both average and max?
+>>
+> 
+>
+> If you're referring to Nedko's suggestion I've already stated that I
+think it would be a useful improvement.
+
+good. I must have missed that.
+
+> But in the meantime, if users
+> are hearing xruns (while they're seeing DSP figures around 40%) I'm
+> simply pointing out that this is NOT due to the averaging mechanism. And
+> in any case, if you're referring to Mixbus3 users, those complaints
+> weren't even about the Jack backend.!
+
+What use-case do you see in the exposing the average value? How do you
+interpret the value? How is a user supposed to interpret it?
+
+
+As developer I can see some value in it for regression tests (same app,
+same machine, same settings) for development, but then again it's the
+worst-case that really matters.
+
+As user I'm interested how much more DSP I can safely add, the current
+mechanism (average + thread-hold + filter) cannot provide any useful
+measure. How do you propose to address this?
+
+
+> Mixbus2 (which uses the Jack backend exclusively) has been around
+> for at least 4 years. Yet I can't remember a single user complaining about
+this.
+
+Well, jack has been around much longer. How is that an argument?
+
+best,
+robin
+
+1451224737.6597_0.ltw:2,a <567FEE97.7080407 at gareus dot org>
+________________________________________________________________________________
+

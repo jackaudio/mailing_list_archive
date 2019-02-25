@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack1: jack_transport does not work as master</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack1: jack_transport does not work as master</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1435844301.31879_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1435853008.8156_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1435851061.6508_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 02 Jul 2015 17:30:42 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Tobias Hoffmann </span> &lt;[hidden] at thax dot hardliners dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1435844301.31879_0.ltw:2,/index.html'>Re: [Jack-Devel] jack1: jack_transport does not work as master </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Tobias Hoffmann
+<a href='../1435855647.10372_0.ltw:2,/index.html'>Re: [Jack-Devel] jack1: jack_transport does not work as master </a></td></tr>
+</table>
+<pre>
+On 02/07/15 15:38, Paul Davis wrote:
+&gt; jack_transport is not intended to act as a the time master.
+Well, comparing example-clients/transport_client.c and 
+tools/transport.c, I'd say the one big difference between the two is 
+that tools/transport.c (aka jack_transport) can act as a *simple* 
+timebase master...
+
+&gt; providing BBT information requires some kind of tempo map. This is
+&gt; beyond the scope of jack_transport.
+Sure, if I need a more sophisticated tool, I'll use one (or write one 
+myself).
+Thankfully, jack provides a lot of small command line tools for simple 
+tasks.
+That's what I also expected from jack_transport. And with jack2 the same 
+jack_transport does work as a timebase master (with a "trivial" tempo map).
+
+But the real issue here is a completely different one:
+Does jack_set_timebase_callback() also require jack_set_process_callback()?
+
+jack_transport (which is shipping with jack1) assumes that 
+jack_set_process_callback is not required -- which matches jack2's behavior.
+But for jack1 the timebase callback is only called, when I add a process 
+callback (just return 0;).
+
+Either jack1/libjack0 is wrong to also require the process callback, or 
+transport.c is wrong to assume that it's not needed (because it does not 
+process audio).
+
+AFAIUI jackaudio.org/api does not clearly say that the process callback 
+must be non-NULL to become a timebase master, although I could see why 
+it might in fact be necessary (for a certain implementation).
+
+   Tobias
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1435844301.31879_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1435853008.8156_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1435851061.6508_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1435851061.6508_0.ltw:2,&nbsp;&lt;55955922.8010706 at thax dot hardliners dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

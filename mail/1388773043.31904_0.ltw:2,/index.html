@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] from alsa_[in|out] to zita</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] from alsa_[in|out] to zita</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1388770209.27188_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388774142.1375_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388773043.31904_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 03 Jan 2014 19:05:56 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Lucio Crusca </span> &lt;[hidden] at sulweb dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Lucio Crusca
+<a href='../1388767966.23877_0.ltw:2,/index.html'>Re: [Jack-Devel] from alsa_[in|out] to zita </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Dominique Michel
+<a href='../1388774142.1375_0.ltw:2,/index.html'>Re: [Jack-Devel] from alsa_[in|out] to zita </a></td></tr>
+</table>
+<pre>
+I've found this thread: http://linuxaudio.org/mailarchive/lad/2013/7/11/200910 
+and I've read through it. There's a substantial difference between how I start 
+zita and how the thread OP (IOhannes m zmoelnig) starts it.
+
+I use 
+
+zita-j2a -j ploop -v -d hw:0,1 ...
+
+but IOhannes uses hw:Loopback,0,1. So I've switched to his syntax and I think 
+I've moved one step forward:
+
+zita-j2a -j ploop -v -d hw:Loopback,0,1 -r 48000 -p 64 -L -n 2 &amp;
+zita-a2j -j cloop -v -d hw:Loopback,0,1 -r 48000 -p 64 -L -n 2 &amp;
+
+$ aplay /usr/share/sounds/alsa/Front_Center.wav 
+Playing WAVE '/usr/share/sounds/alsa/Front_Center.wav' : Signed 16 bit Little 
+Endian, Rate 48000 Hz, Mono
+
+e.g. no more errors, except I don't hear anything... well, to be honest I do 
+hear something: if I speak into the mic, I can hear myself into the 
+headphones, and that's great. I still can't hear anything from alsa 
+applications.
+
+I don't know if it helps, however here is the hw params output:
+
+$ aplay --device=hw:Loopback,0 --dump-hw-params 
+/usr/share/sounds/alsa/Front_Center.wav 
+Playing WAVE '/usr/share/sounds/alsa/Front_Center.wav' : Signed 16 bit Little 
+Endian, Rate 48000 Hz, Mono
+HW Params of device "hw:Loopback,0":
+--------------------
+ACCESS:  MMAP_INTERLEAVED RW_INTERLEAVED
+FORMAT:  S16_LE S16_BE S32_LE S32_BE FLOAT_LE FLOAT_BE
+SUBFORMAT:  STD
+SAMPLE_BITS: [16 32]
+FRAME_BITS: [16 1024]
+CHANNELS: [1 32]
+RATE: [8000 192000]
+PERIOD_TIME: (5 65536000]
+PERIOD_SIZE: [1 524288]
+PERIOD_BYTES: [64 1048576]
+PERIODS: [1 1024]
+BUFFER_TIME: (5 131072000]
+BUFFER_SIZE: [1 1048576]
+BUFFER_BYTES: [64 2097152]
+TICK_TIME: ALL
+--------------------
+
+but the same command, without specifying the device, gives:
+
+$ aplay --dump-hw-params /usr/share/sounds/alsa/Front_Center.wav 
+Playing WAVE '/usr/share/sounds/alsa/Front_Center.wav' : Signed 16 bit Little 
+Endian, Rate 48000 Hz, Mono
+HW Params of device "default":
+--------------------
+ACCESS:  MMAP_INTERLEAVED MMAP_NONINTERLEAVED MMAP_COMPLEX RW_INTERLEAVED 
+RW_NONINTERLEAVED
+FORMAT:  S8 U8 S16_LE S16_BE U16_LE U16_BE S24_LE S24_BE U24_LE U24_BE S32_LE 
+S32_BE U32_LE U32_BE FLOAT_LE FLOAT_BE FLOAT64_LE FLOAT64_BE MU_LAW A_LAW 
+IMA_ADPCM S24_3LE S24_3BE U24_3LE U24_3BE S20_3LE S20_3BE U20_3LE U20_3BE 
+S18_3LE S18_3BE U18_3LE U18_3BE
+SUBFORMAT:  STD
+SAMPLE_BITS: [4 64]
+FRAME_BITS: [4 640000]
+CHANNELS: [1 10000]
+RATE: [4000 4294967295)
+PERIOD_TIME: (85331 85332)
+PERIOD_SIZE: (341 366498150)
+PERIOD_BYTES: (170 4294967295)
+PERIODS: (0 2149583)
+BUFFER_TIME: [1 4294967295]
+BUFFER_SIZE: [682 733007751]
+BUFFER_BYTES: [341 4294967295]
+TICK_TIME: ALL
+--------------------
+
+i.e. totally different params... wasn't my Loopback device supposed to be the 
+default one?
+
+$ aplay -l
+**** List of PLAYBACK Hardware Devices ****
+card 0: Loopback [Loopback], device 0: Loopback PCM [Loopback PCM]
+  Subdevices: 1/2
+  Subdevice #0: subdevice #0
+  Subdevice #1: subdevice #1
+card 0: Loopback [Loopback], device 1: Loopback PCM [Loopback PCM]
+  Subdevices: 2/2
+  Subdevice #0: subdevice #0
+  Subdevice #1: subdevice #1
+card 1: SB [HDA ATI SB], device 0: ALC892 Analog [ALC892 Analog]
+  Subdevices: 0/1
+  Subdevice #0: subdevice #0
+card 1: SB [HDA ATI SB], device 1: ALC892 Digital [ALC892 Digital]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 2: Generic [HD-Audio Generic], device 3: HDMI 0 [HDMI 0]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1388770209.27188_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388774142.1375_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388773043.31904_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1388773043.31904_0.ltw:2,&nbsp;&lt;2688150.aoZGMJ3bMN at fx&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] [LAU] running jackd from rc.local</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] [LAU] running jackd from rc.local</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1429355351.10009_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1429355658.10439_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1429355505.10219_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 18 Apr 2015 14:11:38 +0300 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Athanasios Silis </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>David Nielson &lt;[hidden] at naptastic dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Developers JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>David Nielson
+<a href='../1429354739.8937_0.ltw:2,/index.html'>Re: [Jack-Devel] [LAU] running jackd from rc.local </a></td></tr>
+</table>
+<pre>
+Hi David,
+ it appears that due to the nature of ubuntu* distros, I have given up the
+notion of starting my audio application from within rc.local - I had
+problems with alsa_(in|out) not being able to grab the soundcards in my
+system.
+
+it was suggested that I do it from my desktop environments autostart
+features, but these are executed when I log in, whereas I want audio to
+start up sometime during the boot process (as my user) but before I log in.
+basically the idea is
+-I press "power ON" button on the pc
+-wait for pc to boot
+-audio works through this pc
+
+It is an audio routing workstation (and jack client) so it should normally
+get audio from the jack master, do some processing and spit audio from the
+soundcard i/o.
+
+so starting everything as root with a proper init script is not in the
+direction. but it appears "application autostart" is not effective either.
+
+
+
+On Sat, Apr 18, 2015 at 1:58 PM, David Nielson &lt;[hidden]&gt; wrote:
+
+&gt; Really, the right thing to do here is to set JACK up as a system
+&gt; service, with an init script, or whatever the systemd equivalent is, if
+&gt; you're running systemd.
+&gt;
+&gt; What you're using now is not actually an init script, if you have to
+&gt; call it from rc.local. Init scripts go in /etc/init.d, follow specific
+&gt; conventions, and are symlinked into various targets so they run only in
+&gt; the appropriate run levels.
+&gt;
+&gt; Here's a decent primer:
+&gt; http://www.thegeekstuff.com/2012/03/lsbinit-script/
+&gt;
+&gt; David Nielson
+&gt;
+&gt; On 04/18/2015 05:34 AM, Athanasios Silis wrote:
+&gt; &gt; Hi Len,
+&gt; &gt; unfortunately the .desktop file is not good for me.
+&gt; &gt; it is only run after I have logged in, whereas I want my script to be
+&gt; &gt; started as me, but before I log in.
+&gt; &gt; Is there a way to achieve that, without resorting to autologin ?
+&gt; &gt;
+&gt; &gt; On Fri, Apr 17, 2015 at 4:10 PM, Len Ovens &lt;[hidden]
+&gt; &gt; &lt;mailto:[hidden]&gt;&gt; wrote:
+&gt; &gt;
+&gt; &gt;     On Fri, 17 Apr 2015, Athanasios Silis wrote:
+&gt; &gt;
+&gt; &gt;         Hi all,
+&gt; &gt;         I am trying to run jackd instance from /etc/rc.local (along with
+&gt; &gt;         a few other
+&gt; &gt;         applications) from a custom made init script.
+&gt; &gt;
+&gt; &gt;         The system is ubuntustudio and I have setup everything to have
+&gt; &gt;         elevated
+&gt; &gt;         permissions when executing applications from the @audio group.
+&gt; &gt;
+&gt; &gt;
+&gt; &gt;     Are you really wanting to run audio while you are logged out? It
+&gt; &gt;     would be much easier to add a desktop file to ~/.config/autostart/
+&gt; &gt;     Like jackstart.desktop with something like:
+&gt; &gt;
+&gt; &gt;     [Desktop Entry]
+&gt; &gt;     Encoding=UTF-8
+&gt; &gt;     Version=0.9.4
+&gt; &gt;     Type=Application
+&gt; &gt;     Name=AutoJack
+&gt; &gt;     Comment=Jackdbus starter
+&gt; &gt;     Exec=jack_control start
+&gt; &gt;     StartupNotify=false
+&gt; &gt;     Terminal=false
+&gt; &gt;     Hidden=false
+&gt; &gt;
+&gt; &gt;
+&gt; &gt;     Change the Exec to point to a script if you want to add config
+&gt; &gt;     options, or use jackd instead of jack_control if you don't care
+&gt; &gt;     about PA-jack bridging.
+&gt; &gt;
+&gt; &gt;     This will have jack runnning from login.
+&gt; &gt;
+&gt; &gt;     If you want to headless operation then have rc.local do it as the
+&gt; &gt;     user that will run this stuff.
+&gt; &gt;
+&gt; &gt;     --
+&gt; &gt;     Len Ovens
+&gt; &gt;     www.ovenwerks.net &lt;http://www.ovenwerks.net&gt;
+&gt; &gt;
+&gt; &gt;
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; 
+&gt; &gt; Jack-Devel mailing list
+&gt; &gt; [hidden]
+&gt; &gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt; &gt;
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1429355351.10009_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1429355658.10439_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1429355505.10219_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1429355505.10219_0.ltw:2,&nbsp;&lt;CADgchnuyGEz-AmOLdVLkgQ-qxUBQt_e6ts=1_QFs8BTZjLFHMg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

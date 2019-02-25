@@ -1,0 +1,99 @@
+Date:        Thu, 12 May 2011 12:05:07 -0700
+From:        Devin Anderson  <[hidden] at charityfinders dot com>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz [Jack-Devel] JACK thread priorities on different OSes (1305188573.17421_0.ltw:2,a)
+Follow-Up:   Devin Anderson Re: [Jack-Devel] JACK thread priorities on different OSes (1305227415.27166_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] JACK thread priorities on different OSes (1305228065.29428_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK thread priorities on different OSes
+
+On Thu, May 12, 2011 at 1:22 AM, Stéphane Letz <[hidden]> wrote:
+
+> Look at the table at the bottom of
+> http://msdn.microsoft.com/en-us/library/ms685100(v=vs.85).aspx
+> (the "Base priority")
+>
+> Basically the way I understand is:
+>
+> - in *any* process priory class, the
+> THREAD_PRIORITY_TIME_CRITICAL (currently used for audio and
+> MIDI RT) is actually 15
+>
+> - the only way to boost that value is to move the *entire process* to
+> REALTIME_PRIORITY_CLASS but then *all other threads* of this
+> process will get crazy values between 16 and 31, that is *above* any
+> THREAD_PRIORITY_TIME_CRITICAL value that a process *below*
+> REALTIME_PRIORITY_CLASS would have taken... this is just wrong.
+
+I'm not convinced that this is wrong in every case.  I think that
+giving the choice to the user and letting him/her determine the best
+process priority for his/her system is a good idea.  I think issuing a
+very obvious warning containing lots of capital letters when running
+in REALTIME_PRIORITY_CLASS is also a good idea. :)
+
+The process priority is less important if MMCSS is available, but
+that's not always the case.  It's my understanding that many Windows
+pro audio users still use Windows XP.
+
+> - in the presence of MIDI and audio thread, what should we do? keep
+> the process in NORMAL_PRIORITY_CLASS , set the audio RT to
+> THREAD_PRIORITY_HIGHEST (so actually 10) and the MIDI RT to
+> THREAD_PRIORITY_TIME_CRITICAL (so actually 15). Not sure it
+> will improve the situation..
+
+I think the process should run in NORMAL_PRIORITY_CLASS by default,
+and that the process priority should be adjustable via a command line
+argument.
+
+I'm not totally convinced it will improve the situation either, but,
+given that JACK 2 runs on Windows and is going to continue to run on
+Windows, I would like to see the situation improve as much as it
+possibly can.
+
+>> MMCSS, when it's implemented, adds another sort of priority when the
+>> -P switch is set to 90 or above.
+>>
+>> I can't help but feel that the current situation is hackish and cheap.
+>
+> So my feeling is that this process/thread priority description is
+> basically flawed on Windows, and this is probably the reason they
+> added another flawed concept like MMCSS...
+
+I mostly agree with you, but I think MMCSS does help the situation a
+bit.  When MMCSS is available, it should definitely be used, as it
+solves the problem with process priorities that you identified
+earlier; that is, that a higher process priority changes the priority
+of *every* thread instead of the changing the priority of the threads
+that need to have high priorities.
+
+Some possible mappings using MMCSS:
+
+PRIORITY_AUDIO: Task Name - "Pro Audio", AVRT_PRIORITY_HIGH
+PRIORITY_CALLBACK: no MMCSS, THREAD_PRIORITY_NORMAL
+PRIORITY_MIDI_TERMINAL: Task Name - "Pro Audio", AVRT_PRIORITY_CRITICAL
+
+>> I can think of a potential practical use for this sort of thing.
+>> Let's assume that someone wanted to write an audio driver for bindings
+>> that were available on more than one operating system (i.e.
+>> PortAudio), or wanted to write a MIDI driver for bindings that were
+>> available on more than one operating system (i.e. PortMIDI, RtMidi).
+>> Instead of creating a bunch of ugly #ifdef's, the driver could use the
+>> appropriate constant to set the thread priority.
+>
+> Sure I agree with that, I'm just saying we can improve a bit (abstract
+> some OS specificities) but not expect miracles...
+
+I don't expect any miracles.  However, since JACK 2 is running on
+Windows, I would like to see Windows users get a fighting chance.
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+
+1305227128.26082_0.ltw:2,a <BANLkTinGeJryh9_oM8H-nLXY1sqi9nuthg at mail dot gmail dot com>
+________________________________________________________________________________
+

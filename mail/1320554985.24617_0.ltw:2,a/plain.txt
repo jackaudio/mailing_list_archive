@@ -1,0 +1,130 @@
+Date:        Sun, 06 Nov 2011 04:46:56 +0000
+From:        Panos Ghekas  <[hidden] at yahoo dot gr>
+To:          Guy Perrin <[hidden] at dobroyd dot com>
+Cc:          "\"[hidden] at lists dot jackaudio dot org\"" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Guy Perrin [Jack-Devel] Win7 Jack v1.9.8 - failure to register 64bit JackRouter.dll from v1.9.8 (1320550813.19159_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Σχετ: Win7 Jack v1.9.8 - failure to register 64bit JackRouter.dll from v1.9.8
+
+Hi Guy,
+
+I'm a humble Jack user on windows a couple of years now and indeed Stephane fullfilled my wishes for a 64bit version and beyond that he  did a mixed one !
+
+My system is win7 home premium, 64bit, Intel T4400 dual core at 2.2GHz 4GBram, standard HDD at 5.900rpm
+
+I really had no problem registering the 64 bit .dll with command prompt.
+
+I have my UAC shut down. I presume you did so. It is a must on win7.
+
+At first when I tried to register 64bit JackRouter.dll from system 32 (regsvr) I got errors too.
+
+The solution was to run the command prompt and type 
+Regsvr32 “C:\Program Files (x86)\Jack v1.9.8\64bits\JackRouter.dll”
+
+Then all went OK 
+- I presume that indeed in your C:\Program Files (x86)\Jack v1.9.8 there is a folder named 64bits and inside there is the JackRouter.dll
+
+This is a quick responce from a fellow win7 user untill Stephane or other more experienced people respond :-)
+
+Best
+Panos
+
+PS. Glad you came and visited our jOrgan wiki ! :-D
+
+
+
+________________________________
+Απο: Guy Perrin <[hidden]>
+Προς: "[hidden]" <[hidden]>
+Στάλθηκε: 5:38 π.μ. Κυριακή, 6 Νοεμβρίου 2011
+Θεμα: [Jack-Devel] Win7 Jack v1.9.8 - failure to register 64bit JackRouter.dll from v1.9.8
+
+
+G’day
+ 
+This email maybe long winded, but I figure better to give too much information rather than too little.
+My intention is two-fold: to give an error report AND to request the GUID for the 64bit version of the JackRouter.dll, so I can manually create the Win7 Registry Key/Entry.
+ 
+The journey to (and through) the Problem:
+ 
+I’ve downloaded the 64bit installation package (for v1.9.8 on Windows 7) as per instructions obtained from the Mailing List:
+ 
+From letz at grame.fr  Wed Oct 12 08:02:22 2011
+Subject: [Jack-Devel] Jack in Windows 7 x64
+ 
+Mixed 64/32 bits version: http://www.grame.fr/~letz/Jack_v1.9.8_64_setup.exe
+ 
+and run the installation.
+The 32 bit functionality is working according to spec.
+However 64bit functionality was not available.
+I then found an article which presented information for Registering JackRouter for 64-bit Windows:
+ 
+[ http://sourceforge.net/apps/mediawiki/jorgan/index.php?title=Configuring_Jack_PortAudio_to_connect_to_your_soundcard ]
+ 
+Regsvr32 “C:\Program Files (x86)\Jack v1.9.8\64bits\JackRouter.dll”
+ 
+My attempt to run the registration process resulted in the display of an error MessageBox:
+ 
+(First dialog box)
+ 
+MessageBox Title: JackRouter.
+Message: Register Server failed ! (-1)
+ 
+(click OK)
+ 
+(Next Message box displayed)
+ 
+MessageBox Title: RegSvr32
+Message: The module “C:\Program Files (x86)\Jack v1.9.8\64bits\JackRouter.dll” was loaded but the call to DllRegisterServer failed with error code 0xffffffff.  For more information about this problem, searchonline using the error code as a search item.
+ 
+I then referenced a Microsoft Knowledge Base article (http://support.microsoft.com/kb/249873 ) which contained the following non-specific information:
+ 
+
+________________________________
+
+The module ""%1"" was loaded but the call to %2 failed with error code %3.\n\nFor more information about this problem, search online using the error code as a search term.
+
+There was an error when regsvr32.exe invoked the entrypoint in the module specified in the command line. The error code appears as part of the message
+
+________________________________
+
+ 
+Brickwall.
+ 
+I then perused the available source code for v1.9.7.
+I managed to locate the GUID for the JackRouter.dll from the source code.
+By referencing the Windows Registry entries under:
+ 
+HKEY_LOCAL_MACHINE\Software\Wow6432Node\ASIO\JackRouter (registry entry name located in the ASIO SDK from Steinberg)
+ 
+I was able to confirm the validity of the GUID in the source code (it was exactly the same as appeared in the Registry Key).
+ 
+I believe that if we have two distinct executables containing COM servers, each DLL must register a unique GUID for each.
+I assume that the GUID located in the v1.9.7 code must be for 32bit, and a macro must be used in the v1.9.8 code to switch between the 32bit/64bit GUID depending on the version (32/64 bit) being compiled.
+ 
+Possible Solutions:
+ 
+1)      There is an issue with my Computer Setup which needs to be addressed.
+I am running:
+a.      Win7 Pro SP1 64  bit
+b.      HP EliteBook 8540w
+c.      Intel Core i7 CPU Q840 @ 1.87 GHz
+d.      16Gb RAM
+I also have ASIO4ALL v2 installed and functioning.
+ 
+2)      There is an issue with v1.9.8 JackRouter.dll registration code which needs to be addressed (though I doubt it).  No suggestions here as I don’t have access to the source code.
+
+
+3)      Someone sends me the GUID (or the source code) for the v1.9.8 JackRouter.dll, and I just enter it direct into the Registry Key:
+
+HKEY_LOCAL_MACHINE\Software\ASIO\JackRouter
+ 
+Hope I’m not being too presumptuous.
+ 
+Regardz
+Guy
+ 
+
+1320554985.24617_0.ltw:2,a <1320554816.93141.YahooMailNeo at web29104 dot mail dot ird dot yahoo dot com>
+________________________________________________________________________________
+

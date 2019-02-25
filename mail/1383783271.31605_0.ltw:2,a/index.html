@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] [jack1] building without zita</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] [jack1] building without zita</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1383779008.28917_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1383785593.693_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1383783271.31605_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 07 Nov 2013 00:14:00 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Kaspar Bumke </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1382710721.4954_0.ltw:2,/index.html'>Re: [Jack-Devel] [jack1] building without zita </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1383785593.693_0.ltw:2,a/index.html'>Re: [Jack-Devel] [jack1] building without zita </a></td></tr>
+</table>
+<pre>
+I don't have the libs installed either actually.
+
+The relevant section of the configure output seem to be:
+
+checking for _Z28zita_resampler_major_versionv in -lzita-resampler... no
+checking for _Z28zita_alsa_pcmi_major_versionv in -lzita-alsa-pcmi... no
+    ....
+ | Build with ZITA ALSA bridge support................... : false
+
+But then during make:
+
+Making all in tools
+make[2]: Entering directory `/home/debian/build/jack1/tools'
+Making all in zalsa
+make[3]: Entering directory `/home/debian/build/jack1/tools/zalsa'
+/bin/bash ../../libtool  --tag=CXX   --mode=compile g++
+-DHAVE_CONFIG_H -I. -I../..  -DAPPNAME=\"zalsa_in\"
+-DVERSION=\"0.4.0\"   -g -O2 -MT zalsa_in_la-zita-a2j.lo -MD -MP -MF
+.deps/zalsa_in_la-zita-a2j.Tpo -c -o zalsa_in_la-zita-a2j.lo `test -f
+'zita-a2j.cc' || echo './'`zita-a2j.cc
+libtool: compile:  g++ -DHAVE_CONFIG_H -I. -I../..
+-DAPPNAME=\"zalsa_in\" -DVERSION=\"0.4.0\" -g -O2 -MT
+zalsa_in_la-zita-a2j.lo -MD -MP -MF .deps/zalsa_in_la-zita-a2j.Tpo -c
+zita-a2j.cc  -fPIC -DPIC -o .libs/zalsa_in_la-zita-a2j.o
+In file included from zita-a2j.cc:26:0:
+alsathread.h:25:28: fatal error: zita-alsa-pcmi.h: No such file or directory
+ #include &lt;zita-alsa-pcmi.h&gt;
+                            ^
+compilation terminated.
+make[3]: *** [zalsa_in_la-zita-a2j.lo] Error 1
+make[3]: Leaving directory `/home/debian/build/jack1/tools/zalsa'
+make[2]: *** [all-recursive] Error 1
+make[2]: Leaving directory `/home/debian/build/jack1/tools'
+make[1]: *** [all-recursive] Error 1
+make[1]: Leaving directory `/home/debian/build/jack1'
+make: *** [all] Error
+
+
+Here are the full logs: https://gist.github.com/kasbah/7346632
+
+On 25 October 2013 15:18, Paul Davis &lt;[hidden]&gt; wrote:
+&gt; (1) the current configure.ac is missing checks for the zita headers (it just
+&gt; checks for the libs). so if you have the libs but not the headers installed,
+&gt; it will fail. i will try to fix this ASAP
+&gt;
+&gt; (2) yes, there will be a circular dependency so if you are building them
+&gt; both from scratch the order would be jack1 =&gt; zita =&gt; rebuild jack1
+&gt;
+&gt;
+&gt; On Fri, Oct 25, 2013 at 10:04 AM, Kaspar Bumke &lt;[hidden]&gt;
+&gt; wrote:
+&gt;&gt;
+&gt;&gt; Hey,
+&gt;&gt;
+&gt;&gt; should the current master be buildable without the zita tools? Having
+&gt;&gt; some trouble here even after trying various hacks on the configure.ac
+&gt;&gt; and configure files.
+&gt;&gt;
+&gt;&gt; Also, I think I encountered some sort of circular dependencies when I
+&gt;&gt; tried to build with the zita tools since they -ljack which hasn't been
+&gt;&gt; built yet? Couldn't reproduce this yet though, will have another go
+&gt;&gt; later...
+&gt;&gt;
+&gt;&gt; Cheers,
+&gt;&gt;
+&gt;&gt; Kaspar
+&gt;&gt; 
+&gt;&gt; Jack-Devel mailing list
+&gt;&gt; [hidden]
+&gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1383779008.28917_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1383785593.693_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1383783271.31605_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1383783271.31605_0.ltw:2,a&nbsp;&lt;CAB+dmjgpjJM5uqhtbVj-9UdX_nEvjRHb5ftHiaJY3jBYEFEScQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

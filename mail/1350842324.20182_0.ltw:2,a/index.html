@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Audioadapter broken pipe error in Jack 1.9.8</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Audioadapter broken pipe error in Jack 1.9.8</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1350824944.2285_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1350860734.2676_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1350842324.20182_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 21 Oct 2012 10:58:31 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Mark Kendrick </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Geoff Beasley
+<a href='../1350860734.2676_0.ltw:2,a/index.html'>Re: [Jack-Devel] Audioadapter broken pipe error in Jack 1.9.8 </a></td></tr>
+</table>
+<pre>
+I'm following the guides to get a working linux-to-linux netjack setup
+running. I think I'm close, but I'm getting stuck with a "Broken pipe"
+(and broken audio) when I try to load the audioadapter.
+
+I'm running Jack2 version 1.9.8 which I start in realtime with the net
+backend, like so:
+
+[root@alarmpi jack2]# jackd -R -d net
+jackdmp 1.9.8
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2011 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+no message buffer overruns
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 10
+NetDriver started in async mode without Master's transport sync.
+Waiting for a master...
+Initializing connection with bree...
+**************** Network parameters ****************
+Name : alarmpi
+Protocol revision : 5
+MTU : 1500
+Master name : bree
+Slave name : alarmpi
+ID : 2
+Transport Sync : no
+Send channels (audio - midi) : 2 - 0
+Return channels (audio - midi) : 2 - 0
+Sample rate : 48000 frames per second
+Period size : 2048 frames per period
+Network latency : 5 cycles
+SampleEncoder : Float
+Slave mode : async
+****************************************************
+
+
+
+I load the audioadapter with this command in another terminal:
+
+[root@alarmpi ~]# jack_load audioadapter -i "-d hw:CODEC"
+audioadapter is running.
+client name = audioadapter
+
+
+When I do, the server gives this output followed by a long string of
+"Broken pipe" messages accompanied by clicking noises on the USB audio
+device:
+
+Audio Interface Description :
+Sampling Frequency : 48000, Sample Format : S16_LE, buffering : 2048,
+nperiod : 2
+Software inputs :  2, Software outputs :  2
+Hardware inputs :  2, Hardware outputs :  2
+Card info (address : 0x40d05490)
+        ID         = CODEC
+        Driver     = USB-Audio
+        Name       = USB Audio CODEC
+        LongName   = Burr-Brown from TI USB Audio CODEC at
+usb-bcm2708_usb-1.2, full speed
+        MixerName  = USB Mixer
+        Components = USB08bb:2900
+--------------
+HW Params info (address : 0x466a3460)
+
+--------------
+HW Params info (address : 0x466a3c08)
+
+--------------
+../linux/alsa/JackAlsaAdapter.h:463, w3 : Broken pipe(-32)
+../linux/alsa/JackAlsaAdapter.h:463, w3 : Broken pipe(-32)
+../linux/alsa/JackAlsaAdapter.h:463, w3 : Broken pipe(-32)
+../linux/alsa/JackAlsaAdapter.h:463, w3 : Broken pipe(-32)
+../linux/alsa/JackAlsaAdapter.h:463, w3 : Broken pipe(-32)
+
+
+
+Those broken pipe errors continue until I unload the audioadapter. I
+should note that the network audio piece of this "worked", meaning I
+could send sound from the host to this client by connecting all the
+ports. It sounded terrible, of course, because these errors just kept
+coming, but I feel like I'm very close to having a low-latency stream
+to a $35 piece of hardware (a Raspberry Pi).
+
+I am able to play audio from a "normal" audio player via Alsa through
+the USB device without issue.
+
+Any thoughts on what I could do to fix this or work around it?
+
+I tried getting the latest version from git and managed to compile it
+on this device, but jack wouldn't start. It kept giving a "Bus error"
+accompanied by memory alignment errors in the kernel log. I assumed
+that was something specific to the arm hardware and didn't want to
+bother everyone with it. I can give more details on that if you want,
+but my hope would be to find a solution within the 1.9.8 codebase I
+have running "successfully" on this machine.
+
+Thanks - let me know if you need more details.
+
+
+
+___________________
+Mark Kendrick
+aeetos at [google's mail service] dot com
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1350824944.2285_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1350860734.2676_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1350842324.20182_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1350842324.20182_0.ltw:2,a&nbsp;&lt;CALFtKw7Kf0L8a9wSiDXYpPXVPkRjeHNDBAEjV1wniRAij2RA9g at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

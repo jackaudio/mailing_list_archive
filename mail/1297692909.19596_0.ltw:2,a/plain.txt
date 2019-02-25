@@ -1,0 +1,42 @@
+Date:        Mon, 14 Feb 2011 15:14:47 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          torbenh Hohn <[hidden] at gmx dot de>, Valerio Pilo <[hidden] at akhela dot com>
+Cc:          "[hidden] at lists dot jackaudio dot org List" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: torbenh Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1297691732.17940_0.ltw:2,a)
+Follow-Up:   Robin Gareus Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1297947692.32535_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client
+
+>>> 
+>> 
+>> Since I cannot reproduce the original issue here on my Linux machine, I cannot go much further. To summarize:
+>> 
+>> - when JACK2 in synchronous mode, the server does : blocking ALSA read (actually, wait + read), graph activation, wait for graph to complete, write ALSA. 
+>> 
+>> - when a client is killed, it may fail to correctly complete a cycle, before the server detect the client has been removed, and cleanup the graph.  The server has a timeout to decide when the graph has really failed before trying to write back in ALSA. Since the server is late, ALSA backend issue a  "ALSA: could not complete playback" error in alsa_driver_write. This is considered as a "non recoverable error" and the backend wrapping thread is just stopped.
+>> 
+>> - how does JACK1 behave is a similar situation? I guess there is a "graph late" problem also? Is there a timeout to decide when the graph has really failed? why is the "ALSA: could not complete playback" error not triggered in this precise case?
+> 
+> jack1 will be late too.
+> but jack1 does not try to write to the driver when the graph is late.
+> the next alsa wait will detect the xrun and recover.
+> so the next cycle, things should be fine again.
+> 
+
+
+OK this makes sense, Valerio here a patch to test that does not write back in the backend if the "graph process" fails:
+
+
+
+
+Can you try is and report?
+
+Thanks
+
+Stéphane 
+* Attachment: '1297692909.19596_0.ltw:2,a/files/AUDIO_DRIVER.diff'
+content-type: application/octet-stream
+
+1297692909.19596_0.ltw:2,a <77AD61A4-60AD-4905-A34A-65D07BB081DA at grame dot fr>
+________________________________________________________________________________
+

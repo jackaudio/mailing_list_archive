@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Shared memory and static variables</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Shared memory and static variables</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1379242204.5966_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1379486990.12493_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1379443664.31035_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 17 Sep 2013 20:47:27 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Kristian Amlie </span> &lt;[hidden] at amlie dot name&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1379509185.16806_0.ltw:2,/index.html'>Re: [Jack-Devel] Shared memory and static variables </a></td></tr>
+</table>
+<pre>
+Hi,
+
+I have not posted to this list before, but I am a long time user of
+Jack. I'm also a developer, and I'm thinking about making a patch for
+Jack, but I thought I would ask some opinions/advice from the Jack
+developers first, particularly whether you would ever approve the patch
+I'm thinking of.
+
+The reasons for writing the patch are rather technical (it's not a new
+feature, sorry!), so bear with me. I am the author of the Jack2DSSI
+plugin wrapper (http://jack2dssi.sf.net/). It (ab)uses the Jack API (and
+some private API) to create an internal Jack server, which it then wraps
+in a DSSI plugin. This way, any Jack client can become a plugin.
+
+Here is the problem: You cannot launch more than one instance of the
+plugin. I *think* that the reason is that the shared memory structure
+that Jack uses is pointed to by some global variables (registry_id and
+registry_info), and this means that the second server will mess up the
+pointers of the first server. It was probably never designed to run more
+than one server in one process.
+
+What I would like to do is to refactor some code in the shm.c file &amp;
+friends, so that it would not rely on these global variables. Most
+likely this would involve adding some function parameters here and there
+to pass the pointers on the stack, rather than as global variables; I
+haven't worked out all the details yet.
+
+Since this touches with the very heart of Jack's interprocess
+communication mechanism, I won't be surprised if there is some
+skepticism towards this change, especially since it (seemingly) only
+benefits one application. On the other hand, removing global variables
+is usually a good thing to do if one can.
+
+So there you have it. I hope that made sense. My questions are:
+
+1. Do you know of a strong reason that this should not be done? (e.g.
+"breaking the API is unavoidable")
+
+2. Do you think you'd approve a patch like that if it was written and
+reviewed properly?
+
+
+Cheers!
+
+-- 
+Kristian
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1379242204.5966_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1379486990.12493_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1379443664.31035_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1379443664.31035_0.ltw:2,&nbsp;&lt;5238A3BF.3070204 at amlie dot name&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,75 @@
+Date:        Wed, 08 Feb 2017 18:16:46 +0100
+From:        Jörg Müller  <[hidden] at gmail dot com>
+To:          Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels (1485178334.32055_0.ltw:2,a)
+Follow-Up:   John Rigg Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels (1486585073.6400_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels (1486732521.12244_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels
+
+So the bug has been fixed on the alsa-side. However, when I start jack via:
+
+wfs@wfs16:~$ jackd -p 1024 -d alsa -C madifx_record_all -P madifx_playback_all
+jackdmp 1.9.10
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2014 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+no message buffer overruns
+no message buffer overruns
+no message buffer overruns
+JACK server starting in realtime mode with priority 10
+self-connect-mode is "Don't restrict self connect requests"
+audio_reservation_init
+Acquire audio card Audio0
+creating alsa driver ...
+madifx_playback_all|madifx_record_all|1024|2|48000|0|0|nomon|swmeter|-|32bit
+configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: 32bit float little-endian
+ALSA: use 8 periods for capture
+ALSA: final selected sample format for playback: 32bit float little-endian
+ALSA: use 8 periods for playback
+jackd: ../linux/alsa/JackAlsaDriver.cpp:122: virtual int
+Jack::JackAlsaDriver::Attach(): Assertion `fCaptureChannels < 256'
+failed.
+Aborted (core dumped)
+
+The corresponding cpp-file at that line compares against a variable
+called "DRIVER_PORT_NUM", which is a constant defined in
+"common/JackConstants.h" on line 53 on the github repo. Could that be
+the problem?
+
+2017-01-23 14:31 GMT+01:00 Adrian Knoth <[hidden]>:
+> On Mon, Jan 23, 2017 at 01:57:09PM +0100, Jörg Müller wrote:
+>
+>> I need to combine two HDSPe MADI FX cards to one virtual device. I have a
+>
+> Fancy!
+>
+>> For combining the MADI FX cards to one virtual device, I created an
+>> .asoundrc with 194 inputs for each card. When I start that virtual device
+>
+> You can (and probably should) ask this again on the ALSA ML if you want
+> to do it via ALSA virtual devices. The other option is to have jack open
+> both cards:
+>
+>    https://github.com/jackaudio/jack1/commit/40b01cc3691f25840b40432ec16fd312dbfbd365
+>
+> I have never tried it, but in theory, you just add -A 2ndALSAname to the
+> command line and be done.
+>
+> Not sure how much documentation is available for this on the internet,
+> but might be worth trying.
+>
+>
+> Cheers
+>
+> --
+> mail: [hidden]       http://adi.thur.de      PGP/GPG: key via keyserver
+>
+
+1486574217.20755_0.ltw:2,a <CAKw=HF3aKxt=hwO5_pdXLiPihAPVqpsZj9WboMFw51_6gVCQ-Q at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,47 @@
+Date:        Fri, 19 Jun 2009 22:08:08 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          [hidden] at lists dot jackaudio dot org
+Cc:          Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>
+In-Reply-To: Lennart Poettering Re: [LAD] [Jack-Devel] jack2's dbus name (1245342112.31614_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] jack2's dbus name
+
+Lennart Poettering <[hidden]> writes:
+
+> On Thu, 18.06.09 16:09, [hidden] ([hidden]) wrote:
+>
+>> > I think org.jackaudio.service should be fine. I don't think this
+>> > automatic logic needs to work on non-D-Bus jack builds. As I see it
+>> > you don't need to make any changes on jack for this to work. All I
+>> > need is the guarantee that by the time the service name is registered
+>> > on the bus jack is fully accessible. Otherwise we had a race here: if
+>> > PA looks for the org.jackaudio.service name to appear on the bus and
+>> > then imemdiately connects to it while jack isn't fully accessible yet
+>> > PA would fail.
+>> 
+>> the existence of org.jackaudio.service object does not guarantee,
+>> that jackd is connectable.
+>
+> I'd consider that brokeness in Jack then. Taking the name on the bus
+> sould be the last step during initialization. Otherwise you'll always
+> be in racy situations where clients try to talk to JACK while JACK is
+> only half-way initialized.
+
+I'd like to clarify something,
+
+org.jackaudio.service exposes the controller object. It is not the server,
+it is the controller, a peristent endpoint that can be used to start and
+stop the server on user request. jack clients are usually not supposed
+to check whether jack server is started. It will be either autostarted
+or libjack "initialization" will fail if autostart is disabled and jack
+server is stopped.
+
+The dbus object name that is used for cooperation with PA is different
+thing.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: DE1716B0>
+
+1245438548.11894_0.ltw:2,a <87bpokoxd3.fsf at usbix dot spacelabs dot org>
+________________________________________________________________________________
+

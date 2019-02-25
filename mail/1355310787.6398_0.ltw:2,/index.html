@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] speaker management</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] speaker management</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1355308301.2223_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1355326813.26436_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1355310787.6398_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 12 Dec 2012 13:12:57 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Nedko Arnaudov </span> &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Patrick Shirkey
+<a href='../1355308301.2223_0.ltw:2,/index.html'>Re: [Jack-Devel] speaker management </a></td></tr>
+</table>
+<pre>
+"Patrick Shirkey" &lt;[hidden]&gt; writes:
+
+&gt;&gt;&gt; So do we need a way to override the jack portnames in the JACK API?
+&gt;&gt;&gt;
+&gt;&gt;&gt; Seems like a reasonable addition to the API to me.
+&gt;&gt;
+&gt;&gt; we already have it - jack aliases (altrough i dont recommend using them)
+&gt;&gt;
+&gt;
+&gt; Are "jack aliases" unique to  LADISH? I haven't heard of them in the JACK
+&gt; API?
+
+jackdbus doesnt expose aliases (on purpose) and ladish doesnt use
+them. There is WIP branch to use jack aliases as "transport" for better
+default hardware client/port names. "default", because you can change
+them later with ladish (or with jack aliases).
+
+jack aliases are part of the jack api. both jack1 and jack2.
+
+&gt; Maybe it would be helpful if you could give a step by step instruction on
+&gt; how to achieve what Arnold is looking for with ladish and then we can test
+&gt; it out to see if it does the trick?
+
+1. Create studio. Studio stores and restores jack setup and
+infrastructure jack apps like crossovers. Connections between hardware,
+infrastructure jack apps and rooms (yes, you can have more than one) are
+part of the studios.
+
+2. Create room in the studio. Room has snake-like (multicore cable)
+connection to studio. The room snake ports have well defined roles.
+
+3. Connect room ports to other jack clients in the studio subgraph.
+
+4. Start your non-infrastructure apps as part of the room and save them
+as projects. You can connect jack apps to studio-link ports.
+
+ladish has two types of "sessions". studios and rooms. The jack graph
+can be split between studio and one or more rooms. Studio is "session"
+that has only non-project specific part of the jack graph. Jack
+management is also part of the studio. Studio has room definitions.
+
+When you load and start the studio:
+ * jack server is configured and started
+ * infrastructure (studio) apps are started
+ * studio app ports are reconnected once they appear in the jack graph.
+ * rooms are recreated (without projects loaded in them
+
+Then you load your project into suitable room. It is not implemented
+yet, but the rooms can be created from room definitions stored in the
+projects. Other think that is not implemented yet is custom
+(user-defined) room templates. Right now they are all defined in the
+code (still easy to add new ones).
+
+-- 
+Nedko Arnaudov &lt;GnuPG KeyID: 5D1B58ED&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1355308301.2223_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1355326813.26436_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1355310787.6398_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1355310787.6398_0.ltw:2,&nbsp;&lt;87fw3bbk1y.fsf at arnaudov dot name&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

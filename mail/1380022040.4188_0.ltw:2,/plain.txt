@@ -1,0 +1,44 @@
+Date:        Tue, 24 Sep 2013 13:27:10 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Harry van Haaren Re: [Jack-Devel] Very low latency audio (1379681614.14790_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Very low latency audio
+
+On 09/20/13 14:53, Harry van Haaren wrote:
+
+>> On my netbook, I was able to start jackd with
+>> jackd -P62 -dalsa -dhw:0 -r44100 -p16 -n2
+>> but the hardware driver didn't support -p8 or -p4.
+>>
+> Indeed very few cards support that low buffer size: apparently one of
+> the Creative SoundBlaster series starts on -p8 but xruns internally...
+> I've heard that some RME gear is capable of running at such low
+> latencies too. No experience with those RME interfaces (the PCI-E
+> stuff IIRC).
+
+The RME PCI cards do 64, while their PCIe counterparts offer 32.
+
+
+If you want less, then you have to sample the hardware pointer and write
+closely in front of it. In theory, pulseaudio already supports it on
+Intel HDA cards, but they're aiming for less interrupts/Wakeups, not low
+latency.
+
+I have an experimental kernel patch to enable the same mode on RME HDSPM
+cards, but pulseaudio has a built-in limit of 2x32 channels, so I cannot
+test it on my 2x36 channels RayDAT. ;) Maybe I could try with the 2x18
+channels Multiface attached to my laptop, just to see if it works.
+
+
+
+IIRC, Clemens Ladisch successfully used small buffers with his firewire
+ALSA module, but I don't remember the exact numbers.
+
+
+
+Just my €0.02
+
+1380022040.4188_0.ltw:2, <5241770E.9060404 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

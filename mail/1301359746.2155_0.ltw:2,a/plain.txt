@@ -1,0 +1,37 @@
+Date:        Tue, 29 Mar 2011 02:48:39 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          [hidden] at xs4all dot nl
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: [hidden] at xs4all dot nl [Jack-Devel] Transcoding clients for jack ? (1301262140.2786_0.ltw:2,a)
+Follow-Up:   [hidden] at xs4all dot nl Re: [Jack-Devel] Transcoding clients for jack ? (1301363410.7989_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Transcoding clients for jack ?
+
+On 03/27/2011 11:41 PM, [hidden] wrote:
+> Hi,
+> I was wondering whether there are any realtime (or near realtime)
+> transcoding clients for jack ? In particular I am currently interested in
+> transcoding to vorbis, wav and aac audio. Must be cross platform (or at
+> least run on Linux too).
+
+3 years old and almost forgotten: `jack-stdout`
+http://rg42.org/oss/jackstdout/
+
+  jack-stdout system:capture_1 system:capture_2 \
+  | oggenc -r -R 48000 -B 16 -C 2 - \
+  > /tmp/my.ogg
+
+just pipe to sox, aacplusenc, lame, ffmpeg,..
+
+It's realtime-safe. However: if the internal ringbuffer (64k
+stereo-samples - 256kBytes) and the unix-pipe (on Linux: 64kBytes) fill
+up, samples will be dropped from the ringbuffer (and you'll get error
+messages to stderr.) - The buffers are large enough for most tasks. The
+CPU's the limit. YMMV.
+
+HTH,
+robin
+
+1301359746.2155_0.ltw:2,a <4D912C67.7050707 at gareus dot org>
+________________________________________________________________________________
+

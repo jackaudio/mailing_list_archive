@@ -1,0 +1,121 @@
+Date:        Sun, 31 Jan 2016 15:06:50 +0100
+From:        Joakim Hernberg  <[hidden] at alchemy dot lu>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] stepping down (1454247893.8989_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] stepping down
+
+On Sun, 31 Jan 2016 08:44:42 -0500
+Paul Davis <[hidden]> wrote:
+
+> On Sun, Jan 31, 2016 at 6:33 AM, Kjetil Matheussen
+> <[hidden]
+> > wrote:
+> 
+> >
+> >
+> >
+> > I don't think Jack is the wrong solution for a DAW either. But Jack
+> > never got finished.
+> > It has a wonderful API, but it shouldn't be a struggle for a
+> > program to create a jack client
+> > if a jack server isn't running. (there were a lot of talk about this
+> > around 10 years ago,
+> > but the end result never became as good as it should I think).
+> >
+> 
+> i am not sure what the problem is here. if the client doesn't specify
+> anything, then the server will start automatically with the same
+> parameters as it did last time. this has worked for years. no?
+> 
+> 
+> >
+> > I think the first program trying to create a client also should
+> > start the server. Not
+> > just fork off a process, but actually run the server.
+> > And if another program wants to create a jack client, it connects
+> > to the first client process,
+> > which is the one running the server.
+> >
+> 
+> this seems a bit odd to me. if the first client is really just a
+> client, why would it become the server? what happens when the user
+> closes it (or otherwise resets it)?
+> 
+> that's the whole point of using a control application that exists
+> before (and almost certainly after) all other clients.
+> 
+> 
+> >
+> > Furthermore, GUI should be built into libjack, so that you can call
+> > jack_open_audio_driver_configuration_gui(),
+> > jack_open_audio_connection_configuration_gui(),
+> > etc. inside your client.
+> >
+> > I know there is something called libjackserver, but how many uses
+> > it?
+> >
+> 
+> libjackserver isn't what you think it is. you're thinking of the
+> server API, used to start, stop and otherwise control a JACK server.
+> it is the basis of jack2's dbus support, so basically everything
+> using jack2 is using it. it is also present in jack1, and is also
+> used internally there.
+> 
+> libjackserver is also used *all* the time.
+> 
+> Does it do
+> > all these things? How stable is it? In my opinion, there shouldn't
+> > be any libjackserver, or jackd program, or qjackctl, only libjack.
+> >
+> 
+> this would simply lead *back* to jackd, since lots of people would
+> want a program they could start in order to start jack, that would
+> run before and after other clients. someone would write it, link it
+> to libjack and it would become "jackd".
+> 
+> 
+> >
+> > Another problem with Jack is that it never attempted to do consumer
+> > audio, and then we got pulseaudio in addition to Jack. There should
+> > only be Jack, IMO.
+> >
+> 
+> here we sort of agree.
+
+I'll comment as somewhat of a heretic using reaper in wine together
+with wineasio/jack.  I have a monolithic environment in that reaper is
+the daw, and my plugins are vsts hosted by reaper either in it's own
+process or in separate processes (for bridging/sandboxing).  I also
+enjoy all the benefits in using jack, being able to record/output
+from/to pulseaudio and alsa (mostly using the alsa loopback device in
+combination with zita-a2jbridge as it seems to be the best solution).
+
+In addition I can use zita-n2jbridge to distribute audio over my lan,
+and even use zita-a2jbridge to connect additional soundcards.  Mostly
+features I don't use very often, but very handy to just change output
+in reaper and hear my mix on the laptop or tv speakers (with very
+low latency)...
+
+When I start reaper, wineasio creates the jack client, the server
+autostarts (if not running) and wineasio auto connects the reaper
+outputs to the main soundcard outputs.
+
+When rewriting the wineasio client, it was very handy having the jack
+api and I suspect that it would have been a lot harder to do if I
+had to program using the alsa api instead.
+
+What can I say, I really love the environment and think JACK is working
+fantastically well.  Having the plugins hosted in my daw is clearly
+superior (imo), but the routing flexibilty of jack and the ease of
+programming to the jack api makes jack a great asset in my setup.
+
+As always YMMW.
+
+-- 
+
+   Joakim
+
+1454249230.9898_0.ltw:2, <20160131150650.4f85a412 at tor dot valhalla dot alchemy dot lu>
+________________________________________________________________________________
+

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] [PATCH] [core] change pthread_t to jack_native_thread_t in all public headers.</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] [PATCH] [core] change pthread_t to jack_native_thread_t in all public headers.</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298307478.15173_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298314398.28958_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298308828.17962_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 21 Feb 2011 18:19:49 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Torben Hohn </span> &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+</table>
+<pre>
+since jack1 only runs on archs with pthread.h we just
+typedef pthread_t jack_native_thread_t;
+
+jack2 needs something smarter.
+
+this patch prevents a future merge of the jack header files,
+but iff we decide to do that, we can probably find a proper
+solution at that time.
+---
+ jack/jack.h   |    4 +---
+ jack/thread.h |    8 ++++----
+ jack/types.h  |    7 +++++++
+ 3 files changed, 12 insertions(+), 7 deletions(-)
+
+diff --git a/jack/jack.h b/jack/jack.h
+index 572e6b8..c3c72f2 100644
+--- a/jack/jack.h
++++ b/jack/jack.h
+@@ -25,8 +25,6 @@
+ extern "C" {
+ #endif
+ 
+-#include &lt;pthread.h&gt;
+-
+ #include &lt;jack/types.h&gt;
+ #include &lt;jack/transport.h&gt;
+ 
+@@ -172,7 +170,7 @@ int jack_deactivate (jack_client_t *client) JACK_OPTIONAL_WEAK_EXPORT;
+  * @return the pthread ID of the thread running the JACK client side
+  * code.
+  */
+-pthread_t jack_client_thread_id (jack_client_t *) JACK_OPTIONAL_WEAK_EXPORT;
++jack_native_thread_t jack_client_thread_id (jack_client_t *) JACK_OPTIONAL_WEAK_EXPORT;
+ 
+ /*@}*/
+ 
+diff --git a/jack/thread.h b/jack/thread.h
+index 786b692..1a33202 100644
+--- a/jack/thread.h
++++ b/jack/thread.h
+@@ -69,7 +69,7 @@ int jack_client_max_real_time_priority (jack_client_t*) JACK_OPTIONAL_WEAK_EXPOR
+  * @returns 0, if successful; EPERM, if the calling process lacks
+  * required realtime privileges; otherwise some other error number.
+  */
+-int jack_acquire_real_time_scheduling (pthread_t thread, int priority) JACK_OPTIONAL_WEAK_EXPORT;
++int jack_acquire_real_time_scheduling (jack_native_thread_t thread, int priority) JACK_OPTIONAL_WEAK_EXPORT;
+ 
+ /**
+  * Create a thread for JACK or one of its clients.  The thread is
+@@ -88,7 +88,7 @@ int jack_acquire_real_time_scheduling (pthread_t thread, int priority) JACK_OPTI
+  * @returns 0, if successful; otherwise some error number.
+  */
+ int jack_client_create_thread (jack_client_t* client,
+-			       pthread_t *thread,
++			       jack_native_thread_t *thread,
+ 			       int priority,
+ 			       int realtime,	/* boolean */
+ 			       void *(*start_routine)(void*),
+@@ -101,9 +101,9 @@ int jack_client_create_thread (jack_client_t* client,
+  *
+  * @returns 0, if successful; otherwise an error number.
+  */
+-int jack_drop_real_time_scheduling (pthread_t thread) JACK_OPTIONAL_WEAK_EXPORT;
++int jack_drop_real_time_scheduling (jack_native_thread_t thread) JACK_OPTIONAL_WEAK_EXPORT;
+ 
+-typedef int (*jack_thread_creator_t)(pthread_t*,
++typedef int (*jack_thread_creator_t)(jack_native_thread_t*,
+ 				     const pthread_attr_t*,
+ 				     void* (*function)(void*),
+ 				     void* arg) JACK_OPTIONAL_WEAK_EXPORT;
+diff --git a/jack/types.h b/jack/types.h
+index 3f07118..d2a20b1 100644
+--- a/jack/types.h
++++ b/jack/types.h
+@@ -22,6 +22,7 @@
+ #define __jack_types_h__
+ 
+ #include &lt;inttypes.h&gt;
++#include &lt;pthread.h&gt;
+ 
+ typedef int32_t jack_shmsize_t;
+ 
+@@ -73,6 +74,12 @@ typedef struct _jack_client  jack_client_t;
+  */
+ typedef uint32_t	     jack_port_id_t;
+ 
++/**
++ *  to make jack API independent of different thread implementations,
++ *  we define jack_native_thread_t to pthread_t here.
++ *  (all platforms that jack1 runs on, have pthread)
++ */
++typedef pthread_t            jack_native_thread_t;
+ 
+ /**
+  *  @ref jack_options_t bits
+-- 
+1.7.2.3
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298307478.15173_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298314398.28958_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298308828.17962_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1298308828.17962_0.ltw:2,a&nbsp;&lt;1298308789-19952-1-git-send-email-torbenh at gmx dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

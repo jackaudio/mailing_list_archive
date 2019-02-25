@@ -1,0 +1,100 @@
+Date:        Fri, 20 Sep 2013 10:55:24 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          "Mann, Eric" <[hidden] at intel dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>, John Reed <[hidden] at gmail dot com>
+In-Reply-To: Mann, Eric Re: [Jack-Devel] Very low latency audio (1379688134.19455_0.ltw:2,)
+Follow-Up:   David Nielson Re: [Jack-Devel] Very low latency audio (1379701116.2547_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Very low latency audio
+
+i should have said "burst transfer" which is pretty much all you want to
+use for low audio i think.
+
+interrupts are a totally separate issue. *something* has to wake user space
+periodically to initiate audio data generation/processing, and i'm not
+aware of how you would do that without an interrupt from something (whether
+it is an hrtimer or the audio interface is not really relevant).
+
+
+On Fri, Sep 20, 2013 at 10:42 AM, Mann, Eric <[hidden]> wrote:
+
+>  Maybe I’m mis-understanding the device, but you can generally do < 64
+> byte DMA transfers over PCIe … they are called partials. They aren’t
+> particularly efficient from a bus and memory utilization perspective ..
+>  you start to see the inefficiency as you approach back-to-back transfers
+> -> 1 usec (at least on current CPUs … some 6+ yr old laptop its probably in
+> the 10-20 usec area … close to a 48KHz sample rate … ).****
+>
+> ** **
+>
+> The current state of the art for low-latency **anything** is to avoid
+> interrupts (as an interrupt itself is ~1-2 usec of processing latency) –
+> either in-kernel (e.g. 3.11’s low-latency sockets) or in user space.****
+>
+> ** **
+>
+> Eric Mann / Intel Networking Division****
+>
+> ** **
+>
+> *From:* [hidden] [mailto:
+> [hidden]] *On Behalf Of *Paul Davis
+> *Sent:* Friday, September 20, 2013 6:58 AM
+> *To:* John Reed
+> *Cc:* JACK
+> *Subject:* Re: [Jack-Devel] Very low latency audio****
+>
+> ** **
+>
+> note that the lower limit for PCI burst transfer is 64 bytes, which means
+> that if you are only schlepping around two channels worth of 16 bits each,
+> you need 16 samples minimum to be able to launch a DMA transfer.
+>
+> obviously higher channel counts reduce or eliminate this problem.****
+>
+> ** **
+>
+> On Fri, Sep 20, 2013 at 8:35 AM, John Reed <[hidden]> wrote:*
+> ***
+>
+> Hello,****
+>
+> ** **
+>
+> On my netbook, I was able to start jackd with****
+>
+> jackd -P62 -dalsa -dhw:0 -r44100 -p16 -n2****
+>
+> but the hardware driver didn't support -p8 or -p4.****
+>
+> ** **
+>
+> -p16 already requires a lot of fast interrupts, so I assume that to use
+> this reliably, I would have to be very careful about setting all of the
+> kernel switches, etc.****
+>
+> ** **
+>
+> Is there any hope for getting -p8 or -p4 working, even if I have to write
+> my own custom device driver? Or has anyone done any work in connecting
+> xenomai to jack? Would I be better off writing a xenomai application and
+> then find a way to connect it to an ALSA driver directly?****
+>
+> ** **
+>
+> Cheers,****
+>
+> John****
+>
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org****
+>
+> ** **
+>
+
+1379688931.19989_0.ltw:2, <CAFa_cKmMw-zfzbjE7KmxGHxerVFnpWHwHS0rCbojhe2ivhG-kA at mail dot gmail dot com>
+________________________________________________________________________________
+

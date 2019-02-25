@@ -1,0 +1,87 @@
+Date:        Tue, 06 Sep 2011 10:35:44 -0700
+From:        ccrome  <[hidden] at gmail dot com>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] Debugging Jack Clients (1315327545.27630_0.ltw:2,a)
+Follow-Up:   ccrome Re: [Jack-Devel] Debugging Jack Clients (1315333811.1763_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Debugging Jack Clients
+
+Thanks Paul.
+
+When I try that, it doesn't work properly.  Here's what happens:
+
+# jackd -r -t 50000 -d alsa .... > jackd_log &
+> jackd 0.120.1
+> Copyright 2001-2009 Paul Davis, Stephane Letz, Jack O'Quinn, Torben Hohn
+> and others.
+> jackd comes with ABSOLUTELY NO WARRANTY
+> This is free software, and you are welcome to redistribute it
+> under certain conditions; see the file COPYING for details
+> JACK compiled with System V SHM support.
+> loading driver ..
+> creating alsa driver ... hw:0|hw:0|1024|2|48000|0|0|nomon|swmeter|-|16bit
+> control device hw:0
+> configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 2 periods
+> ALSA: final selected sample format for capture: 16bit little-endian
+> ALSA: use 2 periods for capture
+> ALSA: final selected sample format for playback: 16bit little-endian
+> ALSA: use 2 periods for playback
+
+
+
+Then,* *I start the debugger
+
+> # gdb client
+> gdb> break process
+> gdb> run
+> Starting program:
+> /home/caleb/mmfx/platform/platform_beagle/puppy_driver/jack_scripts/jack_sine
+> [Thread debugging using libthread_db enabled]
+> [New Thread 0x40a73470 (LWP 22052)]
+> engine sample rate: 48000
+> [New Thread 0x412f6470 (LWP 22055)]
+>   ^C
+> Program received signal SIGINT, Interrupt.
+> 0x401e9f44 in nanosleep () from /lib/arm-linux-gnueabi/libc.so.6
+> (gdb) bad status (254) for client sine handling event (type = 8)
+> bad status (254) for client sine handling event (type = 8)
+> bad status (254) for client sine handling event (type = 8)
+> gdb>
+> gdb> continue
+
+
+The callback 'process' is never called again, and the jackd_log file is
+filled with alsa xruns.
+
+Any thoughts?
+
+BTW, I'm running JACK 1 on an ARM.
+
+Thanks again,
+  -Caleb
+
+
+
+On Tue, Sep 6, 2011 at 9:45 AM, Paul Davis <[hidden]>wrote:
+
+> On Tue, Sep 6, 2011 at 12:41 PM, ccrome <[hidden]> wrote:
+> > Hi,
+> >    Forgive me fi this has been asked before, but the tux archives seem to
+> be
+> > broken (not responding) for me.
+> > I'm developing a Jack client on Linux (using the jackd sever with the
+> ALSA
+> > backend), and need to be able to debug the client application.  How do
+> you
+> > go about this in Jack?  I'm trying this:
+> > # jackd -d alsa .... <startup options>.... &
+>
+> jackd -r -t 50000 -d alsa ......
+>
+> (-r => not Realtime, -t N => set client timeout (in msecs))
+>
+
+1315330558.30740_0.ltw:2,a <CAG5mAdxkRBjVO+4B9F5==FPdSFVEd=bdwJPc=zNTj6GUNm_aOA at mail dot gmail dot com>
+________________________________________________________________________________
+

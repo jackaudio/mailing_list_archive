@@ -1,0 +1,44 @@
+Date:        Fri, 11 May 2018 16:13:53 -0500
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Chris Caudle Re: [Jack-Devel] How to use jackd as a 'system-wide' server? (1526072413.25304_0.ltw:2,)
+Follow-Up:   Thomas Brand Re: [Jack-Devel] How to use jackd as a 'system-wide' server? (1526129648.29972_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] How to use jackd as a 'system-wide' server?
+
+On Fri, May 11, 2018 3:59 pm, Chris Caudle wrote:
+> I don't see jack_ringbuffer_write() in that same app_jack.c file and I
+
+OK, I had time to search a little.  That function is from jack, not
+asterisk, but I think the asterisk code may not be using it correctly.
+The jack ringbuffer.h file has this note:
+return the number of bytes write, which may range from 0 to cnt
+
+So it seems that the write() function is documented as possibly writing
+less than the full data given.
+
+There is also this function, which seems to be for getting the amount of
+free space available in the ringbuffer, but I cannot see that the asterisk
+code ever calls this function:
+
+/**
+ * Return the number of bytes available for writing.
+ *
+ * @param rb a pointer to the ringbuffer structure.
+ *
+ * @return the amount of free space (in bytes) available for writing.
+ */
+size_t jack_ringbuffer_write_space(const jack_ringbuffer_t *rb);
+
+
+In short, I think this is a bug in the asterisk implementation.  It should
+be checking how much free space is available and only attempting to write
+that, or  should just deal with write() not writing the full amount of
+data and calling write() again later to finish writing all the data.
+
+-- 
+Chris C
+
+1526073260.26293_0.ltw:2, <0cfb0b6de34b46b4279a107982c3a36d.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

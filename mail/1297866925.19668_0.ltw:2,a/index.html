@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] issues with latency management with "complex" clients</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] issues with latency management with "complex" clients</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297861313.10937_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297869213.24885_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297866925.19668_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 16 Feb 2011 09:35:01 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at gmail dot com </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Arne Jacobs
+<a href='../1297869703.26027_0.ltw:2,a/index.html'>Re: [Jack-Devel] issues with latency management with "complex" clients </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Florian Faber
+<a href='../1298364309.12688_0.ltw:2,a/index.html'>Re: [Jack-Devel] issues with latency management with "complex" clients </a></td></tr>
+</table>
+<pre>
+as most of you know, torben implemented support for the expanded
+*correct* version of JACK"s latency management (as shown in
+http://ardour.org/files/jack-latency.png). i use the term "correct"
+here simply to mean that the latency numbers that can be seen within
+the graph (by JACK or by clients) reflect *all* signal flow within the
+graph, and not just the flow involving explicit port connections known
+to JACK.
+
+as i've cooked up the ardour support for this, i've encountered an
+issue which i think is either incredibly deep, or incredibly
+ignorable, and want to know what other JACK developers think.
+
+JACK tends to assume that as long as port connections stay the same,
+the graph is essentially static and unchanging. But the presence of
+applications that can deliver audio from other ports OR from internal
+sources (e.g. synthesis or disk playback) complicates this quite a
+bit.
+
+Consider Ardour. When  a track in Ardour is in playback mode, its
+effectively functioning like a synthesizer (or just a simple file
+playback client). The connections to and data arriving at the track's
+input ports are completely irrelevant. In playback mode, the track
+effectively has a set of output ports that should be marked
+JackPortIsTerminal to indicate that the audio data available there
+does not originate anywhere else in the JACK graph.
+
+But now switch the track into recording mode, with monitoring enabled.
+What appears at the track's output ports is now totally dependent on
+the connections to the track's input ports. The track is no longer
+functioning as a synth or file playback engine, but instead is more
+like a passthru FX unit. Its output ports are definitely not
+"Terminal" - all data presented at the outputs comes from the inputs.
+
+As the track is switched between these two modes, the answers to the
+two questions regarding latency change. These questions are (from the
+diagram referenced above):
+
+    * how long has it been since the data read by a client from an
+input port arrived at the edge of the graph? ("capture" latency)
+    * how long will it be before data written by a client to an output
+port will arrive at the edge of the graph? ("playback" latency)
+
+Client's like Ardour effectively change where the "edge" of the graph
+is - in playback mode, the track itself is the edge of the graph where
+data originates. When recording+monitoring, the edge of the graph
+moves back to the ultimate source of whatever the track is recording.
+As a result, the answer to the capture latency question depends on
+which mode the track is in ... but also note that the upstream
+playback could be considered as changing too. If Ardour is recording,
+say, Specimen, the playback latency for Specimen's data may depend on
+which mode the track is in also. If the track is in playback mode,
+then there's no audio path for Specimen's data through Ardour at all.
+If its recording+monitoring, then there is a path through the track
+that may be affected by plugin latencies.
+
+So the question is: should anything be done about this? Should ardour
+force a recompute of the latencies when a track changes modes? This is
+quite expensive and definitely non-RT in jack1; its doable with
+tschak. jack2 does not have an implementation of this latency API yet.
+Could we just redefine the latency specifications into something that
+is still useful, but avoids this issue? Or something else?
+
+--p
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297861313.10937_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297869213.24885_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297866925.19668_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1297866925.19668_0.ltw:2,a&nbsp;&lt;AANLkTi=GVvaugNuBZAhdph7Dg9u-OUR5OwW7h9kkLURL at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

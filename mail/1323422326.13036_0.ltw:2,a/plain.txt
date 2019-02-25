@@ -1,0 +1,95 @@
+Date:        Fri, 09 Dec 2011 09:18:37 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] The Situation(s) With JACK (1323418452.5730_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] The Situation(s) With JACK (1323423388.15060_0.ltw:2,a)
+Follow-Up:   Mark Constable Re: [Jack-Devel] The Situation(s) With JACK (1323445975.14308_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] The Situation(s) With JACK
+
+On Fri, Dec 09, 2011 at 09:14:13AM +0100, Stéphane Letz wrote:
+> > 
+> > One good reason to have a fresh look at what Jack is
+> > supposed to do is the fact that SMP systems are more
+> > or less the norm today. And complex apps (A3 being
+> > the prime example) are taking advantage of that and
+> > organising their internal processing using multiple
+> > threads. No doubt more will follow. Yet, scheduling
+> > in Jack remains on a per-process basis. That means
+> > that e.g. if app B depends on input from app A, the
+> > entire B is made to wait until all of A has done its
+> > work, while the actual dependencies may be much more
+> > fine-grained. There are several ways to address this.
+> > One would be to have a single 'audio engine' process
+> > and delegate all audio processing to it. That would
+> > of course mean that all security is lost, a single
+> > rogue audio routine could bring down everything. 
+> > Another solution would be to make Jack trigger port
+> > or groups of ports instead of a process. So anything
+> > in B that depends on A would run as soon as all output
+> > from A that a part of B depends on is available. In
+> > other words, the signal graphs becomes global. That
+> > would also allow B to be a insert of A without adding
+> > latency etc.
+> > 
+> > But I'm dreaming. 
+ 
+> I second those concerns about better SMP system support,
+> but note that multiple JACK clients per process (which
+> is perfectly possible with jack2) already allows to do
+> (or at least to "test" even if the model is not perfect)
+> what you are speaking about.
+
+Yes, but only if the dependencies are more or less static,
+which is usually not the case. If they are not, you would
+not only need to migrate modules from one client to another 
+(possible), but also ports (hairy).
+
+They way apps like A3 schedule their internal multithreaded
+computation is entirely dynamic. A module is added to a
+queue when all its inputs are available; sooner or later
+one of the computation threads will take it there, execute
+it and provide triggers for the next ones. There is no
+static schedule, simply because without knowing the exact
+execution time of each module you can't compute one.
+
+If you want to seamlessly integrate such networks then
+the same thing should happen between processes. So, when
+a Jack client has computed the signal on a particular
+output port it should set that port to 'ready', Jack
+transfers this status to all ports this one is connected
+to, and the owners of those destinations decide what to
+do. In theory. In practice part of that dynamic logic
+will have to be pushed into Jack somehow to avoid useless
+process switches. How to do that is the main challenge.
+
+On a related topic: it seems that OSX now has a system
+that allows a userland process to schedule a task to be
+executed at a defined priority by a global 'engine', and
+in a way that is much more efficient than creating a thread
+for it. The way I understand it (which may be wrong) is that
+it uses a pool of system threads instead. Do you know more
+about this ? 
+
+> But I think we should clearly separate which could be
+> a "fresh look"..., to the current situation Paul wants
+> to address,
+
+I agree. I bring this up because 'a fresh start' is one
+of the options, even if unlikely the one to be adopted.
+
+> only that we are still all waiting.... of the "how" ((-;
+
+Indeed :-(
+
+Ciao,
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+
+1323422326.13036_0.ltw:2,a <20111209091837.GA11864 at linuxaudio dot org>
+________________________________________________________________________________
+

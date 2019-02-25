@@ -1,0 +1,53 @@
+Date:        Tue, 08 Jan 2013 18:19:52 +0000
+From:        John Emmas  <[hidden] at tiscali dot co dot uk>
+To:          JACK List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Robin Gareus Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357668206.15729_0.ltw:2,a)
+Follow-Up:   John Emmas Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357669812.18387_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)
+
+Sorry, I should have chimed in earlier on this...
+
+On 8 Jan 2013, at 18:03, Robin Gareus wrote:
+
+> On 01/08/2013 03:44 PM, Adrian Knoth wrote:
+> 
+>> Does it work on Windows? It's based on Basil's work but modified:
+>> 
+>>   1.) No sizeof() for MSVC
+>>   2.) No align via JACK_ALIGN_TYPES for MSVC
+>>   3.) pack(push,8) on MSVC, which is the default AFAIK.
+>> 
+>> I'm unsure about the latter, that is, where types like int32_t will end
+>> up when included in a struct.
+> 
+> the nice part of Basil's patch is that it reduces differences between
+> jack1 and jack2 headers.
+> 
+
+This bit is in fact the problem:-
+
+>> 
+>>   3.) pack(push,8) on MSVC, which is the default AFAIK.
+>> 
+
+
+In MinGW, the compiler option '-mms-bitfields' is supposed to be equivalent to 'pack(push, 8)' and in most cases it does work - but it doesn't work in every case...  :-(
+
+When I flagged this up to the MinGW devs there was a certain reluctance to change the behaviour, in case it broke a load of existing apps which were already working satisfactorily.  That's why we ended up opting for 1-byte packing.
+
+However, if 1-byte packing is only needed on Windows, there's a much simpler fix.  At line 25 of jack/systemdeps.h, this line:-
+
+        #ifdef __GNUC__
+
+could simply get changed to:-
+
+        #if defined(__MINGW__)  ||  defined(__MINGW32__)
+
+That would be a pretty minimal change and would probably work for all platforms.
+
+John
+
+1357669203.17433_0.ltw:2,a <723B8BBF-31B0-4DDB-9373-5D7A19597B6B at tiscali dot co dot uk>
+________________________________________________________________________________
+

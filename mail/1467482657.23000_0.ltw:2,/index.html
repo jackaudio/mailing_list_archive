@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Compiling jack2 in mixed mode</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Compiling jack2 in mixed mode</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1467482292.22498_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1467486271.26682_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1467482657.23000_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 02 Jul 2016 14:04:07 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1467482292.22498_0.ltw:2,a/index.html'>Re: [Jack-Devel] Compiling jack2 in mixed mode </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1467486271.26682_0.ltw:2,a/index.html'>Re: [Jack-Devel] Compiling jack2 in mixed mode </a></td></tr>
+</table>
+<pre>
+On Sat, Jul 2, 2016 at 1:58 PM, Fons Adriaensen &lt;[hidden]&gt; wrote:
+
+&gt; On Sat, Jul 02, 2016 at 09:45:48AM -0400, Paul Davis wrote:
+&gt;
+&gt; &gt; context switches are not free. their cost varies depending on the size of
+&gt; &gt; the working set of the process (the amount of memory touched by the
+&gt; &gt; process, notably during the JACK process() callback).
+&gt; &gt;
+&gt; &gt; they might vary from &lt;10 usecs to as much as 500usecs (the lowest
+&gt; possible
+&gt; &gt; number is dependent on your CPU; the upper bound depends on the clients)
+&gt; &gt;
+&gt; &gt; 100 * 100 usecs = 10msecs
+&gt; &gt;
+&gt; &gt; so, you've just used 10msecs of the time available for the process
+&gt; &gt; callback. That's enormous (quite possibly larger than the actual time
+&gt; &gt; available).
+&gt;
+&gt; True, assuming you have single linear chain of 100 clients, and
+&gt; each step involves a context switch.
+&gt;
+&gt; In practice there are two factors that mitigate this problem:
+&gt;
+&gt; 1. Parts of the graph may run in parallel. And SMP systems
+&gt;    are more or less standard today.
+&gt;
+
+4-8 core systems are more or less standard. So this only reduces the cost
+in the best possible scenario by a factor of 4-8. In more common cases, the
+improvement is much less.
+
+
+&gt;
+&gt; 2. Linear chains could be in the same process. In that case,
+&gt;    depending on implementation, you don't even need a thread
+&gt;    switch.
+&gt;
+
+Actually, I misspoke - this is already implemented. Internal clients will
+be executed in the same thread if they are part of a serial chain.
+
+IMO, the reality is that chaining together entirely independent signal
+processing code is best done via plugins (internal clients, in a JACK
+context), not processes. The clever hack that JACK represents is useful for
+connecting small numbers of processes, but I don't believe that the design
+should be used as an indication that process-level chains are the right way
+to composite signal processing elements.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1467482292.22498_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1467486271.26682_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1467482657.23000_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1467482657.23000_0.ltw:2,&nbsp;&lt;CAFa_cKnh0ZdRKs6WMu34eUVP=U+UeMRvCJFO5F2vXWdsibAnkQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

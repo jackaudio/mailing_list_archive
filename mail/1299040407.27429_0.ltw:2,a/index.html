@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Writing an IEEE 802.1BA (AVB) compliant network backend for Jack2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1299031662.16041_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1299044144.30979_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1299040407.27429_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 01 Mar 2011 22:32:29 -0600 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+</table>
+<pre>
+On Tue, March 1, Torben wrote:
+&gt; i dont really understand this.
+&gt; you mean streaming from harddisk to multiple endpoints,
+&gt; all playing phase synced ?
+
+Torben,
+I couldn't really tell if you understood the scenario proposed.
+Consider the situation of a DAC at the mix position playing back, and a
+separate DAC farther away, playing the monitor mix for the musician.  Two
+separate endpoints that you would want in sync.
+The ravenna page even describes audio over IP direct to the monitors, so
+you have an Ethernet cable to each speaker.  Definitely want those two
+endpoints to play phase synced.
+
+&gt; with soundcards that generate their own clocks, and dont allow
+&gt; for rate control ?
+
+No, of course the endpoints have to allow for rate control. That is why
+all the talk of IEEE-1588 or 802.1AS.  Network based clock
+synchronization. All the endpoints synchronize to the PTP clock, and
+generate sample clocks based on that.
+
+&gt; if one allows 3ms of diff, we can do this with netjack
+
+1us or better is the goal.
+
+&gt; with a reasonably good ptp timer in the kernel.
+&gt; this is all easy stuff.
+
+Florian's point was that "reasonably good" is context sensitive, and in
+the case of Ravenna, the goal is to replace the word clock or AES11 synch
+signal with network time clock. AES11 requires that output samples are
+within +/- 1us of the nominal frame synch signal at 48ksamp/s, or +/-0.5us
+at 96k.  I guess maybe 0,5us if you are in Europe.
+I don't fully understand the implications of that spec for packetized data
+delivery (as opposed to AES3 or AES10 or AES50 which stream the data
+continuously),  which is why I think maybe the software implementation in
+the Linux kernel will be OK as long as the average frequency has no
+difference, and the maximum error is bounded, but perhaps not quite as
+tightly as 1us.
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1299031662.16041_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1299044144.30979_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1299040407.27429_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1299040407.27429_0.ltw:2,a&nbsp;&lt;4db49c86164a406e62c8041fcbbf592e.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,233 @@
+Date:        Sun, 20 Feb 2011 18:00:41 +0100
+From:        Dragan Noveski  <[hidden] at gmx dot net>
+To:          [hidden] at jamadots dot com
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Henry W. Peters Re: [Jack-Devel] Using Jack (1298220589.16078_0.ltw:2,a)
+Follow-Up:   Henry W. Peters Re: [Jack-Devel] Using Jack (1298222967.21059_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Using Jack
+
+On 20.02.2011 17:49, Henry W. Peters wrote:
+> Thanks for reply.
+>
+> Yes, I use 'qjackctl' to start 'jack,' that is, (usually) unless the 
+> audio/midi program does it for me...  (Rosegarden, Ardour, etc.). & a 
+> strange thing to me, is that if I load 'ZynAddSubFX,' I can get 'jack' 
+> to start up, & midi to function (record/play), but no audio.
+>
+> I removed the 'fw' version of jackd, & you were correct, this did not 
+> solve the problem.
+>
+> I sent this before, but I'll send the out put from 'qjackctl' from 
+> when I try to start 'jack' from it:
+>
+>> 11:34:58.847 Patchbay deactivated.
+>>
+>> 11:34:59.018 Statistics reset.
+>>
+>> 11:34:59.107 ALSA connection graph
+>> change.
+>>
+>> 11:34:59.969 ALSA connection change.
+>>
+>> 11:35:00.201 ALSA connection graph
+>> change.
+>>
+>> 11:35:03.953 Startup script...
+>>
+>> 11:35:03.955 artsshell -q terminate
+>>
+>> sh: artsshell: not found
+>>
+>> 11:35:04.358 Startup script
+>> terminated with exit status=32512.
+>>
+>> 11:35:04.359 JACK is starting...
+>>
+>> 11:35:04.359 /usr/bin/jackd -dalsa
+>> -dhw:0 -r44100 -p1024 -n2
+>>
+>> jackd 0.118.0
+>>
+>> Copyright 2001-2009 Paul
+>> Davis, Stephane Letz, Jack O'Quinn, Torben Hohn and others.
+>>
+>> jackd comes with ABSOLUTELY
+>> NO WARRANTY
+>>
+>> This is free software, and
+>> you are welcome to redistribute it
+>>
+>> under certain conditions;
+>> see the file COPYING for details
+>>
+>> Memory locking is unlimited
+>> - this is dangerous. You should probably alter the line:
+>>
+>> @audio - memlock unlimited
+>>
+>> in your /etc/limits.conf to
+>> read:
+>>
+>> @audio - memlock 1141431
+>>
+>> 11:35:04.380 JACK was started with
+>> PID=2280.
+>>
+>> JACK compiled with System V
+>> SHM support.
+>>
+>> loading driver ..
+>>
+>> apparent rate = 44100
+>>
+>> creating alsa driver ...
+>> hw:0|hw:0|1024|2|44100|0|0|nomon|swmeter|-|32bit
+>>
+>> control device hw:0
+>>
+>> configuring for 44100Hz,
+>> period = 1024 frames (23.2 ms), buffer = 2 periods
+>>
+>> ALSA: final selected sample
+>> format for capture: 32bit integer little-endian
+>>
+>> ALSA: use 2 periods for
+>> capture
+>>
+>> ALSA: final selected sample
+>> format for playback: 32bit integer little-endian
+>>
+>> ALSA: use 2 periods for
+>> playback
+>>
+>> ALSA: cannot set hardware
+>> parameters for playback
+>>
+
+this is where your probem is....
+are you sure that you are using the right device (hw:0) ?
+
+in qjack you click the 'configuration' button, which will open a config 
+window for you.
+there you could try sth different than hw:0. look at the input/output 
+device or click at the '>' buttons to choose one.
+
+the output of the command:
+
+cat /proc/asound/cards
+
+could also tell us more.
+>>
+>> ALSA: cannot configure
+>> playback channel
+>>
+>> cannot load driver module
+>> alsa
+>>
+>> 11:35:04.561 JACK was stopped
+>> successfully.
+>>
+>> 11:35:04.561 Post-shutdown script...
+>>
+>> 11:35:04.563 killall jackd
+>>
+>> jackd: no process found
+>>
+>> 11:35:04.985 Post-shutdown script
+>> terminated with exit status=256.
+>>
+>> 11:35:06.451
+>>
+>> Could not connect to JACK server as client. - Overall operation failed.
+>>
+>> - Unable to connect to server. Please check the messages window for
+>>
+>> more info.
+>>
+>
+>
+> It appears that
+> the "driver alsa module" will not load. I have been checking my alsa
+> configurations (I have now a file with my alsa system info, I can send
+> if it may seem relevant).
+>
+>
+>
+> One other matter has occurred to me, my system did a 'fsck' this
+> morning after 24 boots... & came up with some errors that I do not
+> remember seeing before... (could there be a bug via the "upgrade"
+> someplace else that effects this situation? I think there is a log some
+> place in this regard, but do not remember how to access it (?)).
+>
+>
+>
+> To be clear, I had functioning sound until this "upgrade."
+>
+
+after an upgrade, everything can happen, like things stop working etc.
+
+cheers,
+doc
+>
+>
+>
+> Henry
+>
+> On 02/20/2011 11:24 AM, Dragan Noveski wrote:
+>> On 20.02.2011 17:11, Henry W. Peters wrote:
+>>> I have sent some several messages regarding a problem with sound on 
+>>> my Debian Squeeze set-up *after* a massive recent "upgrade;" no 
+>>> resolution so far. I have been doing some sniffing around in my 
+>>> system & I discovered, via the Synaptic Package Manager that it 
+>>> appears I have some different versions of 'jack' installed:
+>> hallo,
+>> those are not different versions.
+>>>
+>>> jackd   (version 5)
+>> this is only a pseudo package. just keep it.
+>>> jackd1 (version 1:0.118+svn3796-8)
+>> this is the actually jackd package, keep it for sure.
+>>> jackd1-firewire (version 1:0.118+svn3796-8)
+>> this is the fw part, you only need if you are using fw. perhaps you 
+>> can simple remove it, but i do not think that your problem is here.
+>>
+>> how are you starting jackd? are you using qjackctl for that?
+>>
+>> cheers,
+>> doc
+>>>
+>>> I have been (appropriately or not) been admonished several times in 
+>>> the past, that multiple versions of 'jack' are *not* OK.  I did not 
+>>> install the firewire version for sure... as I do not use firewire (I 
+>>> have a echo mia sound card... & it was working fine before the above 
+>>> mentioned upgrade... & historically speaking, I had a 'jackd2' 
+>>> install at an upgrade... & removing it allowed me to have audio 
+>>> function once again).
+>>>
+>>> Please advise (perhaps these versions work together?).
+>>>
+>>> Thanks much.
+>>>
+>>> Henry
+>>>
+>>> On 02/07/2011 10:42 PM, Henry W. Peters wrote:
+>>>> I use Debian Squeeze. I have been using Jack & various audio 
+>>>> programs for a while now. This morning, Squeeze did a massive 
+>>>> "upgrade," the short of is, the sad redundant cry; no audio... 
+>>>> Rosegarden crashes, Real Audio (Helix 11), crashes, Jack will not 
+>>>> start up (qjackctl), Ardour can not open (start) Jack, & probably 
+>>>> other problems I have not yet encountered... I do believe Jack was 
+>>>> one of the programs "upgrading."
+>>>>
+>>> 
+>>> Jack-Devel mailing list
+>>> [hidden]
+>>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>>>
+>>
+>>
+
+1298221264.17561_0.ltw:2,a <4D6148B9.4080006 at gmx dot net>
+________________________________________________________________________________
+

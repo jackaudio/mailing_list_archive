@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] R: Jack thread cancellation</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] R: Jack thread cancellation</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1367832267.29304_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1367832894.30383_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1367832671.29903_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 06 May 2013 11:31:03 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> MONTANARO Luciano (MM) </span> &lt;[hidden] at magnetimarelli dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>"[hidden] at lists dot jackaudio dot org" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1367594647.2883_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack thread cancellation </a></td></tr>
+</table>
+<pre>
+&#13;
+&gt; -----Messaggio originale-----&#13;
+&gt; Da: St&#xE9;phane Letz [mailto:[hidden]]&#13;
+&gt; Inviato: venerd&#xEC; 3 maggio 2013 17:24&#13;
+&gt; A: MONTANARO Luciano (MM)&#13;
+&gt; Cc: [hidden]&#13;
+&gt; Oggetto: Re: [Jack-Devel] Jack thread cancellation&#13;
+&gt;&#13;
+&gt;&#13;
+&gt; Le 3 mai 2013 &#xE0; 17:11, "MONTANARO Luciano (MM)"&#13;
+&gt; &lt;[hidden]&gt; a &#xE9;crit :&#13;
+&gt;&#13;
+&gt; &gt; Hi list,&#13;
+&gt; &gt;&#13;
+&gt; &gt; I have an embedded application that makes use of jack (Version 1.9.8).&#13;
+&gt; &gt; I have started seeing crashes from the clients in the JackError() call.&#13;
+&gt; &gt;&#13;
+&gt; &gt; The stack trace shows that the thread executing (Which is handling the&#13;
+&gt; &gt; JackSocketChannel::Execute call) receives is being killed&#13;
+&gt; &gt; (sigcancel_handler is called) and since the thread is in&#13;
+&gt; &gt; CANCEL_ASYNCHRONOUS mode, it crashes since an unsafe function is&#13;
+&gt; &gt; called (vnsprintf).&#13;
+&gt; &gt;&#13;
+&gt; &gt; The client I am using is actually unaware of using Jack at all, it is&#13;
+&gt; &gt; using the alsa jack plugin, and it opens/closes the alsa devices many&#13;
+&gt; &gt; times during its lifetime.&#13;
+&gt; &gt;&#13;
+&gt; &gt; Now, I have a few doubts:&#13;
+&gt; &gt; - Why are threads created with cancellation type&#13;
+&gt; PTHREAD_CANCEL_ASYNCHRONOUS?&#13;
+&gt; &gt;  Is this because the realtime threads need this or is there some other&#13;
+&gt; reason?&#13;
+&gt;&#13;
+&gt; Old written code&#x2026;. AFAIR PTHREAD_CANCEL_DEFERRED was not working so well&#13;
+&gt; (or possibly not the same way on test OS like Linux and OSX) so&#13;
+&gt; PTHREAD_CANCEL_ASYNCHRONOUS was choses.&#13;
+&gt;&#13;
+&#13;
+Thanks, that is one og my hypothesis. The other one was that the process callback is likely to have no cancellation point, given the restriction about doing no io.&#13;
+&#13;
+&gt; &gt; - Would it be possible to mark the threads used by the&#13;
+&gt; &gt; JackMessageBuffer and  JackSocketClientChannel as PTHREAD_CANCEL_DELAYED&#13;
+&gt; instead?&#13;
+&gt;&#13;
+&gt; You mean PTHREAD_CANCEL_DEFERRED?  Possibly yes.  Try to test it.&#13;
+&gt;&#13;
+&#13;
+&#13;
+Yes, sorry for the confusion. I am going to test it, I just wanted to make sure I was not missing something important.&#13;
+&#13;
+&gt; &gt; - Why is fThread.Kill() used in JackSocketClientChannel::Stop instead of&#13;
+&gt; fThread.Stop()?&#13;
+&gt;&#13;
+&gt; Same answer as before, Stop was not working reliably on all testes OSs, so&#13;
+&gt; Kill was used.&#13;
+&gt;&#13;
+&#13;
+All right, then I can test it in my setup... I think the environment is controlled enough that using Stop should not have drawbacks.&#13;
+&#13;
+&gt;&#13;
+&gt; &gt;  The latter should still work, and allow the Execute() to terminate it&#13;
+&gt; &gt; communication  with the server.&#13;
+&gt; &gt;&#13;
+&gt; &gt; Thanks in advance,&#13;
+&gt; &gt; Luciano&#13;
+&gt; &gt; --&#13;
+&gt;&#13;
+&gt; St&#xE9;phane&#13;
+&#13;
+Thank you again for the clarification.&#13;
+&#13;
+Luciano&#13;
+&#13;
+VISITA IL NOSTRO NUOVO SITO WEB! - VISIT OUR NEW WEB SITE!   www.magnetimarelli.com&#13;
+&#13;
+Confidential Notice: This message - including its attachments - may contain proprietary, confidential and/or legally protected information and is intended solely for the use of the designated addressee(s) above. If you are not the intended recipient be aware that any downloading, copying, disclosure, distribution or use of the contents of the above information is strictly prohibited.&#13;
+If you have received this communication by mistake, please forward the message back to the sender at the email address above, delete the message from all mailboxes and any other electronic storage medium and destroy all copies.&#13;
+Disclaimer Notice: Internet communications cannot be guaranteed to be safe or error-free. Therefore we do not assure that this message is complete or accurate and we do not accept liability for any errors or omissions in the contents of this message.&#13;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1367832267.29304_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1367832894.30383_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1367832671.29903_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1367832671.29903_0.ltw:2,a&nbsp;&lt;67BA5DEFFBE7BF46B4C53F7E5FC5AD4423A1920632 at MXCL13 dot fgremc dot it&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

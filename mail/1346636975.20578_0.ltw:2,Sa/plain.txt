@@ -1,0 +1,122 @@
+Date:        Mon, 03 Sep 2012 04:49:26 +0300
+From:        Athanasios Silis  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Paul Davis Re: [Jack-Devel] can't connect audio between two computers (1346691969.24173_0.ltw:2,Sa)
+
+Subject:     [Jack-Devel] can't connect audio between two computers
+
+hello everyone,
+i am attempting to export audio from a jack slave pc running
+
+ win7 -64bit , with jack 1.9.9 for 64bit systems (had to because I got the
+AvSetMmThreadCharacteristics  error, as explained here
+http://comments.gmane.org/gmane.comp.audio.jackit/25980 )
+
+to an audio server (jack master) with a pro audio card (based on the
+ice1712 chip) which is a slackware 13.37 - 32bit, with jack 0.121.3.
+
+I am using the wiki page
+http://trac.jackaudio.org/wiki/WalkThrough/User/NetJack (i presume this
+wiki for netjack2  http://trac.jackaudio.org/wiki/WalkThrough/User/NetJack2is
+only for when both master and slave as based on jacksmp / jack2 ? please
+correct me if I am wrong).
+
+So I start portaudio with asio4all extension in windows ( I have appended
+asio4all in portaudio's desktop shortcut ), and then I try to start jack
+server from 'jack control' (basically qjackctl).
+
+portaudio gives output:
+
+C:\Program Files (x86)\Jack>jackd -R -S -d portaudio -d "ASIO::ASIO4ALL v2"
+jackdmp 1.9.9
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2012 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+Drivers/internals found in : C:\Windows
+Drivers/internals found in : C:\Windows
+JACK server starting in realtime mode with priority 10
+InitTime : multimedia timer resolution set to 1 milliseconds
+
+and starting qjackctl straight after says that it is 'Active' and the
+messages are
+
+04:37:30.728 Patchbay deactivated.
+
+04:37:30.756 Statistics reset.
+
+04:37:30.774 JACK connection change.
+
+04:37:30.779 Client activated.
+
+
+basically the setup has the following bits checked: jackd (as server
+prefix), realtime, no memory lock, driver: net (or netone??), verbose
+messages, priority:default, port max:256, timeout: 2000msec, audio:Duplex,
+chan I/O: default,default.
+
+
+I get 2 capture ports and 8 playback ones (!??!!) .
+
+
+finally i go to the master and start jack_netsource as:
+
+
+jack_netsource -H <slave_ip> (i've also desperately appended the -n1 -i4
+-o4 options a later trials)
+
+it says 'Not connected' and I get 2 capture and 2 playback audio ports (and
+midi too) by default.
+
+of course the audio is not router.
+
+
+If i go back and close qjackctl and jack_netsource in slave and master
+respectively,
+
+and I try to start the second jack audio server (with the net backend) from
+DOS command prompt, i get the following (remember portaudio is still
+working)
+
+
+
+C:\Program Files (x86)\Jack>jackd -R -d net
+
+jackdmp 1.9.9
+
+Copyright 2001-2005 Paul Davis and others.
+
+Copyright 2004-2012 Grame.
+
+jackdmp comes with ABSOLUTELY NO WARRANTY
+
+This is free software, and you are welcome to redistribute it
+
+under certain conditions; see the file COPYING for details
+
+Drivers/internals found in : C:\Windows
+
+Drivers/internals found in : C:\Windows
+
+`default' server already active
+
+Failed to open server
+
+so I'm puzzled what I do wrong.
+
+i mean first of all i think jack and jack2 should work between different
+pc's , but should I use net or netone from the jack2 slave?
+
+at the moment none of the 2 seem to do the trick.
+
+what else may I be doing wrong?
+
+
+Thank you for your help
+
+Thanassis
+
+1346636975.20578_0.ltw:2,Sa <CADgchnsedoXsxsQTpsFrr3tjxOsdaka3j9uCDXeOeHb3LiWKUQ at mail dot gmail dot com>
+________________________________________________________________________________
+

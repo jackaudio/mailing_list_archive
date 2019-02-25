@@ -1,0 +1,105 @@
+Date:        Wed, 04 Jun 2014 18:52:35 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          TimKa <[hidden] at yandex dot ru>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: TimKa Re: [Jack-Devel] Place for bug reporting (1401898091.28321_0.ltw:2,a)
+Follow-Up:   TimKa Re: [Jack-Devel] Place for bug reporting (1401958024.9126_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Place for bug reporting
+
+On Wed, Jun 04, 2014 at 08:00:53PM +0400, TimKa wrote:
+
+> I do not believe that it's clock drift. I have two master clock
+> sides.
+
+I could end here. There are never two masters. There is exactly one
+clock master, everthing else is slaved. If not, you need sample rate
+conversion (SRC). As simple as that.
+
+And this is what is happening. Whenever your two "masters" are off by
+more than your "jitter buffer" (read: yet another FIFO), you're into
+trouble. SRC or clock synchronistation, choose whatever suits your
+needs.
+
+
+> I just send UDP buffers to ethernet on sender side. On
+> receiver side I just check availability of data with zero timeout
+> (and read to buffer if present) and copy data to out from jitter
+> buffer, also I check for jitter buffer overflow, so, as I
+> understand, clock drift is not key for my situation.
+
+And what do you do when there is not enough data in the buffer?
+Inserting zeroes as needed? Likewise, I guess that you throw away data
+if the buffer is full, too. In that case, it should work, you're
+essentially doing some poor way of SRC.
+
+
+Use some debugging information to verify that your buffer always
+maintains a valid fill level. In other words, print a warning whenever
+it passes a given low/high watermark.
+
+> For VoiceIP (similar to my demo) there are some strategics to work
+> good enough even with two master clock sides.
+
+It's called SRC.
+
+
+> >Posting logs of underruns won't get you nowhere, this doesn't even
+> >qualify as a bug report. A segfault without a stacktrace neither.
+> Could you please make advise what's enough for bug report?
+
+Let's start with what is not a bug report:
+
+  * "I'm writing my own application, and it's not working."
+
+  * "Whatever I do, it segfaults."
+
+
+Xruns are not bugs, they are expected error conditions. It's up to the
+integration engineer (you) to figure out why they occur. Nobody except
+you knows your setup.
+
+If something segfaults, fire up gdb and point out where the problem is
+or at least could be. We're talking multithreaded applications here,
+it's super easy to create a memory corruption somewhere. In that case,
+not even gdb would make sense. valgrind might help, but then again,
+you'd need to invoke jackd with a large timeout. Debugging RT
+applications is hard.
+
+If gdb is too much to ask for, then at least try to generalise your
+problem, try it on a different machine and see if it's really a jackd
+problem. It has to be reproducible.
+
+
+
+Let's do some expectation management: If you assume that you can pick
+two random ARM boards, install Linux and just use jackd to forward some
+audio from one board to the other, than this is likely not going to
+work. You can start with ordinary UDP streaming via gstreamer/vlc, make
+sure to have SRC on the receiving end, and see if that works.
+
+You'll notice that smaller buffers are more likely to cause trouble.
+Depending on your needs, you might never reach the desired latency.
+There are people with full-blown i7 machines out there who cannot go
+below a certain latency because of some obscure system details (graphics
+driver, wifi driver, firmware (SMI), IRQ assignment).
+
+As said before: start with large buffers (4k samples) and expect all
+kinds of trouble when you go lower. Be scientific, measure, take notes
+what is working and what is not. And most importantly: don't expect this
+stuff to work out of the box. It's neither a text editor nor a web
+radio, it's a real-time application.
+
+And if it xruns, it's not a jackd bug. It's your system that is at
+fault. Your only chance is to spend more time in the lab figuring out
+why.
+
+
+HTH
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1401900769.916_0.ltw:2,a <20140604165235.GL30918 at ltw dot loris dot tv>
+________________________________________________________________________________
+

@@ -1,0 +1,45 @@
+Date:        Fri, 01 Apr 2011 17:12:14 -0700
+From:        Devin Anderson  <[hidden] at charityfinders dot com>
+To:          "Tim E. Real" <[hidden] at rogers dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Tim E. Real Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages (1301701945.28867_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages
+
+On Fri, Apr 1, 2011 at 4:37 PM, Tim E. Real <[hidden]> wrote:
+> On April 1, 2011 03:38:58 pm Devin Anderson wrote:
+>> I think continuing to guarantee one complete MIDI event per
+>> 'jack_midi_event_t' object is the best way to go.
+>
+> This means the event is not delivered to us until it is completely
+>  received, possibly after several process cycles, right?
+
+Correct.
+
+> I know that the ALSA API breaks long received sysex into chunks and
+>  delivers them.
+> And I get an size error if sending one long sysex with ALSA, I need to
+>  change our code to chunk them.
+
+It's up to the MIDI driver to handle data chunks with whatever API
+it's using.  JACK clients shouldn't need to care about blocking, MIDI
+baud rate, etc.
+
+> IIRC my (older) music keyboard sends chunked sysex.
+
+Byte data always arrives in chunks of some sort, whether a chunk
+represents a complete message, several messages, or one part of a
+longer message.  It's up to the MIDI driver to make sure the data is
+parsed into complete, valid MIDI messages, and delivers the data to
+other clients just like any other JACK client.
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+
+1301703149.29989_0.ltw:2,a <AANLkTikmLr2Fng12-oFNrtHYEWis9HDSyLuA=5ddGzFa at mail dot gmail dot com>
+________________________________________________________________________________
+

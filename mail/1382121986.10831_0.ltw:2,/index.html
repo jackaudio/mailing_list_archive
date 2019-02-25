@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] major change in jack1 MIDI handling</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] major change in jack1 MIDI handling</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1382026641.10120_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1382122658.11263_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1382121986.10831_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 18 Oct 2013 11:46:18 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1381917537.27443_0.ltw:2,/index.html'>Re: [Jack-Devel] major change in jack1 MIDI handling </a></td></tr>
+</table>
+<pre>
+Hi St&#xE9;phane,
+
+On Wed, Oct 16, 2013 at 2:58 AM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+
+&gt; I agree that the Driver class architecture is far from simple&#x85;
+&gt; "historical" reasons for the main part...
+
+JACK 2 driver development, in general, is far from simple.  One way to
+simplify driver development would be to have a well-defined driver
+development API.  There are a lot of classes in the common directory
+that have absolutely nothing to do with driver development; yet, when
+I was hacking on JACK 2 MIDI drivers, I had to search through the
+common directory every single time I wanted to use functionality
+provided by the JACK 2 core.  The common directory is pretty
+intimidating.
+
+&gt;&gt; 4.) Speaking of returning -1 for non-realtime errors, I'm of the
+&gt;&gt; opinion that throwing exceptions is a fantastic way to handle errors.
+&gt;
+&gt; Here this is a kind of legacy of the pure C approach, C++
+&gt; exception came after that, thus this "ugly" mix of the two
+&gt; approaches.
+
+But now that you have the C++ approach, why not use it?  I know there
+are places in the JACK 2 code that use exceptions, but they're fairly
+limited.
+
+(Obviously, I'm not advocating that exceptions be used in the realtime
+parts of the code.)
+
+&gt;&gt; 5.) I said before that there isn't one driver I've seen that
+&gt;&gt; implements all three of the Open() functions.  Looking through the
+&gt;&gt; Linux-specific drivers, I see that JACKAlsaDriver and
+&gt;&gt; JackALSARawMidiDriver (I wrote that one) implement only one Open()
+&gt;&gt; function each.  Here's a bit of a curve ball - JackFreebobDriver and
+&gt;&gt; JackFFADODriver each define an Open function with a completely
+&gt;&gt; different signature!
+&gt;
+&gt; Not my fault actually, I did not wrote this code&#x85;.
+
+I'm not blaming you.  I'm not blaming the FFADO/Freebob driver
+developers.  What I am saying is that providing specific case Open()
+methods for subclasses to call is likely not the best approach to this
+problem because you don't always know the parameters that a subclass
+needs for the Open() method.
+
+I think the best way to solve this problem is to define an Open()
+method with no parameters, and define pure virtual methods the Open()
+method calls to do the things that Open() needs to do.  If any
+information is required from outside the implementing subclass, then
+that information can be passed to the subclass' constructor.
+
+On a code style note (since I'm talking about Open() vs. open()), the
+camel case function names are a total turn-off.  Every time I look at
+a camel-case function name, there's something in the back of my head
+that wonders if it's a class constructor call.
+
+Thanks,
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+midisnoop - http://midisnoop.googlecode.com/
+psinsights - http://psinsights.googlecode.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1382026641.10120_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1382122658.11263_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1382121986.10831_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1382121986.10831_0.ltw:2,&nbsp;&lt;CAG7zqTr1oFHg5iGo0rKwg61pf4NWG_y+L2MN9nWC=3G-Bz89aA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

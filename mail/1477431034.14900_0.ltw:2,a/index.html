@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack vs. motu (usb)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack vs. motu (usb)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1477427330.11509_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1477432701.16523_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1477431034.14900_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 25 Oct 2016 14:30:16 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fernando Lopez-Lezcano </span> &lt;[hidden] at ccrma dot Stanford dot EDU&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt;, [hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1477427330.11509_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack vs. motu (usb) </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1477432701.16523_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack vs. motu (usb) </a></td></tr>
+</table>
+<pre>
+On 10/25/2016 01:28 PM, Fons Adriaensen wrote:
+&gt; On Tue, Oct 25, 2016 at 12:49:44PM -0700, Fernando Lopez-Lezcano wrote:
+&gt;
+&gt;&gt; When using aplay to help debug this it turns out that aplay does not
+&gt;&gt; complain, and it happily plays the soundfile, but nothing comes out
+&gt;&gt; of the speakers for the first few seconds - I presume until the card
+&gt;&gt; switches sampling rate.
+&gt;
+&gt; Is that sampling rate actually set by aplay, or before by using HW
+&gt; controls ?
+
+Just using aplay alone... it plays "fine" except that it takes a few 
+seconds for sound to actually appear in the outputs.
+
+&gt;&gt; Once the sampling rate has been defined at least _once_ then Jack
+&gt;&gt; has no problem to start (over and over again) and aplay plays files
+&gt;&gt; with sound from the beginning.
+&gt;&gt;
+&gt;&gt; If you access the status and configuration web server in the Motu
+&gt;&gt; you can switch the sampling rate and you see the clock lock icon
+&gt;&gt; turn blinking red and then solid white once the change is done.
+&gt;&gt; Also, alsamixer and amixer show a single read only "control" that is
+&gt;&gt; actually the lock status indicator (the lsusb descriptors also show
+&gt;&gt; another r/w control that can be used to _set_ the frequency but that
+&gt;&gt; is somehow not reflected in the alsamixer/amixer interface).
+&gt;
+&gt; A few lines of python could probably set the sample rate using the
+&gt; web interface, wait until the card is ready, then start Jack.
+&gt; Or find out what's required on the usb endpoint that sets the
+&gt; sample rate.
+
+Or just have a script that tries to start jack, fails, waits a bit and 
+tries again (replacing jackd - a nasty hack).
+
+It would be best to not depend on the web interface as that might not be 
+always available when we connect through usb.
+
+I have not looked at the jack source to try to figure out why it is not 
+working while aplay does - maybe the card no longer generates 
+interrupts? Also, if the clock somehow changes while jack is running 
+(for example I disconnect the clock source if slaving to external 
+clock), jack goes into la-la land and we need to quit everything and 
+restart it to get things going again. Too bad...[*]
+
+-- Fernando
+
+[*] eventually I want to get these cards working with AVB...
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1477427330.11509_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1477432701.16523_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1477431034.14900_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1477431034.14900_0.ltw:2,a&nbsp;&lt;0df0bfe3-c8c5-3ea7-735f-17c680c8cb2f at ccrma dot stanford dot edu&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

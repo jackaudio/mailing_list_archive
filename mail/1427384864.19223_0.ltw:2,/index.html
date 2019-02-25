@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] netjack audio routing from smart OSs (IOS and Android)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] netjack audio routing from smart OSs (IOS and Android)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1427380101.14269_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1427403244.2010_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1427384864.19223_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 26 Mar 2015 16:47:15 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Tobias Hoffmann </span> &lt;[hidden] at thax dot hardliners dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Christian Schoenebeck
+<a href='../1427379183.13325_0.ltw:2,/index.html'>Re: [Jack-Devel] netjack audio routing from smart OSs (IOS and Android) </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Christian Schoenebeck
+<a href='../1427403244.2010_0.ltw:2,/index.html'>Re: [Jack-Devel] netjack audio routing from smart OSs (IOS and Android) </a></td></tr>
+</table>
+<pre>
+Hi,
+
+I think we have to distinguish between Jack (as audio router) and 
+Netjack (as protocol):
+* Porting the Jack server to iOS has been done, but due to iOS changes 
+it cannot be used any more.
+* But iOS instead now has an API for "Inter-App Audio".
+Using the (quite simple) netjack1 protocol "standalone" (e.g. by 
+reimplementing it - no licensing problems here) and providing it as 
+"Netjack audio source" could work.
+
+I'm not sure about possible clock issues; I think using the iOS device 
+as "netjack master" should work.
+When the netjack protocol handling is statically embedded to be used 
+only in a certain application, this is probably even less of a problem.
+
+Using the device as "netjack slave" (i.e. "jackd -d net") forces the 
+masters clock onto the device while e.g. the audio hardware of the iPad 
+has it's own idea of timing.
+
+* Wrt. to Android, I don't know much about this MediaRouter class....
+Still, implementing the netjack protocol inside a single application is 
+possible (and you already mentioned Jack for Android).
+
+The latency stuff becomes really noticeable when you send AND receive 
+channels at the same time; lets say you on the netjack slave you just 
+connect an input to an output. Then you will have probably a noticeable 
+and non-deterministic delay between these stream back on your device 
+(the master).
+
+In contrast, Jack for Android aims to guarantee a certain latency -- 
+which, in turn, requires low-latency scheduling from the kernel.
+
+   Tobias
+
+
+On 26/03/15 14:13, Christian Schoenebeck wrote:
+&gt; Hi Matt,
+&gt;
+&gt; as far as I can see it at the moment, the situation is like this:
+&gt;
+&gt; iOS: Technically not a problem at all, however due to the nature of iOS and
+&gt; its prohibition of DLLs, you will have licensing issues. The authors of
+&gt; netjack would need to change the license so that someone could use it there as
+&gt; part of a static lib linked into an app distributed on the App Store.
+&gt;
+&gt; Android: the main issue I still see on Android is that the kernel shipped with
+&gt; all Android devices is not real-time safe/low latency capable. Which makes it
+&gt; IMO useless for audio applications. Maybe Kim could comment whether there any
+&gt; kinds of plans to address this on Android in near future.
+&gt;
+&gt; CU
+&gt; Christian
+&gt;
+&gt; On Thursday 26 March 2015 12:20:22 Matt Flax wrote:
+&gt;&gt; Hi everyone,
+&gt;&gt;
+&gt;&gt; I think it would be handy to have a transparent netjack audio device for
+&gt;&gt; IOS and Android.
+&gt;&gt; The idea is that it would enable regular apps to stream audio to netjack
+&gt;&gt; servers rather then the Andoroid or IOS hardware.
+&gt;&gt; What do you think ?
+&gt;&gt;
+&gt;&gt; I have done some exploring for Android and also (just) asked Kim Jeong
+&gt;&gt; Yeon (the porter of Jack to Android) whether he knew anything - waiting
+&gt;&gt; for a response.
+&gt;&gt;
+&gt;&gt; Here is what I have found for Android :
+&gt;&gt; There is a MediaRouter class ...
+&gt;&gt; http://grepcode.com/file/repo1.maven.org/maven2/org.robolectric/android-all
+&gt;&gt; /5.0.0_r2-robolectric-0/android/media/MediaRouter.java?av=h
+&gt;&gt;
+&gt;&gt;
+&gt;&gt;        This flag ROUTE_TYPE_LIVE_AUDIO is relevant for searching the code.
+&gt;&gt;
+&gt;&gt; I am not sure how to use it or how to interface to it ?
+&gt;&gt; It is possible we can do it directly from JAVA or the C++ NDK.
+&gt;&gt;
+&gt;&gt; Does anyone know or even know anyone who knows ?
+&gt;&gt;
+&gt;&gt; Similar for IOS ... anyone know or know anyone who knows ?
+&gt;&gt;
+&gt;&gt; thanks
+&gt;&gt; Matt
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1427380101.14269_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1427403244.2010_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1427384864.19223_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1427384864.19223_0.ltw:2,&nbsp;&lt;55142A03.8040802 at thax dot hardliners dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How to get mplayer and firefox/flash to play</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How to get mplayer and firefox/flash to play</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324445807.19772_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324474912.7376_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324468792.30591_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 21 Dec 2011 11:59:42 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1324432522.19574_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to get mplayer and firefox/flash to play </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1324474912.7376_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to get mplayer and firefox/flash to play </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1324474971.7407_0.ltw:2,a/index.html'>Re: [Jack-Devel] re-designing ALSA -- was: How to get mplayer and firefox/flash to play </a></td></tr>
+</table>
+<pre>
+On Tue, Dec 20, 2011 at 08:55:13PM -0500, Paul Davis wrote:
+&gt; On Tue, Dec 20, 2011 at 6:57 PM, Fons Adriaensen &lt;[hidden]&gt; wrote:
+&gt; 
+&gt; &gt; If you just add the outputs from all client without any scaling
+&gt; &gt; then there is no 'policy' involved,
+&gt; 
+&gt; what format are the samples in? do you do SRC? how about dithering?
+&gt; what latency exists for clients that asked for specific values (or
+&gt; didn't)? how are xruns handled? do i need to go on?
+&gt; 
+&gt; &gt; client gets does not depend on the presence of any other as long
+&gt; &gt; as the sum doesn't exceed the physical limits. If it does, that
+&gt; &gt; is the user's problem. Just as it is when e.g. windows from two
+&gt; &gt; or more apps overlap on the screen.
+&gt; 
+&gt; you might have noticed that X Window does not run in the kernel, for
+&gt; precisely the same reason that ALSA does not do in-kernel mixing.
+
+Please rewind a few posts and read again. I never said it should be
+done in kernel space. 
+
+And what I have in mind is very close to what ALSA actually does,
+it just gets presented in a different way.
+
+Currently an app that wants a particalar sample rate, format,
+whatever is supposed to either
+
+1. configure the HW card, assuming it supports what the client
+   wants, or
+
+2. use one of those predefined 'plugins'.
+
+The problems with the 'plugs' (2) are that
+
+3. ALSA doesn't present them in the same way as HW devices
+   (it tries to some extent) and consequenctly any app that
+   just scans for HW cards, (typically the closed source
+   things like Skype etc.) won't ever use them. 
+
+4. They don't work as expected (try running Jack on plughw:x,y),
+   and making them work as expected - that is provide all the
+   access methods, options, etc. that ALSA offers on real HW
+   devices also on an arbitrary stack of plugins - would
+   complicate things no end and probably lead to absurd
+   situations (such as conversions that cancel out).
+
+As an example of (3), I'm currently trying to use the Harpex-b
+app &lt;harpex.net&gt;. It's based on the Juce framework. It correctly
+detects ALSA HW devices and presents them on a menu. Fine. Only
+problem is that the Juce code chokes on 64-ch cards such as the
+MADI ones. OK, just define a 'route' ALSA device (IIRC) with
+less channels (it needs 8) or us the ALSA-&gt;Jack plugin. But that
+doesn't work because ALSA doesn't present them as real devices.
+By not doing that it misses the whole point of having such plugs
+in the first place.
+
+(1) can't be done if the sound card is supposed to be shared
+between different apps. Selecting the sample rate, format etc.
+should done by the a configuration utility. After that apps are
+supposed to use the sound card as it is. 
+
+What I propose is that the userspace part of ALSA 
+
+5. Separates HW configuration from actually using a soundcard.
+In other words the API to be used by a normal client informs
+the client of the current sample rate, format, buffers size
+and whatever, but does not require or even allow the client
+to set any of those. Same for the access model: only mmap,
+and clients are supposed to run their audio code in RT. All
+this is very similar to the restrictions that Jack imposes.
+
+6. Provides multi-client access - split inputs, sum outputs -
+with eventually the option of exclusive access.
+
+Clients that can't live with the restrictions of (5) link
+with a library (part of the ALSA system) that provides sample
+rate conversion, buffering, alternative access methods, and
+whatever you can imagine in an easy way. This library replaces
+all of dmix, dsnoop, route, etc. The essential difference is
+that the client configures this as required instead of having
+to use some predefined 'plugs' that it can't discover in the
+first place.
+
+All this would actually be simpler than what we have now.
+
+Ciao,
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324445807.19772_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324474912.7376_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324468792.30591_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1324468792.30591_0.ltw:2,a&nbsp;&lt;20111221115942.GA26504 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

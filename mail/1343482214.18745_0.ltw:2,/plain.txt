@@ -1,0 +1,49 @@
+Date:        Sat, 28 Jul 2012 22:59:36 +0930
+From:        Jonathan Woithe  <[hidden] at just42 dot net>
+To:          [hidden] at lists dot sourceforge dot net
+
+Subject:     [FFADO-devel] r2189: Change in method of jack version detection
+
+Hi everyone
+
+A while back we added a test on the jack version as part of an automatic
+determination of whether the new libffado API version can be used.  This
+utilised pkg-config and obviously will only give a reliable answer if the
+jackd development files are present on the system.
+
+In most distributions, these files are in a separate jack-devel package
+which most users will not normally have installed.  In this case the version
+detection will fail and (to aid distribution packagers) scons will assume a
+new jack will ultimately be used.  This has caused a number of people to
+compile svn trunk recently and end up with an "incompatible" FFADO version
+for their distribution-supplied jack (which expected the old FFADO API).
+
+Revision 2189 checks in what I hope is a solution to this.  Instead of
+relying soley on pkg-config, scons first tries "jackd --version".  I am
+hoping this makes life easier for users compiling trunk on systems with
+an older jackd.
+
+I have tested this with jack1 installed and uninstalled, and it seems to
+work as expected on my system.  Since the format of the version query from
+jack2 is the same I expect things to be ok in that case too, but I haven't
+explicitly verified this.  There is also a chance that I've stuffed some
+corner case up; if this is the case please let me know and we'll fix it.  I
+apologise in advance if any error on my part causes an inconvenience.
+
+Regards
+  jonathan
+
+------------------------------------------------------------------------------
+Live Security Virtual Conference
+Exclusive live event will cover all the ways today's security and 
+threat landscape has changed and how IT managers can respond. Discussions 
+will include endpoint security, mobile security and the latest in malware 
+threats. http://www.accelacomm.com/jaw/sfrnl04242012/114/50122263/
+
+FFADO-devel mailing list
+[hidden]
+https://lists.sourceforge.net/lists/listinfo/ffado-devel
+
+1343482214.18745_0.ltw:2, <20120728132936.GA22482 at marvin dot atrad dot com dot au>
+________________________________________________________________________________
+

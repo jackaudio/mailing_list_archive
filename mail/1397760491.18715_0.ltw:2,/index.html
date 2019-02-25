@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] popen/fclose patch to fix failure on OSX 10.9</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] popen/fclose patch to fix failure on OSX 10.9</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1397737355.11445_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1397761793.21174_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1397760491.18715_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 17 Apr 2014 19:47:57 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Carl Hetherington </span> &lt;[hidden] at carlh dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1397762289.22193_0.ltw:2,/index.html'>Re: [Jack-Devel] popen/fclose patch to fix failure on OSX 10.9 </a></td></tr>
+</table>
+<pre>
+Hi all,
+
+I've found the following patch to JACK1 v 0.124 appears to be
+necessary to make JACK work correctly on OS X 10.9.
+Without it, the second call to popen in a session fails.  The man
+page says that pclose() is the right thing, anyway (not
+fclose()).
+
+Best regards
+Carl
+
+
+
+--- libjack/client.c.orig	2014-04-16 19:54:39.000000000 +0100
++++ libjack/client.c	2014-04-16 19:54:48.000000000 +0100
+@@ -168,7 +168,7 @@
+  	}
+
+  	if (fgets (buf, sizeof (buf), in) == NULL) {
+-		fclose (in);
++		pclose (in);
+  		free (pathcopy);
+  		return -1;
+  	}
+@@ -177,7 +177,7 @@
+
+  	if (buf[len-1] != '\n') {
+  		/* didn't get a whole line */
+-		fclose (in);
++		pclose (in);
+  		free (pathcopy);
+  		return -1;
+  	}
+@@ -190,7 +190,7 @@
+  	memcpy (jack_tmpdir, buf, len-1);
+  	jack_tmpdir[len-1] = '\0';
+
+-	fclose (in);
++	pclose (in);
+  	free (pathcopy);
+
+  	return 0;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1397737355.11445_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1397761793.21174_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1397760491.18715_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1397760491.18715_0.ltw:2,&nbsp;&lt;alpine.DEB.2.02.1404171944470.6169 at localhost&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

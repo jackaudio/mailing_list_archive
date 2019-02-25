@@ -1,0 +1,115 @@
+Date:        Tue, 21 Jan 2014 23:48:55 +1100
+From:        Matt Flax  <[hidden] at flatmax dot org>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Matt Flax Re: [Jack-Devel] new IIO driver added to jack - large overruns (1390290479.10492_0.ltw:2,a)
+Follow-Up:   Christian Schoenebeck Re: [Jack-Devel] new IIO driver added to jack - large overruns (1390309259.9555_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] new IIO driver added to jack - large overruns (1390310507.11620_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] new IIO driver added to jack - large overruns
+
+I have found that jack isn't pulling much cpu time at all when operating 
+the iio driver. Top reports that it chews about 3% of the cpu power. 
+This suggests that a lot of the delay is coming from kernel related 
+servicing of the iio read calls.
+
+The small overruns can probably be removed by reading from the DMA 
+buffer in the background, but I would need to do some form of locking 
+and unlocking ... whether it be polling in user space or some atomic 
+lock system ...
+Does anyone have suggestions on what can be used for locking or user 
+space polling - something approved by jack ?
+Also it may be a good idea to have separate reading threads ... one for 
+each IIO device ... any pointers ?
+
+Matt
+
+
+On 21/01/14 18:47, Matt Flax wrote:
+> OK, thanks.
+>
+> I am now compiling with different flags on the ARM (let me know if you 
+> need them) ... and I have removed this xrun problem from the ALSA 
+> driver. I have also drastically reduced the xrun problem in the iio 
+> driver to about 0.3 ms. The xruns occur about every 43 ms. This result 
+> occurs when I sample 4 channels at 1 MHz.
+> If I only sample 2 channels I find I get xruns of about 0.15 ms. This 
+> occurs roughly every 67 ms.
+>
+> By the way - in a similar manner to jack2 - I find I need to remove 
+> the POST_PACKED_STRUCTURE for the ARM architecture... otherwise I get 
+> the expected "Bus error" ... hmmm.
+>
+> I am wondering what I should do to squeeze the tiny 0.3 ms speed up !
+>
+> If you want to help, then you can pull the gtkiostream and 
+> flatmax/jack1 repos. thanks
+>
+> Here is an example run :
+>
+> # jackd -R -d iio -p2048
+>
+> created iio driver ... iio_pcm|1000000|2048|2048|4|0
+>
+> **** iio: xrun of 6099u usec last xrun was 8147us ago.
+> **** iio: xrun of 21u usec last xrun was 34837us ago.
+> **** iio: xrun of 326u usec last xrun was 43334us ago.
+> **** iio: xrun of 326u usec last xrun was 43334us ago.
+> **** iio: xrun of 252u usec last xrun was 43260us ago.
+> **** iio: xrun of 252u usec last xrun was 43260us ago.
+> **** iio: xrun of 253u usec last xrun was 43261us ago.
+> **** iio: xrun of 270u usec last xrun was 43278us ago.
+> **** iio: xrun of 253u usec last xrun was 43261us ago.
+> **** iio: xrun of 252u usec last xrun was 43260us ago.
+> **** iio: xrun of 252u usec last xrun was 43260us ago.
+> **** iio: xrun of 289u usec last xrun was 43297us ago.
+> **** iio: xrun of 290u usec last xrun was 43298us ago.
+> **** iio: xrun of 252u usec last xrun was 43260us ago.
+> **** iio: xrun of 252u usec last xrun was 43260us ago.
+> **** iio: xrun of 326u usec last xrun was 43334us ago.
+> **** iio: xrun of 271u usec last xrun was 43279us ago.
+> **** iio: xrun of 252u usec last xrun was 43260us ago.
+> **** iio: xrun of 308u usec last xrun was 43316us ago.
+>
+>
+> Matt
+>
+> On 21/01/14 00:12, Paul Davis wrote:
+>>
+>>
+>>
+>> On Mon, Jan 20, 2014 at 4:55 AM, Matt Flax <[hidden] 
+>> <mailto:[hidden]>> wrote:
+>>
+>>     Just confirming that I also see a similar xrun when running the
+>>     alsa driver ... see below ...
+>>     It is possible that this problem is within Jack itself, and not
+>>     the drivers ...
+>>
+>>
+>> xruns are caused by systemic problems or by clients, not by JACK itself.
+>>
+>>
+>> **** alsa_pcm: xrun of at least 71.259 msecs
+>>
+>> **** alsa_pcm: xrun of at least 71.001 msecs
+>>
+>> **** alsa_pcm: xrun of at least 71.038 msecs
+>>
+>> **** alsa_pcm: xrun of at least 71.019 msecs
+>>
+>>
+>> the consistency of the timing strongly suggests a systemic cause 
+>> (there are many possible such causes)
+>>
+>>
+>
+>
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1390308547.9077_0.ltw:2,a <52DE6CB7.1060705 at flatmax dot org>
+________________________________________________________________________________
+

@@ -1,0 +1,88 @@
+Date:        Fri, 09 Dec 2011 19:18:03 +0000
+From:        Jamie Heilman  <[hidden] at audible dot transient dot net>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis [Jack-Devel] The Situation(s) With JACK (1323349512.4356_0.ltw:2,Sa)
+Follow-Up:   Paul Davis Re: [Jack-Devel] The Situation(s) With JACK (1323458516.4392_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] The Situation(s) With JACK
+
+Paul Davis wrote:
+> 2. there is no defined API version that clients can be said to depend
+> on (that is, libjack from different implementations of JACK do not
+> come with a standard soname that can be used in dependency
+> determination). In addition, JACK's attempted use of weak linkage to
+> deal with an evolving API turns out to be based on a serious
+> misconception on Linux (it does work on OS X, and sometimes on Linux
+> too).
+...
+> 6. largely as a result of (2), distributions and applications are
+> starting to create a situation where despite the fact that Jack1 and
+> Jack2 are, in fact API and ABI compatible, explicit requirements for
+> Jack1 or Jack2 are in effect. They are wrong to do so, but their
+> reasons for doing so are entirely understandable.
+
+From my experience with JACK as both a user and a programmer, this is
+where I've felt the most pain.  By way of illustration...
+
+$ find jack1 jack2 -name jack.pc.in | xargs grep ^Name
+jack1/jack/jack.pc.in:Name: jack
+jack2/jackmp/jack.pc.in:Name: jack
+
+The pkg-config namespaces are the same, but because they're
+individually versioned the usefulness of being able to do something
+like PKG_CHECK_MODULES([jack], [jack >= 0.117.0], ...) in an autoconf
+file is destroyed.  JACK2 1.9.3 would satisfy the check, but would
+fail to have the jack_on_info_shutdown symbol, so I end up having to
+augment the check with AC_CHECK_LIB macros to ensure the symbol
+I need is actually available, which is totally fine, it gets the job
+done, it just makes me sad I can't use pkg-config where it normally
+makes my life easier.  I mention this becuase if your proposal
+involves introducing anything new, please consider adopting a new
+namespace for it so it doesn't fall victim to the same problem, or
+make the existing one worse.
+
+Then there's the subtle differences between modes of failure that have
+bit me, as a user, depending on which client library I'm using.  (see
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=643333 for example,
+and I'll note jack.plumbing is not the only program I've seen affected
+in that way, iirc jack_evmon fails the same way)
+
+> 4. JACK was one of the first audio APIs to provide network streaming,
+> but the existence of two incompatible implementations of netjack makes
+> network streaming more to difficult to explain than it is to actually
+> do. Both implementations have their benefits, but there is absolutely
+> no talk of any unification and some notable resistance to it. When the
+> typical question arises "Can I use JACK to stream audio from A to B?"
+> the answer is so complex that many people just give up (and probably
+> rightly so). Contrast this to, for example, using the AUNetSend and
+> AUNetReceive plugins on OS X. It just makes a mockery of netjack in
+> terms of ease of use (though latency is terrible).
+
+Ease of use is fine and all, but my experience is that it means really
+different things to different people.  One of the things I've really
+liked about the JACK project so far, is that there's been a palpable
+reluctance to paper over the hard problems and pretend they don't
+exist.  When I sat down to set up JACK networking between my qemu-kvm
+sandboxes and my workstation they run on, I ran into all kinds of
+roadblocks because, indeed, it wasn't as straightforward as I'd
+assumed it would be, but I learned a lot in the process because I kept
+asking myself, "well why is it done that way?" and digging deeper.  I
+really value that education, and I would congradulate the project for
+not obscuring the challenges with hand-waving and glitter in the name
+of adoption.  It does result in exposed complexity, but I'd rather be
+faced with that, than ignorant of the compromises being made on my
+behalf.
+
+Another big reason why I keep using JACK is because of it's light
+dependancies and lack of overbearing assumptions about my environment.
+(I notice you've mentioned zeroconf discovery in the context of a
+future network streaming protocol, and I admit that makes me a little
+nervous, but hopefully there's still room in the future for explicit
+point to point setups.)
+
+-- 
+Jamie Heilman
+
+1323458292.3899_0.ltw:2,a <20111209191803.GA26259 at cucamonga dot audible dot transient dot net>
+________________________________________________________________________________
+

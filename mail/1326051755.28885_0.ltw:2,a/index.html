@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] ladish + jack autoconnect</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] ladish + jack autoconnect</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1326046758.21745_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1326054758.988_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1326051755.28885_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 08 Jan 2012 14:42:01 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Tim E. Real </span> &lt;[hidden] at rogers dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Nedko Arnaudov
+<a href='../1325988047.14741_0.ltw:2,Sa/index.html'>Re: [Jack-Devel] ladish + jack autoconnect </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1326054758.988_0.ltw:2,a/index.html'>Re: [Jack-Devel] ladish + jack autoconnect </a></td></tr>
+</table>
+<pre>
+On January 8, 2012 3:59:52 AM you wrote:
+&gt; "Tim E. Real" &lt;[hidden]&gt; writes:
+&gt; &gt; To help new users and as a stepping stone to a better configuration
+&gt; &gt; system,&gt; 
+&gt; &gt;  at startup I auto-fill our midi ports with found Jack midi devices
+&gt; &gt;  now.
+&gt; &gt; 
+&gt; &gt; By that I mean I scan for Jack midi ports and create matching client
+&gt; &gt; ports&gt; 
+&gt; &gt;  and then automatically connect them together.
+&gt; &gt; 
+&gt; &gt; Then everything is ready to go, the user can immediately start creating
+&gt; &gt; midi&gt; 
+&gt; &gt;  tracks and doesn't necessarily have to open our midi configuration
+&gt; &gt;  dlg.
+&gt; &gt; 
+&gt; &gt; Thus as viewed in say qjackctl, we have matching client ports and
+&gt; &gt; 
+&gt; &gt;  connections for every outside port found.
+&gt; &gt; 
+&gt; &gt; Not fond of auto-doing anything, it's behaviour can change as our
+&gt; &gt; 
+&gt; &gt;  configuration system evolves, or be removed (and may very well be).
+&gt; &gt; 
+&gt; &gt; But previously it was a rather clumsy affair for our users to set up
+&gt; &gt; devices.
+&gt; &gt; 
+&gt; &gt; So anyway I actually wanted to have the app /continuously/ watch for new
+&gt; &gt; ports&gt; 
+&gt; &gt;  and auto connect them as well, instead of just at startup or
+&gt; &gt;  on-demand.
+&gt; &gt; 
+&gt; &gt; I didn't, because it seems a bad idea.
+&gt; &gt; It could lead to infinite recursive auto-connecting. Right?
+&gt; &gt; 
+&gt; &gt; Say two apps employ this auto-connecting technique.
+&gt; &gt; Then they are both constantly watching for each others' ports.
+&gt; &gt; As soon as the second app starts the first app creates matching ports,
+&gt; &gt; 
+&gt; &gt;  then the second app sees these new ports and creates matching ones,
+&gt; &gt;  then the first one sees those ports and creates matching ones, and so
+&gt; &gt;  on.&gt; 
+&gt; &gt; I'm wondering if even the one-time auto-connect at startup is still a
+&gt; &gt; bad
+&gt; &gt; 
+&gt; &gt;  idea. It still kinda WIP, maybe make it more optional
+&gt; &gt;  (click-to-auto-fill).&gt; 
+&gt; &gt; (There sure are a lot of ports created!)
+&gt; &gt; With this talk of auto-connect and session managers I would like to ask
+&gt; &gt; if&gt; 
+&gt; &gt;  this one-time auto-connect at startup might also interfere with
+&gt; &gt;  session
+&gt; &gt;  managers like LASH or LADISH, or even say Jack Session? (We only have
+&gt; &gt;  LASH.)&gt; 
+&gt; &gt; Maybe I should determine whether it is in fact a session, and bypass
+&gt; &gt; 
+&gt; &gt;  the automatic port creation and auto-connecting at startup...
+&gt; 
+&gt; It will interfere badly with ladish if ladish rooms are in use. Please
+&gt; make your app to not autoconnect when it detects that it is started by
+&gt; the ladish daemon. Qtractor already implementes such check. The check
+&gt; inspects the LADISH_APP_NAME environment variable. The environment
+&gt; variables that ladishd sets upon starting app are documented here:
+&gt; 
+&gt; http://ladish.org/wiki/envvars
+&gt; 
+&gt; I'll leave jack-session detection to be described by whom worships it.
+&gt; 
+&gt; AFAIK LASH library initialization success is a sign of LASH server
+&gt; availability.
+&gt; 
+&gt; The bad(or good) news here is that at some point ladish will allow self
+&gt; connects. For this to work properly jack clients/ports participating in
+&gt; given virtual graph should be separated from those participating in
+&gt; other virtual graphs. Separated at JACK API level. This is actually a
+&gt; good reason to not ban (in political sense) autoconnects at app level
+&gt; but to restrict them in the jack server, when user setup actually
+&gt; requires it.
+
+OK Thanks for the cool tips!
+
+The more I think about it, the more wrong my auto-connect seems.
+I should not auto-create ports or auto-connect anything, even at startup.
+
+Instead I should try to find a way, certainly, to present our user with the 
+ found Jack midi port names - from directly within our midi tracks for
+ convenience - and let them decide from there what to create and connect, 
+ but under no circumstances should I 'auto-do' anything.
+
+It's interesting how re-connections of this nature tie in with session
+ managers. It's like, at some point the session manager could be seen as
+ more like part of the 'project manager' inside the app - more integral to 
+ the app than just a sort of external 'loader'.
+That at some point I should hand off this desired reconnect functionality 
+ to the session manager, that's what they do. ('Gotcha' here is what if the 
+ session manager is not running...)
+
+Thanks. Tim.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1326046758.21745_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1326054758.988_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1326051755.28885_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1326051755.28885_0.ltw:2,a&nbsp;&lt;1511179.xj3r8tlQME at amd64-desktop&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

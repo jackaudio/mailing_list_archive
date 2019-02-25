@@ -1,0 +1,86 @@
+Date:        Sun, 19 Oct 2014 20:17:41 +0200
+From:        [hidden] at trellis dot ch <[hidden] at trellis dot ch
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Robin Gareus Re: [Jack-Devel] jack_connect with many channels (1413760846.16871_0.ltw:2,)
+
+Subject:     [Jack-Devel] jack_connect with many channels
+
+Hi
+
+i use the following code snippet to connect all available hardware/system
+capture ports to a client:
+
+--
+
+  if(autoconnect==1)
+  {
+    int j=0;
+    int i=0;
+    for(i=0;i<input_port_count;i++)
+    {
+      if (ports[i]!=NULL)
+      {
+        if(!jack_connect (client, ports[i],jack_port_name(ioPortArray[j])))
+        {
+          fprintf (stderr, "autoconnect: %s -> %s\n",
+            ports[i],jack_port_name(ioPortArray[j])
+          );
+          j++;
+        }
+        else
+        {
+          fprintf (stderr, "autoconnect: failed: %s -> %s\n",
+            ports[i],jack_port_name(ioPortArray[j])
+          );
+        }
+      }
+    }
+    fprintf (stderr, "\n");
+  }
+
+  free (ports);
+--
+
+When there are only few system:capture ports and the client has many input
+ports it fails with a segmentation fault, jack log shows
+
+subgraph starting at send timed out (subgraph_wait_fd=8, status = 0, state
+= Triggered, pollret = 0 revents = 0x0)
+
+Since connections can only be made after the client was activated, the
+first thought was that it simply takes too long (this is done outside the
+process() call).
+
+Maybe the client code is buggy. When the client in question is run in gdb,
+this is the output:
+
+[New Thread 0x7ffff7fa0700 (LWP 6321)]
+autoconnect: system:capture_1 -> send:input_1
+autoconnect: system:capture_2 -> send:input_2
+
+Program received signal SIGSEGV, Segmentation fault.
+0x00007ffff73278f3 in _IO_vfprintf_internal (s=s@entry=0x7fffffffc840,
+    format=<optimized out>, format@entry=0x7ffff7bccdbc "%s",
+    ap=ap@entry=0x7fffffffc9a8) at vfprintf.c:1661
+1661	vfprintf.c: No such file or directory.
+
+Search on the internet didn't reveal anything other than this might be
+related to vprintf / datatypes / output things.
+
+Some further observations:
+-This happens only with a large number of involved client input ports
+(i.e. 100)
+-This happens only for a connection direction of hw->client. client->hw
+hasn't that issue.
+-This happens only with jack1 !
+
+So i wondered possible differences that could make it work / not work or
+how the code could be adapted to work with both jacks.
+
+Any help is appreciated,
+Regards
+Thomas
+
+1413758280.12708_0.ltw:2, <8346df0655dec7a97d825717fedfc218.squirrel at ips73 dot ips dot ch>
+________________________________________________________________________________
+

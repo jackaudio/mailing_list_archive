@@ -1,0 +1,51 @@
+Date:        Tue, 15 Mar 2011 13:21:14 +0100
+From:        Torben Hohn  <[hidden] at gmx dot de>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Torben Hohn [Jack-Devel] [PATCH 4/4] [alsa] fix whitespace from previous commits. (1300191695.6174_0.ltw:2,a)
+Follow-Up:   Torben Hohn [Jack-Devel] [PATCH 2/4] [alsa] remove useless copy function. (1300191706.6201_0.ltw:2,a)
+Follow-Up:   Torben Hohn [Jack-Devel] [PATCH 3/4] [alsa] initialise driver->read_via_copy also for cap PCM_FORMAT_FLOAT_LE (1300191710.6206_0.ltw:2,a)
+
+Subject:     [Jack-Devel] [PATCH 1/4] [alsa] fix initialisation of io functions for capture only mode
+
+this is a quick fix for the problem reported by Felix Pfeifer.
+whitespace cleanup and more thorough fixes of this code follow.
+---
+ drivers/alsa/alsa_driver.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/alsa/alsa_driver.c b/drivers/alsa/alsa_driver.c
+index a883528..05efc07 100644
+--- a/drivers/alsa/alsa_driver.c
++++ b/drivers/alsa/alsa_driver.c
+@@ -233,6 +233,7 @@ alsa_driver_hw_specific (alsa_driver_t *driver, int hw_monitoring,
+ static void
+ alsa_driver_setup_io_function_pointers (alsa_driver_t *driver)
+ {
++	if (driver->playback_handle) {
+ 	if (SND_PCM_FORMAT_FLOAT_LE == driver->playback_sample_format) {
+ 		if (driver->playback_interleaved) {
+ 			driver->channel_copy = memcpy_interleave_d32_s32;
+@@ -312,7 +313,9 @@ alsa_driver_setup_io_function_pointers (alsa_driver_t *driver)
+ 			exit (1);
+ 		}
+ 	}
++	}
+ 	
++	if (driver->capture_handle) {
+ 	switch (driver->capture_sample_bytes) {
+ 	case 2:
+ 		driver->read_via_copy = driver->quirk_bswap?
+@@ -330,6 +333,7 @@ alsa_driver_setup_io_function_pointers (alsa_driver_t *driver)
+ 		        sample_move_dS_s32u24;
+ 		break;
+ 	}
++	}
+ }
+ 
+ static int
+-- 
+1.7.2.3
+
+1300191699.6177_0.ltw:2,a <1300191677-23161-1-git-send-email-torbenh at gmx dot de>
+________________________________________________________________________________
+

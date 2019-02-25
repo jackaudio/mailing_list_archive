@@ -1,0 +1,37 @@
+Date:        Sun, 17 Jul 2011 18:08:14 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Robin Gareus <[hidden] at gareus dot org>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>
+
+Subject:     [Jack-Devel] multiserver jackdbus (Was: jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT")
+
+>> As for the PEBKAC:
+>> Sometimes, I launch a 2nd non-RT jackd with different server-name in
+>> order to debug ardour3 with gdb. By doing so ~/.config/jack/conf.xml is
+>> overridden (disable sync mode) and next time I suspend/resume the
+>> machine the engine-parameters of the main/default jackdbus get re-set...
+>> I end up running in async mode even though the original server/backend
+>> was started in sync-mode. Weird. IIUC that should not happen: It is an
+>> engine setting not a backend setting, right?
+
+I guess you mean jackdbus not jackd. jackdbus is designed and
+implemented as singleton. It could be extended to allow multiple servers
+but I never got enough info about how this setup is supposed to be used
+and I don't know how to design it properly.
+
+When you set any parameter, engine(server) or driver one, it is recorded
+in jackdbus memory and also saved in the ~/.config/jack/conf.xml
+file. When you start server, parameters that are set in memory are
+used. When jackdbus process is activated it reads settings from the
+config file.
+
+If you somehow manage to start second jackdbus instance, it will use the
+same config and files. Hopefully it is evident why this is not a good
+thing to do.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1310904517.7459_0.ltw:2,a <8739i5eyht.fsf at arnaudov dot name>
+________________________________________________________________________________
+

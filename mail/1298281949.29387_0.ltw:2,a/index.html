@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Problem using Jack2 with MinGW and pthreads</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Problem using Jack2 with MinGW and pthreads</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298243182.28049_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298282615.30735_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298281949.29387_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 21 Feb 2011 19:52:13 +1000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Tim Mayberry </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1298282615.30735_0.ltw:2,a/index.html'>Re: [Jack-Devel] Problem using Jack2 with MinGW and pthreads </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Peter Nelson
+<a href='../1298282624.30744_0.ltw:2,a/index.html'>Re: [Jack-Devel] Problem using Jack2 with MinGW and pthreads </a></td></tr>
+</table>
+<pre>
+I've been working on porting an existing application to windows using
+the MinGW compiler. The application uses both pthreads via
+(http://sourceware.org/pthreads-win32) and the jack API via jack2
+
+The problem I'm having(I think) is that pthread_t is getting redefined
+via jack/systemdeps.h
+
+The relevant section:
+
+#elif __MINGW32__   /* MINGW */
+    #include &lt;stdint.h&gt;
+    #include &lt;sys/types.h&gt;
+    #ifndef pthread_t
+        typedef HANDLE pthread_t;
+    #endif
+#else
+
+So if jack.h and pthread.h are included in the same source file I get
+this error:
+
+systemdeps.h:46:24: error: conflicting declaration 'typedef void* pthread_t'
+pthread.h:571:24: error: 'pthread_t' has a previous declaration as
+'typedef struct ptw32_handle_t pthread_t'
+
+My first thought was to define pthread_t to what it is in pthread.h
+before including jack.h so that there aren't conflicting declarations
+and then undefine it again before including pthread.h so that I'm not
+redefining pthread_t in pthread.h to something broken.
+
+This seemed silly to me and probably breaks stuff so I was wondering
+am I missing something? Is it intended to be able to use the MinGW
+compiler to compile jack2 and use a pthreads implementation and if so
+how?
+
+Thanks,
+
+Tim.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298243182.28049_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298282615.30735_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298281949.29387_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1298281949.29387_0.ltw:2,a&nbsp;&lt;AANLkTi=rTNXQmK9CDV5yAf18_8kFYyMWiwNBFFpSEc7j at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1493227365.14525_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1493249112.3160_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1493243177.29897_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 26 Apr 2017 16:45:19 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Frodo Jedi
+<a href='../1493249112.3160_0.ltw:2,a/index.html'>Re: [Jack-Devel] Failures in connecting mac OSX Sierra and an embedded board with linux via netjack2 </a></td></tr>
+</table>
+<pre>
+On Wed, April 26, 2017 12:22 pm, Frodo Jedi wrote:
+&gt; My goal is to send audio from the odroid board (master)
+&gt; to the mac (slave) using a direct ethernet connection.
+
+The jackd master is the device with the audio hardware.  Are your problems
+perhaps caused because you are following the setup instructions for master
+on a device with no audio hardware? (saw later on that you tried the other
+way around, so let's concentrate on that configuration).
+
+&gt; On the master:
+&gt; /usr/bin/jackd -P 70 -p96 -t 2000 -dalsa -dhw:CODEC -S -s
+&gt; -r48000 -p128 -n2
+
+&gt; jack_load netmanager
+
+
+That is on the odroid?  What ALSA compatible hardware is on the odroid?
+
+In any event, the short of it is that ALSA is the driver for the audio
+hardware, so whichever device has speakers connected better be the device
+where you are giving the driver argument as "-dalsa" or you won't hear any
+sound.
+
+&gt; Actually, if can be of any help, I also tried to set the mac
+&gt; as master and the linux board as the slave.
+
+That should be the correct configuration if you want to connect the mac to
+an amplifier and speakers and you want the linux odroid system to just
+send digital audio information to the mac and have the mac play the audio.
+
+&gt;  The result is that they seem to communicate,
+&gt; although jack on the mac crashes giving the error
+&gt; "Floating point exception: 8":
+
+Can you run local jack aware software on the mac and play audio through
+the mac audio hardware?  Make sure you can get that working first before
+trying to bring networking into it.
+
+&gt; Default input and output devices are not the same !!
+&gt; Cannot open default device in duplex mode, so aggregate
+&gt; default input and default output
+&gt; Separated input = 'Built-in Microphone'
+&gt; Separated output = 'Built-in Output'
+
+If you aren't going to use "Built-in Microphone" as an input device, you
+could start with playback only.  That should get rid of the "input and
+output devices are not the same !!" warning.   I think that would be -P
+passed the coreaudio driver parameters, or maybe -Cno -Pyes, the manual
+page is a little vaguely
+worded and I don't have a machine with coreaudio to play with to try it out.
+
+That is assuming you want to use the built in audio for the output,
+otherwise the wrong device is selected and you need to sort that out
+first.
+
+
+&gt; Takes physical 2 audio output(s) for slave
+&gt; Takes physical 0 MIDI input(s) for slave
+&gt; Takes physical 0 MIDI output(s) for slave
+&gt; Sending parameters to ...
+&gt; Floating point exception: 8
+
+This is a modern mac with Intel processor?  Just making sure.  I don't
+have a mac myself, but just in case someone else can help, which OS
+version?
+
+This is the default multicast address reported by the master:
+&gt; Starting Jack NetManager
+&gt; Listening on '225.3.19.154:19000'
+
+But you specified a unicast address in the place where you would usually
+specify a multicast address different than default:
+&gt; On the slave (linux board):
+&gt; jackd -R -d net -a 192.168.117.129 -p 19000
+
+From the walk-through you linked:
+Parameters for driver 'net' (all parameters are optional):
+        -a, --multicast_ip      Multicast Address (default: 225.3.19.154)
+
+You are giving a unicast address as the argument for the multicast address
+to use.  Why did you think you needed to do that?
+It seems the unicast address was ignored, because there is a message later
+showing connected to macbook.
+
+&gt; Maximum number of input ports is reached for application ref = 0
+&gt; driver: cannot register port for system:midi_playback_769
+&gt; Can't allocate ports.
+&gt; Initing net driver fails...
+
+That looks like the net backend driver is trying to register MIDI  ports
+for some reason, but the documentation says the default is no MIDI ports.
+From the walk-through page "The default configuration is a simple stereo
+use, with no midi port."  Maybe one of the jack2 devs can comment on
+whether the behavior and documentation have diverged.
+
+If you do get rid of the internal microphone as an input port, you should
+probably set the net backend to not expect any input ports.   I think that
+would be adding -C 0 -P 2 to the arguments after -dnet.
+I guess for good measure you could add -i 0 -o 0 to specify 0 MIDI in and
+out ports, although that is supposed to be the default.
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1493227365.14525_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1493249112.3160_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1493243177.29897_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1493243177.29897_0.ltw:2,a&nbsp;&lt;3150b37785664d685a7f06eaae2447ce.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

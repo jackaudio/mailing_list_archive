@@ -1,0 +1,51 @@
+Date:        Sun, 11 Aug 2013 11:02:57 -0700
+From:        Sam Hanes  <[hidden] at maltera dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Athanasios Silis [Jack-Devel] starting jack from an ssh session - dbus problem (1376241771.31581_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] starting jack from an ssh session - dbus problem
+
+On 2013-08-11 10:22, Athanasios Silis wrote:
+> I am on a ubuntustudio64 - 13.04 system.
+> I would like to be able to start the jack daemon from an ssh on occasions.
+> I stumble upon DBUS though.
+>
+>     nass@starkill:~$ jackd -S -dalsa -dhw:1,0 -r44100 -p128 -n2
+>     [snip]
+>     Failed to connect to session bus for device reservation Unable to
+>     autolaunch a dbus-daemon without a $DISPLAY for X11
+>
+> is there a switch to disable dbus? can I (and should I) compile a
+> version of jack in another folder without dbus and run this instead?
+
+Reading the documentation, it doesn't appear that there's a command-line 
+switch to disable dbus support. I didn't check the source code, though, 
+so there may be one that's just undocumented.
+
+http://trac.jackaudio.org/wiki/JackDbusPackaging
+http://manpages.ubuntu.com/manpages/raring/en/man1/jackd.1.html
+
+Since you're running Ubuntu Studio, I'm guessing you have X running. 
+That is, the machine on which you're trying to run JACK has a graphical 
+interface. You just don't have DISPLAY set because your shell is being 
+started by sshd and not in the process tree of a graphical session. If 
+you have a logged in session under X you should be able to connect to it 
+by setting DISPLAY yourself:
+     $ export DISPLAY=:0.1
+
+If that doesn't help, or if you don't have an active X session, you can 
+start the dbus daemon manually:
+     $ dbus-daemon --session
+
+Once you have the dbus daemon running JACK should no longer need X to 
+auto-start it (I think). For more information on dbus-daemon see:
+
+http://manpages.ubuntu.com/manpages/raring/en/man1/dbus-daemon.1.html
+
+--
+Sam Hanes
+[hidden]
+
+1376244185.609_0.ltw:2,a <5207D1D1.5020808 at maltera dot com>
+________________________________________________________________________________
+

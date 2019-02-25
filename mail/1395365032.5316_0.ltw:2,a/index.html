@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Using Jack</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Using Jack</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1395364377.4678_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1395387682.22344_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1395365032.5316_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 20 Mar 2014 21:23:43 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Yves Perron &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Yves Perron
+<a href='../1395364377.4678_0.ltw:2,a/index.html'>Re: [Jack-Devel] Using Jack </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Emmas
+<a href='../1395387682.22344_0.ltw:2,a/index.html'>Re: [Jack-Devel] Using Jack </a></td></tr>
+</table>
+<pre>
+On Thu, Mar 20, 2014 at 9:12 PM, Yves Perron &lt;[hidden]&gt; wrote:
+
+&gt;
+&gt;
+&gt; *Hi Paul, I'm getting there, thanks again for your devotion to this thread*
+&gt;
+&gt; As has been mentioned already, the Windows version of JACK uses the same
+&gt; system that was created for POSIX systems to enable autostart. This system
+&gt; is what Ardour and Mixbus both use:
+&gt;
+&gt; That is interesting,
+&gt;
+&gt; write the command to $HOME/.jackdrc and when jack_client_open() is called,
+&gt; if there is no server, one will be created using the command given in that
+&gt; file.
+&gt;
+&gt; While that seem to be a solution, it would be nice if you could elaborate
+&gt; on this.
+&gt;
+&gt; What command?
+&gt;
+
+the command that will start a JACK server.
+
+
+&gt; Is that command called just before jack_client_open()?
+&gt;
+
+it is not "called" at all. the command is placed into $HOME/.jackdrc and
+then libjack reads it from there and starts the server using the command it
+finds in the file.
+
+
+&gt; Where is $Home?
+&gt;
+
+on windows? no idea. read the source code.
+
+
+&gt; Of course, the format of the file is different for jack2 than for jack1,
+&gt; but since jack1 doesn't run on windows, no problem: one component of the
+&gt; command per line.
+&gt;
+&gt; One component of the command per line? Any example of this I could chew on?
+&gt;
+
+i already told you that qjackctl also writes to this file.
+
+
+&gt; QJackctl also creates this file to store the last configuration in.
+&gt;
+&gt; What is the file name? and where is it stored?
+&gt;
+
+on windows, no idea. i gave you a hint ...
+
+
+&gt; You could get the command correct using QJackctl and then just re-use the
+&gt; file contents in the future.
+&gt;
+&gt; What you are trying to do is unconventional, and not intended to be easy,
+&gt; nor is it documented or planned for use by random developers.
+&gt;
+&gt; jack_client_open() is already starting a server automatically if none
+&gt; present, what is unconventional about setting custom options before it
+&gt; starts? Otherwise it makes it useless to start a vanilla server... in my case
+&gt; at least.
+&gt;
+yes, in your case, which is odd and unusual and you seem to want it to work
+with very little effort on your part.
+
+There are ways to make it work, but as I've tried to make it clear, you are
+&gt; really on your own trying to accomplish this. The facilities for starting
+&gt; the JACK server from within a client are a mostly hidden element of the API
+&gt; and intended for people writing control applications NOT for people who
+&gt; wish to focus on a normal client.
+&gt;
+&gt; So what is the point of starting the server automatically in the first
+&gt; place? That's pretty much the source of my confusion.
+&gt;
+so that clients that need the server will just find it running, with the
+same parameters as it was last started with. clients can explicitly request
+that jack_client_open() should NOT do this if they prefer.
+
+
+&gt; Could you define Control application? I mentioned previously: "As a
+&gt; second phase, I'll use my app to sync, send/receive data from/to other
+&gt; clones of my app through a local network. "
+&gt;
+
+a control application is an app that exists for no purpose other than to
+configure and control JACK. qjackctl is an example of one such application.
+JackPilot on OS X is another. Carla on Linux is another. patchage on Linux
+is another (though this is purely a patchbay, it does not offer server
+startup+configuration). another way to put it is "an application that has
+no JACK ports and does not register a JACK process callback".
+
+
+&gt; Would that classify as control application? If yes, that's clearly what I
+&gt; want. I want to make a controller application.
+&gt;
+it does not.
+
+
+&gt; This is why we are focusing on this. You are not only using JACK on the
+&gt; least-used-with-JACK platform, but wanting to do something quite
+&gt; unconventional, when in fact all of your goals could be achieved without
+&gt; dealing with JACK at all.
+&gt;
+&gt;
+&gt;
+&gt; Why would a jack_server_start("with midi support") function be so
+&gt; unconventional? Plus, using jack_options_t with all the supported init
+&gt; options would be beautiful. I don't understand what you are trying to
+&gt; prevent developers to play with.
+&gt;
+
+we've explained this several times. JACK was not designed to be used in the
+way you want to use it.
+
+if you want full control over the server startup, use the control API to
+start the server. if that is too complex, use $HOME/.jackdrc. If neither of
+those work for you, then don't use JACK at all.
+
+
+conventionally JACK is started by the user as a separate step from starting
+any client applications. the cases where this is not done (e.g. Ardour or
+Mixbus) have been coded by people who know a great deal about JACK and have
+had to deal with a variety of subtle issues with doing this.
+
+
+there is a  LOT of (non-windows) example code, documentation of the control
+API ... you are going to have to start digging because nobody is going to
+hand this to you on a plate.
+
+
+--p
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1395364377.4678_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1395387682.22344_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1395365032.5316_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1395365032.5316_0.ltw:2,a&nbsp;&lt;CAFa_cK=7Jn4AJNx2X7S-tHq_DA4GzRcjLRRqw+_cZVbrbyq6Ug at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

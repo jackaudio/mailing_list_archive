@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] mumbo jumbo on a wiki page</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] mumbo jumbo on a wiki page</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1309811961.6314_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1309859344.13168_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1309846648.18632_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 05 Jul 2011 08:17:10 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1309811961.6314_0.ltw:2,a/index.html'>Re: [Jack-Devel] mumbo jumbo on a wiki page </a></td></tr>
+</table>
+<pre>
+Le 4 juil. 2011 &#xE0; 22:38, Paul Davis a &#xE9;crit :
+
+&gt; On Mon, Jul 4, 2011 at 3:58 PM, Fons Adriaensen &lt;[hidden]&gt; wrote:
+&gt;&gt; On Mon, Jul 04, 2011 at 03:21:37PM -0400, Paul Davis wrote:
+&gt;&gt; 
+&gt;&gt;&gt; trying to describe it at all is tricky, because it *is* tricky to even
+&gt;&gt;&gt; know for sure if you need them.
+&gt;&gt; 
+&gt;&gt; True. But I was hoping for your expos&#xE9; as to how A3 deals
+&gt;&gt; with SMP machines (which are the norm today) :-))
+&gt; 
+&gt; more or less the way you describe. torben did the implementation.
+&gt; 
+
+In Faust we use a Work Stealing Scheduler to deal with this kind of DAG:
+
+http://www.grame.fr/Ressources/pub/FAUST_LAC2010.pdf
+
+The difference is that since the DAG is known in advance we can "compile" the given activation code for each task (which task are to be computed next, which tasks is to be pushed on a queue). Tasks are indentified by an index and we used lock-free code (CAS based) to access the queues. 
+
+You can possibly look at the generated code by using Faust2 branch on GIT :
+
+http://faudiostream.git.sourceforge.net/git/gitweb.cgi?p=faudiostream/faudiostream;a=summary
+
+and generate code for a given example, like:
+
+faust -sch -a jack-gtk.cpp examples/freeverb.dsp
+
+Then this "static" (DAG know in advance) method can probably be generalized to dynamic graphs.
+
+St&#xE9;phane
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1309811961.6314_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1309859344.13168_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1309846648.18632_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1309846648.18632_0.ltw:2,a&nbsp;&lt;5EC4697B-B2ED-4830-959D-B586B7CF49BA at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

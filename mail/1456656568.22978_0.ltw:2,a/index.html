@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK1 0.125.0rc1 now available</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK1 0.125.0rc1 now available</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1456628702.26164_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1456662264.26753_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1456656568.22978_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 28 Feb 2016 10:49:01 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Rui Nuno Capela </span> &lt;[hidden] at rncbc dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1456628702.26164_0.ltw:2,/index.html'>Re: [Jack-Devel] JACK1 0.125.0rc1 now available </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Rui Nuno Capela
+<a href='../1456662264.26753_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK1 0.125.0rc1 now available </a></td></tr>
+</table>
+<pre>
+On 02/28/2016 03:04 AM, Paul Davis wrote:
+&gt;
+&gt;
+&gt;&gt; There's also a significant regression since 0.124.X. I am having problems
+&gt;&gt; with clients being zombified AND with jackd crashing. Work on this issue is
+&gt;&gt; slow and will delay release.
+&gt;
+&gt; Is this issue documented anyway? Even just steps required to reproduce it.
+&gt; Anything anyone else can do to help?
+&gt;
+&gt;
+&gt; I don't have a recipe. Just my normal daytime activity (developing
+&gt; ardour, playing music, listening to streaming music, watching videos)
+&gt; now kills JACK several times a day, whereas it used to be rock solid.
+&gt;
+&gt; I have not tried git bisect yet, but I will when I get a moment.
+&gt;
+
+fwiw. have built, packaged and run jack-0.125.0rc1:
+   http://www.rncbc.org/archive/#jack
+also on my OBS home project:
+   https://build.opensuse.org/package/show/home:rncbc/jack
+
+example startup log head:
+~~~
+/usr/bin/jackd -P86 -t3000 -m -dalsa -dhw:DMX6Fire -r48000 -p128 -n2 -Xseq
+jackd 0.125.0rc1
+Copyright 2001-2009 Paul Davis, Stephane Letz, Jack O'Quinn, Torben Hohn 
+and others.
+jackd comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK compiled with System V SHM support.
+loading driver ..
+apparent rate = 48000
+creating alsa driver ... 
+hw:DMX6Fire|hw:DMX6Fire|128|2|48000|0|0|nomon|swmeter|-|32bit
+configuring for 48000Hz, period = 128 frames (2.7 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: 32bit integer little-endian
+ALSA: use 2 periods for capture
+ALSA: final selected sample format for playback: 32bit integer little-endian
+ALSA: use 2 periods for playback
+creating alsa_midi driver ...
+
+
+using qjackctl for that matter where pretty_name metadata  aliases are 
+being used all the time btw. also doing all the usual things: 
+development, testing, debugging, playing, streaming, browsing, etc. and 
+with pulseaudio-sink and -source modules all along... all that on one 
+desktop and two laptops, all rigged with latest 4.4 kernels (preempt 
+w/threadirqs and preempt_rt_full; rtirq sets the primary snd card to 
+rtprio=90 thus the jackd -P86 ... ;))
+
+all to tell that 0.125.0rc1 is doing fine over here without any major 
+hiccups, though the usual xruns specially due on video and possibly 
+pulseaudio related but sure that was also happening before on jackd-0.124.x
+
+so it seems it's all as solid as ever before.
+
+however i have a complaint :) re. the git repo in particular: since 
+0.125.0rc1 announcement the submodules aren't pulling right... evidence 
+follows:
+
+~~~
+~/src/jack1/jack1-git&gt; git pull --all
+Fetching origin
+Already up-to-date.
+
+~/src/jack1/jack1-git&gt; git submodule update
+fatal: reference is not a tree: e74323c535876abca9a2293bd2ca426a3b91ff8b
+fatal: reference is not a tree: a2536c8b348bbfb21ec53db901e7992d7ffef474
+fatal: reference is not a tree: 8e140b72de0231d129c6006db969f1dba4f1486b
+Unable to checkout 'e74323c535876abca9a2293bd2ca426a3b91ff8b' in 
+submodule path 'example-clients'
+Unable to checkout 'a2536c8b348bbfb21ec53db901e7992d7ffef474' in 
+submodule path 'jack'
+Unable to checkout '8e140b72de0231d129c6006db969f1dba4f1486b' in 
+submodule path 'tools'
+
+~/src/jack1/jack1-git&gt; git remote -v
+origin  git://github.com/jackaudio/jack1.git (fetch)
+origin  git://github.com/jackaudio/jack1.git (push)
+
+~/src/jack1/jack1-git&gt; git branch -a
+* master
+remotes/origin/HEAD -&gt; origin/master
+remotes/origin/control_device_name_fixes
+remotes/origin/master
+remotes/origin/uuid
+
+
+byee
+--
+rncbc aka. Rui Nuno Capela
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1456628702.26164_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1456662264.26753_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1456656568.22978_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1456656568.22978_0.ltw:2,a&nbsp;&lt;BLU436-SMTP1042D7B6D298FD60CAF3B9AAEB90 at phx dot gbl&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

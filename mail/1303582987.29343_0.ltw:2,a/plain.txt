@@ -1,0 +1,52 @@
+Date:        Sat, 23 Apr 2011 14:22:55 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Eric Kampman <[hidden] at yahoo dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Eric Kampman Re: [Jack-Devel] [jackosx] MIDI timing and Jack (not OS-X-specific) (1303582287.27859_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [jackosx] MIDI timing and Jack (not OS-X-specific)
+
+On Sat, Apr 23, 2011 at 2:11 PM, Eric Kampman <[hidden]> wrote:
+> I'm enough of a newbie at audio that I've not yet run into the circumstances that would cause me to need to compromise jitter for the sake of latency or vice versa. I will use the advice you are giving and when my experience catches up a bit I will understand better.
+
+you will run into these very quickly the moment you do any kind of
+synthesis based on incoming MIDI (or equivalent) data. if you try to
+"make the sound as soon as possible after the incoming event arrives",
+you will get bad jitter, up to 1 block's worth of audio. the latency -
+the delay between the person doing something and the sound being
+audible - will vary between "zero" and 1 block.
+
+if the block size is small (in JACK terms, frames-per-period is low),
+then some musicians/performers won't notice it too much, but most
+will. most humans are sensitive to variable jitter much more than they
+are to a fixed latency. they will play a key and the sound will come
+out anywhere from "zero" frames to 1 block's worth of frames later. if
+the block size is big, you will *really* notice the effect quite
+dramatically, and it will be essentially unplayable because of the
+jitter.
+
+you might think that the latency would be the issue there, but think
+again, and specifically, think about instruments like pipe organs.
+they take a bit of practice to get used to, but the latency from such
+instruments is enormous compared to most digital audio - it can be
+tenths of a second (or more) between a key press and the sound
+starting. but because the jitter is basically zero, humans can play it
+- the brain just shifts into a mode where it compensates for the fact
+that the sound is always X msecs behind the fingers.
+
+> AFA a2jmidid I confess to hasty conclusions -- I was basing my assessment on a2jmidibridge.c comment and code around line 94 in jack_callback(). The comment says:
+
+a2jmidi_bridge.c is not part of a2jmidid:
+
+From the Makefile:
+
+     SOURCES = a2jmidid.c.* jack.c.* port.c.* port_thread.c.* port_hash.c.*
+
+in the checkout i have of a2jmidid, there is quite a bit of clutter in
+there that can be misleading like this.
+
+--p
+
+1303582987.29343_0.ltw:2,a <BANLkTi=VyTVxfQ9w9SO3z9o-y3-63==5BA at mail dot gmail dot com>
+________________________________________________________________________________
+

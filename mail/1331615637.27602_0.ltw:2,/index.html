@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[FFADO-devel] [PATCH] v1.2 of setbufsize support for firewire driver</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[FFADO-devel] [PATCH] v1.2 of setbufsize support for firewire driver</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1331615603.27558_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1331629632.18070_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1331615637.27602_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 13 Mar 2012 15:43:03 +1030 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jonathan Woithe </span> &lt;[hidden] at just42 dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot sf dot net </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1332017156.18521_0.ltw:2,a/index.html'>Re: [Jack-Devel] [FFADO-devel] [PATCH] v1.2 of setbufsize support for firewire driver </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1332021302.20739_0.ltw:2,a/index.html'>Re: [Jack-Devel] [FFADO-devel] [PATCH] v1.2 of setbufsize support for firewire driver </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1332021329.20748_0.ltw:2,a/index.html'>Re: [FFADO-devel] [PATCH] v1.2 of setbufsize support for firewire driver </a></td></tr>
+</table>
+<pre>
+Hi again
+
+Another day, another tweak to the ffado setbufsize patch.  This is version
+1.2.  Differences from version 1.1:
+
+ - be more liberal in accepting libffado API version numbers.
+ - patch confirmed to apply cleanly to current jack svn (r4778).
+
+Regards
+  jonathan
+
+--- jack-orig/drivers/firewire/ffado_driver.c	2012-03-13 14:47:43.042406524 +1030
++++ jack/drivers/firewire/ffado_driver.c	2012-03-13 15:36:43.181078985 +1030
+@@ -7,6 +7,7 @@
+  *   http://www.jackaudio.org
+  *
+  *   Copyright (C) 2005-2007 Pieter Palmers
++ *   Copyright (C) 2012 Jonathan Woithe
+  *
+  *   This program is free software; you can redistribute it and/or modify
+  *   it under the terms of the GNU General Public License as published by
+@@ -50,7 +51,10 @@
+ 
+ static int ffado_driver_stop (ffado_driver_t *driver);
+ 
++// Basic functionality requires API version 8.  If version 9 or later
++// is present the buffers can be resized at runtime.
+ #define FIREWIRE_REQUIRED_FFADO_API_VERSION 8
++#define FIREWIRE_REQUIRED_FFADO_API_VERSION_FOR_SETBUFSIZE 9
+ 
+ // enable verbose messages
+ static int g_verbose=0;
+@@ -675,24 +679,71 @@
+ static int
+ ffado_driver_bufsize (ffado_driver_t* driver, jack_nframes_t nframes)
+ {
+-	printError("Buffer size change requested but not supported!!!");
++	signed int chn;
+ 
+-	/*
+-	 driver-&gt;period_size = nframes;  
++	// The speed of this function isn't critical; we can afford the
++	// time to check the FFADO API version.
++	if (ffado_get_api_version() &lt; FIREWIRE_REQUIRED_FFADO_API_VERSION_FOR_SETBUFSIZE ||
++            ffado_streaming_set_period_size == NULL) {
++	        printError("unsupported on current version of FFADO; please upgrade FFADO");
++	        return -1;
++	}
++
++	driver-&gt;period_size = nframes;  
+ 	driver-&gt;period_usecs =
+ 		(jack_time_t) floor ((((float) nframes) / driver-&gt;sample_rate)
+ 				     * 1000000.0f);
+-	*/
+-	
++
++	// Reallocate the null and scratch buffers.
++	driver-&gt;nullbuffer = calloc(driver-&gt;period_size, sizeof(ffado_sample_t));
++	if(driver-&gt;nullbuffer == NULL) {
++		printError("could not allocate memory for null buffer");
++		return -1;
++	}
++	driver-&gt;scratchbuffer = calloc(driver-&gt;period_size, sizeof(ffado_sample_t));
++	if(driver-&gt;scratchbuffer == NULL) {
++		printError("could not allocate memory for scratch buffer");
++		return -1;
++	}
++
++	// MIDI buffers need reallocating
++	for (chn = 0; chn &lt; driver-&gt;capture_nchannels; chn++) {
++		if(driver-&gt;capture_channels[chn].stream_type == ffado_stream_type_midi) {
++			// setup the midi buffer
++			if (driver-&gt;capture_channels[chn].midi_buffer != NULL)
++			        free(driver-&gt;capture_channels[chn].midi_buffer);
++			driver-&gt;capture_channels[chn].midi_buffer = calloc(driver-&gt;period_size, sizeof(uint32_t));
++		}
++	}
++	for (chn = 0; chn &lt; driver-&gt;playback_nchannels; chn++) {
++		if(driver-&gt;playback_channels[chn].stream_type == ffado_stream_type_midi) {
++		        if (driver-&gt;playback_channels[chn].midi_buffer != NULL)
++		                free(driver-&gt;playback_channels[chn].midi_buffer);
++			driver-&gt;playback_channels[chn].midi_buffer = calloc(driver-&gt;period_size, sizeof(uint32_t));
++		}
++	}
++
++	// Notify FFADO of the period size change
++	if (ffado_streaming_set_period_size(driver-&gt;dev, nframes) != 0) {
++	        printError("could not alter FFADO device period size");
++	        return -1;
++	}
++
++	// This is needed to give the shadow variables a chance to
++	// properly update to the changes.
++	sleep(1);
++
+ 	/* tell the engine to change its buffer size */
+-#if 0
+ 	if (driver-&gt;engine-&gt;set_buffer_size (driver-&gt;engine, nframes)) {
+ 		jack_error ("FFADO: cannot set engine buffer size to %d (check MIDI)", nframes);
+ 		return -1;
+ 	}
+-#endif
+ 
+-	return -1; // unsupported
++	// Other drivers (eg: ALSA) don't seem to adjust latencies via
++	// jack_port_set_latency_range() from the bufsize() callback, so we
++	// won't either.  Is this right?
++
++        return 0;
+ }
+ 
+ typedef void (*JackDriverFinishFunction) (jack_driver_t *);
+@@ -704,7 +755,7 @@
+ {
+ 	ffado_driver_t *driver;
+ 
+-	if(ffado_get_api_version() != FIREWIRE_REQUIRED_FFADO_API_VERSION) {
++	if(ffado_get_api_version() &lt; FIREWIRE_REQUIRED_FFADO_API_VERSION) {
+ 		printError("Incompatible libffado version! (%s)", ffado_get_version());
+ 		return NULL;
+ 	}
+
+------------------------------------------------------------------------------
+Keep Your Developer Skills Current with LearnDevNow!
+The most comprehensive online learning library for Microsoft developers
+is just $99.99! Visual Studio, SharePoint, SQL - plus HTML5, CSS3, MVC3,
+Metro Style Apps, more. Free future releases when you subscribe now!
+http://p.sf.net/sfu/learndevnow-d2d
+
+FFADO-devel mailing list
+[hidden]
+https://lists.sourceforge.net/lists/listinfo/ffado-devel
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1331615603.27558_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1331629632.18070_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1331615637.27602_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1331615637.27602_0.ltw:2,&nbsp;&lt;20120313051303.GL14630 at marvin dot atrad dot com dot au&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

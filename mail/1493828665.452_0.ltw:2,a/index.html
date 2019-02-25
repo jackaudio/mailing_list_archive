@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How does --hwmix work?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How does --hwmix work?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1493819118.17659_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1493834800.9464_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1493828665.452_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 03 May 2017 18:07:31 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> David Kastrup </span> &lt;[hidden] at gnu dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Chris Caudle
+<a href='../1493819118.17659_0.ltw:2,a/index.html'>Re: [Jack-Devel] How does --hwmix work? </a></td></tr>
+</table>
+<pre>
+"Chris Caudle" &lt;[hidden]&gt; writes:
+
+&gt; On Wed, May 3, 2017 1:05 am, David Kastrup wrote:
+&gt;&gt; Sigh, you are right.  But the question remains:  What applications will
+&gt;&gt; support this and what does it mean?
+
+[Large treatise regarding hardware monitoring elided]
+
+&gt; Where this makes a difference is when you are using a recording
+&gt; application such as Ardour, if you configure Ardour so that it uses
+&gt; software monitoring, Ardour will mix the incoming audio with the
+&gt; existing material and send back out to the audio output.  If you
+&gt; configure for hardware monitoring, then Ardour will only play back the
+&gt; existing material, and the hardware is responsible for mixing the
+&gt; incoming audio material with the output of pre-existing material so
+&gt; you can hear both.  Note that both method 1 and method 3 would be
+&gt; classifired as hardware monitoring, it only differs in whether you
+&gt; have an external mixer handling the task or you computer audio
+&gt; interface can handle the task.
+
+Uh, the question was not what hardware monitoring is.  The question was
+what the --hwmon option to Jackd does and which applications support it.
+
+"the hardware is responsible for mixing the incoming audio material" is
+nothing that Jackd would be involved with since Jackd isn't hardware.
+
+So what does this option do?  The manual page reads (as you cited):
+
+	-H, --hwmon
+		Enable hardware monitoring of capture ports.  This is a
+		method for obtaining "zero latency" monitoring of audio
+		input.  It  requires support  in hardware and  from the
+		underlying ALSA device driver.
+
+		When enabled, requests to monitor capture ports will be
+		satisfied  by creating  a  direct  signal path  between
+		audio interface  input and  output connectors,  with no
+		processing by  the host  computer at all.   This offers
+		the lowest possible latency for the monitored signal.
+
+		Presently (March 2003), only  the RME Hammerfall series
+		and cards  based on the ICE1712  chipset (M-Audio Delta
+		series, Terratec, and others)  support --hwmon.  In the
+		future, some  consumer cards  may also be  supported by
+		modifying their mixer settings.
+
+		Without --hwmon, port monitoring  requires JACK to read
+		audio into system memory, then  copy it back out to the
+		hardware again, imposing the  basic JACK system latency
+		determined by the --period and --nperiods parameters.
+
+But what does this mean when I have 26 capture ports and 18 output
+ports?  What kind of applications request to "monitor capture ports",
+and what ports will get a direct signal path between them?
+
+When I use Ardour, I have settings for "Ardour is responsible for
+monitoring" and "Hardware is responsible for monitoring".  For which of
+the two settings would the --hwmon option to Jackd be even relevant?
+
+Wait.  Now I see _three_ settings.
+
+Record monitoring handled by:
+"via Audio Driver"
+"ardour"
+"audio hardware"
+
+[Testing out several things]
+
+Ok, the "via Audio Driver" option is not there when Jackd runs on my
+default laptop hardware (AC97) but it is there when it runs on the RME
+Hammerfall DSP.  But independently of whether or not I specify --hwmon.
+So does this option actually make a difference to Jackd?
+
+Either way, what is the effect?  Does Ardour take the gain totals
+(disregarding all other plugin effects) from its jackd-controlled
+hardware inputs to its record-enabled tracks and from its record-enabled
+tracks to its jackd-controlled hardware outputs, convert them to mixer
+settings and hand them over?
+
+That would be what I consider "best case".  It is also something about
+which I can find nothing whatsoever in the Jack API documentation (as
+seen on its web site).  So it's hard to guess at the actual capabilities
+being exercised here.
+
+If it accesses the mixer like that, it's actually a bit more than just
+monitoring.  Who does the latency accounting in this case?  The
+Hammerfall docs state 4 samples delay at 48kHz and its ilk and 8 samples
+delay at 96kHz and its ilk for the digital signal paths.  For the analog
+signals, A/D has 31 samples delay due to oversampling/filtering and D/A
+has 30 samples delay.
+
+So basically Ardour's menu "Editor/Audio/Monitoring/Record monitoring
+handled by:" gains an additional option "via Audio Driver" on certain
+hardware, independently of whether jackd has been started with --hwmon
+or not.
+
+This magic third option is not mentioned in the Ardour manual
+&lt;http://manual.ardour.org/preferences-and-session-properties/preferences-dialog/audio/&gt;:
+
+    Record monitoring handled by: determines whether Ardour provides
+    monitoring of incoming audio or whether monitoring is provided by
+    hardware. See
+    Monitoring(http://manual.ardour.org/recording/monitoring/) for more
+    information.
+
+And "Monitoring" is actually less rather than more information:
+
+    When recording, it is important that performers hear themselves, and
+    to hear any pre-recorded tracks they are performing with. Audio
+    recorders typically let you monitor (i.e. listen to) the input
+    signal of all tracks that are armed for recording, and playing back
+    the unarmed tracks.
+
+
+So does --hwmon make an actual difference (I should likely mention that
+I used Jack2 for this experiment)?  And what actually happens?  And is
+there any documentation about any of this and the involved APIs
+anywhere?  And if this requires special Jackd support (as the manual
+page suggests) rather than being able to work with more generic
+ALSA-accessible mixers (like, say, the AC97 mixer), where would one find
+out about just which cards are supported in 2017?  The manual page
+states "Presently (March 2003)" which is not particularly up to date.
+
+-- 
+David Kastrup
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1493819118.17659_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1493834800.9464_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1493828665.452_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1493828665.452_0.ltw:2,a&nbsp;&lt;87o9v9vs8s.fsf at fencepost dot gnu dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

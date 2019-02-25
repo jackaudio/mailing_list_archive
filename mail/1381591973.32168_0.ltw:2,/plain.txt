@@ -1,0 +1,195 @@
+Date:        Sat, 12 Oct 2013 11:32:43 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Christian Schoenebeck <[hidden] at crudebyte dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Christian Schoenebeck Re: [Jack-Devel] major change in jack1 MIDI handling (1381590150.31010_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] major change in jack1 MIDI handling
+
+On Sat, Oct 12, 2013 at 11:07 AM, Christian Schoenebeck <
+[hidden]> wrote:
+
+> However nowadays, since also ARM and even microcontroller units provide
+> multi
+> cores, the async mode becomes more and more beneficial and important than
+> the
+> sync mode anyway.
+>
+
+That depends on who or what you consider the primary "market" for JACK to
+be. And to repeat what I have to repeat over and over (almost as often as
+Stephane correcting my mistakes about Jack2 :), Jack2's multicore support
+(except in the "exp" branch of some time ago) only provides benefits with
+parallel data flow. We have have no way to know how many users of JACK ever
+have parallel data flow, but it is easy to guess that there are many
+working setups that never, ever see this. Having real numbers would help a
+lot.
+
+> Are there bug reports for these dead locks? I am on #jack on IRC 24/7 and
+I
+> have not seen reports of deadlocks or lower CPU idle load for years, if
+> ever. Deadlocks were a problem with Tschak, which is why it did not land.
+
+The last dead lock fix for JACK1 was commited by you 6 days ago:
+>
+> https://github.com/jackaudio/jack1/commit/29785c4a257b1cb3ef1129e17d2a416ccfc073ce
+> However I have to add that this particular example is a bit unfair, since
+> this
+> particular code part is not protected in JACK2 by lock guard's either yet.
+>
+
+Precisely. And sure, I'm very well aware of the benefits of C++ for this
+sort of thing.
+
+I was not referring to implementation details. I totally agree that the
+> JACK2
+> code base could be simplified significantly. However the point is, bringing
+> JACK2 to some point which would be acceptable for you as well, could be
+> achieved in reasonable time (requiring that there are no emotional causes
+> involved). However the other way around is impossible. Because you will
+> never
+> achieve the same quality on C level. And it is not like Stéphane or other
+> "JACK2 developers" were closed-minded to compromises. ;-)
+>
+
+I'm not interested in pushing Jack1 as "the future", I said that. But I'm
+also not interested in Jack2 as the direct antecedent of "the future JACK".
+I have no desire to impose my coding style on Stephane's work (he is
+entitled to his own style, which is perfectly fine for those for whom it is
+perfectly fine).
+
+The work I am doing on Jack1 right now is because I *can* and because I
+don't want to see silly API extensions added. I want to find out what the
+operational issues are, for example, in a version of JACK where the UUID
+becomes the primary identifier for all objects, and maybe even where the
+concept of a "name" as anything other than loosely attached metadata goes
+away. I can do that VERY quickly with Jack1, but *I* can't do that quickly
+with Jack2. And I am also working quite hard to not break API or ABI
+compatibility.
+
+
+> Actually I watched for a long time how Stéphane and others worked hard for
+> this C++ implementation of JACK to become adopted. And it was always just
+> neglected by people because of ideological reasons (C-only, code style,
+> copyright).
+>
+
+This just isn't true.
+
+"JACK2 is Ok, but not yet what I want" as reason to totally ignore it, ...
+> how
+> could there ever be a joint community ever again with that attitude?
+>
+
+There hasn't been a joint community for years. There is no animosity
+between Stephane and myself  (or even between Torben and Stephane) - we
+just agree that we don't want to work on each other's code. And I'm not
+sure that "totally ignore" it adequately captures my attitude towards
+Jack2. I have to deal with Jack2 every day both as a user and a  person
+dealing with Ardour user support. I admire a lot of the ideas in Jack2 and
+I pay attention to changes it undergoes.
+
+
+> > That said, I am not particularly interested in maintaining Jack1 either,
+> > but would like to move forward with a new implementation that attempts to
+> > combine the best of both worlds. I have no idea if I (or anyone else)
+> will
+> > find the time to do this. The idea would be to code something in C++,
+>
+> Right, then we would have a 3rd concurrent JACK server implementation and a
+> 3rd developer camp fighting with each other, because of certain JACK1
+> developers' desire to stick with C. ;-) So it might probably not even solve
+> the overall situation, because the main problem currently is the missing
+> willingness to find a consensus.
+>
+
+Jack O'Quinn is the only JACK developer who made much of a issue about
+sticking with C. He has not been active in JACK development for many years,
+and Jack1 would remain in existence in the event of a new C++
+implementation anyway.
+
+
+>
+> > My recent work on Jack1 was triggered by the "threat" that an overly
+> > specific new API would get added to JACK2 in spite of years of calling
+> for
+> > a more generic approach (metadata). There have been discussions for
+> several
+> > years about a metadata API for JACK, and significant discussion on IRC
+> from
+> > time to time. An API for this has now been implemented (which also covers
+>
+> That explains why you added this API, but not why you added it to JACK1.
+> ;-)
+> Just kidding. However if I saw it correctly, this new API still does not
+> provide a way to associate data (like an application icon) to a jack
+> client.
+>
+
+You did not see it correctly.
+
+       char* icon_string = encode_image_as_base_64 (png_data);
+       jack_set_property (jack_get_uuid_for_client_name (client_name),
+JACK_METADATA_ICON_SMALL, icon_string, "image/png;base64");
+
+      ....
+
+      char* icon_string;
+      char* type;
+      char* png_data;
+
+      if (jack_get_property (jack_get_uuid_for_client_name (client_name),
+JACK_METADATA_ICON_SMALL, &icon_string, &type) == 0) {
+                if (type && strcmp (type, "image/png;base64") == 0) {
+                          png_data = decode_image_as_base_64 (icon_string);
+                }
+                jack_free (icon_string);
+                if (type) {
+                    jack_free (type);
+                }
+     }
+
+I doubt that JACK1 will vanish that soon. I have the impression that your
+>
+
+I don't want it to live a moment longer than it needs to.
+
+
+> opinion is such influential in the community, that it would prevent that.
+> And
+> often misinformations are spread about JACK2 (like just seen today), which
+> also explains why many people continue using JACK1.
+>
+> However the situation is very exhausting for both developers and end users,
+> and I hope that you probably use your influence to find some consensus
+> among
+>
+
+I tried this. We tried this a couple of years ago. There is no consensus.
+
+
+> this split camp in future. Because fact is, the overall situation is very
+> stuck right now.
+
+
+It isn't stuck. It is just inefficient and wasteful.
+
+And it's just getting worse day by day. Now we might even get
+> two completely different API sets soon.
+>
+
+That is something I will not permit to happen, if I have any influence over
+things at all.
+
+I have no problem with "weak-linked" optional new API (except that our
+approach to this turns out to be totally broken for most cases on Linux,
+and impossible on windows).
+I have no problem with N different implementations.
+
+But forking the JACK API in ways that affect the core ... it needs to be
+called something else. Not that I wouldn't like to, given my understanding
+of how big a mistake we made using names as identifiers.
+
+1381591973.32168_0.ltw:2, <CAFa_cKnpkx2dK51kv-2LN7qTksyk+q8AWz7m5XeLmXYtP0Av8g at mail dot gmail dot com>
+________________________________________________________________________________
+

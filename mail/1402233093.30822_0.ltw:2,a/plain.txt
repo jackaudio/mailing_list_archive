@@ -1,0 +1,65 @@
+Date:        Sun, 08 Jun 2014 15:11:09 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: [hidden] at jrigg dot co dot uk [Jack-Devel] Jack2 build error - Debian 7 amd64 (1402228038.26103_0.ltw:2,a)
+Follow-Up:   John Rigg Re: [Jack-Devel] Jack2 build error - Debian 7 amd64 (1402240708.5069_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack2 build error - Debian 7 amd64
+
+On Sun, Jun 08, 2014 at 12:54:04PM +0100, [hidden] wrote:
+
+> I just did a git pull from Jack2 on GitHub and tried compiling it on Debian
+> stable amd64. The build fails. I previously built it on May 25th and it was
+> fine.
+
+First and foremost, let me point out that current jack2 git compiles
+fine on Debian unstable.
+
+I didn't bother to try on Debian 7 (stable), but since you've compiled
+libsndfile yourself, I have the gut feeling that it is more specific to
+your local setup than a generic problem.
+
+
+> (.text+0x2ac): undefined reference to `FLAC__stream_encoder_process_interleaved'
+
+This is pretty clear. For some reasons, symbols from libflac were
+referenced but later not linked against. This could either be due to
+indirect linking or API mismatch (no idea if the FLAC API has changed
+recently).
+
+You can try this patch, but no guarantees (completely untested):
+
+
+diff --git a/example-clients/wscript b/example-clients/wscript
+index fbf8999..01cea83 100644
+--- a/example-clients/wscript
++++ b/example-clients/wscript
+@@ -41,6 +41,7 @@ def configure(conf):
+  
+     if conf.is_defined('HAVE_SNDFILE'):
+         conf.env['LIB_SNDFILE'] = ['sndfile']
++        conf.env['LIB_FLAC'] = ['flac']
+ 
+     conf.check_cfg(package='celt', atleast_version='0.5.0', args='--cflags --libs', mandatory=False)
+ 
+@@ -120,7 +121,7 @@ def build(bld):
+             prog.env.append_value("LINKFLAGS", "")
+             prog.use += ['SNDFILE']
+         if bld.env['IS_LINUX']:
+-            prog.use += ['RT', 'SNDFILE']
++            prog.use += ['RT', 'FLAC', 'SNDFILE']
+         if bld.env['IS_SUN']:
+             prog.use += ['RT', 'SNDFILE']
+         if bld.env['IS_WINDOWS']:
+
+
+
+
+Cheers
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1402233093.30822_0.ltw:2,a <20140608131109.GG7384 at ltw dot loris dot tv>
+________________________________________________________________________________
+

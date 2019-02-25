@@ -1,0 +1,77 @@
+Date:        Sun, 17 May 2009 14:07:55 +0100
+From:        Rui Nuno Capela  <[hidden] at rncbc dot org>
+To:          Fons Adriaensen <[hidden] at kokkinizita dot net>
+Cc:          Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>, JACK Developers <[hidden] at jackaudio dot org>
+In-Reply-To: Fons Adriaensen Re: [LAD] [Jack-Devel] more jack/qjackctl madness (1242560416.23177_0.ltw:2,a)
+Follow-Up:   Gabriel M. Beddingfield Re: [LAD] [Jack-Devel] more jack/qjackctl madness (1242566557.27664_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [LAD] [Jack-Devel] more jack/qjackctl madness (1242569195.29516_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] more jack/qjackctl madness
+
+Fons Adriaensen wrote:
+> On Sun, May 17, 2009 at 11:48:57AM +0100, Rui Nuno Capela wrote:
+> 
+>> qjackctl only writes to ~/.jackdrc *iif* you opt to (see Setup/Misc/Save
+>> JACK audio server configuration). otherwise it *never* makes use of that
+>> file ie. it never auto-starts jackd implicitly; it only does start jackd
+>> explicitly if none is found running atm.
+> 
+> If the file is ignored by jackd, and by qjackctl, why
+> does qjackctl write it at all ?
+>  
+>> if you really want several jackd server running simultaneously
+> 
+> I don't want that. I want to get rid of one that was 
+> started automatically, terminated, but restarted by
+> dbus (why on earth ?) when I run qjackctl. The net
+> result is that running qjackctl starts a server with
+> parameters that have no relation at all to its setup
+> (making it appear as if qjackctl has gone nuts), and
+> starting the one corresponding to qjackctl's setup
+> becomes impossible. It's very probably not qjackctl's
+> fault.
+> 
+> Two other things _are_:
+> 
+> 1. I definitely want to be able to terminate qjackctl
+> without stopping jackd, even if that jackd was started
+> by qjackctl. This used to be possible.
+> 
+
+unfortunately, Qt4's class which is being used for wrapping the jackd
+process (QProcess) does kill it on its destructor. afaict, this behavior
+wasn't present in Qt3 and that's why there's no option to keep jackd
+running upon quitting qjackctl anymore.
+
+> 2. Qjackctl-0.3.4 seems to have a bug handling the port
+> creation and destruction callbacks, it continues to show
+> ports that have been deleted and does not show some new
+> ones. This happens when the delete/create calls are close
+> together. Jack_evmon shows the right events in the right
+> order, so it must be qjackctl getting it wrong.
+> 
+
+this might just be a side-effect of the jack_port_t* reuse issue that i
+think has been discussed recently.
+
+qjackctl does not handle port (un)registration callbacks but does its
+book-keeping with this jack_port_t * handle as a unique key identifier.
+
+if, for instance, one client unregisters one given port and registers
+another in a quick sequence, it might just happen that the new port has
+the very same jack_port_t* address value which got just reclaimed and
+reused. alas, qjackctl assumes it's the very same port object as it
+keeps jack_port_t*s as its unique port identifiers, so nothing changes.
+
+i suppose i'll have to fix this soon. by properly handling port
+unregistration callbacks, which will be a novelty after 5+ years of
+doing just fine without on jack1 at least ;)
+
+cheers
+-- 
+rncbc aka Rui Nuno Capela
+[hidden]
+
+1242565862.27055_0.ltw:2,a <4A100C2B.6040901 at rncbc dot org>
+________________________________________________________________________________
+

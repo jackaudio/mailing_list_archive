@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] buffer size callback, revisit</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] buffer size callback, revisit</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297788752.18400_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297791387.24951_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297790510.22481_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 15 Feb 2011 12:21:26 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Jack O'Quin
+<a href='../1297791387.24951_0.ltw:2,a/index.html'>Re: [Jack-Devel] buffer size callback, revisit </a></td></tr>
+</table>
+<pre>
+(this message mostly reiterates something that torben bought up the other day).
+
+there is a potential race condition in the way that current JACK
+implementations make the port buffer sizes available to clients. the
+simplest way to visualize the problem is something like this:
+
+  CLIENT:
+	    jack_client_t* jack_client = jack_client_open (...);
+            size_t sz = jack_get_buffer_size (jack_client);
+	    ptr = malloc (sz);
+            ....
+                                                                  OTHER CLIENT
+
+jack_set_buffer_size (jack_client, nframes);
+            ....
+            jack_activate (jack_client)
+
+once CLIENT gets a process callback that uses "ptr" as a pointer to
+some memory, it won't know that the buffer is the wrong size.
+
+this is true EVEN IF the client registered a buffer size callback. why
+so? despite the suggestion in the API docs for the buffer size
+callback, existing implementations do NOT guarantee to call the
+client's buffer size callback from within jack_activate(). this means
+that there is no reliable way for a client to know the port buffer
+size before its first process callback. the buffer size callback will
+notify it of later changes to the size, but not the initial size when
+it gets its first process() call.
+
+torben and i have discussed this and although we came up with some
+less intrusive/changy schemes, they are all wrong at a fundamental
+level. what we propose is a subtle change that unfortunately requires
+a new API call.
+
+what we believe is the right approach to fixing this has 3 parts:
+
+   1) a new buffer size callback that can be registered with the
+explicit understanding that it will be called from any subsequent call
+to jack_activate() (if there is one)
+   2) JACK implementations change to honor (1)
+   3) a new function, jack_get_buffer_size_by_type() which will return
+the size, in bytes, of the port buffers associated with a particular
+buffer type
+
+in association with this, we would mark jack_get_buffer_size() and the
+old buffer size callback registration functions as deprecated.
+
+its unfortunate to have to make such a "deep" change to fix an
+apparently "minor" race condition, but the semantics in the current
+API are really genuinely incorrect and always have been.
+
+comments welcome, as usual. lets not hear from all the same people :))
+
+--p
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1297788752.18400_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1297791387.24951_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1297790510.22481_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1297790510.22481_0.ltw:2,a&nbsp;&lt;AANLkTi=2BP6veaaCtmjG6FnAz=uufCww1F3DBpp41PBK at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

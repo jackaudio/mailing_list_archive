@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] problem with jack's watchdog killing jackd process after a 3-4 seconds of operation</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] problem with jack's watchdog killing jackd process after a 3-4 seconds of operation</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1336759255.1190_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1337053442.12973_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1336775579.25737_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 11 May 2012 22:32:43 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jamie Heilman </span> &lt;[hidden] at audible dot transient dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Athanasios Silis &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Athanasios Silis
+<a href='../1336747398.15038_0.ltw:2,a/index.html'>Re: [Jack-Devel] problem with jack's watchdog killing jackd process after a 3-4 seconds of operation </a></td></tr>
+</table>
+<pre>
+Athanasios Silis wrote:
+&gt; My virtualbox host, is a server (slackware too). so no rt kernel, no
+&gt; low-latency desktop and the rest. could that affect the ability of the alsa
+&gt; on the host to provide duplex audio functionality?
+&gt; In virtualbox I am using the 'alsa' driver and exposing the AC97 codec on
+&gt; the guest. HDA intel didn't offer much different results though.
+
+It could, though in my experience the quality of the device emulation
+tends to be the limiting factor.  I use KVM's emulated audio devices
+for portability testing as part of the work I do on aqualung (playback
+software) and I've had the greatest success when I don't
+take the guest driver and the emulated device for granted, but rather
+experiment with the available combinations to see what works best for
+the OS.  With a Linux guest, its less noticable (probably because
+Linux gets the most testing) but I've found, for example, a Windows XP
+guest in KVM works best with the emulated ES1370, where as OpenBSD
+and OpenIndiana runs the smoothest with the AC97 emulation.  I haven't
+had much luck getting anything to work well with FreeBSD (though I
+haven't tried any guest kernel tuning yet).
+
+&gt; Thank you for your help!
+&gt; unfortunately, the plan to have this vm guest as a fx engine can't be
+&gt; utilized :(
+&gt; 
+&gt; BUT (just had a -hopefully- brilliant idea) what if I forget about alsa,
+&gt; and I use this jack server as a slave using the net backend????
+&gt; could i do that and forget about the real hw ports?
+
+Absolutely.  I do that w/kvm regularly, and I'd recommend it vs. using
+emulated hardware in the guest.  Of course it really depends on what
+you're actually trying to achieve ... I do this just to route PCM
+audio from my sandboxes to my workstation, and I don't do anything
+that's terribly performance critical in my sandboxes (one of them is
+for a browser instance, the others are mostly for doing portability
+testing and trying out software I don't trust).  For example, I've
+found I can watch crap on youtube even with X11 forwarding and audio
+routed over netjack1 (via loopback mind you... kvm is running on my
+workstation, though it should work over a gigE network without any
+problems too) with acceptable lag.  I wouldn't try to watch an entire
+movie or TV show that way as av sync issues will eventually become
+irritatingly distracting, but it's fine for casual surfing.  As for
+using a vm for effects processing offload... that's sorta dodgy given
+that guests are subject to sharing their processing time, you're
+likely going to run into bad latency problems.  That said, it never
+hurts to just try it out and see how far you can push things.
+
+-- 
+Jamie Heilman                     http://audible.transient.net/~jamie/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1336759255.1190_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1337053442.12973_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1336775579.25737_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1336775579.25737_0.ltw:2,a&nbsp;&lt;20120511223243.GA5184 at cucamonga dot audible dot transient dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

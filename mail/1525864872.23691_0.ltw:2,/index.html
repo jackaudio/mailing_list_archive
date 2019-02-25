@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How to use jackd as a 'system-wide' server?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How to use jackd as a 'system-wide' server?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1525857409.12663_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1525865030.23821_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1525864872.23691_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 09 May 2018 13:20:34 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Joakim Hernberg </span> &lt;[hidden] at alchemy dot lu&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Christophe Lohr
+<a href='../1525857409.12663_0.ltw:2,/index.html'>[Jack-Devel] How to use jackd as a 'system-wide' server? </a></td></tr>
+</table>
+<pre>
+I think you'd need to run the jackd server in promiscuous mode.  IIRC
+that is broken on jack2, but worked last time I tried it with jack1.
+
+Here is a unit file I wrote a long time ago to run it on archlinux:
+
+cat /etc/systemd/system/jackd.service 
+[Unit]
+Description=Start the JACK server in promiscuous mode
+
+[Service]
+Type=simple
+Environment="JACK_PROMISCUOUS_SERVER="
+UMask=0
+ExecStart=/usr/bin/jackd -P80 -p512 -t5000 -dalsa -dhw:DSP -r44100 -p128 -n2 -i18 -o18 -I47 -O48
+
+[Install]
+WantedBy=multi-user.target
+
+
+Note that you'll have to set the JACK_PROMISCUOUS_SERVER environment
+variable in your user login shell too for the client libs to find the
+server.
+
+On Wed, 9 May 2018 11:16:21 +0200
+Christophe Lohr &lt;[hidden]&gt; wrote:
+
+&gt; Hello,
+&gt; &#xA0; I'm looking for some advices for configuring my system.
+&gt; 
+&gt; I plan to use the Jack plugin for the Asterisk PBX
+&gt; https://blog.russellbryant.net/2008/01/13/jack-interfaces-for-asterisk/
+&gt; https://wiki.asterisk.org/wiki/display/AST/Asterisk+12+Application_JACK
+&gt; 
+&gt; Since Asterisk is started as a daemon by systemd, I guess that I
+&gt; should also start Jackd as a system-wide server, and not within a user
+&gt; graphical session.
+&gt; In such a case, jackd does not rely on dbus, isn't it?
+&gt; 
+&gt; So, how does jack clients may reach the jackd server?
+&gt; Is there some well known entry point, or discovering mechanisms
+&gt; (without dbus)?
+&gt; 
+&gt; I'm lost. Any explanations are welcome ;-)
+&gt; 
+&gt; Best regards
+&gt; Christophe
+&gt; 
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+
+
+-- 
+
+   Joakim
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1525857409.12663_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1525865030.23821_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1525864872.23691_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1525864872.23691_0.ltw:2,&nbsp;&lt;20180509132034.4bf2bf29 at tor dot valhalla dot alchemy dot lu&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

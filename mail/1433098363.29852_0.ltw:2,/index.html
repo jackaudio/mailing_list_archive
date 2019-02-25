@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack Audio Question</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack Audio Question</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1432897486.2700_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1433234122.7965_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1433098363.29852_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 31 May 2015 20:52:33 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Holger Marzen </span> &lt;[hidden] at marzen dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Miguel Martin &lt;[hidden] at miguel-martin dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Adrian Knoth
+<a href='../1432201137.27140_0.ltw:2,/index.html'>Re: [Jack-Devel] Jack Audio Question </a></td></tr>
+</table>
+<pre>
+On Thu, 21 May 2015, Adrian Knoth wrote:
+
+&gt; On 05/20/15 11:49, Miguel Martin wrote:
+&gt; 
+&gt; &gt; Hi there,
+&gt; &gt; 
+&gt; &gt; I'm asking about your API jack audio. I'm not sure if you are the lead
+&gt; &gt; developers or not, but you're the only emails I could find that
+&gt; &gt; contributed to this project. I just want to ask: is it possible to
+&gt; &gt; control application level volume in OS X and Linux? If so, can you give
+&gt; &gt; me any resources or point me in the right direction?
+&gt; 
+&gt; You are looking for jack-devel@. CCed now.
+&gt; 
+&gt; And the answer is no, JACK does not control application level volume, it
+&gt; just forwards and merges audio streams.
+
+&gt; If you want volume control, use a mixer (maybe one of not too many
+&gt; jack-based mixers), so you can adjust each jack client's volume in one
+&gt; place.
+
+My audio interface has no hardware mixer, so I asked for such a feature.
+I'd appreciate a "master volume" in jackd, but no developer wants jackd
+to deal with that.
+
+I found a solution that works for me:
+
+- I start a mixer, e.g. jack_mixer
+- I start jack.plumbing with a ruleset that disconnects my jack clients
+  (even ALSA-clients that use jack via .asoundrc) and connects them to
+  jack_mixer's input. jack.plumbing stays active permanently in my
+  X-session.
+
+My ruleset (.jack.plumbing) looks like:
+
+(connect    "alsa-jack\..*jackP\..*:out_000" "jack_mixer:ALSA L")
+(connect    "alsa-jack\..*jackP\..*:out_001" "jack_mixer:ALSA R")
+(disconnect "alsa-jack\..*jackP\..*:out_000" "system:playback_1")
+(disconnect "alsa-jack\..*jackP\..*:out_001" "system:playback_2")
+
+(connect    "Clementine:out_jackaudiosink-.*_1" "jack_mixer:JACK L")
+(connect    "Clementine:out_jackaudiosink-.*_2" "jack_mixer:JACK R")
+(disconnect "Clementine:out_jackaudiosink-.*_1" "system:playback_1")
+(disconnect "Clementine:out_jackaudiosink-.*_2" "system:playback_2")
+
+(connect    "Qtractor:Master/out_1" "jack_mixer:JACK L")
+(connect    "Qtractor:Master/out_2" "jack_mixer:JACK R")
+(disconnect "Qtractor:Master/out_1" "system:playback_1")
+(disconnect "Qtractor:Master/out_2" "system:playback_2")
+
+(connect    "rosegarden:master out L" "jack_mixer:JACK L")
+(connect    "rosegarden:master out R" "jack_mixer:JACK R")
+(disconnect "rosegarden:master out L" "system:playback_1")
+(disconnect "rosegarden:master out R" "system:playback_2")
+
+(connect    "MPlayer.*:out_0" "jack_mixer:ALSA L")
+(connect    "MPlayer.*:out_1" "jack_mixer:ALSA R")
+(disconnect "MPlayer.*:out_0" "system:playback_1")
+(disconnect "MPlayer.*:out_1" "system:playback_2")
+
+(connect "jack_mixer:MAIN L" "system:playback_1")
+(connect "jack_mixer:MAIN R" "system:playback_2")
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1432897486.2700_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1433234122.7965_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1433098363.29852_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1433098363.29852_0.ltw:2,&nbsp;&lt;alpine.DEB.2.20.1505312044110.15828 at regen dot intern dot marzen dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

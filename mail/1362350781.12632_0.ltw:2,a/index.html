@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] CoreMIDI driver bug fix</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] CoreMIDI driver bug fix</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1362349877.11205_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1362356819.16707_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1362350781.12632_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 03 Mar 2013 14:46:10 -0800 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Christian Schoenebeck &lt;[hidden] at crudebyte dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1362375155.4658_0.ltw:2,/index.html'>Re: [Jack-Devel] CoreMIDI driver bug fix </a></td></tr>
+</table>
+<pre>
+Hi Christian,
+
+On Sun, Mar 3, 2013 at 2:39 PM, Christian Schoenebeck
+&lt;[hidden]&gt; wrote:
+&gt; On Saturday 02 March 2013 20:29:53 Devin Anderson wrote:
+&gt;&gt; That's interesting.  The iOS CoreMIDI spec says the same thing as the
+&gt;&gt; MacOSX CoreMIDI spec.  Is that MIDI coming from the hardware driver,
+&gt;&gt; or from other CoreMIDI applications?  Has a bug been filed against
+&gt;&gt; either CoreMIDI or whatever is sending the MIDI messages?
+&gt;
+&gt; It sais the same, because like many APIs in iOS, the CoreMIDI API seems to be
+&gt; copied by Apple as it is. In many iOS API docs you find things like
+&gt; "Availability: Available in OS X v10.5 and later" - full stop, not even
+&gt; mentioning any iOS version at all.
+&gt;
+&gt; The issue with "running status" seems to be emitted by the iOS hardware
+&gt; driver. I never encountered it myself, since I don't have a keyboard or MIDI
+&gt; controller which sends with running status ATM. I'm trusting here on couple
+&gt; end users who reported this "running status" issue to exist on iOS. And in
+&gt; fact there were some other end users who reported exactly these symptoms on
+&gt; iOS (numerous dropped note on / off events). The reported keyboards (I still
+&gt; find in my mails) which would have that issue were: Alesis 49, some Novation
+&gt; keyboard and "maybe" Akai synth station (not sure about the latter). These
+&gt; were all end user reports. Hardware defects can be exluded, since the users
+&gt; reported those keyboards to work with other, more mature CoreMIDI iOS apps.
+&gt;
+&gt; I haven't filed a bug at Apple's bug tracker system, nor checked if there is
+&gt; one already. So far I haven't even proofed that this bug really exists.
+
+Perhaps the numerous dropped note-on/note-off events are due to the
+multiple message/packet bug, and have nothing to do with running
+status.  I can't confirm the possibility either way, as I don't have
+access to a Mac or an iPhone.
+
+&gt; I just pushed some temporary code for handling multiple events in one
+&gt; MIDIPacket. Maybe St&#xE9;phane can merge it to the official git server again.
+&gt; It's quite some amount of code now. It could be reduced to only few lines, by
+&gt; splitting JackCoreMidiInputPort::ProcessCoreMidi() into 2 methods (one method
+&gt; only iterating over events, calling each time the 2nd method which is
+&gt; guaranteed to receive only data of exactly one event). However I think it's
+&gt; not worth it at this point, since I expect the whole MIDI parser code in
+&gt; JackCoreMidiInputPort to be dropped in favor of using
+&gt; JackMidiRawInputWriteQueue very soon.
+
+Excellent. :)
+
+&gt;&gt; If you plan on adding the JackMidiRawInputWriteQueue, then I'd like to
+&gt;&gt; make a suggestion.  The alsarawmidi driver and the FFADO driver use
+&gt;&gt; the JackMidiRawInputWriteQueue.  If you need a reference on how to use
+&gt;&gt; the driver, you can look at those drivers.  The alsarawmidi driver is
+&gt;&gt; probably more relevant because it uses the two thread scheme to handle
+&gt;&gt; MIDI messages, just like CoreMIDI.
+&gt;
+&gt; Ok, I try to find a bit of time for that task in probably two weeks.
+
+Awesome!  When I wrote the code, I didn't have access to a Mac, so I
+couldn't debug (or even compile) what I wrote.  Just a warning, as
+there could be other bugs lurking in the code.
+
+&gt;&gt; If you have any other questions regarding the MIDI queue system,
+&gt;&gt; please send me a message.  I'm happy to help. :)
+&gt;
+&gt; Ok, I will get back at that. :)
+
+:)
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+midisnoop - http://midisnoop.googlecode.com/
+psinsights - http://psinsights.googlecode.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1362349877.11205_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1362356819.16707_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1362350781.12632_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1362350781.12632_0.ltw:2,a&nbsp;&lt;CAG7zqTrh=x+iWsLXqQqCzxJ+1uxUHNtD-rFKq88A81mLj+desQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,59 @@
+Date:        Wed, 23 Dec 2015 21:48:30 +0100
+From:        Florian Paul Schmidt  <[hidden] at gmx dot net>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: John Emmas Re: [Jack-Devel] jack dsp load calculation (1450902073.28946_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack dsp load calculation
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+On 23.12.2015 21:20, John Emmas wrote:
+
+[...]
+
+Sidestepping from the discussion: Why not make more statistics
+available. Or even better: Make the information to generate the
+statistics available.
+
+I.e. add a callback to provide measurements from the previous cycle.
+
+Something like
+
+jack_register_measurement_callback(void (f*)(jack_measurements*));
+
+where jack_measurements is an opaque type with associated functions
+
+uint64_t
+jack_measurements_get_cycle_available_milliseconds(jack_measurements*);
+
+uint64_t
+jack_measurements_get_cycle_consumed_milliseconds(jack_measurements*);
+
+where the former provides the available milliseconds for processing
+the whole jack graph (maybe normalized by number of cpus (jack2) or
+not (jack1)) and the latter provides the consumed milliseconds.
+
+Units, function names, what measurements, etc, are subject to further
+discussion, but this would allow different clients to provide the
+statistics they need for their usecase.
+
+Flo
+
+- -- 
+https://fps.io
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJWewieAAoJEA5f4Coltk8Z7pcH/RLB1tmFlYFLQaZPLJ4tnxIA
+nQQTxzoAksqWiPzAqS31tg9uQC5XMratjaLMSXGd9yDBg+2Jt3a6zvuwvAH21EuD
+Y5PNh+vPhtvyZXs/q+p0lOWta9v3VR7OZ85GKn3KGE8jeSfs2eRCDQ4TW/jhMz9i
+/ZdvvKQv2kzEDoQ/0/evfG2ttJXzEVPZ+j+FZGlSJEo4LtJXhqltOwoM/xv/u6f9
+hQPLEFPbf+zaeIhJIdCabp1GfXJWNqydzu5uecMfgw47Or8utnxK6HXKHOKg/Max
+AXCXeFsmAGcpVkrlLTqst9TYYbuKFld4+azxnkbq/3WcRup80SojtcBtkQnrWIU=
+=XhKy
+-----END PGP SIGNATURE-----
+
+1450903721.31950_0.ltw:2,a <567B089E.6040106 at gmx dot net>
+________________________________________________________________________________
+

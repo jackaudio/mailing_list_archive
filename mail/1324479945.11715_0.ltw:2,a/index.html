@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How to get mplayer and firefox/flash to play</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How to get mplayer and firefox/flash to play</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324477086.9214_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324481329.12855_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324479945.11715_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 21 Dec 2011 15:05:28 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1324474912.7376_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to get mplayer and firefox/flash to play </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1324481329.12855_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to get mplayer and firefox/flash to play </a></td></tr>
+</table>
+<pre>
+On Wed, Dec 21, 2011 at 08:41:12AM -0500, Paul Davis wrote:
+ 
+&gt; Indeed. The dmix device actually does almost precisely what you
+&gt; describe, and will appear in device listings *if* its configured in
+&gt; the relevant system-wide or per-user ALSA config file. Two years ago,
+&gt; most distributions shipped with dmix configured. With PulseAudio
+&gt; spreading, and more powerful, they tend to no longer do so. I remember
+&gt; Fedora at one point shipping with default=dmix, so that all audio
+&gt; processes that just opened the default device got their audio mixed
+&gt; (in user space, without a server). Note that there is also a
+&gt; server/client based solution too - I don't think its been used much by
+&gt; anyone.
+&gt; 
+&gt; But there's a second problem. Look at the output of aplay -L. Now
+&gt; compare it to the list of devices shown by, say, qjackctl in its setup
+&gt; dialog. You'll note that they are not the same. The real problem here
+&gt; is not the gap between h/w device names and plugin device names. The
+&gt; problem is that there are indeed two namespaces within ALSA, one that
+&gt; references a card number, device number and possibly subdevice number,
+&gt; the other than is an alias for either a plugin or something specified
+&gt; using the first namespace. According to aplay, these two namespaces
+&gt; consist of:
+&gt; 
+&gt;     -l, --list-devices      list all soundcards and digital audio devices
+&gt;     -L, --list-pcms         list device names
+&gt; 
+&gt; So, having defined the "jack" plugin device, aplay -L will list it
+&gt; just like "default" and "hdmi" and "front" and so forth. But you're
+&gt; right that it doesn't show up in the other namespace, because its not
+&gt; a "card".
+
+Now I'm lost. I do have a ~/.asoundrc
+
+----
+
+pcm.!default {
+    type plug
+    slave { pcm "jack" }
+}
+
+pcm.jack {
+    type jack
+    playback_ports {
+        0 system:playback_3
+        1 system:playback_4
+    }
+    capture_ports {
+        0 system:capture_3
+        1 system:capture_4
+    }
+}
+
+----
+
+and it works (mplayer, firefox, even alsaplayer use it).
+
+But it does *not* show up in either aplay -L or -l. So is
+there are third namespace as well ?
+
+BTW, the two lines you quoted from aplay -h illustrate
+another problem. Note the inconsistent use of terms like
+'device', 'card' and 'pcm'. You end up wondering what each
+of those actually means. And what the real difference
+between -L and -l is supposed to be. It gets an order of
+magnitude worse in most of the ALSA docs.
+
+
+&gt; &gt; problem is that the Juce code chokes on 64-ch cards such as the
+&gt; &gt; MADI ones. OK, just define a 'route' ALSA device (IIRC) with
+&gt; &gt; less channels (it needs 8) or us the ALSA-&gt;Jack plugin. But that
+&gt; &gt; doesn't work because ALSA doesn't present them as real devices.
+&gt; &gt; By not doing that it misses the whole point of having such plugs
+&gt; &gt; in the first place.
+&gt; 
+&gt; absolutely. but ALSA does present them as "real devices", just in one
+&gt; of two namespaces and the app has no reason to choose the one in which
+&gt; they appear. its pretty pathetic.
+
+Even more if you consider that the app is doing the right thing:
+it provides a list of devices and allows the user to select one.
+That is better than most ALSA apps. That list could have included
+'!default', and in that case things would just work. But why should
+an author add !default if he/she believes the list is complete,
+and !default will be one of those listed anyway ?
+ 
+&gt; &gt; (1) can't be done if the sound card is supposed to be shared
+&gt; &gt; between different apps. Selecting the sample rate, format etc.
+&gt; &gt; should done by the a configuration utility. After that apps are
+&gt; &gt; supposed to use the sound card as it is.
+&gt; 
+&gt; this is the way pro-audio apps work on many platforms (not all - try
+&gt; digital performer sometime on OS X with the h/w running at a different
+&gt; rate from the DP session). its very far from how almost all desktop
+&gt; apps work on most platforms.
+
+See below.
+ 
+&gt; restrictions which ensure that JACK is not adopted by many
+&gt; programmers, and because of the SNAFU'ed state of the rest of Linux,
+&gt; make life complicated for users because RT access is considered
+&gt; "special".
+
+Yes, but Jack could have offered form the start a library, working
+on top of Jack's native interface, that provides resampling, read()
+and write(), buffering to allow non-RT operation, etc. Basically
+allowing the author to define his own private 'soundcard' with a
+fully traditional API. Combine that with a jackd running as a real
+system daemon and you get the most easy-to-use audio system on the
+planet. Could still be done, but probably that space is taken by
+PA today.
+ 
+&gt; you should read the code of libasound (the ALSA library). it does
+&gt; precisely what you're describing (not necessarily optimally) but it
+&gt; really does aspire to be precisely what you're describing.
+
+Believe me, I have. The last time just an hour ago. But AFAICS (and
+please correct me if I'm missing something essential) it provides
+all that only via the 'plugins', which the client apparently can't
+discover in any standard way. In what I propose, the initiative to
+use any conversions, buffering, etc. is taken by the client which
+just specifies what it needs. This is fundamentally different from
+offering predefined plugins which apart from being invisible will
+also either be restrictive, or be forced to be 'too clever for their
+own good'.
+ 
+&gt; I still don't understand how this all works without a server/client
+&gt; architecture. Dmix tries to do this, and its too clever for its own
+&gt; good (or that of users). The server/client nature of JACK and
+&gt; PulseAudio is one of the things that makes them fragile (to whatever
+&gt; extent they are fragile), and thus unloved by people negatively
+&gt; impacted by this sort of architecture (and often unnecessarily).
+
+In what sense do you see a server/client architecture as fundamentally
+different from e.g. open(), read(), write() etc. ? Just the fact that
+there is an 'active' entity (a daemon) involved instead of only system
+calls ? That should be transparent to the user. So I somehow fail to
+see the point you want to make.
+
+Ciao,
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324477086.9214_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324481329.12855_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324479945.11715_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1324479945.11715_0.ltw:2,a&nbsp;&lt;20111221150528.GC26504 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

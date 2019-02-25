@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Mic won't work when Jack PortAudio is turned on</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Mic won't work when Jack PortAudio is turned on</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1514205790.12389_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1514519647.31773_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1514226735.5383_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 25 Dec 2017 12:31:42 -0600 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Beagtroll
+<a href='../1513815794.10400_0.ltw:2,/index.html'>[Jack-Devel] Mic won't work when Jack PortAudio is turned on </a></td></tr>
+</table>
+<pre>
+On Wed, December 20, 2017 6:22 pm, Beagtroll wrote:
+&gt; I need your help, my mic won't work when Jack PortAudio is turned on.
+
+I never saw a reply to this on list, so I will make a best guess (I do not
+have jack running on Windows, only on Linux).
+
+&gt; I connected my mic to a Focusrite Saffire Pro 24 DSP and am working on
+&gt; windows 10, my microphone is connected to the first XLR input, and is
+&gt; working fine when Jack PortAudio is not activated.
+
+You established that the hardware is working, so I think you only need to
+understand how jack works and connect everything appropriately within the
+software.
+
+&gt; When I turn on Jack PortAudio however, it suddently doesn't register any
+&gt; sound anymore on the Widnows VU metres (playback devices)
+
+How are you starting jack, directly from a command shell, or using another
+tool like qjackcontrol?
+
+Either way works, but there are implications for how you make changes to
+the jack settings depending on whether you have to use the jack control
+line applications, or you can use the graphical dialogs in qjackcontrol
+(or other graphical software).
+
+First a quick description of how jack works, since you may not understand
+how and  why it is used:
+jack is made to take exclusive control of your audio hardware so that you
+can be sure it has the correct settings for audio production, and to
+ensure that all connected applications are using the same settings (so for
+example you will not have one application starting and trying to make
+changes to the settings which conflict with another previously started
+application).
+
+Once jack is controlling the audio hardware, it then acts like an
+electronic equivalent of a patchbay, so that no audio goes in and out of
+the sound card until you make connections from jack to the applications
+you want to use.
+
+I think the reason that you no longer see any indication of audio in the
+windows control application is because that application no longer has
+control of the sound card, jack does, and you have not made any
+connections within jack to an application which can display the level of
+the incoming audio.
+
+&gt; is that I can't change the sample rate anymore of my mic, the Advanced tab
+&gt; is gone after I started JackPort Audio.
+
+Correct, the sample rate is controlled strictly by how jack was configured
+when started, and cannot be changed at run time.  You must stop jack and
+restart it with a different sample rate if you want to record at a
+different sample rate for some reason.
+
+&gt; I have provided you with a Imgur link to the pictures with the description
+&gt; under the pictures.
+
+Since I am not running the Windows build at this point someone with jack
+on Windows experience will need to comment on the easiest way to make the
+connections between Jack applications.  From what I understand, many
+Windows users are not actually using jack aware software but are just
+using jack as a way to route audio between multiple ASIO aware
+applications.  I think the same requirement applies, you have to have a
+way to inform the jack server which applications you want connected
+together, and which you want connected to the hardware interface.  On
+linux there are applications named jack_lsp and jack_connect which can be
+used to list ports and connect ports together, respectively, but I
+typically use a graphical application called qjackcontrol which has a
+graphical patch style connection display.  I think qjackcontrol can run on
+Windows, but I am not positive, but there may be some other application
+more commonly used on Windows.
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1514205790.12389_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1514519647.31773_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1514226735.5383_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1514226735.5383_0.ltw:2,&nbsp;&lt;3b458e7f3110573ba0a4adfa2763f97b.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

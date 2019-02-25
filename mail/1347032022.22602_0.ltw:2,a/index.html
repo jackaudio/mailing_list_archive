@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1347023207.8506_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1347037078.32312_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1347032022.22602_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 07 Sep 2012 17:33:25 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>"[hidden] at lists dot jackaudio dot org Developers" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1347023207.8506_0.ltw:2,a/index.html'>Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1347037078.32312_0.ltw:2,a/index.html'>Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Adrian Knoth
+<a href='../1347041202.6379_0.ltw:2,a/index.html'>Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources </a></td></tr>
+</table>
+<pre>
+On 09/07/2012 03:06 PM, St&#xE9;phane Letz wrote:
+&gt; 
+&gt; Le 7 sept. 2012 &#xE0; 13:27, Robin Gareus a &#xE9;crit :
+&gt;&gt; opus_encode() will not always result in a fixed length.
+&gt;&gt; In particular if the input is silent or if the bitrate is large,
+&gt;&gt; fCompressedSizeByte will be less than the max possible.
+&gt;&gt;
+&gt;&gt; To work arount this I use the first 4 bytes of the actual payload to
+&gt;&gt; transmit the fCompressedSizeByte per channel - I have not yet committed
+&gt;&gt; that patch.
+&gt;&gt;
+&gt;&gt; Would this be the way to go? Any better alternatives?
+&gt; 
+&gt; Seems reasonable.
+
+OK.
+
+&gt;&gt; Although most agree that nejack is a valid use-case for opus
+&gt;&gt; custom-modes, upstream is reluctant to enable custom-modes by default,
+&gt;&gt; because it breaks interoperability
+&gt; 
+&gt; In what way?
+
+In principle every opus stream should be playable with any other opus
+application e.g. firefox.
+
+IMHO this is a non-issue, because netjack's protocol is not intended to
+inter-operate with anything except other jack instances, anyway.
+
+
+&gt;&gt; A drawback from custom-mode is that compression is not as good as it can
+&gt;&gt; be (it has not been optimized).
+&gt; 
+&gt; But will it be at some point?
+
+I don't know. It does not seem to be high priority. AFAIU some of the
+experimental improvements are also tied to the fixed frame-rates.
+
+
+&gt; I think we should clearly avoid degrading the performances (and
+&gt; adding code complexity with any buffering scheme..) because of this
+&gt; kind of reasons.  Going from CELT to Opus is not "our" choice, so we
+&gt; should keep pushing to keep the best we can.
+
+
+The question boils down to this:
+
+  A)  use standard opus modes
+     + makes some opus-devs and packagers happy
+     - adds latency
+     - adds code-complexity to jack (re-framing to N*120 frames)
+     + possibly improved compressed sound-quality
+
+  B) use opus custom-modes.
+     - may not be available on all systems
+       (requires libopus to be compiled with --enable-custom-modes)
+     + no additional latency
+     + simple code in jack
+     - possibly substandard compression quality
+       (should still be better than celt, though)
+
+
+I'm leaning towards (B). Favor simplicity and fixed low latency over
+quality when using compression. -- Users who require high-quality or
+loss-less transmission won't be using Celt, Opus or whatever, anyway.
+
+(A) Re-framing the buffers, modifying the port-latencies on netjack, etc
+are no complicated tasks per se. ..but taking care of all details and
+integration is certainly not trivial.
+
+ciao,
+robin
+
+
+PS Here are some excerpts of the IRC discussion on #celt
+
+14:55 &lt; rgareus&gt; Hi. Is there any reason why debian's libopus comes
+without '--enable-custom-modes' ?
+[..]
+15:22 &lt; Garf&gt; why does jack need custom modes to begin with?
+15:22 &lt; rgareus&gt; Garf: because it has a fixed frame/period cycle.
+15:23 &lt; rgareus&gt; and the frames/period is usually a power of two.
+15:25 &lt; Garf&gt; why should opus have to care about that?
+15:25 &lt; Garf&gt; this reeks of serious misdesign elsewhere
+15:25 &lt; ron_&gt; mostly to (try and) avoid the risk of people who shouldn't
+be using custom modes using them anyway because of a misunderstanding
+15:27 &lt;+derf&gt; Well, the point of opus-custom is for cases where you're
+not trying to interoperate with anyone else, and don't need any of the
+voice modes.
+15:27 &lt; rgareus&gt; netjack is pretty much isolated. it only talks to other
+jackd instances.
+[..]
+15:36 &lt;+derf&gt; rgareus: Well, as I said, you reframe things from 256
+samples or whatever to 240 samples, and add 10 ms of delay.
+[..]
+15:42 &lt;+derf&gt; The lowest standard Opus supports at all is 5 ms.
+[..]
+15:44 &lt;+derf&gt; 120 sample frame size + 120 sample overlap + 56 sample
+reframing buffer.
+[..]
+15:50 &lt; rgareus&gt; Am I understanding it correctly that the only downside
+of --enable-custom-modes in the deb package would be, that some API
+users would abuse it and thereby break compatibility?
+15:50 &lt;+gmaxwell&gt; opus custom also loses most of the exp encoder
+enhancements. It's worth making an effort to not use it.
+15:51 &lt;+derf&gt; And it's nowhere near as well tested.
+[..]
+[..]
+22:17 &lt;+bemasc&gt; rgareus: For 64-sample frames, I think the minimum
+additional latency of Opus would be 232 samples, compared to 64 in
+opus-custom, or a difference of 168 samples = 3.5ms.  If you think it's
+worth losing your chance at compatibility with a whole universe of
+standard Opus decoders (e.g. every copy of Firefox), then you should use
+opus-custom.
+[..]
+22:43 &lt; rgareus&gt; bemasc: netjack's data stream is not intended to
+interoperate with any other application, least of all browsers. It is
+used to bridge JACK (as in http://jackaudio.org) servers over a network.
+Apart from audio-data, the netjack protocol includes MIDI, transport
+information (SMPTE and Bar-beat-tick,..) and other jack-settings such as
+port-latencies,..
+[..]
+22:49 &lt;+bemasc&gt; rgareus: Cool.  FYI, standard Opus is designed to be
+able to do a lot of these things, like synchronized massively
+multichannel streams (over RTP).
+22:49 &lt; rgareus&gt; celt-custom worked fine.. until debian decided to drop
+celt :) hence this work on replacing it with opus.
+22:50 &lt;+bemasc&gt; Interop may not be on the roadmap now, but I maintain
+that it might make sense.  For example, I hope that live concert mixing
+systems from different vendors will eventually interoperate over
+multichannel Opus-RTP.
+22:52 &lt;+bemasc&gt; There's even an RTP mapping for MIDI!
+[..]
+23:31 &lt; jmspeex&gt; About netjack, I honestly think it's a good reason for
+using opus-costom
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1347023207.8506_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1347037078.32312_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1347032022.22602_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1347032022.22602_0.ltw:2,a&nbsp;&lt;504A13C5.3000404 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

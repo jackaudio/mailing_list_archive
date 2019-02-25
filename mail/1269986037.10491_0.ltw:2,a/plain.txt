@@ -1,0 +1,84 @@
+Date:        Tue, 30 Mar 2010 17:51:18 -0400
+From:        Tim E. Real  <[hidden] at rogers dot com>
+To:          [hidden] at lists dot linuxaudio dot org, [hidden] at lists dot jackaudio dot org
+In-Reply-To: Rui Nuno Capela Re: [LAD] [Jack-Devel] Transport question (1269936132.14160_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] Transport question
+
+On March 30, 2010 04:01:54 am Rui Nuno Capela wrote:
+> On Mon, 29 Mar 2010 21:42:47 -0400, "Tim E. Real" wrote:
+> > On March 29, 2010 07:11:39 pm Rui Nuno Capela wrote:
+> >> On 03/29/2010 11:05 PM, Tim E. Real wrote:
+> >> > On March 29, 2010 05:18:28 pm you wrote:
+> >> >> On Mon, Mar 29, 2010 at 2:41 PM, Tim E. Real wrote:
+> >> >>> Disturbing result: I discovered that QJackCtl, running all by
+>
+> itself
+>
+> >> >>>  with no other apps running, exhibits the problem.
+> >> >>>
+> >> >>> Run QJackCtl.
+> >> >>> Set the Jack size to a relatively high value like 1024 or 2048.
+> >> >>> Now play the transport.
+> >> >>> In the majority of attempts it will not start - goes into stop
+> >> >>> immediately. If it does manage to start, try FF or REW.
+> >> >>> Again, in the majority of attempts it will stop.
+> >>
+> >> nope, i just can't reproduce the behavior... but you might have a point
+> >> re. play button checked state, which may be backfiring on
+> >> JackTransportStarting...
+> >>
+> >> hmmm... i'll be back tomorrow :)
+>
+> Tim, salsaman,
+>
+> please, try today's svn trunk (qjackctl 0.3.6.4+), if you can
+>
+> change-log says:
+>
+> - Transport play (rolling) status is now being guarded to avoid
+>   backfiring from extraneous transport state changes.
+>
+> maybe it fixes the issue. i can't really verify whether it's actually on
+> target, as i fail to reproduce the reported behavior, both jackd 0.118.3
+> and 1.9.5 :/
+>
+> you tell me.
+>
+> thanks anyway.
+
+Woo hoo! Got it!
+
+Actually I fully anticipated what your fix would do:
+On another box I had tested QJacjCtl-0.2.23 
+ (before your ui button changes were made).
+It never actually stopped, but I could briefly see 'starting'
+ in the status window and the 'pause' button would briefly go out,
+ but it would keep happily rolling.
+
+So when I browsed your code in -0.3.5 and saw the button handling,
+ I knew that whereas -0.2.23 would say 'starting' but keep rolling, 
+ -0.3.5 wanted to actually stop, and did so.
+
+So now QJackCtl behaves like -0.2.23 did:
+During the times when -0.3.5 wanted to stop, I instead now see 'starting'
+ in the status window and the 'pause' button will briefly go out,
+ but QJackCtl and the apps will keep happily rolling.
+
+Even during the sometimes long pause where QJackCtl says 'starting'
+ the transports actually keep rolling in the apps and in QJackCtl.
+Good.
+
+Thanks a bunch Rui !
+Will keep an eye out and report anything else.
+
+Jack-devels: Apparently this closes the issue I reported months ago.
+(Well, that is until I test with to-be-re-worked time-stretching 
+ audio pre-fetch code in MusE again... But that's another story. 
+ Hopefully it's solved.)
+
+Cheers. Tim.
+
+1269986037.10491_0.ltw:2,a <201003301751.18691.termtech at rogers dot com>
+________________________________________________________________________________
+

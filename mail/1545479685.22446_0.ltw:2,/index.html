@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Some observations re Jack and systemd</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Some observations re Jack and systemd</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1545472540.16658_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1545509636.3378_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1545479685.22446_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 22 Dec 2018 12:54:07 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Christian Affolter </span> &lt;[hidden] at purplehaze dot ch&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>J&#xF6;rn Nettingsmeier
+<a href='../1545423871.8348_0.ltw:2,/index.html'>[Jack-Devel] Some observations re Jack and systemd </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>J&#xF6;rn Nettingsmeier
+<a href='../1545510209.3777_0.ltw:2,/index.html'>Re: [Jack-Devel] Some observations re Jack and systemd </a></td></tr>
+</table>
+<pre>
+Hi J&#xF6;rn
+
+thanks for sharing this.
+
+Some time ago I've also had to write systemd service units for running a
+headless jackd in combination with "rotter" for a recording solution.
+
+The service file is available at [1] and the documentation at [2] in
+case you're interested. It supports multiple jackd instances (it was
+written as a generic systemd service unit template) and uses the
+"jack_wait" command to wait for jackd to be up and running. It was
+designed to be as generic as possible an let the local administrator
+configure certain settings using systemd service instance overrides (see
+[3] for an example with alsa).
+
+Best regards,
+Chris
+
+[1]
+https://github.com/radiorabe/centos-rpm-rotter/blob/master/jackd%40.service
+[2]
+https://github.com/radiorabe/centos-rpm-rotter#systemd-service-unit-templates-explained
+[3]
+https://github.com/radiorabe/centos-rpm-rotter#running-rotter-through-systemd
+
+
+On 21.12.2018 21:24, J&#xF6;rn Nettingsmeier wrote:
+&gt; Hi everyone,
+&gt; 
+&gt; 
+&gt; after scratching my head for a long time to make systemd behave when
+&gt; running jack as a service, I thought I'd share my findings:
+&gt; 
+&gt; Example service file:
+&gt; 
+&gt; [Unit]
+&gt; Description=JACK Audio Connection Kit
+&gt; After=sound.target
+&gt; After=ntp.service
+&gt; After=time-sync.target
+&gt; Before=jackd.target
+&gt; Requires=jackd.target
+&gt; 
+&gt; [Service]
+&gt; EnvironmentFile=-/your/config/file/containing/JACKD_OPTIONS
+&gt; LimitRTPRIO=85
+&gt; LimitMEMLOCK=700000000
+&gt; User=nettings
+&gt; Environment="DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket"
+&gt; 
+&gt; ExecStartPre=/bin/sleep 10
+&gt; ExecStart=/usr/bin/jackd $JACKD_OPTIONS
+&gt; RestartSec=5
+&gt; Restart=on-failure
+&gt; 
+&gt; [Install]
+&gt; WantedBy=multi-user.target
+&gt; 
+&gt; 
+&gt; So it's easy to start a service as a user, but that user's environment
+&gt; is not automatically pulled in. That means even though user nettings
+&gt; does have the necessary permissions in /etc/security/limits.conf, you
+&gt; still need to spell them out for systemd.
+&gt; 
+&gt; Another thing to note is that at least on current raspbian, the
+&gt; time-sync.target is broken. Its promise is to only be triggered after
+&gt; ntp has worked its magic and the system time is monotonous. However,
+&gt; I've seen time jumps which combined with cheap USB hardware or the
+&gt; builtin Raspi sound will hang jack. Hence the ugly sleep.
+&gt; 
+&gt; Final goodness: systemd might try to clean up after you. So when you
+&gt; have a jackd service started in your name, all is well, until you have
+&gt; logged in somehow and then closed the last shell, at which point the
+&gt; janitor from hell will happily clear /dev/shm and with it all your jack
+&gt; semaphores, leading to instant dumpster fire and silence.
+&gt; 
+&gt; This magic can be avoided by setting
+&gt; RemoveIPC=no
+&gt; in /etc/systemd/logind.conf
+&gt; 
+&gt; After clearing these hurdles, I've been quite happy with how systemd
+&gt; handles jack clients.&#xA0; The usecase here is a number of clients running
+&gt; in an embedded appliance, and systemd takes care of restoring them when
+&gt; I cause them to crash, which is good. Not that they crash, but it's good
+&gt; to have defense in depth.
+&gt; Figuring out how to order services is hard because you cannot assume a
+&gt; service is really ready when systemd has fired it off. So I've used a
+&gt; ExecStartPre script that blocks until a downstream jack port has
+&gt; appeared in those cases where I want to start clients in a particular
+&gt; order (matters most for the one job that needs to connect all the ports,
+&gt; so I let it wait on a test port for each client it needs to connect).
+&gt; 
+&gt; Old-time SysV user here, and granted, systemd has given me many a WTF
+&gt; moment, but it does its job. Unfortunately, it does too many other jobs
+&gt; as well, but hey...
+&gt; 
+&gt; 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1545472540.16658_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1545509636.3378_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1545479685.22446_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1545479685.22446_0.ltw:2,&nbsp;&lt;3481cdc6-adf8-7250-86dd-3ce46dfb8869 at purplehaze dot ch&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

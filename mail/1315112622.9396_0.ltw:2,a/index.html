@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Client deactivation behavior</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Client deactivation behavior</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1315101534.19094_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1315123957.2007_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1315112622.9396_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 03 Sep 2011 22:03:18 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at charityfinders dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Gabriel Beddingfield &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Gabriel Beddingfield
+<a href='../1315081045.8913_0.ltw:2,a/index.html'>Re: [Jack-Devel] Client deactivation behavior </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Gabriel Beddingfield
+<a href='../1315123957.2007_0.ltw:2,a/index.html'>Re: [Jack-Devel] Client deactivation behavior </a></td></tr>
+</table>
+<pre>
+On Sat, Sep 3, 2011 at 1:16 PM, Gabriel Beddingfield &lt;[hidden]&gt; wrote:
+
+&gt;&gt; I'm in the middle of testing a new version of `synthclone`, and I'm
+&gt;&gt; noticing what I believe is incorrect behavior in JACK 1 (0.120.2 on
+&gt;&gt; AVLinux).
+&gt;&gt;
+&gt;&gt; Intermittently, I notice that the process callback will still be
+&gt;&gt; executing after jack_deactivate() returns, and `synthclone` will
+&gt;&gt; segfault in the process callback in a call to jack_port_get_buffer().
+&gt;&gt; I don't know if the process callback is called before the call to
+&gt;&gt; jack_deactivate() and jack_deactivate() isn't waiting for it to
+&gt;&gt; finish, or if the process callback is being called after
+&gt;&gt; jack_deactivate() returns.
+&gt;&gt;
+&gt;&gt; Before filing a bug, I want to make sure this is not expected behavior
+&gt;&gt; and that this isn't fixed in newer versions of JACK. &#xA0;I'll try a newer
+&gt;&gt; version tomorrow if this isn't cleared up by then.
+&gt;
+&gt; This is not expected behavior. &#xA0;jack_deactivate() should be synchronous...
+&gt; that is, it should not return until the process() cycle is complete.
+&gt;
+&gt; FWIW, if JACK 0.120.2 actually exhibits this bug... all hell would be
+&gt; breaking loose with every JACK app... not just yours.
+
+I did a bit more experimentation throughout the week, and could only
+get this bug to occur when:
+
+1.) (The new version of) `synthclone` is running in debug mode from QtCreator.
+2.) JACK functionality is contained in a Qt plugin.
+3.) JACK 0.120.2 (from AV Linux) is installed.
+4.) A call to jack_deactivate() is closely followed by freeing
+resources used in the process callback.
+
+I couldn't get the bug to show itself under any other circumstances.
+If I don't use debug mode, make JACK calls in the main executable, use
+a different version of JACK, change the code to use
+jack_client_close() instead of jack_deactivate(), or wait to free
+resources, then everything runs fine.
+
+Hmmm.  I can now confirm that updating QtCreator also makes the bug go away.
+
+I'm confused, but I'm pretty certain this isn't a bug in JACK.
+
+Sorry for any trouble/confusion I may have caused (aside from my own).
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1315101534.19094_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1315123957.2007_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1315112622.9396_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1315112622.9396_0.ltw:2,a&nbsp;&lt;CAG7zqTo2Wurx-Tn-e+3dkbQUufTNQr2T014t0TuPUKt=vAXLZA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

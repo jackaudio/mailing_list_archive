@@ -1,0 +1,52 @@
+Date:        Mon, 30 May 2011 18:29:01 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Dan Muresan Re: [Jack-Devel] query jack scaling factor? (1306777842.16472_0.ltw:2,a)
+Follow-Up:   Matthew Robbetts Re: [Jack-Devel] query jack scaling factor? (1306784604.26455_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] query jack scaling factor?
+
+On Mon, May 30, 2011 at 08:50:21PM +0300, Dan Muresan wrote:
+
+> So, for now (October 2008) we use 2^(N-1)-1 as the scaling factor.
+> 
+> Which is part 1 of my point -- unless Jack promises *never* to change
+> this scaling strategy, it should be available for those apps that need
+> bit-exactness.
+
+AFAIK, the only point about bit-exactness is for legal purposes,
+when you have to prove that some data is 'original' by comparing
+its cryptographic digest to a certified one. Which means you
+can't modify it in any way, and there's no point sending it
+throuhg Jack.
+
+Apart from that, there is nothing magical about the bit patterns
+produced by an AD converter. Change the analog gain by 0.1 dB and
+you get completely different samples and roundoff errors, for the
+same input signal. They are neither better nor worse than the
+original ones.
+
+> Part 2 of my point was: can I find out whether Jack is reading 16-bit,
+> 24-bit, or something else from ALSA? There's no point in wasting disk
+> / memory space if I want to convert back to PCM in my app.
+
+There are good reasons for converting to float for computation.
+Disk and memory space are cheap these days, and most apps writing
+sound files will offer you the choice of 16, 24 or FP. If you
+modify the samples in any way, the conversion to 16 or 24 bit
+should be the last step, not an intermediate one, and Jack will
+take care of it.
+
+If the format matters you have to read the specs of your soundcard.
+Jack will report the sample *format* when starting up, but that
+doesn't need to be the same as the actual number of bits from the
+converter. Many 24-bit cards use a 32-bit format for example.
+
+Ciao,
+
+-- 
+FA
+
+1306780162.20976_0.ltw:2,a <20110530182901.GD27205 at linuxaudio dot org>
+________________________________________________________________________________
+

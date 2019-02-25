@@ -1,0 +1,137 @@
+Date:        Tue, 22 Dec 2009 07:29:28 +0000
+From:        alex stone  <[hidden] at gmail dot com>
+To:          "Gabriel M. Beddingfield" <[hidden] at teuton dot org>
+Cc:          [hidden] at lists dot linuxaudio dot org
+In-Reply-To: Gabriel M. Beddingfield Re: [LAD] LADI (1261460019.24721_0.ltw:2,a)
+
+Subject:     Re: [LAD] LADI
+
+This is a bit disingenuous to use as an example.
+
+1.)  Ardour doesn't have a save as state, to begin with, so it's
+unique in the way it has to be handled. Apps equipped with save as,
+don't need special treatment, so the user can save them wherever they
+like.
+
+2.) you assume it's either/or based on your ardour example for "heavy"
+or "light". Again, this is based on an app where the session, once
+created, cannot be moved, and can, at best, only be linked to. Save as
+for most normal apps wouldn't hit any of the challenges you allege,
+because the user could recall, save as, do another recall, etc,
+without having to create new links, etc, simply because the app
+session was "stuck in place for all time."
+
+Wrong example, imho, based on a unique app that doesn't behave as
+others do. For most other use cases, where apps are coded in a more
+"normal" fashion, jacksession would, and has, behaved........normally.
+
+On Tue, Dec 22, 2009 at 5:33 AM, Gabriel M. Beddingfield
+<[hidden]> wrote:
+>
+>
+> On Tue, 22 Dec 2009, torbenh wrote:
+>>> * session callback does not work asynchronously
+>>
+>> so you want it async ?
+>> well... lets make it async then ?
+>
+> :-)
+>
+>>> Also, I wasn't comfortable with how the serialization should work...
+>>> but it was too early in the process to pick nits on that.
+>>
+>> please state your problems.
+>
+> Two links (requires jack-devel list authentication):
+>
+> http://lists.jackaudio.org/private.cgi/jack-devel-jackaudio.org/2009-November/003905.html
+> http://lists.jackaudio.org/private.cgi/jack-devel-jackaudio.org/2009-November/003927.html
+>
+> I really think there should be a quit-without-save.
+>
+> Also, with respect to saving and restoring sessions,
+> suppose this work-flow:
+>
+>   1. Save a session (#1) with Ardour as a part of it.
+>      Instead of transferring GB of data to the
+>      session-data-dir, it stores a handle[1] to the
+>      data (i.e. a URI tracing back to a save state).
+>
+>   2. When session #1 is reloaded, Ardour loads the
+>      handle to the original project's save state.
+>
+>   3. User forces an export to the session-data-dir.
+>      This means that Ardour must transfer all the
+>      gigabytes of data necc. to recreate the session.
+>
+>   4. User opens session #1 from an exported archive.
+>      Ardour finds heavy data in the session-data-dir,
+>      and uses it (rather than, say, importing the
+>      data to  some other location).
+>
+>   5. User does a "save as" on the current session,
+>      thus saving Session #2.  Ardour saves a handle to
+>      a save-state from Session #1 (and Session #1's
+>      session-data-dir).
+>
+>   6. User deletes Session #1.  They now
+>      have also corrupted Session #2.
+>
+> This just seems, to me, messy and error-prone.  To the end
+> user, I don't think it would ever be obvious that Session #2
+> depended on Session #1.  Meanwhile application developers
+> have to find a stable way to work with session data, whether
+> it's handles or heavy data.  They also have to negotiate
+> what it means when the user says "Save," but the data is in
+> a session-data-dir, and the user /didn't/ say "Save
+> Session."
+>
+> Ways that it might be cleaned up:
+>
+>   1. Always require that session data be "heavy"
+>      in the session-data-dir.
+>
+>      - or -
+>
+>   2. Only store handles to session data... and
+>      don't even have a session-data-dir.  Export
+>      is a special step.  Exported sessions must be
+>      "imported" before being used.
+>
+>      - or -
+>
+>   3. Session manager implements some manner of
+>      "session data database" that manages the
+>      dependencies between resources and sessions.[2]
+>      Applications transfer data to session manager
+>      as something like a zip stream... and the session
+>      manager is responsible for storage and retrieval.
+>
+> #1 is, I think, the most stable... but at the price of
+> wasting a lot of disk space.  #2 is fast and efficient, but
+> at a much greater risk of corrupting session data.  #3 is
+> like #1, but the session manager implementation is able to
+> conserve resources and even be on another host.
+>
+> -gabriel
+>
+> [1] In my e-mail in November, I used the word "stub"
+>     instead of "handle."
+> [2] Yes, this idea is a little "out there." :-)
+> 
+> Linux-audio-dev mailing list
+> [hidden]
+> http://lists.linuxaudio.org/mailman/listinfo/linux-audio-dev
+>
+
+
+
+-- 
+www.openoctave.org
+
+[hidden]
+[hidden]
+
+1261466990.3358_0.ltw:2,a <caa95e270912212329h7e4512a7q2faf672bee4e93dd at mail dot gmail dot com>
+________________________________________________________________________________
+

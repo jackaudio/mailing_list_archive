@@ -1,0 +1,51 @@
+Date:        Mon, 20 Apr 2015 12:48:36 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          Jörn Nettingsmeier <[hidden] at stackingdwarves dot net>, Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Jörn Nettingsmeier [Jack-Devel] jack1 git FTBFS (1429525593.20012_0.ltw:2,)
+Follow-Up:   Jörn Nettingsmeier [SOLVED] Re: [Jack-Devel] jack1 git FTBFS (1429530622.25848_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] jack1 git FTBFS
+
+On 04/20/15 12:26, Jörn Nettingsmeier wrote:
+
+> metadata.c:202:15: error: 'DB' has no member named 'exists'
+>           if (db->exists (db, NULL, &d_key, 0) == DB_NOTFOUND) {
+>                 ^
+
+Weird. Should be there. Did you check db.h (the system-wide file)? Mine
+clearly has it.
+
+> metadata.c:322:29: error: 'DBC' has no member named 'get'
+>           while ((ret = cursor->get(cursor, &key, &data, DB_NEXT)) == 0) {
+>                               ^
+
+Same here:
+
+struct __dbc {
+[..]
+         /* DBC PUBLIC HANDLE LIST BEGIN */
+         int (*close) __P((DBC *));
+}
+
+It's clearly there.
+
+So either your include file is broken or it's not taken into
+consideration.
+
+You can pass -E to the gcc call (manually) and redirect the output to a
+file, so you get the preprocessor out. Maybe as simple as this:
+
+/* foo.c */
+#include <db.h>
+
+
+gcc - E foo.c
+
+And there, you should see all the expanded struct __db{,c,t} things.
+
+
+Good luck with hunting this down. ;)
+
+1429526923.21086_0.ltw:2, <5534D984.9060003 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

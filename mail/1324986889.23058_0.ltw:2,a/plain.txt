@@ -1,0 +1,125 @@
+Date:        Tue, 27 Dec 2011 12:54:22 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          JACK Mailing List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Fons Adriaensen [Jack-Devel] Jack's timing functions (1324919191.9270_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] Jack's timing functions (1324990866.27072_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack's timing functions
+
+On 12/26/2011 06:06 PM, Fons Adriaensen wrote:
+> Hello all,
+
+Hi Fons,
+> During the weekend I've been working on adaptive resampling
+> algorithms (as required for e.g. alsa_in and similar apps).
+
+YAY!
+
+I recently had quite a bit of frustration with varispeed, pitch-shift
+playback. libsamplerate slowly approaches a new rates when updating
+SRC_DATA->src_ratio. src_set_ratio() allow for immediate updates at loss
+of quality.
+
+How does it compare to rubberband?
+
+> The first tentative result produces around 100 times less
+> jitter on the dynamic resample ratio than alsa_in. See 
+> <http://kokkinizita.linuxaudio.org/linuxaudio/resample.html>,
+> The difference in phase noise levels is roughly 40 dB.
+> 
+> In fact it has reached the point where the performance is no
+> longer dominated by random timing errors, but also systematic
+> ones resulting from quantisation of some of the variables
+> involved in the calculation (mostly frame counts expressed
+> as integers) start to show up.
+> 
+> This is very visible in the time domain test results, but even
+> the frequency domain ones start to show this, Note all those
+> little discrete lines in the first plot (link above) - each
+> of these is the result of a deterministic error pattern.
+> 
+> This in turn made me look into Jack's timing-related functions.
+> 
+> One of the values I needed was the microseconds time for the
+> start of the current cycle (the one filtered by the DLL). This
+> is not available in the public API. It can be computed in two
+> ways. The first is
+> jack_frames_to_time (client, jack_last_frame_time (client));
+> which is a rather convolved way to recompute an already known
+> value: client->engine->current_time.current_wakeup.
+> 
+> The second involves using jack_frames_since_cycle_start() and
+> jack_get_time() and compute the result from those. This is even
+> more convolved and won't produce an accurate result because:
+> 
+> a) the usecs clock is read twice, the values used should be the
+>    same but they won't,
+> b) the value returned by jack_frames_since_cycle_start() is
+>    quantised to an integer and precision is lost,
+> c) the base usecs time used by this function is apparently not
+>    the DLL filtered time but the unfiltered one. 
+> 
+> (c) in fact introduces an inconsistency in the set of time-related
+> functions.
+> 
+> So my first suggestion is to add two functions to transclient.c:
+> 
+> jack_time_t jack_current_wakeup_time (const jack_client_t *client)
+> {
+>     return client->engine->frame_timer.current_wakeup;
+> }
+> 
+> jack_time_t jack_next_wakeup_time (const jack_client_t *client)
+> {
+>     return client->engine->frame_timer.next_wakeup;
+> }
+> 
+> which together with jack_last_frame_time() provide all the 
+> info a client could need to do its own calculations to full
+> precision.
+> 
+> Note that it is perfectly safe to read these three values in
+> the process callback even without the 'guards' used to ensure
+> an atomic copy in jack_read_frame_time() - a new cycle isn't 
+> supposed to start at that time (and if it does there is bigger
+> trouble ahead anyway).
+> 
+> An alternative would be to provide a single function to allow
+> a client to read all three in a single call, with or without
+> guards.
+> 
+
+unless someone can point out a case for individually querying
+jack_current_wakeup_time() and jack_next_wakeup_time(), your 2nd idea
+seems best:
+
+int jack_get_cycle_timing (
+  const jack_client_t* client,
+  jack_nframes_t*      last_frame_time,
+  jack_time_t*         current_wakeup_time,
+  jack_time_t*         next_wakeup_time,
+);
+
+Yet, your first proposal of adding two functions is more conform with
+the existing JACK API.
+
+> Another way to provide better precision would be to let
+> jack_frames_since_cycle_start() return a double or float,
+> and to modify the two frames<->usecs conversion functions
+> to accept/return a float or double frametime referenced
+> to the start of the cycle (i.e. removing the potentially
+> large offset, which is given by jack_last_frame_time()
+> anyway).
+
+Keep that in mind for Jack3.
+
+Modifying the API - even if it fixes somewhat broken behaviour -  is
+currently worse than simply adding an interface or two.
+
+2c,
+robin
+
+1324986889.23058_0.ltw:2,a <4EF9B1EE.8040107 at gareus dot org>
+________________________________________________________________________________
+

@@ -1,0 +1,63 @@
+Date:        Wed, 11 Jan 2012 14:33:30 +0100
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] The Situation(s) With JACK (1326285794.26703_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] The Situation(s) With JACK (1326289512.29625_0.ltw:2,a)
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] The Situation(s) With JACK (1326307909.24671_0.ltw:2,Sa)
+
+Subject:     Re: [Jack-Devel] The Situation(s) With JACK
+
+On 01/11/2012 01:42 PM, Paul Davis wrote:
+
+> so please comment: what is the best way to put the header files that
+> define the JACK API, along with the source code for the
+> example+utility clients somewhere that any implementation of the API
+> could use them?
+
+I'm also not a big fan of submodules. How about the following:
+
+
+    jack-common --> independent repo
+      + headers --> branch in jack-common with the header files
+      + tools
+      + example-clients
+      + manpages
+
+The last three are also branches of the jack-common repo.
+
+The real jackd repositories:
+
+    jackd1   --> independent repo
+    jackd2   --> independent repo
+
+It doesn't really matter if it's one repo with two branches or two
+repos, but I guess the latter is more convenient to use. Correct me if
+I'm wrong.
+
+The jackd developer would now and then do
+
+    $ git pull jack-common headers
+
+to update their *local copy* of header files the current trunk (master)
+is based on.
+
+Same for example-clients, tools and the lot. It's not even necessary
+those things reside on different branches, but it gives the jackd
+developer the opportunity to update example-clients, tools, headers and
+man pages individually (no idea if this is required).
+
+Coordination required: jackd1 and jackd probably need to agree on three
+or four common subdirectories in their repositories, that is, include/,
+tools/, example-clients/, man/. Not a big deal, requires some minor
+updates to the build system.
+
+
+This could all happen in parallel with the existing svn repos, if
+needed.
+
+
+Cheers
+
+1326288823.28625_0.ltw:2,a <4F0D8FAA.70305 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

@@ -1,0 +1,128 @@
+Date:        Mon, 26 Feb 2018 19:52:24 -0600
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: lowkeyoutlaw Re: [Jack-Devel] Why can I only select 512 samples? (1519326178.12039_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Why can I only select 512 samples?
+
+On Thu, February 22, 2018 1:02 pm, lowkeyoutlaw wrote:
+> The actual driver was hard to come by, and is no longer supported. The
+> driver on the site is actually ASIO4ALL, which works well, but ties up all
+> audio system wide. I use an alternative ASIO from Image line/FL Studio
+> called FL Studio ASIO, of course. It works a bit better than ASIO4ALL.
+> Even if i use ASIO4ALL i get the same results.
+
+The startup command for jackd.exe needs to know the correct driver name to
+use when starting.  If you use the FL Studio ASIO driver, does it have FL
+Studio ASIO as the driver name?
+On the jack on windows page it shows the full command to use, typically
+set as a shortcut.
+You will be able to see the output better if you open a command prompt and
+paste in the command there:
+"C:\Program Files\Jack\jackd.exe" -R -S -d portaudio -d "ASIO::ASIO4ALL v2"
+
+If you don't want to use ASIO4ALL then you need to change the string
+"ASIO::ASIO4ALL v2" to whatever matches your actual driver name.
+As shown on that same web page you can get the list of available drivers
+with the l (lower case L) option:
+"C:\Program Files\Jack\jackd.exe" -d portaudio -l
+
+I suspect may show a different name for the FL Studio driver.
+
+This is the full set of options for the portaudio backend.  You can give
+them as extra arguments after the "-d portaudio" argument.  Don't put them
+before, jackd will try to interpret them directly and probably print an
+error about options not applying, make sure you put -d portaudio on the
+command line, then any settings that need to be set for that backend
+driver.
+
+   PORTAUDIO BACKEND PARAMETERS
+       -c --channel
+              Maximum number of channels (default: all available hardware
+channels)
+
+       -i --channelin
+              Maximum number of input channels (default: all available
+hardware channels)
+
+       -I --input-latency
+              Extra input latency (frames) (default: 0)
+
+       -o --channelout
+              Maximum number of output channels (default: all available
+hardware channels)
+
+       -O --output-latency
+              Extra output latency (frames) (default: 0)
+
+       -C --capture
+              Whether or not to capture (default: true)
+
+       -P --playback
+              Whether or not to playback (default: true)
+
+       -D --duplex
+              Capture and playback (default: true)
+
+       -r --rate
+              Sample rate (default: 48000)
+
+       -p --period
+              Frames per period (default: 1024). Must be a power of 2.
+
+       -n --name
+              Driver name (default: none)
+
+       -z --dither
+              Dithering mode (default: none)
+
+> I'm going to try this again right now while I'm typing.
+> -First, I opened the Jack Control Panel & set the buffer/latency to 1024
+
+Not sure what you are calling the Jack Control Panel, but if it is what I
+suspect it is the application you use to  make connections while jackd is
+running, I have never heard that the Jack Control application can change
+jackd startup parameters.
+
+> -Second, I opened Jack PortAudio. I don't see any place on it to change
+> any settings. It's just a command window.
+
+If you followed the jack on windows page to setup the Jack PortAudio
+shortcut then you set the command line in the shortcut, that is where you
+change settings, by changing the command line executed by the shortcut.
+
+> I just realised a couple days ago that this works without
+> The Control Panel running.
+
+Yes, the shortcut you setup for jackd will start jackd, the control panel
+application is just so you can make connections between applications if
+you have applications which are not jack native and so do not provide any
+way inside the application to make connections.
+
+I'm not sure about jackrouter, the application which provides ASIO
+interfaces into the jack audio ports.  You may need to check
+JackRouter.ini and make sure there is not a setting for buffer size there.
+ I think JackRouter should get its buffer size from the jack server
+though, so start by running jackd from a command shell so you can make
+sure that buffer size is actually getting passed to jack.  I think it
+should be something like this, possibly with the driver name changed to
+match your FL Studio driver:
+
+"C:\Program Files\Jack\jackd.exe" -R -S -d portaudio -d "ASIO::ASIO4ALL
+v2" -p 1024
+
+There is usually a -r argument for the sample rate (e.g. 44100, 48000,
+96000).  According to the manual page it defaults to 48000, so if you
+would prefer 44100 you should also add in -r 44100 after the other
+arguments.
+In fact, if you have source material at 44100 and you are forcing MPC
+software to run at 48000 it may be doing sample rate conversion in the
+background, which will probably be a bigger CPU drain than running at 512
+instead of 1024 sample buffer size.
+
+-- 
+Chris Caudle
+
+1519696375.28976_0.ltw:2, <70aa6fe1854a4c07aae7d1935f82ac75.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

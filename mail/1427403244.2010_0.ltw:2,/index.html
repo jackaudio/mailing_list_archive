@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] netjack audio routing from smart OSs (IOS and Android)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] netjack audio routing from smart OSs (IOS and Android)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1427384864.19223_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1427407407.5614_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1427403244.2010_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 26 Mar 2015 20:54:05 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Christian Schoenebeck </span> &lt;[hidden] at crudebyte dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Tobias Hoffmann
+<a href='../1427384864.19223_0.ltw:2,/index.html'>Re: [Jack-Devel] netjack audio routing from smart OSs (IOS and Android) </a></td></tr>
+</table>
+<pre>
+On Thursday 26 March 2015 16:47:15 Tobias Hoffmann wrote:
+&gt; I think we have to distinguish between Jack (as audio router) and
+&gt; Netjack (as protocol):
+&gt; * Porting the Jack server to iOS has been done, but due to iOS changes
+&gt; it cannot be used any more.
+&gt; * But iOS instead now has an API for "Inter-App Audio".
+
+Note though that Inter-App Audio (IAA) is a lite-weight plugin-like solution 
+specifically designed for iOS. You do not have much routing freedom with IAA, 
+compared to i.e. JACK. And most IAA host apps on iOS are quite restricted as 
+well. You are also not able to launch several instances of a so called "IAA 
+Node" (plugin) on the entire system. So there are a lot of restrictions with 
+IAA. It is *not* comparable with desktop plugin solutions like LV2, VST, AU, 
+RTAS.
+
+&gt; Using the (quite simple) netjack1 protocol "standalone" (e.g. by
+&gt; reimplementing it - no licensing problems here) and providing it as
+&gt; "Netjack audio source" could work.
+
+Sure you can re-implement everything with the same protocol. But who would do 
+that? And even if somebody does, he must still take care of license issues:
+He must not use any kind of GPL/LGPL based components from other people. And 
+if somebody else wants to contribute to his iOS app, then all those persons 
+must either transfer their copyright to him or they must release their 
+contributions under a less restrictive license (i.e. a BSD style one).
+
+&gt; I'm not sure about possible clock issues; I think using the iOS device
+&gt; as "netjack master" should work.
+&gt; When the netjack protocol handling is statically embedded to be used
+&gt; only in a certain application, this is probably even less of a problem.
+
+The technical problem here is that you have a lot of packet losses with WLAN. 
+So you cannot compare the stability with wired Ethernet at all. Accordingly 
+you probably must live with a reasonably high latency of 40ms(?) or so. There 
+are a bunch of people on this list who know the numbers better than I do.
+
+&gt; Using the device as "netjack slave" (i.e. "jackd -d net") forces the
+&gt; masters clock onto the device while e.g. the audio hardware of the iPad
+&gt; has it's own idea of timing.
+&gt; 
+&gt; * Wrt. to Android, I don't know much about this MediaRouter class....
+&gt; Still, implementing the netjack protocol inside a single application is
+&gt; possible (and you already mentioned Jack for Android).
+
+Java based callbacks don't make sense. You need to use a native (NDK) based 
+solution for real-time audio parts. You would not use Objective-C on iOS for 
+real-time audio stuff either.
+
+CU
+Christian
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1427384864.19223_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1427407407.5614_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1427403244.2010_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1427403244.2010_0.ltw:2,&nbsp;&lt;201503262054.05886.schoenebeck at crudebyte dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] non-callback API</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] non-callback API</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303363844.14153_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303374697.3388_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303364465.15335_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 21 Apr 2011 07:40:38 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1303337062.10769_0.ltw:2,a/index.html'>Re: [Jack-Devel] non-callback API </a></td></tr>
+</table>
+<pre>
+Le 21 avr. 2011 &#xE0; 00:03, Fons Adriaensen a &#xE9;crit :
+
+&gt; On Wed, Apr 20, 2011 at 10:42:05PM +0200, St&#xE9;phane Letz wrote:
+&gt; 
+&gt;&gt; I thin, the point of having jack_cycle_wait() and jack_cycle_signal() was to be able to write:
+&gt;&gt; 
+&gt;&gt; 
+&gt;&gt; while(true)
+&gt;&gt; {
+&gt;&gt; 	jack_cycle_wait()
+&gt;&gt; 
+&gt;&gt; 	// Do some work the require the new input buffers and produce output buffers
+&gt;&gt; 
+&gt;&gt; 	 jack_cycle_signal()  // transfer control to next client in the graph *ASAP* (especially important in a multi-core case when next clients can start running)
+&gt;&gt; 
+&gt;&gt; 	// Possibly do some more work before suspending again until next cycle
+&gt;&gt; 
+&gt;&gt; }
+&gt; 
+&gt; 
+&gt; That is correct. But it should be possible to do exactly
+&gt; the same when using the callback mode:
+
+I should check...
+&gt; 
+&gt; int process_callback(int nframes, void *arg)
+&gt; {
+&gt;    // Do some work.
+&gt;    // ...
+&gt;    // Input buffer are no longer required, output buffers
+&gt;    // are ready.
+&gt; 
+&gt;    jack_cycle_signal(); // Allows the next client to run.
+&gt; 
+&gt;    // Do some other work.
+&gt; 
+&gt;    return 0
+&gt; }
+&gt; 
+&gt; which mutatis mutandis is the equivalent of your example using
+&gt; the callback mode.
+&gt; 
+&gt; The only requirement for this to work is that returning from the
+&gt; callback and calling jack_cycle_wait() are exactly equivalent,
+&gt; that is either:
+&gt; 
+&gt; 1. They both require jack_cycle_signal() to be called before, or
+&gt; 
+&gt; 2. They don't, or
+&gt; 
+&gt; 3. They do the equivalent of jack_cycle_signal() if that was not
+&gt;   already called.
+&gt; 
+&gt; Currently, returning from the callback does the equivalent of
+&gt; calling jack_cycle_signal(), while calling jack_cycle_wait()
+&gt; doesn't (in my original proposal it did.). A clean implementation
+&gt; would give them exactly the same semantics, and to preserve the
+&gt; original callback API that would mean (3). In other words, using
+&gt; jack_cycle_signal() should be optional in either mode.
+&gt; 
+
+
+But anyway I don't really see the point of your "clean" version.  The " set process calllback" mode was the "historical" mode (classic, easy to understand...), now we also have the "give you thread and use jack_cycle_wait/jack_cycle_signal pair" that give all flexibility needed. 
+
+I don't think we should break again the semantic, and the jack_cycle_wait/jack_cycle_signal stuff has been there since1 or 2 years, quite enough for any interested person to give valuable feedback....
+
+Stephane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303363844.14153_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303374697.3388_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303364465.15335_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1303364465.15335_0.ltw:2,a&nbsp;&lt;535A8F7D-929F-4AD7-9E8F-699A77037E08 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

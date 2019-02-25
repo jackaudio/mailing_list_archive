@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Σχετ: JACK 1.9.8 targets / MIDI Driver status?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Σχετ: JACK 1.9.8 targets / MIDI Driver status?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1309966811.28884_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1310002489.17054_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1309974609.12131_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 06 Jul 2011 18:49:39 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Panos Ghekas </span> &lt;[hidden] at yahoo dot gr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Peter L Jones &lt;[hidden] at drealm dot info&gt;, "[hidden] at jackaudio dot org" &lt;[hidden] at jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Peter L Jones
+<a href='../1309964647.26499_0.ltw:2,a/index.html'>Re: [Jack-Devel] JACK 1.9.8 targets / MIDI Driver status? </a></td></tr>
+</table>
+<pre>
+Hi to all,&#xA0;
+
+I got the same thing here as Peter describes
+
+"Cannot use MMCSS 1552" scrolls down the screen constantly.
+I use ASIO::ASIO4ALL v2 without -r and -p after.
+
+But, I can play for hours with no problem...... (?!)
+also mixing 32 &amp; 64bit apps .
+
+Apparently something is wrong but I cannot notice any difference in performance from my fingers on the keyboards and the sound from my lap.
+
+Best
+Panos
+
+
+________________________________
+&#x391;&#x3C0;&#x3BF;: Peter L Jones &lt;[hidden]&gt;
+
+
+St&#xE9;phane,
+
+Ah, so it's not the WinMME output at all, I see; it's "Multimedia Class
+Scheduler Service".&#xA0; See below.
+
+The message "Cannot use MMCSS 1552" scrolls up the screen constantly:
+&gt; C:\&gt; "C:\Program Files (x86)\Jack v1.9.8\jackd.exe" -R -S -P91 -d portaudio
+-d"ASIO::ASIO Echo FireWire" -r48000 -p256
+&gt; jackdmp 1.9.8
+&gt; Copyright 2001-2005 Paul Davis and others.
+&gt; Copyright 2004-2011 Grame.
+&gt; jackdmp comes with ABSOLUTELY NO WARRANTY
+&gt; This is free software, and you are welcome to redistribute it
+&gt; under certain conditions; see the file COPYING for details
+&gt; JACK server starting in realtime mode with priority 91
+&gt; Cannot lock down memory area (No error)
+&gt; Cannot use MMCSS 1552
+&gt; Cannot use MMCSS 1552
+&gt; Cannot use MMCSS 1552
+&gt; Cannot use MMCSS 1552
+&gt; Cannot use MMCSS 1552
+&gt; Cannot use MMCSS 1552
+...
+&gt; jack main caught signal 2
+&gt; Cannot unlock down memory area (No error)
+
+The usual output is:
+&gt; C:\&gt; "C:\Program Files (x86)\Jack v1.9.8\jackd.exe" -X winmme -R -S -P91 -d portaudio -d"ASIO::ASIO Echo FireWire" -r48000 -p256
+&gt; jackdmp 1.9.8
+&gt; Copyright 2001-2005 Paul Davis and others.
+&gt; Copyright 2004-2011 Grame.
+&gt; jackdmp comes with ABSOLUTELY NO WARRANTY
+&gt; This is free software, and you are welcome to redistribute it
+&gt; under certain conditions; see the file COPYING for details
+&gt; JACK server starting in realtime mode with priority 91
+&gt; Cannot lock down memory area (No error)
+&gt; JackWinMMEDriver::Open - num_potential_inputs&#xA0; 3
+&gt; JackWinMMEDriver::Open - num_potential_outputs&#xA0; 4
+&gt; JackWinMMEDriver::Open - multimedia timer resolution set to 1 milliseconds.
+&gt; JackWinMMEDriver::Open - while creating input port: std::exception
+&gt; JackWinMMEInputPort::ProcessWinMME - MIDI device opened.
+&gt; JackWinMMEDriver::Open - while creating input port: std::exception
+&gt; JackWinMMEOutputPort::HandleMessage - MIDI device opened.
+&gt; JackWinMMEOutputPort::HandleMessage - MIDI device opened.
+&gt; JackWinMMEDriver::Open - while creating output port: std::exception
+&gt; JackWinMMEOutputPort::HandleMessage - MIDI device opened.
+&gt; JackWinMMEDriver::Open - input_count&#xA0; 1
+&gt; JackWinMMEDriver::Open - output_count&#xA0; 3
+&gt; JackWinMMEDriver::Attach - fCaptureChannels&#xA0; 1
+&gt; JackWinMMEDriver::Attach - fPlaybackChannels&#xA0; 3
+&gt; JackWinMMEDriver::Start - Starting driver.
+&gt; JackWinMMEDriver::Start - Enabling input ports.
+&gt; JackWinMMEDriver::Start - Enabling output ports.
+&gt; MMCSS API used to acquire RT for thread: -2
+&gt; MMCSS API used to acquire RT for thread: -2
+&gt; MMCSS API used to acquire RT for thread: -2
+&gt; JackWinMMEDriver::Start - Driver started.
+...
+(Ctrl-C)
+...
+&gt; JackWinMMEOutputPort::HandleMessage - MIDI device closed.
+&gt; JackWinMMEOutputPort::HandleMessage - MIDI device closed.
+&gt; JackWinMMEOutputPort::HandleMessage - MIDI device closed.
+&gt; messagebuffer not initialized, skip message
+
+
+
+See above!&#xA0; WinMME vs no WinMME seems to have a big effect.&#xA0; Is this expected?
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1309966811.28884_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1310002489.17054_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1309974609.12131_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1309974609.12131_0.ltw:2,a&nbsp;&lt;1309974579.23091.YahooMailNeo at web29108 dot mail dot ird dot yahoo dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

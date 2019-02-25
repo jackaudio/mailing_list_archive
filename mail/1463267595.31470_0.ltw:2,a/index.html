@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Implement a driver as a writable client?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Implement a driver as a writable client?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1463249572.14356_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1463293074.2648_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1463267595.31470_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 15 May 2016 02:12:47 +0300 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chuckk Hubbard </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1463182887.1790_0.ltw:2,/index.html'>Re: [Jack-Devel] Implement a driver as a writable client? </a></td></tr>
+</table>
+<pre>
+Thanks for the info, Paul.
+So, are you basically saying I need an extra buffer? A client takes audio
+input from the JACK server and writes it to a buffer, and I have to
+manually tweak the size of that buffer to avoid over- or underruns, and
+another thread writes from that buffer to the hardware I2S FIFO whenever
+it's writable? If I understand the implications of clients being unable to
+block as you say, the audio generation programs won't ever wait for my
+improvised "driver"... but I'm not sure if I get why that's something to
+worry about.
+-Chuckk
+
+
+
+On Sat, May 14, 2016 at 2:41 AM, Paul Davis &lt;[hidden]&gt;
+wrote:
+
+&gt; You can't do duplex properly as a client. The main difference between a
+&gt; JACK "driver" (aka "backend") and a client is that a driver consists of two
+&gt; halves. One is executed at the start of a process cycle, to collect data
+&gt; from the hardware; the other is executed at the end of a process cycle, to
+&gt; deliver data to the hardware.
+&gt;
+&gt; If you're not doing duplex, you can do whatever you want in a client, but
+&gt; keep in mind that it cannot block, meaning that you basically have to
+&gt; shuffle the data to/from another thread that actually interacts with the
+&gt; hardware.
+&gt;
+&gt;
+&gt; On Fri, May 13, 2016 at 7:12 PM, Chuckk Hubbard &lt;[hidden]
+&gt; &gt; wrote:
+&gt;
+&gt;&gt; Hi.
+&gt;&gt; I've been sinking lots of time in trying to get ALSA to work with a
+&gt;&gt; SGTL5000 (Teensy Audio Adapter) in Raspbian on a Raspberry Pi 3. I have the
+&gt;&gt; complete documentation for how to manually set up the audio chip, and
+&gt;&gt; sufficient documentation on how to manually set up the Pi's ARM I2S
+&gt;&gt; peripheral. The ALSA solution is generalized for any kind of hardware you
+&gt;&gt; could want, is something I don't really want to know, at all, in my life,
+&gt;&gt; and seems just far too complex when I have detailed guides for both the
+&gt;&gt; audio chip and the CPU. The one combination of ALSA platform, machine and
+&gt;&gt; codec drivers that I've managed to get sound from plays more than 2x too
+&gt;&gt; fast and will not open with JACK.
+&gt;&gt;
+&gt;&gt; So, I'm reading about the JACK API, wondering about simply writing a C
+&gt;&gt; program to configure and write to the Pi's built-in I2S FIFOs, without even
+&gt;&gt; telling ALSA that I'm doing it; but I see that all JACK clients should use
+&gt;&gt; callback functions. Still, audio input from JACK into a program using the
+&gt;&gt; API is a regular thing, right? So how complicated might it be to set up
+&gt;&gt; such a client that gets audio input from JACK and writes that to the chip's
+&gt;&gt; I2S FIFO? My timing will be controlled by the audio chip, the Pi chip will
+&gt;&gt; be a slave to it. So as long as my program writes to the transmit FIFO fast
+&gt;&gt; enough, and waits if the FIFO is full, I think I don't need to worry about
+&gt;&gt; synchronizing JACK exactly to the audio chip's clock... right?
+&gt;&gt;
+&gt;&gt; I'm just a little fuzzy on this timing part.
+&gt;&gt; Thanks for any clarification.
+&gt;&gt;
+&gt;&gt; -Chuckk
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; --
+&gt;&gt; http://www.badmuthahubbard.com
+&gt;&gt;
+&gt;&gt; 
+&gt;&gt; Jack-Devel mailing list
+&gt;&gt; [hidden]
+&gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;&gt;
+&gt;&gt;
+&gt;
+
+
+-- 
+http://www.badmuthahubbard.com
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1463249572.14356_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1463293074.2648_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1463267595.31470_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1463267595.31470_0.ltw:2,a&nbsp;&lt;CAFA-yJm-EgRgXVBD0qK9bg3mAeukw8KDR_9HeozqM2NPE+usYw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

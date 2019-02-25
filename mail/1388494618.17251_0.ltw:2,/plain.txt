@@ -1,0 +1,64 @@
+Date:        Tue, 31 Dec 2013 13:56:46 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Robin Gareus [Jack-Devel] [PATCH 0/3] modernizing jack-midi-dump (1388494618.17252_0.ltw:2,)
+
+Subject:     [Jack-Devel] [PATCH 2/3] add usage() to jack_midi_dump
+
+Signed-off-by: Robin Gareus <[hidden]>
+---
+ example-clients/midi_dump.c |   28 ++++++++++++++++++++++++++--
+ 1 file changed, 26 insertions(+), 2 deletions(-)
+
+diff --git a/example-clients/midi_dump.c b/example-clients/midi_dump.c
+index 092af99..451c826 100644
+--- a/example-clients/midi_dump.c
++++ b/example-clients/midi_dump.c
+@@ -101,6 +101,28 @@ static void wearedone(int sig) {
+ 	keeprunning = 0;
+ }
+ 
++static void usage (int status) {
++	printf ("jack_midi_dump - JACK MIDI Monitor.\n\n");
++	printf ("Usage: jack_midi_dump [ OPTIONS ] [CLIENT-NAME]\n\n");
++	printf ("Options:\n\
++  -a        use absoute timestamps relative to application start\n\
++  -h        display this help and exit\n\
++  -r        use relative timestamps to previous MIDI event\n\
++\n");
++	printf ("\n\
++This tool listens for MIDI events on a JACK MIDI port and prints\n\
++the message to stdout.\n\
++\n\
++Note that this tool is not realtime-safe. The events are printed\n\
++directly from the process() callback!\n\
++\n\
++If no client name is given it defaults to 'midi-monitor'.\n\
++\n\
++See also: jackd(1)\n\
++\n");
++  exit (status);
++}
++
+ int
+ main (int argc, char* argv[])
+ {
+@@ -112,8 +134,10 @@ main (int argc, char* argv[])
+ 	int cn = 1;
+ 
+ 	if (argc > 1) {
+-		if (!strcmp(argv[1], "-a")) { time_format = 1; cn = 2; }
+-		if (!strcmp(argv[1], "-r")) { time_format = 2; cn = 2; }
++		if      (!strcmp (argv[1], "-a")) { time_format = 1; cn = 2; }
++		else if (!strcmp (argv[1], "-r")) { time_format = 2; cn = 2; }
++		else if (!strcmp (argv[1], "-h")) { usage (EXIT_SUCCESS); }
++		else if (argv[1][0] == '-')       { usage (EXIT_FAILURE); }
+ 	}
+ 
+ 	if (argc > cn) {
+-- 
+1.7.10.4
+
+1388494618.17251_0.ltw:2, <1388494607-1336-3-git-send-email-robin at gareus dot org>
+________________________________________________________________________________
+

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Graph callback and client state</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Graph callback and client state</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1365540096.16917_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1365540517.17286_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1365540349.17135_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 09 Apr 2013 16:45:42 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Harry van Haaren &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Harry van Haaren
+<a href='../1365540096.16917_0.ltw:2,a/index.html'>Re: [Jack-Devel] Graph callback and client state </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Harry van Haaren
+<a href='../1365540517.17286_0.ltw:2,a/index.html'>Re: [Jack-Devel] Graph callback and client state </a></td></tr>
+</table>
+<pre>
+On Tue, Apr 9, 2013 at 4:41 PM, Harry van Haaren &lt;[hidden]&gt;wrote:
+
+&gt; On Tue, Apr 9, 2013 at 9:29 PM, Paul Davis &lt;[hidden]&gt;
+&gt; wrote:
+&gt; &gt; the graph order callback only reflects changes in connectivity.
+&gt; Essentially an "active" flag change would signify an chance in
+&gt; connectivity though right?
+&gt; Perhaps not directly, but a possible change in connectivity, since a port
+&gt; getting deactivated would have its connections cut?
+&gt; I'll agree its slightly changing the exact meaning of the
+&gt; GraphOrderCallback, but only to include a new feature?
+&gt;
+&gt; &gt; even if you use other callbacks, they arrive in specific threads,
+&gt; probably not the thread that got the port info.
+&gt; That's for the (patchbay) client to deal with..? Enter the apps messaging
+&gt; system or trylock()?
+&gt;
+
+you're really missing the point here.
+
+the only way you could possibly solve this issue is if the JACK API allowed
+for something like this:
+
+   jack_lock_graph (client_handle);
+   jack_get_ports (client_handle, ....);
+   DO_SOMETHING_WITH_PORTS (client_handle, ports, ...)
+   jack_unlock_graph (client_handler);
+
+but oops, now the client has locked the graph meaning nothing can be added,
+removed or reconnected and no client can arrive or depart. so now you have
+to have the notion of an
+"all-other-clients-can't-touch-graph-but-i-can-lock" which is absurd, and
+baroque.
+
+the API in this type of system is inherently racy. you can't fix that with
+bandaids. the state of the world can change at ANY time, and even if you
+get told about it, that wiill not help you deal with the fact that some of
+the ports you've been told about have changed state or that there may be
+new ports that you don't know about.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1365540096.16917_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1365540517.17286_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1365540349.17135_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1365540349.17135_0.ltw:2,a&nbsp;&lt;CAFa_cKm4h75EvrEv1Hat5E8nNdyN7md+rbJeDUTFa8xO=ZJPRg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

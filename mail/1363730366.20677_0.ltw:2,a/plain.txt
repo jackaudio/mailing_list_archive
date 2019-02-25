@@ -1,0 +1,43 @@
+Date:        Tue, 19 Mar 2013 22:58:40 +0100
+From:        Ruslan N. Marchenko  <[hidden] at ruff dot mobi>
+To:          Tommaso Cucinotta <[hidden] at sssup dot it>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Tommaso Cucinotta Re: [Jack-Devel] Linux to Linux jacknet ? (1363721930.14801_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Linux to Linux jacknet ?
+
+Hi Tom,
+
+On Tue, Mar 19, 2013 at 04:15:36PM +0000, Tommaso Cucinotta wrote:
+> On 03/03/13 15:40, Stéphane Letz wrote:
+> > 3)  So on master side :
+> > 
+> > jackd -d alsa ….
+> > 
+> > jack_load netmanager
+> 
+> Hi Stephane,
+> 
+> I have one more question: in my network set-up, the master has multiple (either real or virtual) interfaces, and the IP it binds to (as from the qjackctl log window) doesn't seem really the right one I want. Is there a way I can specify/force, when I load netmanager, which network interface it should be listening to, for slaves to connect ?
+> 
+If you want to use unicast then providing IP to netmanager unambiguously binds to that IP, whichever interface it is assigned to.
+There's a trcik here though - if you're using secondary IPs - UDP packet might (or actually will) still leave the system from system default IP. 
+Simply because outgoing socket is recreated once probe is received, and when it is recreated it's not bound anymore, just an ephemeral port.
+You can force system IP (default outgoing IP to use by the system) by creating a route with source IP
+# ip ro add <destination> <gateway> src <secondary ip>
+i.e.
+ip ro add 2.2.2.2 via 1.1.1.1 dev eth1 src 1.1.1.10 
+now whenever connection will be initiated towards that host system will chose that source address unless asked otherwise explicitly.
+
+If you need multicast - there's another story.
+Since you're using ubuntu you can try out my proposed patched package having this feature.
+See neighbouring thread for details.
+PPA is at https://launchpad.net/~rufferson/+archive/snd
+In that version you can specifiy all, explicit or default interface to listen for multicast on.
+
+Regards,
+Ruslan
+
+1363730366.20677_0.ltw:2,a <20130319215840.GA13599 at ruff dot mobi>
+________________________________________________________________________________
+

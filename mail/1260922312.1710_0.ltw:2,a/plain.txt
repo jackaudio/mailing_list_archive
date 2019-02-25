@@ -1,0 +1,45 @@
+Date:        Tue, 15 Dec 2009 16:11:08 -0800
+From:        Sean Bolton  <[hidden] at jps dot net>
+To:          LAD list <[hidden] at lists dot linuxaudio dot org>
+In-Reply-To: Olivier Guilyardi Re: [LAD] Atomic Operations (1260906179.10166_0.ltw:2,a)
+Follow-Up:   Tim Blechmann Re: [LAD] Atomic Operations (1260956688.26220_0.ltw:2,a)
+
+Subject:     Re: [LAD] Atomic Operations
+
+Yikes, not this again....
+
+On Dec 15, 2009, at 11:42 AM, Olivier Guilyardi wrote:
+> On 12/15/2009 08:04 PM, Paul Davis wrote:
+>> this was discussed at some considerable length on jack-devel last  
+>> year, IIRC.
+>> for single reader/single writer ringbuffers, i believe that we
+>> concluded that memory barriers are not necessary.
+>
+> No, to me the conclusion was: we can't programmatically prove that  
+> memory
+> barriers are needed (even on the most vulnerable architectures),  
+> but the theory
+> say that they are, and they should be added for correctness.
+
+My understanding matches Olivier's.  Intel processors have strong memory
+ordering, and so on them the jack ringbuffer is safe without memory
+barriers. However, some PPC processors, and SPARC V9s under linux  
+(but not
+Solaris), use weak memory ordering, and on them, the jack ringbuffer  
+code
+can theoretically fail.
+
+See the "ring buffer memory barriers" discussion on jack-devel back in
+October of last year for more information; in particular, this article
+by Paul E. McKenney is very helpful:
+
+http://www.linuxjournal.com/article/8211
+
+And, until the jack ringbuffer gets fixed, the PortAudio ringbuffer
+appears safe for use on multiprocessor weakly-ordered systems.
+
+-Sean
+
+1260922312.1710_0.ltw:2,a <EF5C4280-CE61-4FA7-94B6-893F1AFD4FDE at jps dot net>
+________________________________________________________________________________
+

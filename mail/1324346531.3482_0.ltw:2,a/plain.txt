@@ -1,0 +1,124 @@
+Date:        Mon, 19 Dec 2011 18:01:57 -0800
+From:        Robert M. Riches Jr.  <[hidden] at jacob21819 dot net>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Paul Davis Re: [Jack-Devel] How to get mplayer and firefox/flash to play nicely with [Net]JACK? (1324352294.27542_0.ltw:2,a)
+
+Subject:     [Jack-Devel] How to get mplayer and firefox/flash to play nicely with [Net]JACK?
+
+(New subscriber, so apologies in advance if I'm in the wrong
+place, etc...)
+
+In setting up a zero-client arrangement, I have some functions
+working with NetJACK, but mplayer and firefox/flash don't play
+well, so far.  I have jackd running with real-time scheduling and
+memory locking on both sides, as evidenced by this from
+/proc/`pidof jackd`/limits on each side:
+
+    Limit                     Soft Limit           Hard Limit           Units
+    ...
+    Max locked memory         512000000            512000000            bytes
+    ...
+    Max nice priority         25                   25                   
+    Max realtime priority     90                   90                   
+    ...
+
+The physical network between the two machines is an isolated
+gigabit ethernet (second NIC of server/slave machine) with only
+an ethernet switch between them.  Per "vnstat -l -i eth1", only
+~4Mbit/s of the available 1Gbit/s is being used.
+
+I have the server/slave account's .asoundrc set up to default to
+going through the JACK plugin:
+
+    pcm.rawjack {
+        type jack
+        playback_ports {
+            0 system:playback_1
+            1 system:playback_2
+        }
+        capture_ports {
+            0 system:capture_1
+            1 system:capture_2
+        }
+    }
+
+    pcm.jackplug {
+        type plug
+        slave { pcm "rawjack" }
+    }
+
+    pcm.!default {
+        type plug
+        slave { pcm "rawjack" }
+    }
+
+The client (JACK master) is set up to route its sound to both the
+HDMI monitor and the line-out/headphone jacks, and that works
+well with ALSA's speaker-test when run without NetJACK.
+
+Running aplay on the server/slave works perfectly.
+
+When I run mplayer on the server/slave, it plays perfectly for
+8.9 seconds and then the sound changes to something similar to a
+motorboat, and the server/slave jackd reports a ton of XRUNs.
+After two control-Cs, mplayer quits, and NetJACK is happy again.
+I get the same results with an input MP3 file at 22050sps mono
+and a 44100sps stero WAV file.
+
+Firefox (with probably a flash video) does not get any sound
+through.  Instead, I get this from the server/slave jackd:
+
+    jack_client_new: deprecated
+    Jack: JackClient::SetupDriverSync driver sem in flush mode
+    Jack: JackPosixSemaphore::Connect jack_sem.1501_default_alsa-jack.rawjackP.18755
+    .0
+    Jack: Already connected name = alsa-jack.rawjackP.18755.0
+    Jack: Clock source : system clock via clock_gettime
+    Jack: JackLibClient::Open name = alsa-jack.rawjackP.18755.0 refnum = 2
+    Jack: JackClient::PortRegister ref = 2 name = alsa-jack.rawjackP.18755.0:out_000
+     type = 32 bit float mono audio port_index = 5
+    Jack: JackClient::PortRegister ref = 2 name = alsa-jack.rawjackP.18755.0:out_001
+     type = 32 bit float mono audio port_index = 6
+    Jack: JackClient::Activate
+    Jack: JackClient::StartThread : period = -2147483648 computation = 21333 constra
+    int = 500
+    Jack: Create non RT thread
+    Jack: ThreadHandler: start
+    Jack: JackClient::kActivateClient name = alsa-jack.rawjackP.18755.0 ref = 2 
+    Jack: JackClient::Connect src =  dst = system:playback_1
+    cannot connect  to system:playback_1
+    Jack: JackClient::Activate
+    Jack: JackClient::Connect src =  dst = system:playback_1
+    cannot connect  to system:playback_1
+    Jack: JackClient::Activate
+    Jack: JackClient::Connect src =  dst = system:playback_1
+    cannot connect  to system:playback_1
+    Jack: JackGraphManager::GetBuffer : port = 5 is released state
+    Jack: JackGraphManager::GetBuffer : port = 6 is released state
+    Jack: JackGraphManager::GetBuffer : port = 5 is released state
+    Jack: JackGraphManager::GetBuffer : port = 6 is released state
+    ...
+
+The last pairs of lines repeat forever.  In this case, it looks
+like 'src' is set to the empty string, but I have no idea what is
+doing that.
+
+Server/slave OS is 64-bit Mageia 1.  Firefox is 32-bit version
+3.6.24.  Assuming it's a flash video, my flash player appears to
+be 10.3.r181.  mplayer is version 1.0-1.rc4.0.r32713.5.1.mga1.
+Server/slave JACK is jackit-1.9.6-1.mga1.  Client/master OS is a
+remastered TinyCore Linux 4.0.2 with JACK version 1.9.7.  In case
+hardware is relevant, the server/slave is a Xeon 3680 (6-core,
+3.3GHz), and the client/master is an i3 540 (2-core, 3.06GHz).
+
+Any suggestions for the mplayer motorboat symptom or the firefox
+symptom?
+
+Thanks in advance.
+
+Robert Riches
+[hidden]
+
+1324346531.3482_0.ltw:2,a <20111220020157.8BBEB264BF at one dot localnet>
+________________________________________________________________________________
+

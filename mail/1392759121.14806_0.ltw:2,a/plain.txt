@@ -1,0 +1,79 @@
+Date:        Tue, 18 Feb 2014 22:31:37 +0100
+From:        Holger Marzen  <[hidden] at marzen dot de>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] JACK output via Bluetooth (1392757504.13711_0.ltw:2,a)
+Follow-Up:   Patrick Shirkey Re: [Jack-Devel] JACK output via Bluetooth (1392922294.28977_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK output via Bluetooth
+
+On Tue, 18 Feb 2014, Paul Davis wrote:
+
+> On Tue, Feb 18, 2014 at 3:59 PM, Holger Marzen <[hidden]> wrote:
+> 
+> >
+> > 2.) zita-j2a
+> >     It can't be run. It complains:
+> >
+> >     hm@wolke:~$ zita-j2a -v -p 128 -c 2 -d btphilips
+> >     Alsa_pcmi: detected more than 1024 playback channnels, reset to 2.
+> >     Alsa_pcmi: can't set playback period size to 128.
+> >     Can't open ALSA playback device 'btphilips'.
+> >
+> 
+> did you try changing the period size?
+
+Yes. Same result. I can use the same period size as my jackd (256), I
+can leave it blank or use another. The zita-doc says it want's a hw:
+device. That's probably the source of the problem.
+
+> also, your question is really not about how JACK can output to bluetooth,
+> but about how to add an additional Bluetooth device to JACK for output when
+> JACK is using some other device as the primary clock source.
+
+It doesn't have to be an additional device. I'd be happy if my JACK
+based programs could output to a bluetooth device, even if this would be
+the only device that JACK is sending its output to.
+
+So I tried the following simple .asoundrc:
+
+ctl.btphilips {
+    type bluetooth
+}
+
+pcm.btphilips {
+    type bluetooth
+    device "00:1D:DF:E4:59:B6"
+    profile "auto"
+}
+
+And I tried to start jackd:
+
+hm@wolke:~$ /usr/bin/jackd -t2000 -dalsa -r44100  -n2 -p1024 -Pbtphilips
+jackdmp 1.9.8
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2011 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in realtime mode with priority 10
+control device hw:0
+audio_reservation_init
+Acquire audio card Audio0
+Acquire audio card Audio-1
+creating alsa driver ... btphilips|-|1024|2|44100|0|0|nomon|swmeter|-|32bit
+configuring for 44100Hz, period = 1024 frames (23.2 ms), buffer = 2 periods
+ALSA: final selected sample format for playback: 16bit little-endian
+ALSA: use 6 periods for playback
+ALSA: could not start playback (File descriptor in bad state)
+Cannot start driver
+JackServer::Start() failed with -1
+Failed to start server
+control device hw:0
+Released audio card Audio0
+
+
+It looks as if I am not far away from a working setup. But what's missing?
+
+1392759121.14806_0.ltw:2,a <alpine.DEB.2.11.1402182206190.15842 at wolke dot intern dot marzen dot de>
+________________________________________________________________________________
+

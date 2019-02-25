@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] ardour3, netjack, bandwidth, xruns</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] ardour3, netjack, bandwidth, xruns</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1388776349.5170_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388865555.1217_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388779512.10372_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 03 Jan 2014 15:04:58 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> David Santamauro </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1388747464.2891_0.ltw:2,/index.html'>Re: [Jack-Devel] ardour3, netjack, bandwidth, xruns </a></td></tr>
+</table>
+<pre>
+On 01/03/2014 06:13 AM, St&#xE9;phane Letz wrote:
+&gt; Try to change the "mtu" value on slave side, using "jumbo" frames on GB network, like
+&gt;
+&gt; jackd -d net -M  9000
+
+If I need to ...
+
+This problem was a difficult one to diagnose. As it turns out, I think 
+I've pinpointed it to the combination usage of PulseAudio and google-chrome.
+
+I have been running the PulseAudio JACK sink/source from day one without 
+problems but very recently installed google-chrome. The only time I get 
+any kind of xruns is when google-chrome is open and as it turns out, 
+quite exaggerated (as reported below) with net manager.
+
+After a few trial and errors, I realized that closing chrome quieted the 
+xruns. So I have 4 midi-out ports (16 channels each) connected over the 
+network returning 48 audio channels. I haven't exercised it completely, 
+but connection is clean without xruns... so far so good.
+
+David
+
+
+&gt;
+&gt; St&#xE9;phane
+&gt;
+&gt; Le 1 janv. 2014 &#xE0; 17:42, David Santamauro &lt;[hidden]&gt; a &#xE9;crit :
+&gt;
+&gt;&gt;
+&gt;&gt; Hi,
+&gt;&gt;
+&gt;&gt; Happy new year ... if this isn't the appropriate list, direct to the
+&gt;&gt; right one, thanks.
+&gt;&gt;
+&gt;&gt; I've started creating my orchestral template using ardour3 (on the
+&gt;&gt; master) and a slave. When I reach a certain number of tracks the xruns
+&gt;&gt; start piling up.
+&gt;&gt;
+&gt;&gt; Master message(s):
+&gt;&gt; Wed Jan  1 07:15:08 2014: NetMaster : overloaded, skipping receive from
+&gt;&gt; 'nslave01'
+&gt;&gt;
+&gt;&gt; ... does this mean the master is overloaded?
+&gt;&gt;
+&gt;&gt; The specs:
+&gt;&gt;   - master is an 8-core/16GB RAM
+&gt;&gt;   - slave is 4-core/16GB RAM
+&gt;&gt;
+&gt;&gt; Goal is to use windows orchestral VSTi(s) whose required 'dongle' is on a windows machine.
+&gt;&gt;
+&gt;&gt;   ardour3:midi-track-1 =&gt; slave:midi-input-1
+&gt;&gt;   slave:audio-out-1    =&gt; ardour3:audio-track-in-1
+&gt;&gt;   slave:audio-out-2    =&gt; ardour3:audio-track-in-2
+&gt;&gt;
+&gt;&gt; Pretty simple, actually, but I'd like 48 channels of audio to come back from the slave.
+&gt;&gt;
+&gt;&gt; Both have Gb network interfaces and both are connected to a Gb switch.
+&gt;&gt;
+&gt;&gt; ardour3 does take CPU slices but the master load avg is ~ 85% idle and
+&gt;&gt; DSP load &lt; 20%.
+&gt;&gt;
+&gt;&gt; Viewing network traffic using iptraf, I see total usage in the 45Mb/s
+&gt;&gt; (4% utilization) range for both master and slave -- clearly room to
+&gt;&gt; spare so I'm assuming there is some other bottleneck somewhere.
+&gt;&gt;
+&gt;&gt; I guess the questions are:
+&gt;&gt;
+&gt;&gt;   - are there hard limits on the number of tracks that can be used when
+&gt;&gt; using using jack over the network?
+&gt;&gt;
+&gt;&gt;   - Is there a formula to figure out this out, e.g., is there a
+&gt;&gt; relationship between the size of the jack graph and data per cycle?
+&gt;&gt;
+&gt;&gt;   - Are there settings (network or for jack_load netmanager) that would
+&gt;&gt; help this situation?
+&gt;&gt;
+&gt;&gt; Both master and slave jackd versions are the same:
+&gt;&gt;
+&gt;&gt; $ jackd -V
+&gt;&gt; jackdmp 1.9.9.5
+&gt;&gt;
+&gt;&gt; I've read this [1] and it appears there are two modes: sync and async.
+&gt;&gt; I'll try toggling this and see what happens.
+&gt;&gt;
+&gt;&gt; ... but any other help would be appreciated.
+&gt;&gt;
+&gt;&gt; David
+&gt;&gt;
+&gt;&gt; [1] http://trac.jackaudio.org/wiki/WalkThrough/User/NetJack2
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; 
+&gt;&gt; Jack-Devel mailing list
+&gt;&gt; [hidden]
+&gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1388776349.5170_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388865555.1217_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388779512.10372_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1388779512.10372_0.ltw:2,&nbsp;&lt;52C717EA.2050201 at gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

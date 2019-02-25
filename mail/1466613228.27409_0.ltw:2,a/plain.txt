@@ -1,0 +1,26 @@
+Date:        Wed, 22 Jun 2016 18:33:37 +0200
+From:        Xavier Mendez  <[hidden] at jmendeth dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+
+Subject:     [Jack-Devel] [patch] Fix bug with alsa_in/alsa_out latency
+
+Hello,
+
+Here's a quick fix for alsa_in and alsa_out, which currently set the 
+playback latency of their ports to the target delay, but forget to 
+convert this delay to JACK frames. See PR for more info.
+
+https://github.com/jackaudio/jack2/pull/215
+https://github.com/jackaudio/tools/pull/8
+
+Also convert the result of jack_frames_since_cycle_start() into ALSA 
+frames, before subtracting it from the delay for the controller.
+
+Note that this change only has effect if ALSA and JACK sample rates 
+differ, otherwise the behavior stays the same.
+
+Xavi
+
+1466613228.27409_0.ltw:2,a <576ABDE1.5000508 at jmendeth dot com>
+________________________________________________________________________________
+

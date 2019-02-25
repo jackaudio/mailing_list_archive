@@ -1,0 +1,71 @@
+Date:        Sun, 09 Jul 2017 16:26:55 +0200
+From:        Thomas Brand  <[hidden] at trellis dot ch>
+To:          alex <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: alex Re: [Jack-Devel] Jack won't start on boot (1499610138.25891_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack won't start on boot
+
+On Sun, July 9, 2017 16:21, alex wrote:
+>
+
+>
+> On 07/09/2017 05:04 PM, Thomas Brand wrote:
+>
+>> On Sun, July 9, 2017 13:37, alex wrote:
+>>
+>>>> I'll try again. I tried to add 'jack_wait -w' to my script, and
+>>>> again running manually works fine, but on boot jack_wait waits for
+>>>> ever and jack never starts.
+>>> jack_wait -w actually helped with creating a log file. Here's the
+>>> output:
+>>>
+>>>
+>>>
+>>> jackdmp 1.9.10 Copyright 2001-2005 Paul Davis and others. Copyright
+>>> 2004-2013 Grame.
+>>> jackdmp comes with ABSOLUTELY NO WARRANTY This is free software, and
+>>> you are welcome to redistribute it under certain conditions; see the
+>>> file COPYING for details
+>>> JACK server starting in realtime mode with priority 10
+>>> Failed to connect to session bus for device reservation Unable to
+>>> autolaunch a dbus-daemon without a $DISPLAY$
+>>>
+>>> Audio device hw:1 cannot be acquired...
+>>> Cannot initialize driver
+>>> JackServer::Open failed with -1
+>>> Failed to open server
+>>>
+>>>
+>> The following seems to happen: when you start jackd manually, you
+>> already have a graphical environment providing $DISPLAY which is again
+>> used by dbus. When you start jackd during boot, it will fail if there is
+>> no graphical environment started yet.
+>>
+>> Many distros have stock jackd that expects dbus which again is
+>> relatively tightly bound to the desktop.
+>>
+>> You can try these things:
+>> -compile jackd without dbus support (if you don't need it for your app)
+>> -start jackd with a startup mechanism that's run by your graphical
+>> environment (after it's ready and $DISPLAY is set)
+> Indeed that seems like a reason. I'm SSHing into to Odroid with -X so I
+> can launch Pd with its GUI, so I tried to SSH without -X and jack wouldn't
+> start, but then SSHing back with -X made jack start.
+>
+> I'd rather not compile something since it took me quite some time to
+> find an image for the Odroid with which I could get descent sound. Since
+> now the sound is coming out nice, I'd rather keep the software the way it
+> is. That being said, I'd rather go for your second suggestion. Can you
+> post an example of how I should start jack with a startup mechanism that's
+> run by my graphical environment? I'm not really following there...
+
+Ah.. maybe this is a headless system so you can't do that.
+Compiling jack is straight forward. install build-essential, clone jackd
+github repo and you're almost there.
+IIRC there are hacks that pretend a dbus env for jack, somebody has to
+chime in.
+
+1499610539.26273_0.ltw:2,a <fd82fcd61c80304d7984d8268ced7d23.squirrel at ips73 dot ips dot ch>
+________________________________________________________________________________
+

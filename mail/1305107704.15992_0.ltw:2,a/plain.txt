@@ -1,0 +1,90 @@
+Date:        Wed, 11 May 2011 11:54:36 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Devin Anderson <[hidden] at charityfinders dot com>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>, Peter L Jones <[hidden] at drealm dot info>
+Follow-Up:   Devin Anderson Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4384) for Windows 64 and 32 bits (1305163900.13146_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4384) for Windows 64 and 32 bits
+
+Le 10 mai 2011 à 23:16, Devin Anderson a écrit :
+
+> On Tue, May 10, 2011 at 1:35 AM, Stéphane Letz <[hidden]> wrote:
+> 
+>>> 3.) Trying JACK with different process and thread priorities (I'm not
+>>> sure if Windows users can adjust the priorities of their
+>>> processes/threads)
+>> 
+>> Well the new MMCSS option (activated with priority over 90 and on
+>> systems that support it [Vista, Seven probably] is supposed to help
+>> for that.
+> 
+> I think it does help some.
+> 
+>> And when not available all real-time threads (audio, midi) gets
+>> THREAD_PRIORITY_TIME_CRITICAL which is the best that can be
+>> done.
+> 
+> This *might* be part of the problem.  The MIDI threads should get a
+> higher priority than the JACK client threads, but they're all getting
+> the same high priority right now.  Also, I'm not sure what priority
+> the MIDI input threads get, as they're created by the WinMM library,
+> and not by JACK.
+> 
+> With the 'alsarawmidi' driver on Linux, this is solved by getting the
+> current JACK realtime priority and adding 1 to get the MIDI thread
+> priority.  On Windows, the solution isn't so straightforward because
+> there are process priorities *and* thread priorities, and a higher
+> priority can't be set by simply adding 1 to the current realtime
+> priority.
+> 
+> The -P switch just doesn't make much sense on Windows.
+> 
+> If I had the time and a Windows development environment, I would
+> create a proposal to alter the -P switch for Windows and add a new
+> priority switch for process priority.
+> 
+> *OR*, perhaps a level of indirection should be created for changing
+> thread priorities that has operating system specific code underneath.
+> Using the number system isn't very straightforward, especially because
+> it doesn't really work outside of Linux.  Something like:
+> 
+> enum JackThreadPriority {
+>    // JACK audio thread
+>    PRIORITY_AUDIO,
+>    // JACK callbacks
+>    PRIORITY_CALLBACK,
+>    // JACK MIDI thread that communicates directly with hardware
+>    PRIORITY_MIDI_TERMINAL,
+> 
+>    // More priorities here ...
+> };
+> 
+> int
+> JackThreadInterface::AcquireRealTime(JackThreadPriority priority);
+> 
+> int
+> JackThreadInterface::AcquireSelfRealTime(JackThreadPriority priority);
+> 
+> ... would allow JACK to be tweaked over time to do the right thing
+> with threads of different priorities on different platforms.
+> 
+> -- 
+> Devin Anderson
+> devin (at) charityfinders (dot) com
+> 
+
+That seems a good "theoritical" idea, but I'm still not sure it can be done in practice. The thing is that on each system JACK2 runs on, the underlying scheduling system is different, especially for real-time threads. POSIX system (Linux, Solaris) are probably the most flexible (with a precise setup of priority), but on OSX there is only a single class for RT threads and RT thread interleaving can be "somewhat" controled. On Windows the situation seems even worse, and I still don't know if there is a way to setup different classes of RT threads, and control thread interleaving the correct way. The situation is maybe only: Windows in not an OS suitable for "hard" RT stuff...
+
+BTW there was an interesting conference on a related subject at LAC 2011
+
+http://lac.linuxaudio.org/2011/?page=program&mode=list&details=1
+
+12:00 Low-Latency Audio on Linux by Means of Real-Time Scheduling (Tommaso Cucinotta)
+
+The video should be online in a few days hopefully.
+
+Stéphane 
+
+1305107704.15992_0.ltw:2,a <783531B2-7D4F-4DCF-9D5E-C3580BC00C76 at grame dot fr>
+________________________________________________________________________________
+

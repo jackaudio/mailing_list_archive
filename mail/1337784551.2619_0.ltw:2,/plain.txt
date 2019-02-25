@@ -1,0 +1,88 @@
+Date:        Wed, 23 May 2012 14:48:58 +0000
+From:        Jamie Heilman  <[hidden] at audible dot transient dot net>
+To:          Jeremy Henty <[hidden] at starurchin dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jeremy Henty Re: [Jack-Devel] su, limits, PAM and JACK (1337757372.2590_0.ltw:2,)
+Follow-Up:   Jeremy Henty Re: [Jack-Devel] su, limits, PAM and JACK (1338143779.32358_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] su, limits, PAM and JACK
+
+Jeremy Henty wrote:
+> Jamie Heilman wrote:
+> > Jeremy Henty wrote:
+> > > Jamie Heilman wrote:
+> > > 
+> > > > Chances are your PAM stack isn't configured to use pam_limits.so
+> > > > for su sessions, which means using su won't pay any attention to
+> > > > the setttings in  limits.conf until it is.  That  said, don't do
+> > > > that.  Using  su programatically to  switch users is a  bad idea
+> > > > becuase su's behavior is notoriously unportable anyway.
+> > > 
+> > > So, is there any good  way to programatically switch users?  I ask
+> > > because I have been  trying to do that with su and  I hit the same
+> > > problem as the OP.
+> > 
+> > ...  I'm a  big  fan of  the  supervision utilities  written by  djb
+> > (http://cr.yp.to/daemontools.html)    and    by   extension    runit
+> > (http://smarden.org/runit/)
+> 
+> I'm  a daemontools  fan  too,  but I  don't  think softlimit  supports
+> setting the  RT priority stuff  that jackd requires  so it is  no help
+> here.
+
+Correct, it doesn't, but then it doesn't have to as long as you have
+bash lying around given that it's ulimit builtin can handle the
+rlimits.
+
+> Even  if it did that  would duplicate configuration  in the PAM
+> and daemontools installations which irks me a little.
+
+Hrm, I don't see it as a duplication.  I see it as simplification.  If
+you don't need to broker and determine authorization, then don't
+involve PAM.  Neither setting rlimits or switching users requires
+additional authorization when the process is already running as
+superuser to start with; involving PAM and making it do the call to
+setrlimit at the time of the user switch only means you've added
+indirection to the code path and actually made things less obvious.  I
+suppose you might want to think of limits.conf as the single control
+point of what resource limits any process of given user or group has,
+but that's not what it is and wishing won't make it so, nor will any
+amount of system reconfiguration.
+
+> runit looks interesting (thanks for the link) but it's a complete Sysv
+> init  replacement, which  is a  lot of  work just  to get  one service
+> running properly.
+
+No no, it isn't exclusively a replacement, it *can* be, but IMO isn't
+that good at it (I think the service dependancy setup is too awkward
+to justify).  I'd use upstart or systemd before I replaced init with
+runit, which says a lot if you knew how much disdain I hold for both
+of those particular pieces of software.  Ubuntu and Debian both have
+a runit package which, if you install it, works just like daemontools
+in that it runs in concert with the whatever the system init process
+is.  I should mention that if you do use a distro that uses upstart or
+systemd, then they both support a native interface for setting rlimits:
+http://upstart.ubuntu.com/wiki/Stanzas#limit and
+http://www.freedesktop.org/software/systemd/man/systemd.exec.html
+(search in-page for setrlimit).
+
+> It would  be nice to  just wrap  a script in  a PAM service.   Do such
+> wrappers  exist?  Or are  they too  much of  a security  nightmare?  I
+> suspect I'll end up adding pam_limits to /etc/pam.d/su , unless that's
+> also a security no-no.
+
+Plenty of scripting languages provide bindings to the PAM library, I
+don't know of any tools written expressly for doing PAM authorization
+from shell scripts off the top of my head.  Again, the reason I said
+don't use su isn't because it's bad to configure su to use pam_limits,
+that's fine; I say don't use su becuase it's interface isn't
+consistent between implementations and doing so means your script
+will be fragile.
+
+
+-- 
+Jamie Heilman                     http://audible.transient.net/~jamie/
+
+1337784551.2619_0.ltw:2, <20120523144858.GA6984 at cucamonga dot audible dot transient dot net>
+________________________________________________________________________________
+

@@ -1,0 +1,148 @@
+#!/usr/bin/perl
+#
+# Jackd PulseAudio wrapper script
+#
+# Suspends pulse audio while jack is running and loads the jack sink module
+#
+#
+# Copyright (C) 2009 Fernando Lopez-Lezcano
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+use warnings;
+use strict;
+use IPC::Open3;
+
+# show something reasonable in ps
+$0="/usr/bin/jackd @ARGV";
+
+my($pid);
+my($sink) = 0;
+my($verbose) = 1;
+
+# check that all needed binaries are available
+my($pulse, $pacmd, $pactl, $pulseaudio, $jackbin);
+$pulseaudio=(-x "/usr/bin/pulseaudio")?"/usr/bin/pulseaudio":"";
+$pacmd=(-x "/usr/bin/pacmd")?"/usr/bin/pacmd":"";
+$pactl=(-x "/usr/bin/pactl")?"/usr/bin/pactl":"";
+$pulse=($pulseaudio ne "")&&($pacmd ne "")&&($pactl ne "");
+$jackbin="/usr/bin/jackd.bin";
+
+# if pulseaudio is not running or is not installed just exec the jack command
+if (!$pulse || !&paRunning()) {
+    print("jackwrapper: about to exec \"$jackbin @ARGV\"\n") if $verbose;
+    exec($jackbin." @ARGV");
+}
+
+# send received signals to the jack subprocess
+$SIG{INT} = \&dieJackDie;
+$SIG{TERM} = \&dieJackDie;
+
+&paSuspend(1);
+$pid=open3("<&STDIN", ">&STDOUT", ">&STDERR", $jackbin, @ARGV);
+if (&waitForJack(5.0)) {
+    $sink=&paLoadModule("module-jack-sink");
+}
+waitpid($pid, 0);
+if ($sink != 0) {
+    &paUnloadModule($sink);
+}
+&paSuspend(0);
+exit(0);
+
+#---- functions ----
+
+sub paRunning {
+    system($pulseaudio." --check < /dev/null &> /dev/null");
+    return ((($?) >> 8) == 0);
+}
+
+sub paCmd {
+    my($command) = @_;
+    my($status);
+    system("/bin/echo ".$command." | $pacmd &> /dev/null");
+    if ((($status=$?) >> 8) != 0) {
+	print("jackwrapper: could not run pacmd $command ($status)\n");
+    } else {
+	print("jackwrapper: pacmd $command\n") if $verbose;
+    }
+    return ($status);
+}
+
+sub paLoadModule {
+    my($module) = @_;
+    my($paPid, $index);
+    if (defined($paPid=open(PACTL, $pactl." load-module $module |"))) {
+	$index=<PACTL>;
+	chomp($index);
+	close(PACTL);
+	if (($? >> 8) != 0) {
+	    print("jackwrapper: could not load module $module ($?)\n");
+	    return(0);
+	}
+    } else {
+	print("jackwrapper: could not load module $module\n");
+	return(0);
+    }
+    print("jackwrapper: loaded $module, index $index\n") if $verbose;
+    return($index);
+}
+
+sub paUnloadModule {
+    my($index) = @_;
+    system($pactl." unload-module $index");
+    if (($? >> 8) != 0) {
+	print("jackwrapper: could not unload module $index ($?)\n");
+    } else {
+	print("jackwrapper: unloaded module $index\n") if $verbose;
+    }
+}
+
+sub paSuspend {
+    my($state) = @_;
+    if (&paRunning()) {
+	&paCmd("suspend $state");
+    } else {
+	print ("jackwrapper: paSuspend: pulseaudio is not running!\n");
+    }
+}
+
+sub dieJackDie {
+    my($signame)=@_;
+    if ($pid != 0) {
+	print("jackwrapper: sending SIG$signame to jackd, pid $pid\n") if $verbose;
+	if ($sink != 0) {
+	    &paUnloadModule($sink);
+	}
+	kill($signame, $pid);
+	waitpid($pid, 0);
+	&paSuspend(0);
+    }
+    exit(0);
+}
+
+sub waitForJack {
+    my($timeout)=@_;
+    my($start)=time();
+    while ((time() - $start) < $timeout) {
+	system("/usr/bin/jack_lsp &>/dev/null");
+	if ((($?) >> 8) != 0) {
+	    select(undef, undef, undef, 0.25);
+	} else {
+	    return(1);
+	}
+    }
+    return(0);
+}

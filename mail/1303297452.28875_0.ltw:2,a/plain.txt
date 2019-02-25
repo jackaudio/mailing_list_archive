@@ -1,0 +1,43 @@
+Date:        Wed, 20 Apr 2011 13:01:28 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Dan Muresan <[hidden] at gmail dot com>
+Cc:          [hidden] at jackaudio dot org
+In-Reply-To: Dan Muresan [Jack-Devel] non-callback API (1303292794.18890_0.ltw:2,Sa)
+Follow-Up:   Dan Muresan Re: [Jack-Devel] non-callback API (1303298004.30126_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] non-callback API
+
+Le 20 avr. 2011 à 11:46, Dan Muresan a écrit :
+
+> Hi, is the non-callback API documented (more extensively than in the
+> API pages) anywhere?
+> 
+> In particular, I'm wondering what the constraints are for calling
+> jack_cycle_wait() -- what happens if I don't call it "often enough"?
+> I'm writing a capture-only application.
+> 
+> -- Dan
+
+You are supposed to do something like that for each cycle in the RT thread:
+
+while (true) {
+
+jack_cycle_wait()
+
+Do so work
+
+jack_cycle_signal()
+
+Possibly some extra work
+
+}
+
+then jack_cycle_wait is a *blocking* that will be resumed by libjack at the right time for you.
+
+Basically a couple of jack_cycle_wait()/jack_cycle_signal() corresponds to one cycle.
+
+Stéphan e
+
+1303297452.28875_0.ltw:2,a <361692C7-1567-4399-BB27-489DE4A6DB92 at grame dot fr>
+________________________________________________________________________________
+

@@ -1,0 +1,59 @@
+Date:        Sun, 04 Nov 2012 11:32:43 +0200
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Ian Malone <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Ian Malone [Jack-Devel] jackdbus no method requestrelease and separate capture and playback devices (1351989629.21384_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jackdbus no method requestrelease and separate capture and playback devices
+
+On Sat, 2012-11-03 at 20:40 -0400, Ian Malone wrote:
+> Hi,
+> 
+> I'm trying to get a Jack DBUS setup working on Fedora 18, attached is
+> my current jack/conf.xml, I'm using jack_control to send the control
+> messages and QJackCtl to monitor the jack output.
+> 
+> At the moment I'm having two issues. One is a failure to get
+> pulseaudio to release the audio device:
+> Sat Nov  3 20:08:11 2012: Starting jack server...
+> Sat Nov  3 20:08:11 2012: JACK server starting in realtime mode with priority 60
+> Sat Nov  3 20:08:11 2012: control device hw:1
+> Sat Nov  3 20:08:11 2012: control device hw:1
+> Sat Nov  3 20:08:11 2012: [1m[31mERROR: Failed to acquire device
+> name : Audio1 error : Method "RequestRelease" with signature "i" on
+> interface "org.freedesktop.ReserveDevice1" doesn't exist
+> [0m
+> Sat Nov  3 20:08:11 2012: [1m[31mERROR: Audio device hw:1 cannot be
+> acquired...[0m
+> Sat Nov  3 20:08:11 2012: [1m[31mERROR: Cannot initialize driver[0m
+> Sat Nov  3 20:08:11 2012: [1m[31mERROR: JackServer::Open() failed with -1[0m
+> Sat Nov  3 20:08:11 2012: [1m[31mERROR: Failed to open server[0m
+> 
+> If pulse is running but doesn't have the device then jack starts okay
+> and the sink/source modules get loaded.
+
+Someone recently reported on IRC the same issue. The conclusion I got
+was that pulseaudio is not conforming to the device reservation API. I
+suggest you to contact someone from the pulseaudio project. Please CC me
+because I'm interested on this issue.   
+
+> The other problem is that I have separate capture and playback
+> devices, but when jackdbus starts successfully (when pulse isn't
+> holding the devices), both connections are to whatever interface is
+> set as 'device'. Setting 'device' to 'none' just gets me
+> DBus exception: org.jackaudio.Error.Generic: Failed to open server
+> 
+> It seems having "device" unset might allow that, but once it is set it
+> can't be cleared (short of manually removing it from the conf.xml).
+> Not being able to unset the device might be a limitation of
+> jack_control (don't know enough about the dbus python api to fix
+> that), but possibly having the capture and playback devices explicitly
+> set means they should override the device setting?
+
+I believe these issues are already fixed in latest git version of jack2.
+ALSA driver parameters are properly prioritized and jack_control got
+commands for resetting parameters to their default state.
+
+1352021596.2482_0.ltw:2,a <1352021563.1912.7.camel at nnnthink-fc17>
+________________________________________________________________________________
+

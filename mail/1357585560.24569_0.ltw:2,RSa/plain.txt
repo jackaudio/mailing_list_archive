@@ -1,0 +1,41 @@
+Date:        Mon, 07 Jan 2013 20:05:52 +0100
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: John Emmas Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357584835.23472_0.ltw:2,RSa)
+Follow-Up:   John Emmas Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357588380.29372_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357588653.29774_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)
+
+On 01/07/2013 07:53 PM, John Emmas wrote:
+
+> Okay, I found it.  Sadly it doesn't compile with MSVC.  The reason is
+> the use of the sizeof operator.  For example, the declaration for type
+> 'jack_double' evaluates to this for MSVC:-
+
+>         typedef __declspec(align(sizeof(double))) double jack_double;
+> 
+> and the problem is that sizeof() isn't evaluated by the preprocessor
+> (it gets evaluated later) so the alignment size is unknown at this
+> point.
+
+Let's have a look:
+
+    typedef JACK_ALIGNED_TYPE(double)   jack_double;
+    typedef JACK_ALIGNED_TYPE(int64_t)  jack_int64_t;
+    typedef JACK_ALIGNED_TYPE(uint64_t) jack_uint64_t;
+
+So three types. We know how large (u)int64_t is. We can also pretend
+that double is 4 bytes wide. I know it's ugly, but we could hardcode
+these values to get rid of the sizeof() operator.
+
+If nothing helps, we could leverage the build system for a compile-time
+check of sizeof(double) if somebody feels uneasy with simply harcoding
+"4".
+
+
+WDYT?
+
+1357585560.24569_0.ltw:2,RSa <50EB1C90.1010204 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

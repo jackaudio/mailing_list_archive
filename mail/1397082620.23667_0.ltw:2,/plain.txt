@@ -1,0 +1,77 @@
+Date:        Wed, 09 Apr 2014 18:30:11 -0400
+From:        Jared Swets  <[hidden] at gmail dot com>
+To:          [hidden] at chriscaudle dot org
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Chris Caudle Re: [Jack-Devel] Sending audio data over the network help (1396710551.1491_0.ltw:2,a)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] Sending audio data over the network help (1397159599.15907_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Sending audio data over the network help
+
+Thank you for your quick reply!
+
+Here is what I am trying to do:  I want to play video games on one PC,
+and record both my MIC and Headphones from PC 1 on PC 2. I want to do
+this using as little system resources as possible on PC 1.
+
+I set up the jack server on PC 1, and patched it back on itself, and
+heard myself (loopback successful), so attempted to do the same thing
+using netjack over the network.  I thought since the loopback worked
+on PC 1 I could write directly to the audio devices on PC 2.
+Apparently not though.
+
+I didn't want to use a full teleconferencing software (if one exists)
+to do this since I suspected the overhead would be much higher, and
+thought it would be overkill.  However it appears I may need to look
+at that for a solution, or figure out if it is possible to code this
+myself in python.
+
+Thanks
+
+
+On Sat, Apr 5, 2014 at 11:08 AM, Chris Caudle <[hidden]> wrote:
+> On Fri, April 4, 2014 6:43 pm, Jared Swets wrote:
+>> Send audio data (mic and headphone data) from 1 windows PC to another
+>> windows PC on the same network (off the same switch).  I am unsure if
+>
+> Mic and headphone on both PC's, or mic and headphone on 1 PC, and audio
+> application on a second PC?
+>
+> The architecture of netjack is that the master controls the audio
+> hardware, the slaves are used for applications to send and receive data
+> from the machine with the audio hardware.
+> Only one machine, the master, will have active audio hardware.
+> Assuming you do not have native jack aware applications on Windows (there
+> are only a small number), the applications must use ASIO.
+>
+>> In the connections window, I connect the System capture_1 (which I
+>> assume is my microphone or headphones, either way I just want to test)
+>> to the Client to_slave_1.  However, nothing seems to be send to the
+>> client desktop speakers/headphones... how do I proceed?
+>
+> The audio hardware on the two machines is running with unsynchronized
+> clocks.  As mentioned the architecture is for applications to connect on
+> the slave machine (what you have called the client machine), so you need
+> an application running on the slave/client machine which will accept data
+> from jack, and perform asynchronous sample rate conversion to bridge from
+> the master clock domain to the slave clock domain.
+>
+> There is a solution to that problem available on Linux, but I do not know
+> if there is an equivalent which works on Windows.  On linux, depending on
+> what version of jack you have it would be alsa_out and alsa_in, the zita
+> equivalents, and on newer versions of jack 1 branch (for example version
+> 0.124) it it built in (although that implementation of jack API does not
+> run on Windows).
+>
+> JACK has much routing flexibility and is intended for complex recording
+> and playback setups.
+> If you only want to connect microphone and headphone on two machines to
+> each other, it sounds like you want audio conferencing software, not jack.
+>
+> --
+> Chris Caudle
+>
+>
+
+1397082620.23667_0.ltw:2, <CAGLXPXaC4rMWudCKXLZyai9-5Y-oDoG3_cVT9RRN2D7qu9CkxA at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] routing alsa through jack</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] routing alsa through jack</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1387340690.15205_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1387468889.9092_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1387404453.17687_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 18 Dec 2013 23:27:21 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Dominique Michel </span> &lt;[hidden] at vtxnet dot ch&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Lucio Crusca
+<a href='../1387340690.15205_0.ltw:2,/index.html'>Re: [Jack-Devel] routing alsa through jack </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Lucio Crusca
+<a href='../1387468889.9092_0.ltw:2,/index.html'>Re: [Jack-Devel] routing alsa through jack </a></td></tr>
+</table>
+<pre>
+Le Wed, 18 Dec 2013 05:24:37 +0100,
+Lucio Crusca &lt;[hidden]&gt; a &#xE9;crit :
+
+&gt; In data marted&#xEC; 17 dicembre 2013 20:53:26, hai scritto:
+&gt; &gt; Entirely appropriate. That approach works just fine here with older
+&gt; &gt; versions of skype that support plain ALSA (I think newer versions of
+&gt; &gt; skype are pulse only, but I don't know. 
+&gt; 
+&gt; AFAICT Skype 4 supports both Pulse and Alsa.
+&gt; 
+&gt; &gt; Did you find
+&gt; &gt; http://alsa.opensrc.org/Jack_and_Loopback_device_as_Alsa-to-Jack_bridge
+&gt; &gt; ? It's somewhat verbose, but a very nice article with complete
+&gt; &gt; step-by-step instructions and background information.
+&gt; 
+&gt; Yes, I did find it, but it's quite focused on a different target than
+&gt; simply routing audio through Jack with a single sound card, and I
+&gt; couldn't manage to distinguish the parts to be ignored in my case.
+I think no part must be ignored. This article is about routing JACK and
+ALSA together.
+
+&gt; When I finished doing what's written there, I was stuck with no audio
+&gt; at all, be it Alsa or Jack. I must have done something wrong, but I
+&gt; can't tell what because I wasn't understanding most of the things I
+&gt; was doing.
+&gt; 
+&gt; &gt; Long story short: You cannot write directly to the loop-hardware
+&gt; &gt; once alsa_in/out are connected. 
+&gt; 
+&gt; I'd say "oviously" here, except I didn't realize it myself... I think
+&gt; I took the opposite for granted because snd_aloop creates two
+&gt; soundcards, so I assumed I could lock one with Jack and the other
+&gt; with Alsa.
+&gt; 
+&gt; &gt; asoundrc: http://robin.linuxaudio.org/tmp/asoundrc-loopback
+&gt; 
+&gt; Ok, I don't want to make the loop be the default device, for the time
+&gt; being: this way if something goes wrong i can just stop jackd and
+&gt; everything keeps working through Alsa. Should I avoid or change
+&gt; the last part ("pcm.!default") of that asoundrc then?
+
+The ALSA programs are using the first available device as their
+default device. The advantage using it for the loop device is the ALSA
+programs will use the loop as device by default, and you will
+automatically get the sound into JACK. The disadvantage is your will
+have jack running all the time.
+
+If, without snd_loopback, you can have the sound in ALSA, you must be
+able to have it in JACK. The only difference with snd_loopback and the
+zita bridges is you can route ALSA and JACK together and use both at
+the same time. The sound card order is up to you, but if your main
+usage is not audio pro but desktop use, it is much simpler to use the
+loopback as first card, so the ALSA programs will use it by default.
+
+Also, the zita bridges will give you a better sound quality than
+alsa_in(out).
+
+I use the following script (in ~/bin/loop2jack):
+
+# Usage: loop2jack sample_rate frame/period
+# where sample_rate is JACK sampling rate
+# and frame/period is jack Frame/Period size
+# To launch it from qjackctl:
+# loop2jack %r %p
+
+PSize=$(( $2/2 ))
+
+# create the loop ALSA &lt;-&gt; JACK
+/usr/bin/zita-j2a -d hw:0,1 -r $1 -p $PSize -L 2&gt;&amp;1 1&gt; /dev/null &amp;
+/usr/bin/zita-a2j -d hw:0,1 -r $1 -p $PSize -L 2&gt;&amp;1 1&gt; /dev/null &amp;
+
+# wait 1 second
+sleep 1
+
+# cloop ports -&gt; jack output ports 
+jack_connect zita-a2j:capture_1 system:playback_1
+jack_connect zita-a2j:capture_2 system:playback_2
+
+
+# jack input ports -&gt; ploop ports
+jack_connect system:capture_1 zita-j2a:playback_1
+jack_connect system:capture_2 zita-j2a:playback_2
+
+
+To launch it from qujackctl, the command to use is into the first
+comment. Just put it into Options -&gt; Execute script after Startup.
+
+My ~/.asoundrc is as follow:
+# playback PCM device: using loopback subdevice 0,0
+pcm.amix {
+  type dmix
+  ipc_key 219345
+  slave.pcm "hw:Loopback,0,0"
+}
+
+# soft volume
+pcm.asoftvol {
+  type softvol
+  slave.pcm "amix"
+  
+  control { name PCM }
+  
+  min_dB -51.0
+  max_dB   0.0
+}
+
+# capture PCM device: using loopback subdevice 0,1
+pcm.asnoop {
+  type dsnoop
+  ipc_key 219346
+  slave.pcm "hw:Loopback,0,1"
+}
+
+# duplex device combining our PCM devices defined above
+pcm.aduplex {
+  type asym
+  playback.pcm "asoftvol"
+  capture.pcm "asnoop"
+}
+
+# ------------------------------------------------------
+# for jack alsa_in and alsa_out: looped-back signal at other ends
+pcm.ploop {
+  type plug
+  slave.pcm "hw:Loopback,1,1"
+}
+
+pcm.cloop {
+  type dsnoop
+  ipc_key 219348
+  slave.pcm "hw:Loopback,1,0"
+}
+
+# ------------------------------------------------------
+# default device
+
+pcm.!default {
+  type plug
+  slave.pcm "aduplex"
+}
+
+
+Cheers,
+Dominique
+
+&gt; 
+&gt; &gt; 
+&gt; &gt;  zita-a2j -L -d hw:Loopback,1,0 -j cloop -n 2 -p 256
+&gt; &gt;  zita-j2a -L -d hw:Loopback,1,1 -j ploop -n 2 -p 256
+&gt; &gt;  sleep 1
+&gt; &gt;  jack_connect cloop:capture_1 system:playback_1 &amp;&gt;/dev/null
+&gt; &gt;  jack_connect cloop:capture_2 system:playback_2 &amp;&gt;/dev/null
+&gt; &gt;  jack_connect system:capture_1 ploop:playback_1 &amp;&gt;/dev/null
+&gt; &gt;  jack_connect system:capture_2 ploop:playback_2 &amp;&gt;/dev/null
+&gt; 
+&gt; I assume I could also make connections through the patchbay in
+&gt; qjackctl instead of using jack_connect, right? It's a more
+&gt; trial-and-error friendly method for the beginners...
+&gt; 
+&gt; 
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1387340690.15205_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1387468889.9092_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1387404453.17687_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1387404453.17687_0.ltw:2,&nbsp;&lt;20131218232721.202a6903 at tux dot fritz dot box&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

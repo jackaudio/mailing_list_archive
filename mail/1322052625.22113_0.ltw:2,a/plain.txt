@@ -1,0 +1,51 @@
+Date:        Wed, 23 Nov 2011 12:48:56 +0000
+From:        Roger James  <[hidden] at beardandsandals dot co dot uk>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] How do I replicate the -P parameter when using dbus (1321994251.13375_0.ltw:2,a)
+Follow-Up:   Roger James Re: [Jack-Devel] How do I replicate the -P parameter when using dbus (1322137262.4788_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] How do I replicate the -P parameter when using dbus
+
+On 22/11/11 20:36, Paul Davis wrote:
+> On Tue, Nov 22, 2011 at 3:30 PM, Roger James
+> <[hidden]>  wrote:
+>
+>> I guess if I want to use qjackctl I will have to go back to figuring why the
+>> server hangs when capture ports are specified on my system that has a
+>> standard onboard nVidia HDA chipset. But that is for another day.
+> this is a common problem. it typically (not always) means that have
+> not set the capture source (in the h/w mixer) correctly. the device
+> refuses to start in duplex mode when this is the case. ALSA drivers
+> get this wrong, probably through lack of information but it could also
+> be a straight bug. use alsamixer or something equivalent to select a
+> valid capture source.
+Some final words on replicating the -P behaviour. The absolute minimum 
+config that I could get to work was as follows:
+
+<driver name="alsa">
+<option name="capture">0</option>
+<option name="duplex">false</option>
+</driver>
+
+All the other driver parameters can be left to default their "unset" 
+values. Note that setting the capture parameter to its unset default 
+value of "none" (i.e. str:set:none:none) does not work, it must show in 
+dp as str:set:none:0.
+
+Paul, I suspected that the capture source settings must be the problem 
+and I played with alsamixer to try to fix it. I could not find a 
+combination of settings that fixed it.
+
+The card is an nVidia onboard HDA chipset
+
+00:07.0 Audio device: nVidia Corporation MCP72XE/MCP72P/MCP78U/MCP78S 
+High Definition Audio (rev a1)
+
+I have tried front and rear mic capture sources and the switches on the 
+two capture volume controls off and on. No joy.
+
+Roger
+
+1322052625.22113_0.ltw:2,a <4ECCEBB8.8090202 at beardandsandals dot co dot uk>
+________________________________________________________________________________
+

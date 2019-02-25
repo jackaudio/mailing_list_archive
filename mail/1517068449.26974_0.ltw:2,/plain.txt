@@ -1,0 +1,41 @@
+Date:        Sat, 27 Jan 2018 09:53:27 -0600
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Robert Bielik [Jack-Devel] Usage feasibility Q (1517043859.31605_0.ltw:2,)
+Follow-Up:   Filipe Coelho Re: [Jack-Devel] Usage feasibility Q (1517078571.5425_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Usage feasibility Q
+
+This is my understanding of your situation, but I have not used RPi for
+audio, so if someone who has says differently weight that opinion higher
+than mine.
+
+On Sat, January 27, 2018 3:03 am, Robert Bielik wrote:
+> 1. JACK in (hw:0,0) -> "JACK mixer"
+>     (This one should be as low a latency as possible, preferably 48 frames
+> @48 Khz, i.e. 1ms buffer size)
+
+Should be possible, but is getting down to the latency range where you
+have to be careful of system configuration.  You may need an RT kernel. 
+Some devices require power of 2 sizes, so depending on the audio interface
+you may have to choose 32 or 64 rather than 48.
+
+> 2. Any-app-using-ALSA  -> ALSA JACK plugin -> JACK "mixer"
+
+I do not know if the ALSA JACK plugin allows setting higher latency for
+the ALSA interface than the jackd settings.  I think Paul has mentioned
+that as a limitation before.
+
+> 3. JACK "mixer" -> JACK DSP plugin -> JACK out (hw:0,0)
+
+Rather than a plugin, you will likely find it easier to develop a stand
+along jack application.  The jack design is not really made for having
+plugins in the server.
+
+
+-- 
+Chris Caudle
+
+1517068449.26974_0.ltw:2, <c652079505858512f6a94cb8dc299e65.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

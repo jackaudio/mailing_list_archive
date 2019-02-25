@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1312256923.16393_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1312307577.25160_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1312290438.5354_0.ltw:2,Sa'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 02 Aug 2011 15:06:49 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Adrian Knoth </span> &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Dan Swain
+<a href='../1312256923.16393_0.ltw:2,a/index.html'>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>David Nielson
+<a href='../1312307577.25160_0.ltw:2,a/index.html'>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea </a></td></tr>
+</table>
+<pre>
+On 08/02/11 05:48, Dan Swain wrote:
+
+&gt;&gt;  It looks to me that NetJack only relies on UDP. That will keep memory
+&gt;&gt; requirements in your IP stack down. But for 128 channels you need to
+&gt;&gt; transmit at least 4*128*48000 = 25MB/sec (Jack uses floats - just consider
+
+Given that you're most likely writing your own RX/TX code, you can
+forget about floats and stick to your ADC/DACs data format, which
+probably means 24bit integer, maybe 16.
+
+You then do float&lt;-&gt;int conversion in your RX/TX software module. OTOH,
+any modern FPGA shouldn't be too stressed by floats, so you could
+offload this work to your hardware.
+
+&gt;&gt; The hard part is going to be the synchronisation. However, you're in the
+&gt;&gt; unique position to be able to vary your clock...
+&gt;&gt;
+&gt;&gt; Therefore: why not run your system as a *slave*
+
+I second this. Especially since the ADC should always be the driving
+clock. I assume the DAC shares the clock signal on the PCB.
+
+Of course, adding multiple of those boards to the same network without
+synchronization on the audio side could be cumbersome and sooner or
+later would lead to AVC, but let's keep things simple and assume a
+single unit or external (digital) syncing for now. (unless you're aiming
+for the one-fits-all solution)
+
+&gt; I did also wonder about Leeloo's approach in terms of having the hardware
+&gt; device being the master, rather than the computer.
+
+Go for it, it saves you a lot of trouble.
+
+&gt; In one way I can understand it in that the hardware clock may be more
+&gt; reliable, but with a Linux machine that has a programmable kernel
+&gt; timer, so the flexibility there would definitely supersede that.
+
+See, time is just an idea, it only exists in the real world, the whole
+digital side has no notion of time whatsoever. It only counts state
+changes. And your only relation to the real world is at the ADC/DAC
+ports.
+
+That said, you clock inside the audio box, send it to the PC, let it
+process it and feed the result back to the audio box. No woe about
+resampling.
+
+&gt; So, in your slave scenario, would you have the device instantly begin to
+&gt; send UDP data once it starts?
+
+This should do the trick, yes. And if you add timestamps (in a sense of
+presentation time, IOW, when the audio signal hit (left) the ADC or will
+hit the DAC), you can reuse this timestamp in your RX/TX backend, add
+your jackd buffer size and send it back to the audio box for the
+outgoing stream. (mind the hw-rx buffers in your device)
+
+
+Cheers
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1312256923.16393_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1312307577.25160_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1312290438.5354_0.ltw:2,Sa'>Index</a></td></tr>
+</table>
+<p><small>1312290438.5354_0.ltw:2,Sa&nbsp;&lt;4E37F669.8040304 at drcomp dot erfurt dot thur dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

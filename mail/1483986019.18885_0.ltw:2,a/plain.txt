@@ -1,0 +1,52 @@
+Date:        Mon, 09 Jan 2017 19:20:05 +0100
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          Yuri <[hidden] at rawbw dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Yuri [Jack-Devel] Thread realtime priority (1483932552.32579_0.ltw:2,a)
+Follow-Up:   Yuri Re: [Jack-Devel] Thread realtime priority (1483993317.26114_0.ltw:2,a)
+Follow-Up:   Robin Gareus Re: [Jack-Devel] Thread realtime priority (1483993411.26320_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Thread realtime priority
+
+On Sun, Jan 08, 2017 at 07:25:47PM -0800, Yuri wrote:
+
+> jackd on FreeBSD calls pthread_setschedparam(thread, SCHED_FIFO, &rtparam)
+> with rtparam.sched_priority = 10.
+> I am wondering where does 10 come from? The range for SCHED_FIFO is 0 .. 31,
+
+On Linux, it's 1 .. 99.
+
+> as returned by sched_get_priority_min() and sched_get_priority_max(). The
+> value 10 seems wrong, since the fastest priority is 0, the slowest is 31.
+
+On Linux, higher is definitely better:
+
+   "Processes with numerically higher priority values are scheduled
+    before processes  with  numerically  lower  priority  values."
+
+> In controlapi.c sched_get_priority_min()/sched_get_priority_max() are called
+> for OpenBSD. For this purpose FreeBSD should be the same. So it should be
+> #ifndef __OpenBSD__ && defined(__FreeBSD__).
+
+Please send a patch or ideally a pull request on github. It's easier to
+discuss.
+
+> Another problem is that FreeBSD doesn't allow to set thread priorities
+> for non-root users, but jackd is supposed to run by the regular user.
+
+You can always run without realtime priorities (-r or --no-realtime).
+
+
+I'm surprised FreeBSD doesn't use PAM to allow users to call SCHED_FIFO.
+You're sure about this?
+
+
+
+HTH
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1483986019.18885_0.ltw:2,a <20170109182005.GU22406 at ltw dot loris dot tv>
+________________________________________________________________________________
+

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Profiling xruns</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Profiling xruns</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1332036585.20231_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1332057949.8336_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1332036706.27099_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 17 Mar 2012 22:11:34 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>D&#xE9;nes Alm&#xE1;si &lt;[hidden] at rudanium dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>D&#xE9;nes Alm&#xE1;si
+<a href='../1332031366.26680_0.ltw:2,a/index.html'>[Jack-Devel] Profiling xruns </a></td></tr>
+</table>
+<pre>
+this involves kernel "debugging". there are facilities in the kernel
+to trace delays in RT-scheduled tasks. googling with reveal more. you
+will end up with very detailed information. the process is not
+particularly smooth or easy - its targetted at kernel developers and
+highly technical user space developers - but it is quite powerful.
+
+On 3/17/12, D&#xE9;nes Alm&#xE1;si &lt;[hidden]&gt; wrote:
+&gt; Hi!
+&gt;
+&gt; I am developing a jack client that is handling different input devices
+&gt; (like joysticks, touch screens, etc.) and capable of using them as
+&gt; musical input devices.
+&gt;
+&gt; The architecture is relatively simple: A directed acyclic graph can be
+&gt; made up of different boxes, each of them performing different tasks,
+&gt; like
+&gt; reading input, generating oscilating values, passing data to a jack
+&gt; midi
+&gt; or audio port, etc. When the graph is modified, a non-rt thread
+&gt; generates
+&gt; a topologic ordering of the nodes into a linked list and a pointer to
+&gt; the head
+&gt; is passed in a ringbuffer to the process function which at its
+&gt; beginning examines
+&gt; the content of the buffer and can store the new list. In each process
+&gt; call, the list is iterated and the process function is called for each
+&gt; box.
+&gt; The edges have buffers which are read and written by the boxes and the
+&gt; topologic
+&gt; ordering ensures that only those edges are read in a cycle whose data
+&gt; are
+&gt; already computed.
+&gt;
+&gt; The problem is: Even without having ANY nodes, thus the process
+&gt; function doing
+&gt; practically nothing, sometimes the application does xruns. I am sure
+&gt; that the
+&gt; source of these xruns is the application as they show up in the
+&gt; messages
+&gt; window of qjackctl with the app's name. Also, I am running in soft
+&gt; mode, which
+&gt; I assume, means that xruns indicating that the backend is not fast
+&gt; enough, are
+&gt; ignored.
+&gt;
+&gt; How could I locate the cause of these xruns? Is there a good practice
+&gt; for profiling
+&gt; these problems? I think it is hard because using tools like gprof will
+&gt; make the
+&gt; app slow and cause xruns which would never occur without the profiling
+&gt; itself.
+&gt;
+&gt; I am using mlockall and a big memory pool, a thread pool (though
+&gt; currently no threads
+&gt; are created when process is called), process shielding for the sound
+&gt; card soft irq,
+&gt; jackd and the app.
+&gt;
+&gt; Jack settings: Rt priority 83, Frames/Period: 128, Sample rate: 48000,
+&gt; Periods/Buffer: 2.
+&gt; The latency is 5.33 msec and apps like ardour xrun only very rarely,
+&gt; under heavy usage.
+&gt; The machine is a samsung notebook with a core i3 cpu, 3Gb ram and
+&gt; unfortunately an onboard
+&gt; soundcard.
+&gt;
+&gt; Is it better for xrun debugging to use the dummy interface in order to
+&gt; be totally
+&gt; independent of the sound card? Also, could it be the problem that I am
+&gt; using
+&gt; clutter for gui? I am quite a beginner in developing audio
+&gt; applications...
+&gt;
+&gt; Thank you in advance,
+&gt; Dennis
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1332036585.20231_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1332057949.8336_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1332036706.27099_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1332036706.27099_0.ltw:2,a&nbsp;&lt;CAFa_cKn=mr-Dv_3WYg7K45qAM6ewCrkyH3Tn8j9POV=EmoWZmw at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

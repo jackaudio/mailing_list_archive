@@ -1,0 +1,41 @@
+Date:        Thu, 04 Aug 2011 07:57:34 -0500
+From:        Gabriel Beddingfield  <[hidden] at gmail dot com>
+To:          Sampo Savolainen <[hidden] at iki dot fi>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Sampo Savolainen Re: [Jack-Devel] Alignment (again) (1312450426.14704_0.ltw:2,a)
+Follow-Up:   Gabriel Beddingfield Re: [Jack-Devel] Alignment (again) (1312466019.8260_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Alignment (again)
+
+On 08/04/2011 04:33 AM, Sampo Savolainen wrote:
+> I would be very surprised if malloc() returned pointers that are not
+> 4-byte aligned.
+
+Looks like either my memory failed more... or they've changed eglibc.  I 
+just ran a test on Ubuntu 11.04 (which uses eglibc) and it always 
+returns 8-byte aligned pointers.
+
+However... I'm pretty sure I've seen 1-byte alignment in the past.  :-/
+
+ > Are you running vectorized code? x86 SIMD (SSE) vector
+> instructions require 16-byte aligned data pointers. This is a more
+> likely source for the segfaults.
+
+True... but in this case the problem was observed while running tests on 
+the jack_ringbuffer with floats and -O3.  I found a related bug report 
+for GCC:
+
+     http://gcc.gnu.org/bugzilla/show_bug.cgi?id=49413
+
+But now that I think of it... the problem with jack_ringbuffer is 
+actually pretty fundamental.
+
+Suppose you allocate a ringbuffer of size N (where N is a power of 2). 
+The storage space is (N-1).  So even if you start with an aligned 
+pointer... when you wrap around it will no longer be aligned. :-/
+
+-gabriel
+
+1312462673.1036_0.ltw:2,a <4E3A973E.4040302 at gmail dot com>
+________________________________________________________________________________
+

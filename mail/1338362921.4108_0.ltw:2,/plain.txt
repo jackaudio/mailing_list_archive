@@ -1,0 +1,41 @@
+Date:        Wed, 30 May 2012 09:28:31 +0200
+From:        aCOSwt  <[hidden] at orange dot fr>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: John Rigg Re: [Jack-Devel] BUG REPORT : Overflow of XRUNs after a?certain?time (1338298131.21496_0.ltw:2,)
+Follow-Up:   Paul Davis Re: [Jack-Devel] BUG REPORT : Overflow of XRUNs after a certain time. (1338369281.7744_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] BUG REPORT : Overflow of XRUNs after a certain time.
+
+> Looks like the problem is associated with raw MIDI.
+> 
+> I have jackd running on my test system without the -Xraw option. It has
+> now run well past the point where the lockup occurred with -Xraw, without
+> any problem.
+
+I confirm this. Which seems indeed logical as the problem occurs with no 
+client recorded apart from the MIDI ports.
+
+Meanwhile, I am tracing the problem and would be grateful if someone familiar 
+with jack's code could confirm :
+
+a/ The XRUN messages as reported in the OP are printed by :
+- [engine.c] jack_run_one_cycle
+- because engine -> spare_usecs <= delayed_usecs
+
+b/ The only occurrence of a call to jack_run_one_cycle is within :
+- [engine.c] jack_run_cycle
+
+c/ The only occurrence of a call to jack_run_cycle is the normal return of :
+- [alsa_driver.c] alsa_driver_run_cycle
+
+d/ The only place in which the delayed_usecs variable used in a/ is set is :
+- [alsa_driver.c] alsa_driver_wait when called by the alsa_driver_run_cycle 
+procedure.
+
+Regards,
+
+aCOSwt
+
+1338362921.4108_0.ltw:2, <201205300928.31410.acoswt at orange dot fr>
+________________________________________________________________________________
+

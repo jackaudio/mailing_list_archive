@@ -1,0 +1,66 @@
+Date:        Sat, 05 Nov 2011 09:46:54 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          hermann <[hidden] at web dot de>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: hermann Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] (1320470430.23460_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash]
+
+Le 5 nov. 2011 à 06:19, hermann a écrit :
+
+> Am Freitag, den 04.11.2011, 18:35 -0400 schrieb Paul Davis:
+>> in reality, there is no support on Linux for what is described in the
+>> JACK header files. it just so happens that building with -fPIC happens
+>> to work, but more as a side-effect than anything intentional. __weak__
+>> is designed as way to refer to symbols used by one library but
+>> obtained from another, not symbols used by an executable and obtained
+>> from a library. __weak_import__ on gcc-osx does what we actually want.
+>> 
+>> this is very confusing situation that will take some time to sort out.
+>> -fPIC is a potential solution, and apparently has some potential
+>> benefits because it allows the run time linker more freedom to
+>> optimize memory layout. but i don't think that it should be *the*
+>> solution. 
+> 
+> A workaround for the situation, witch suite our needs much better was
+> mention in the first post of this thread.
+> 
+> andreas wrote :
+>>        To solve the problem for guitarix, I had to make some ugly
+>>        constructions:
+>> 
+>>         - the functions must never be used directly (or you will get
+>>           a PLT entry so that dlsym() will only reflect the state
+>>        while
+>>           building the executable)
+>> 
+>>         - define typedefs for the function pointers that must be kept
+>>           in sync with the definitions of the functions in the jack
+>>        header
+>> 
+>>         - define global variables that are initialized with the
+>>        function
+>>           addresses via dlsym().
+>> 
+>>        Example:
+>> 
+>>        typedef char *(*jack_client_get_uuid_type)(jack_client_t *);
+>> 
+>>        jack_client_get_uuid_type jack_client_get_uuid_fp =
+>>            reinterpret_cast<jack_client_get_uuid_type>(
+>>                dlsym(RTLD_DEFAULT, "jack_client_get_uuid"));
+>> 
+> 
+> but I really don't understand why we didn't just add the functionality
+> to the lib. (like Stéphane has done it for jack2)
+> 
+> greets
+> hermann
+
+ I did that in JACK2 (JackWeakAPI.c ) as an alternative for the GCC based weak symbol methods, especially to be used in some cases on Windows.
+
+Stéphane 
+
+1320482839.13108_0.ltw:2,a <71F935EB-6864-4451-A006-BCB73C4FF7AA at grame dot fr>
+________________________________________________________________________________
+

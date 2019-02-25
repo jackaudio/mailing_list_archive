@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] cross-compilation from linux to windows using the mingw-w64 toolchain</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] cross-compilation from linux to windows using the mingw-w64 toolchain</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1326985523.913_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1327015423.13909_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1326999446.23382_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 19 Jan 2012 18:57:09 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> mtk001 </span> &lt;[hidden] at btinternet dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+</table>
+<pre>
+Hi.
+
+I am attempting to build jack-1.9.8 for windows using the mingw-w64 toolchain on a linux (Ubuntu) desktop.
+Does anyone have information as to how to configure waf for this to work?
+So far, I have tried the following script.
+
+#!/bin/bash
+
+export DEST_PLATFORM=win32;
+export CC=i686-w64-mingw32-gcc; 
+export CFLAGS=-I/home/martin/Build/include; 
+export CPP=i686-w64-mingw32-gcc; 
+export CXX=i686-w64-mingw32-g++; 
+export AR=i686-w64-mingw32-ar; 
+export NM=i686-w64-mingw32-nm; 
+export RANLIB=i686-w64-mingw32-ranlib; 
+export STRIP=i686-w64-mingw32-strip; 
+waf configure
+
+
+However, this fails because waf tries to compile linux-specific code.
+I get the following error:
+
+../linux/JackLinuxTime.c:30:22: fatal error: sys/mman.h: No such file or directory
+
+
+Also, I get the following errors from shm.c:
+
+../common/shm.c:109:1: warning: (near initialization for &#x2018;registry_info.size&#x2019; [enabled by default]
+../common/shm.c: In function &#x2018;jack_access_registry&#x2019;:
+../common/shm.c:718:2: warning: implicit declaration of function &#x2018;shm_open&#x2019; [-Wimplicit-function-declaration]
+../common/shm.c:718:39: error: &#x2018;O_RDWR&#x2019; undeclared (first use in this function)
+../common/shm.c:718:39: note: each undeclared identifier is reported only once for each function it appears in
+../common/shm.c:724:3: warning: implicit declaration of function &#x2018;close&#x2019; [-Wimplicit-function-declaration]
+../common/shm.c:728:2: warning: implicit declaration of function &#x2018;mmap&#x2019; [-Wimplicit-function-declaration]
+../common/shm.c:729:10: error: &#x2018;PROT_READ&#x2019; undeclared (first use in this function)
+../common/shm.c:729:20: error: &#x2018;PROT_WRITE&#x2019; undeclared (first use in this function)
+../common/shm.c:730:10: error: &#x2018;MAP_SHARED&#x2019; undeclared (first use in this function)
+../common/shm.c:730:37: error: &#x2018;MAP_FAILED&#x2019; undeclared (first use in this function)
+../common/shm.c: In function &#x2018;jack_create_registry&#x2019;:
+../common/shm.c:761:39: error: &#x2018;O_RDWR&#x2019; undeclared (first use in this function)
+../common/shm.c:761:46: error: &#x2018;O_CREAT&#x2019; undeclared (first use in this function)
+../common/shm.c:769:5: warning: implicit declaration of function &#x2018;fchmod&#x2019; [-Wimplicit-function-declaration]
+../common/shm.c:769:24: error: &#x2018;S_IRUSR&#x2019; undeclared (first use in this function)
+../common/shm.c:769:34: error: &#x2018;S_IWUSR&#x2019; undeclared (first use in this function)
+../common/shm.c:769:44: error: &#x2018;S_IRGRP&#x2019; undeclared (first use in this function)
+../common/shm.c:769:54: error: &#x2018;S_IWGRP&#x2019; undeclared (first use in this function)
+../common/shm.c:769:64: error: &#x2018;S_IROTH&#x2019; undeclared (first use in this function)
+../common/shm.c:769:74: error: &#x2018;S_IWOTH&#x2019; undeclared (first use in this function)
+../common/shm.c:776:2: warning: implicit declaration of function &#x2018;ftruncate&#x2019; [-Wimplicit-function-declaration]
+../common/shm.c:785:10: error: &#x2018;PROT_READ&#x2019; undeclared (first use in this function)
+../common/shm.c:785:20: error: &#x2018;PROT_WRITE&#x2019; undeclared (first use in this function)
+../common/shm.c:786:10: error: &#x2018;MAP_SHARED&#x2019; undeclared (first use in this function)
+../common/shm.c:786:37: error: &#x2018;MAP_FAILED&#x2019; undeclared (first use in this functio0n)
+../common/shm.c: In function &#x2018;jack_remove_shm&#x2019;:
+../common/shm.c:809:2: warning: implicit declaration of function &#x2018;shm_unlink&#x2019; [-Wimplicit-function-declaration]
+../common/shm.c: In function &#x2018;jack_release_shm&#x2019;:
+../common/shm.c:816:29: error: &#x2018;MAP_FAILED&#x2019; undeclared (first use in this function)
+../common/shm.c:817:3: warning: implicit declaration of function &#x2018;munmap&#x2019; [-Wimplicit-function-declaration]
+../common/shm.c: In function &#x2018;jack_release_lib_shm&#x2019;:
+../common/shm.c:825:29: error: &#x2018;MAP_FAILED&#x2019; undeclared (first use in this function)
+../common/shm.c: In function &#x2018;jack_shmalloc&#x2019;:
+../common/shm.c:864:32: error: &#x2018;O_RDWR&#x2019; undeclared (first use in this function)
+../common/shm.c:864:39: error: &#x2018;O_CREAT&#x2019; undeclared (first use in this function)
+../common/shm.c:883:24: error: &#x2018;MAP_FAILED&#x2019; undeclared (first use in this function)
+../common/shm.c: In function &#x2018;jack_attach_shm&#x2019;:
+../common/shm.c:898:5: error: &#x2018;O_RDWR&#x2019; undeclared (first use in this function)
+../common/shm.c:904:54: error: &#x2018;PROT_READ&#x2019; undeclared (first use in this function)
+../common/shm.c:904:64: error: &#x2018;PROT_WRITE&#x2019; undeclared (first use in this function)
+../common/shm.c:905:10: error: &#x2018;MAP_SHARED&#x2019; undeclared (first use in this function)
+../common/shm.c:905:37: error: &#x2018;MAP_FAILED&#x2019; undeclared (first use in this function)
+../common/shm.c: In function &#x2018;jack_attach_shm_read&#x2019;:
+../common/shm.c:924:5: error: &#x2018;O_RDONLY&#x2019; undeclared (first use in this function)
+../common/shm.c:930:54: error: &#x2018;PROT_READ&#x2019; undeclared (first use in this function)
+../common/shm.c:931:10: error: &#x2018;MAP_SHARED&#x2019; undeclared (first use in this function)
+../common/shm.c:931:37: error: &#x2018;MAP_FAILED&#x2019; undeclared (first use in this function)
+
+I guess these are due to missing or platform-dependent include files.
+
+
+Any assistance appreciated.
+
+
+Regards,  Martin Kohn
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1326985523.913_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1327015423.13909_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1326999446.23382_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1326999446.23382_0.ltw:2,a&nbsp;&lt;13826157.fi5ATup6Oo at pc002&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

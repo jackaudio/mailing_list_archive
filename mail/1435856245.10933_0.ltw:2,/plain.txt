@@ -1,0 +1,50 @@
+Date:        Thu, 02 Jul 2015 12:57:17 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Tobias Hoffmann <[hidden] at thax dot hardliners dot org>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Tobias Hoffmann Re: [Jack-Devel] jack1: jack_transport does not work as master (1435855647.10372_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] jack1: jack_transport does not work as master
+
+Frankly, computing BBT time has never been part of "how to use the
+JACK API". It should probably never have been included in the source
+code in the first place.
+
+Managing BBT time is *extremely* complex - we have worked on it for
+years in Ardour and it still has issues. I'd prefer to just rip it
+out.
+
+On Thu, Jul 2, 2015 at 12:47 PM, Tobias Hoffmann
+<[hidden]> wrote:
+> On 02/07/15 17:30, Tobias Hoffmann wrote:
+>>
+>> On 02/07/15 15:38, Paul Davis wrote:
+>>>
+>>> jack_transport is not intended to act as a the time master.
+>>
+>> Well, comparing example-clients/transport_client.c and tools/transport.c,
+>> I'd say the one big difference between the two is that tools/transport.c
+>> (aka jack_transport) can act as a *simple* timebase master...
+>
+>
+> Ok, I see now that the BBT update algorithm (in the "else" branch in
+> timebase()) in transport.c is quite broken, because it accumulates rounding
+> errors. However always using the first, recalculating branch (basically: if
+> (true)) seems to be stable -- or at least: better than Hydrogen's timebase
+> master, which updates the BBT only every few cycles... (I've read that
+> somewhere a completely rewritten Jack Master implementation for Hydrogen is
+> available, which I have not tested yet).
+>
+> I find it quite sad that even some code distributed in the jack tarball is
+> an example of how NOT to use the Jack API ...
+>
+>   Tobias
+>
+>
+>
+>
+>
+
+1435856245.10933_0.ltw:2, <CAFa_cKk6w5S=XvDk0NKZeefMRGXtXivNP_S99uc67cFmFQQNGg at mail dot gmail dot com>
+________________________________________________________________________________
+

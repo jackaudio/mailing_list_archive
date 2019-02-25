@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Proper way to play 2 channels on the same output.</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Proper way to play 2 channels on the same output.</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1340821936.31607_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1340853245.17191_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1340823246.1063_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 27 Jun 2012 20:53:52 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Adrian Knoth </span> &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Tim Pitman
+<a href='../1340821936.31607_0.ltw:2,a/index.html'>[Jack-Devel] Proper way to play 2 channels on the same output. </a></td></tr>
+</table>
+<pre>
+On Wed, Jun 27, 2012 at 11:32:01AM -0700, Tim Pitman wrote:
+
+&gt; Hi,
+
+Hi!
+
+&gt; me a delay effect. This works fine on my USB DAC, but for some reason
+&gt; when I use my motherboard's audio sometimes when 2 tones (one from
+&gt; zynaddsubfx and one being repeated by my app) at the same time on the
+&gt; same channel, the sound is distorted. I have a feeling that I'm
+&gt; missing something obvious.
+
+Clipping? That is, the sum of the two signals exceed the maximum or
+minimum value? In jack, it's -1.0 .. 1.0.
+
+So instead of simply copying the samples, multiply them with let's say
+0.5 and check if the problem still exists. Or simply lower the volume in
+zynaddsubfx.
+
+Easy test setup: record zynaddsubfx and your delay output in one channel
+and see if it exceeds the range. You can even write a client that simply
+checks for too large values:
+
+   for (int i=0; i &lt; nframes; i++) {
+      if (fabsf(inbuffer[i]) &gt; 1.0) {
+	 printf ("Signal too large\n"); /* bad! not RT-safe */
+      }
+   }
+
+
+Disclaimer: don't do printf in the process() callback in production
+code.
+
+
+HTH
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1340821936.31607_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1340853245.17191_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1340823246.1063_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1340823246.1063_0.ltw:2,a&nbsp;&lt;20120627185352.GV6396 at ltw dot loris dot tv&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

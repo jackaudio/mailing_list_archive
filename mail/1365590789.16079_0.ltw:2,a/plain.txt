@@ -1,0 +1,52 @@
+Date:        Wed, 10 Apr 2013 11:46:20 +0100
+From:        Peter Nelson  <[hidden] at fuzzle dot org>
+To:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] Graph callback and client state (1365537091.13391_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Graph callback and client state
+
+On Tue, 2013-04-09 at 15:51 -0400, Paul Davis wrote:
+> 
+> 
+> On Tue, Apr 9, 2013 at 3:33 PM, Harry van Haaren
+> <[hidden]> wrote:
+>         On Tue, Apr 9, 2013 at 7:45 PM, Stéphane Letz <[hidden]>
+>         wrote:
+>         > You can never be sure that ports returned by jack_get_ports
+>         are always valid
+>         
+>         
+>         
+>         Any chance that adding a flag,  "JackPortIsActive" to
+>         JackPortFlags allows the functionality to be implemented?
+>         
+>         On activation, the JACK server marks all of the client owned
+>         ports as "active".
+>         
+>         Patchbay managers etc call jack_port_flags() and can query if
+>         its an "active" port or not?
+>         
+> 
+> there is always a race ... sometime between when you get the ports and
+> when you use the information, ports could be added, removed or become
+> inactive.
+
+Of course its possible that the port is removed in the mean time. In
+that case there is absolutely no problem because there is no need to
+care about a non-existent port because you can't (dis)connect it anyway.
+
+This 'problem' manifests in vastly more complex connection management
+code, as connection managers have to additionally monitor that their
+connection attempt worked and may have to repeatedly retry making the
+connection later because it still may not be active yet.
+
+If inactive ports are not listed then connection managers may simply
+fire & forget the connect request. If the port no longer exists, so
+what, it can't be connected anyway.
+
+Of course making this change doesn't fix all problems, but it does help
+one. Surely that's an advantage? 
+
+1365590789.16079_0.ltw:2,a <1365590780.3777.3057.camel at petern dot bnsnet dot co dot uk>
+________________________________________________________________________________
+

@@ -1,0 +1,109 @@
+Date:        Fri, 05 Aug 2011 12:33:58 -0600
+From:        David Nielson  <[hidden] at comcast dot net>
+To:          Dan Swain <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Dan Swain Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1312516666.16512_0.ltw:2,a)
+Follow-Up:   Dan Swain Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea (1312599702.22297_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea
+
+On 08/04/2011 09:57 PM, Dan Swain wrote:
+> I think there are a few more companies looking at this kind of 
+> technology now, and as mentioned in my initial post, Focusrite are 
+> using such technology based on reference designs from Audinate: 
+> http://www.focusrite.com/rednet/
+Rednet looks pretty cool. But they only mention it working with 
+CoreAudio or ASIO, so it's obviously not good enough for us ;-)
+> Of course, their approach is quite extensive in terms of remote 
+> control of devices beyond adjustment of gain, but I agree with the 
+> notion that this (our idea here) could become an open-source project. 
+> ARM is certainly an option, and a couple of years ago I was made aware 
+> of the Beagle Board systems, which are pretty flexible.
+Beagleboards are great. I lean towards a solution based on ARM because 
+there could be a full JACK server on each client--so everything from 
+basic routing to DSP could be done inside that box and potentially not 
+have to go over the network at all.
+
+Aside: Remote gain control is a hard problem to solve. I think it would 
+actually make the most sense to have 3 or 4 preamps on each signal, 
+permanently set to specific gain levels, and then digitally recombine 
+them into signal that exposes the whole gain range. I haven't written 
+anything up on that, yet, because I don't have any mic duplicators here...
+
+> I'm not sure if that's my intent though - it might be better to take 
+> the approach of something that is quite robust, with a minimal amount 
+> of software.
+
+If all you need is more distance for a digital signal, you can get some 
+line driver chips from National that will take the TTL level signal from 
+a TOSLINK connector and drive it over CAT5 or equivalent for 100 meters 
+or more. (I've actually wanted to do that for a while, but it doesn't 
+solve remote gain at all.)
+
+> On the network side, using a switch to route the network traffic to 
+> the computer sounds like a very good method of combining multiple 
+> units. The company I work for at the moment make use of TrendNet 
+> switches, and from their 8-port PoE units to their 48-port 1Gbps in 
+> both directions units, they seem to make some very reliable hardware, 
+> and certainly these and other reliable brands could be used as the 
+> 'backbone' of a good audio network.
+
+There are some 802.1 and 802.3 specs that just came out last year for 
+audio over routable ethernet. They're not really relevant to this 
+conversation, but I bring it up because the hardware they specifically 
+mention is a modified Netgear 24-port gigabit switch--the same one you 
+can get on-line for $200 or so--and all it has is better firmware so it 
+knows how to implement that protocol.
+
+Make sure the switch has enough backbone. Some larger gigabit switches 
+only have a 2-gigabit backbone, which will not suffice.
+
+> I've found a couple of ADC and DAC circuits through my searches on the 
+> internet, so replicating those would certainly make this an 
+> open-source project! However, the analogue side of this scenario is 
+> always the easy side, at least for me. In order for a system like this 
+> to work, and based from what I've read about the JACK system so far, 
+> would I need to 'spoof' some kind of audio interface that JACK would 
+> connect to?
+
+Depending on the ARM chip you went with, you could use an off-the-shelf, 
+consumer-grade ADC and DAC for a 2-in, 2-out unit; maybe more, even 
+2-in, 8-out or something like that.
+
+To get more than that, you will almost certainly have to add an FPGA to 
+the board (just a little cheap one will suffice) and have someone who 
+knows about those things program the FPGA to translate ADC signals to 
+something the ARM chip can understand, like PCIe, and then translate the 
+PCIe back into signals for the DACs to send out. Paul Davis might know 
+something about that, having written the first Linux driver for the RME 
+Hammerfall series of cards, which use an FPGA setup to make ADAT signals 
+available to the CPU. Faberman (whose real name escapes me ATM) might 
+also know.
+
+> Another 'guess' of mine is that if we're going to approach this 
+> hardware as a slave device to the main computer, are we going to need 
+> some kind of bi-directional connection when it comes to the 
+> synchronisation? Or, is it feasible for the whole system, given that 
+> low latency is a requirement (or at least a desirable element) that we 
+> could have the machine send out the 'master clock' signals, and assume 
+> that they reach the end unit as intended?
+
+Oh yeah, that's the other thing you'll use the FPGA for: to generate a 
+wordclock signal to match what's coming through the network.
+
+The new 802.1 standards do define how to keep a single wordclock present 
+across an entire network, but that all requires new and specialized 
+(read: stupidly expensive) NICs and switches, so I'm not sold on that.
+
+> Kind Regards,
+>
+> Dan
+
+Let's please make this happen. If someone made the product we were 
+talking about here, I would buy a bunch of them right off the bat!
+
+David Nielson (Naptastic)
+
+1312569286.24253_0.ltw:2,a <4E3C3796.2010001 at comcast dot net>
+________________________________________________________________________________
+

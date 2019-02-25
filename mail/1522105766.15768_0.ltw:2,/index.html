@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1522102376.12255_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1522192763.26748_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1522105766.15768_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 26 Mar 2018 18:08:54 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Christopher Obbard &lt;[hidden] at 64studio dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Christopher Obbard
+<a href='../1522102376.12255_0.ltw:2,/index.html'>Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Christopher Obbard
+<a href='../1522192763.26748_0.ltw:2,/index.html'>Re: [Jack-Devel] Fwd: connecting to JACKD2 with low buffer sizes </a></td></tr>
+</table>
+<pre>
+On Mon, March 26, 2018 5:12 pm, Christopher Obbard wrote:
+&gt; Ah, I've been running mainline stable 4.14, applied CONFIG_PREEMPT and
+&gt; ran a cyclictest on three threads with no extra load. It was giving me
+&gt; "ok" average latency, and terrible maximum latency.
+
+That is exactly the point of the RT patches.  "Most" of the time latency
+is OK with the standard configuration options.  If you don't mind losing
+some data occasionally the standard kernel config options are probably OK.
+
+&gt; This time I have a printk message of "GBLCTL write error" every few us.
+
+Every few microseconds?  I took a quick look at the McASP documentation
+and that register looks like a control register you would setup once when
+starting the driver, and then not touch it again until you had to
+reconfigure.  If it is being written more than a couple of times something
+is wrong.  It is possible that something is triggering error handling to
+kick in, it looks like that register has to be written again in certain
+cases where clock synch is lost, or possibly lost.  Without knowing more
+details of how you configured clocking and what your hardware looks like I
+can't say much more than that could be something to investigate.
+
+&gt; Lesson learnt: use vendor BSP
+
+Or Robert Nelson's (RCN), his kernel builds are probably at least as good
+as TI and sometimes has additional features included.
+
+&gt; Yeah, the rtirq script is handy. It will need some tweaking for arm
+&gt; boards, I think.
+
+Should only need a change to which devices are included in the
+RTIRQ_NAME_LIST string in /etc/sysconfig/rtirq (or maybe /etc/rtirq, I
+don't remember where it would go in Debian).
+
+
+best regards,
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1522102376.12255_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1522192763.26748_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1522105766.15768_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1522105766.15768_0.ltw:2,&nbsp;&lt;53d139407915d2cb7e57e84438a74153.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

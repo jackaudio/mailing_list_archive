@@ -1,0 +1,139 @@
+Date:        Sat, 02 Jun 2012 15:19:59 +0200
+From:        Dominique Michel  <[hidden] at vtxnet dot ch>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Scottalavender Re: [Jack-Devel] adjusting default settings installed in ubuntu studio (1338596564.14327_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] adjusting default settings installed in ubuntu studio
+
+Le Fri, 01 Jun 2012 19:22:47 -0500,
+Scottalavender <[hidden]> a écrit :
+
+> 
+> 
+> 
+> Sent via the Samsung Galaxy S™ II Skyrocket™, an AT&T 4G LTE
+> smartphone.
+> 
+> -------- Original message --------
+> Subject: Re: Re: [Jack-Devel] adjusting default settings installed in
+> ubuntu studio From: [hidden] 
+> To: Scott Lavender <[hidden]> 
+> CC: [hidden] 
+> 
+> On , Scott Lavender <[hidden]> wrote:
+> > i to improve the "out of the box" performance by adjusting these
+> > settings.
+> 
+> All the settings are available from the QJackCtl "setup" dialog. Also
+> you can start jackd from the command line if you prefer.
+> 
+> $ jackd -h for info on how to do that.
+> 
+> There's no need to modify packages for changing the frames / buffers
+> etc :D -Harry
+> 
+> Harry, I am quite capable of adjusting the setting for my computer.
+> However as project lead for Ubuntu Studio I want to moderate the
+> installed setting for the default installation in order to improve
+> the "out the box performance".
+
+For me, the ideal setting is to run jack all the time. For this to work
+with every sound related software, I thing that the best way to
+archive that is to load snd-aloop as first sound card. That way, all
+the alsa only sound software will use aloop as default, a simple
+script, launched by qjacjctl, will connect this virtual alsa device with
+jack in full duplex:
+( http://linuxaudio.org/mailarchive/lau/2012/4/4/189446 )
+With such a setting, I am able to get ride of all the audio layers like
+pulseaudio. It just work. A big applaud and thank you to the
+developers that made it possible!
+
+A simple ~/.asoundrc can be included into the skeleton for new users.
+In my case, it is as simple than:
+
+cat ~/.asoundrc
+# playback PCM device: using loopback subdevice 0,0
+pcm.amix {
+  type dmix
+  ipc_key 219345
+  slave.pcm "hw:Loopback,0,0"
+}
+
+# capture PCM device: using loopback subdevice 0,1
+pcm.asnoop {
+  type dsnoop
+  ipc_key 219346
+  slave.pcm "hw:Loopback,0,1"
+}
+
+# duplex device combining our PCM devices defined above
+pcm.aduplex {
+  type asym
+  playback.pcm "amix"
+  capture.pcm "asnoop"
+}
+
+# ------------------------------------------------------
+# for jack alsa_in and alsa_out: looped-back signal at other ends
+pcm.ploop {
+  type plug
+  slave.pcm "hw:Loopback,1,1"
+}
+
+pcm.cloop {
+  type dsnoop
+  ipc_key 219348
+  slave.pcm "hw:Loopback,1,0"
+}
+
+# ------------------------------------------------------
+# default device
+
+pcm.!default {
+  type plug
+  slave.pcm "aduplex"
+}
+
+I really think this is the best setup for a pro-audio environment
+where a bridge between jack and alsa is needed.
+
+The script launched by qjackctl after jackd(bus) start:
+cat ~/bin/loop2jack
+#!/bin/sh
+# Launch the wanted software after jackd start.
+# Usage: loop2jack sample_rate
+# where sample_rate is jackd sample rate
+# To launch it from qjackctl:
+# loop2jack %r
+
+## launch and configure the ALSA <-> JACK bridge
+# clients creation
+/usr/bin/alsa_out -j ploop -dploop -q 1 2>&1 1> /dev/null &
+/usr/bin/alsa_in -j  cloop -dcloop -q 1 2>&1 1> /dev/null &
+
+# 1 second wait before connection of the ports
+sleep 1
+
+# cloop ports -> jack output ports 
+jack_connect cloop:capture_1 system:playback_1
+jack_connect cloop:capture_2 system:playback_2
+
+# jack input ports -> ploop
+jack_connect system:capture_1 ploop:playback_1
+jack_connect system:capture_2 ploop:playback_2
+
+## You can add whatever else is needed here:
+## Timidity++ in server mode
+# TODO: launch timidity only if it is not running.
+timidity -iA -B2,8 -Oj -EFreverb=0 -s $1 2>&1 1> /dev/null &
+
+# done
+exit 0
+
+
+-- 
+"We have the heroes we deserve."
+
+1338643040.14576_0.ltw:2,a <20120602151959.2ba8780e at tuxstudio>
+________________________________________________________________________________
+

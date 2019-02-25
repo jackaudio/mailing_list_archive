@@ -1,0 +1,216 @@
+Date:        Tue, 27 Dec 2011 18:28:50 -0800
+From:        Robert M. Riches Jr.  <[hidden] at jacob21819 dot net>
+To:          [hidden] at ccrma dot Stanford dot EDU, [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fernando Lopez-Lezcano [Jack-Devel] jack 1.9.8 + many many connections = problems? (1325037816.11061_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack 1.9.8 + many many connections = problems?
+
+> Date: Tue, 27 Dec 2011 18:03:23 -0800
+> From: Fernando Lopez-Lezcano <[hidden]>
+> To: [hidden],
+> 	Fernando Lopez-Lezcano <[hidden]>
+>
+> Hi all, has anyone out there experienced something similar to what I 
+> describe below? Sorry for the length of the post.
+>
+> I'm really puzzled...
+>
+> (running jack 1.9.8, freshly built today, just in case - running with 
+> 4096 total ports and 768 ports per client)
+>
+> I have a quite complex jack based system (OpenMixer in our Listening 
+> Room driving 22 speakers plus 4 subs). Many programs, all interconnected 
+> through jack and running under Linux (ie: jack itself, three instances 
+> of supercollider, three instances of ambdec, two instances of 
+> jconvolver, four internal 24 channel netjack1 clients, etc, etc). 
+> Everything is run from inside the supercollider language and startup is 
+> automatic from a boot of the workstation. All jack connections are 
+> managed by writing them to a file and then running aj-snapshot.
+>
+> Lately one or two speakers are "silent" after startup. Restarting the 
+> audio engine sometimes fixes the problem, sometimes moves it to a 
+> different speaker. Not all speakers are equal in that sense, in most of 
+> them this never happens, in some of them it nearly always does. There is 
+> nothing special in the speakers that sometimes fail, they all come from 
+> the same hardware source. And from the clues described below it does not 
+> look like it is a hardware problem.
+>
+> As far as I can tell jack gets into a state where sometimes a given port 
+> goes nowhere instead of going to the soundcard output it should go to.
+>
+> That is, system:playback_25 is there, other ports connect and disconnect 
+> to it normally, no errors are logged and yet input to that port does not 
+> go to the corresponding speaker (all the associated equipment seems to 
+> be fine). If I restart the system suddenly the port works fine. Or not. 
+> Or some other port does not work. At most two or three fail, usually 
+> just one, sometimes none (the problem seems to have gotten worse since I 
+> added more things to the system that implied more clients and total 
+> ports and connections).
+>
+> If I do _not_ run the aj-snapshot port connection process and I manually 
+> send a signal (from jnoise) to the ports that are normally affected, 
+> everything is fine, that is, in my tests I never managed to get the 
+> system to fail in that state (ie: everything running, no ports connected).
+>
+> It would seem that something bad is happening when all ports are being 
+> connected and the end result is that inside jack some of the soundcard 
+> ports seem to go nowhere.
+>
+> The aj-snapshot process that connects everything takes a bit to run and 
+> as it progresses jack reports more and more xruns until it finishes. It 
+> would seem that something is running inside jack when ports are 
+> connected that is proportional to the number of existing connections 
+> (the graph reordering?, that would make sense - but it should not 
+> generate xruns, right?).
+>
+> It also appears to be that if I minimize the number of ports I'm 
+> connecting the problem goes away (but then of course the system is not 
+> completely functional :-).
+>
+> Clues?
+> Ways to debug?
+> Anyone seen something similar?
+>
+> -- Fernando
+
+On the very off chance a newbie's suggestion might help, when I
+set up a massively simpler system (NetJACK2, one master, one
+slave, two channels each way) I found I needed to wait after
+starting jackd, alsa_in, and alsa_out before I could reliably run
+jack_connect.  As an example, here's a C-shell script (loop
+syntax differs from bash):
+
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv cut here vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+#!/bin/csh -f
+
+# C-shell script that runs on the server to start the JACK slave side.
+
+# Check and get arguments.
+if ( 2 != $# ) then
+  echo 'ERROR: '$0' needs 2 arguments, got '$#
+  exit(1)
+endif
+set ip = $1
+set pt = $2
+echo 'Slave-side multicast IP:   '$ip
+echo 'Slave-side multicast port: '$pt
+
+# Start the JACK server.
+jackd -R -d net -a $ip -p $pt >& jack-server.log &
+
+# loop client creation
+# /usr/bin/alsa_out -j ploop -dploop -q 1 2>&1 1> /dev/null &
+# /usr/bin/alsa_in  -j cloop -dcloop -q 1 2>&1 1> /dev/null &
+/usr/bin/alsa_out -j ploop -dploop >& alsa-out.log &
+/usr/bin/alsa_in  -j cloop -dcloop >& alsa-in.log  &
+
+# Wait until the ports are available.
+set ports = (system:{capture,playback}_{1,2})
+set ports = ($ports {ploop:playback,cloop:capture}_{1,2})
+foreach port ($ports)
+  while ( 0 == `jack_lsp | fgrep -c $port` )
+    echo 'Waiting for port '$port
+    sleep 1
+  end
+end
+echo 'Got ports:'
+jack_lsp
+
+# cloop ports -> jack output ports 
+jack_connect cloop:capture_1 system:playback_1
+jack_connect cloop:capture_2 system:playback_2
+
+# system input to "ploop" ports  
+jack_connect system:capture_1 ploop:playback_1
+jack_connect system:capture_2 ploop:playback_2
+
+# Show the connections.
+echo 'Made port connections:'
+jack_lsp -c
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cut here ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sending all output to log files is a big help in enabling
+debug.  The big loop in the middle waits until all ports
+from jackd, alsa_in, and alsa_out are available before
+doing any connecting.  The script also prints what ports
+it saw after waiting (to validate the script waited long
+enough), and prints what connections it made.
+
+This script starts the master.  This one is for /bin/sh:
+
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv cut here vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+#!/bin/sh
+
+# Born-shell script to start a JACK master session.
+# It takes the multicast IP address and the port number as arguments.
+
+# Check and get arguments.
+if [ "2" != "$#" ]; then
+  echo 'ERROR: '$0' needs 2 arguments, got '$#
+  exit 1
+fi
+ip=$1
+pt=$2
+echo 'Master-side multicast IP:   '$ip
+echo 'Master-side multicast port: '$pt
+
+# Start the JACK server.
+# Rely on limits set in bootlocal.sh to do real-time and such.
+jackd -R -d alsa -d default &> jack-server.log &
+
+# Wait for the server to initialize.
+sleep 2
+
+# Load the net manager.
+jack_load netmanager -i "-a $ip -p $pt"
+
+# Wait until the remote ports are available.
+echo 'About to wait for remote ports to become available.'
+while [ $(jack_lsp | fgrep -c one.localnet) -eq 0 ]
+do
+  echo 'Waiting for remote ports to be available...'
+  sleep 1
+  jack_lsp > /dev/null
+  if [ $? -ne 0 ]; then
+    echo 'Master-side JACK server is not running.  Aborting.'
+    exit 1
+  fi
+done
+echo 'Finished waiting for remote ports to become available.'
+echo ''
+echo ''
+
+# Connect the JACK ports.
+jack_connect one.localnet:from_slave_1 alsa_pcm:default:in1
+jack_connect one.localnet:from_slave_2 alsa_pcm:default:in2
+
+# Show the connections:
+echo 'JACK ports connected:'
+jack_lsp -c
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cut here ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The above script does similar things to wait for ports to appear,
+and then it prints out what it did for debugging.
+
+Oh, and if using softvol triggered from a .asoundrc file on a
+non-persistent (PXE-booted system), it is necessary to play
+something via aplay or etc. before the control appears.  This
+snippet does that trick for my X terminal (zero client):
+
+# Play burst(s) of noise to make the 'Softmaster' volume control appear.
+aplay /opt/termos/softshortnoise.wav &
+sleep 0.25
+killall aplay
+sleep 0.25
+aplay /opt/termos/softshortnoise.wav &
+sleep 0.5
+killall aplay
+sleep 0.5
+
+HTH
+
+Robert
+
+1325039347.22593_0.ltw:2,a <20111228022850.76FB6264E2 at one dot localnet>
+________________________________________________________________________________
+

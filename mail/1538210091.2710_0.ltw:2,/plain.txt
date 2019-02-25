@@ -1,0 +1,106 @@
+Date:        Sat, 29 Sep 2018 10:34:26 +0200
+From:        Holger Marzen  <[hidden] at marzen dot de>
+To:          David Kastrup <[hidden] at gnu dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: David Kastrup Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency? (1538209786.2501_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] audioadapter: quality setting important when not changing sampling frequency?
+
+On Sat, 29 Sep 2018, David Kastrup wrote:
+
+> Holger Marzen <[hidden]> writes:
+> 
+> > On Fri, 28 Sep 2018, Holger Marzen wrote:
+> >
+> >> On Fri, 28 Sep 2018, Holger Marzen wrote:
+> >> 
+> >> > q2 (SRC_SINC_FASTEST) showed the desired flat envelope and seems to be
+> >> > the best compromise between CPU load and quality.
+> >> > 
+> >> > -> That's the setting I'll use from now on.
+> >> 
+> >> Unfortunately this leads to errors once in a while (although my Core i7
+> >> has no big CPU load), the ringbuffer increases up to 64k. So it's no
+> >> stable solution for me.
+> >
+> > It seems that playing with jackd's priority can cure the problem. I'll
+> > play around with the parms but this seems to be a good start. Maybe
+> > squeezelite, an audioplayer, was the cause because it was running at a
+> > higher priority than jackd.
+> 
+> Wouldn't jackd be running at realtime priority usually?
+> 
+> > jackdmp 1.9.11
+> > Copyright 2001-2005 Paul Davis and others.
+> > Copyright 2004-2014 Grame.
+> > jackdmp comes with ABSOLUTELY NO WARRANTY
+> > This is free software, and you are welcome to redistribute it
+> > under certain conditions; see the file COPYING for details
+> > JACK server starting in realtime mode with priority
+> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 
+> Yup.  Is squeezelite also running with realtime priority?  That would
+> seem weird.  I mean, running an audioplayer while in a recording session
+> seems weird anyway.
+
+I was surprised, too, that squeezelite runs in realtime:
+
+RTPRIO   TID   PID CMD
+     1   262   262 [i915/signal:0]
+     1   263   263 [i915/signal:1]
+     1   264   264 [i915/signal:2]
+     1   265   265 [i915/signal:4]
+     5 10207 10194 pulseaudio --exit-idle-time=-1
+     5 10218 10194 pulseaudio --exit-idle-time=-1
+     9 10200 10194 pulseaudio --exit-idle-time=-1
+     9 10202 10194 pulseaudio --exit-idle-time=-1
+     9 10208 10194 pulseaudio --exit-idle-time=-1
+     9 10215 10194 pulseaudio --exit-idle-time=-1
+     9 10219 10194 pulseaudio --exit-idle-time=-1
+    45 13118 13115 squeezelite -z -n squeezelite-bubu -s mortimer
+    45 13119 13115 squeezelite -z -n squeezelite-bubu -s mortimer
+    50  1123  1123 [irq/133-enp5s0]
+    50   129   129 [irq/122-xhci_hc]
+    50   130   130 [irq/123-xhci_hc]
+    50   131   131 [irq/124-xhci_hc]
+    50   132   132 [irq/125-xhci_hc]
+    50   133   133 [irq/126-xhci_hc]
+    50   134   134 [irq/127-xhci_hc]
+    50   135   135 [irq/128-xhci_hc]
+    50   136   136 [irq/129-xhci_hc]
+    50   137   137 [irq/130-xhci_hc]
+    50   138   138 [irq/12-i8042]
+    50   139   139 [irq/1-i8042]
+    50   140   140 [irq/8-rtc0]
+    50   215   215 [irq/131-rtsx_pc]
+    50   220   220 [irq/132-ahci[00]
+    50   260   260 [irq/134-i915]
+    50   627   627 [irq/135-mei_me]
+    50    70    70 [irq/9-acpi]
+    50   746   746 [irq/136-snd_hda]
+    85 10189 10172 /usr/bin/jackd -P90 -p512 -t2000 -dalsa -r48000 -p128 -n3 -Xseq -dhw:1
+    85 10190 10172 /usr/bin/jackd -P90 -p512 -t2000 -dalsa -r48000 -p128 -n3 -Xseq -dhw:1
+    85 10216 10196 calfjackhost --load /home/hm/scripts/calf.d/main
+    85 10217 10195 /usr/bin/python /usr/bin/jack_mixer -c /home/hm/.jack_mixer
+    90 10179 10172 /usr/bin/jackd -P90 -p512 -t2000 -dalsa -r48000 -p128 -n3 -Xseq -dhw:1
+    99    11    11 [migration/0]
+    99    12    12 [watchdog/0]
+    99    15    15 [watchdog/1]
+    99    16    16 [migration/1]
+    99    21    21 [watchdog/2]
+    99    22    22 [migration/2]
+    99  2341  2339 /usr/lib/rtkit/rtkit-daemon
+    99    27    27 [watchdog/3]
+    99    28    28 [migration/3]
+    99    33    33 [watchdog/4]
+    99    34    34 [migration/4]
+    99    39    39 [watchdog/5]
+    99    40    40 [migration/5]
+    99    45    45 [watchdog/6]
+    99    46    46 [migration/6]
+    99    51    51 [watchdog/7]
+    99    52    52 [migration/7]
+
+1538210091.2710_0.ltw:2, <alpine.DEB.2.20.1809291031150.13093 at bubu dot intern dot marzen dot de>
+________________________________________________________________________________
+

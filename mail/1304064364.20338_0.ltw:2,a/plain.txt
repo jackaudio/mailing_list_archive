@@ -1,0 +1,122 @@
+Date:        Fri, 29 Apr 2011 10:05:37 +0200
+From:        Arnold Krille  <[hidden] at arnoldarts dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Tim E. Real Re: [Jack-Devel] ringbuffer problems (1304036842.2830_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] ringbuffer problems
+
+On Friday 29 April 2011 02:09:21 Tim E. Real wrote:
+> On April 28, 2011 04:18:48 am Arnold Krille wrote:
+> > On Thursday 28 April 2011 09:00:21 Tim E. Real wrote:
+> > > On April 28, 2011 02:03:07 am Arnold Krille wrote:
+> > > > On Thursday 28 April 2011 07:28:27 Timothy Godfrey wrote:
+> > > >  - Multiple readers in several threads reading from the same
+> > > > ringbuffer.
+> > > > > Would
+> > > > > constitute a violation of the rule, 'Their identities cannot be
+> > > > > interchanged'?
+> > > > This rule is there because when one thread is the reader and then
+> > > > another thread starts reading, there is a chance that for a short
+> > > > time both threads read. And that is not safe
+> > > Not even reading by two threads is safe? Why is that?
+> > > Do you mean 'getting' (removal) from the buffer? That makes sense.
+> > "Reading" from ringbuffers seems to be widely accepted as "getting".
+> > > What about simple 'peek' operations (without removal), is that OK?
+> > That can work, but it doesn't have to. What one thread sees while peeking
+> > is probably not the same it sees the next time it accesses the buffer if
+> > another thread is the real "reader" (the one who modifies the
+> > read-pointer). Even worse: [thread A is the writer, thread B the reader,
+> > thread C the "peeker"]
+> > 
+> >  - Thread A writes something to the ringbuffer. Now the size is > 0.
+> >  - Thread C peeks and saves the pointer to the data it peeks at.
+> >  - Thread B reads all available data from the buffer.
+> >  - Thread A writes as much new data in the buffer as it can. The buffer
+> >  is
+> > 
+> > now filled with new data.
+> > 
+> >  - When Thread C accesses the memory from the peeking, the data in there
+> >  is
+> > 
+> > not what it was when it first peeked at it. There is even no guarantee
+> > that it now points to a valid "entry point" in the data stream. What was
+> > boundary of a double could now be in the middle of the bytes of a new
+> > double.
+> > 
+> > Simply put: Don't do that! Its not guaranteed to work.
+> > 
+> > > > without locks on the ringbuffer or somewhere
+> > > > else. (Same for writers.)
+> > > 
+> > > MusE is using custom ring buffers.
+> > > (Admittedly I think we're breaking some of those rules in a few
+> > > places.) They have some code for atomization with locks, but it seems
+> > > unused ATM. I can turn it on, but I wonder if I should.
+> > > 
+> > > The ring buffers have a volatile size member.
+> > > What effect does the volatile keyword have, in general?
+> > > From the "Introduction to the Volatile Keyword" at Embedded dot com:
+> > > "A variable should be declared volatile whenever its value could change
+> > > 
+> > >  unexpectedly.  ...<such as> global variables within a multi-threaded
+> > >  application ...So all shared global variables should be declared
+> > > 
+> > > volatile."
+> > > I try to follow that rule, but I gather use of volatile may not be
+> > > enough, that locks may be required in some cases?
+> > 
+> > The usage of 'volatile' prevents the compiler from optimizing the access
+> > to that variable. For example inside a loop you will see strange results
+> > when you access a variable that is changed from outside while the loop
+> > is running. Without 'volatile' some reads of that variable will not give
+> > what you expect as the compiler just makes the loop use the value from
+> > the last access. Or maybe even the value from before the loop started.
+> > (That behaviour even changes whether you enable debug compile or compile
+> > with optimizations.) With volatile you tell the compiler to always
+> > access the variable.
+> > 
+> > However this is _no_ protection for ringbuffers (regardless whether they
+> > carry binary streams or messages) where there is more then one reader or
+> > more then one writer! This will not work without the usage of atomic
+> > locks.
+> > 
+> > But the size-member of ringbuffers is essentially useless, its only
+> > nice-to- have. For writing to a ringbuffer, the size is only a
+> > first-order assumption how much data fits in (as reader-threads might
+> > read data while you write). What counts is the information "full"
+> > because you have to stop writing when the buffer is full.
+> > For readers size is also only a first-order assumption as there might be
+> > new data written to the buffer while it reads. The only hard information
+> > here is "empty" when there is no data to read.
+> > And the information "full" or "empty" is what you get from comparing the
+> > read- and write-pointers (doesn't matter whether these are real pointers,
+> > counting integers or iterators).
+> > If the size-member is volatile this only prevents readers from reading to
+> > slow. But the real state information is in the pointers and these should
+> > therefor be volatile too. Or simply make the whole ringbuffer_t
+> > volatile...
+> Also, I didn't consider multi-core cpus. That must change the game a bit.
+> (Looks at his P4 computer - "gotta upgrade!")  Thanks. OT-ish:
+
+Hehe, my desktop at home is an old P4 too. And I gotta upgrade once I have 
+time to decide what I want...
+
+But multiple cores isn't the only thing that triggers the behaviour I sketched 
+above, normal process-scheduling can do the same on a single-core system.
+Heck, I learned the most about ringbuffers when I implemented my own to send 
+and receive serial streams on a atmega8. Once you realize that its nice to 
+append the data to the buffer within the receiving interrupt, you also realize 
+that this can happen anytime while your main-thread works on the buffer. And 
+then you love it when your ringbuffer works without locks, otherwise you risk 
+loosing the received data.
+The same for ringbuffers in audio, once you use locks inside the process()-
+callback, you are f***ed...
+
+Have fun,
+
+Arnold
+
+1304064364.20338_0.ltw:2,a <201104291005.43481.arnold at arnoldarts dot de>
+________________________________________________________________________________
+

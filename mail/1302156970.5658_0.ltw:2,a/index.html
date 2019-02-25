@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302156258.4177_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302158396.8695_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302156970.5658_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 06 Apr 2011 23:15:56 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at charityfinders dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Clemens Ladisch &lt;[hidden] at ladisch dot de&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Clemens Ladisch
+<a href='../1302155818.3215_0.ltw:2,a/index.html'>Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Clemens Ladisch
+<a href='../1302172431.11521_0.ltw:2,a/index.html'>Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2 </a></td></tr>
+</table>
+<pre>
+On Wed, Apr 6, 2011 at 10:57 PM, Clemens Ladisch &lt;[hidden]&gt; wrote:
+&gt; Devin Anderson wrote:
+&gt;&gt; When I first did research for writing this driver, I was looking
+&gt;&gt; through the ALSA kernel code, and noticed that the default behavior
+&gt;&gt; for the 'drain' method (when a driver doesn't set its own rawmidi
+&gt;&gt; 'drain' method) is to sleep for 50 milliseconds, and then return,
+&gt;&gt; regardless of whether blocking I/O is used or not. &#xA0;So, one of the
+&gt;&gt; things I did with the 'alsarawmidi' driver is to call:
+&gt;&gt;
+&gt;&gt; &#xA0; &#xA0; snd_rawmidi_params_set_avail_min(rawmidi, params, 1);
+&gt;
+&gt; This already is the default value.
+
+Okay.
+
+&gt;&gt; ... to make the driver wake up when any bytes are written to a port,
+&gt;&gt; and to avoid calling `snd_rawmidi_drain` completely.
+&gt;
+&gt; The avail_min parameter controls only wakeups of the application.
+
+I made a bad assumption.  In my defense, the ALSA API documentation is
+a bit lacking in details. :)
+
+&gt; The drain method is used only with output devices to wait for all data
+&gt; in ALSA's buffer to be written to the device. &#xA0;The only situation where
+&gt; you would want to call it is when closing the device, where ALSA already
+&gt; calls it automatically.
+
+Right.  The JACK ALSA raw driver calls 'snd_rawmidi_drain' after each
+successful call to 'snd_rawmidi_write'.  Since one thread is handling
+output to all ports, couldn't that cause some ports to be neglected?
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302156258.4177_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1302158396.8695_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1302156970.5658_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1302156970.5658_0.ltw:2,a&nbsp;&lt;BANLkTim-wb=8Vyq=noDP3R6GOzMkFDGj+Q at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

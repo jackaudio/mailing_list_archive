@@ -1,0 +1,114 @@
+Date:        Wed, 15 Oct 2014 13:03:29 +1100
+From:        Matt Flax  <[hidden] at flatmax dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Matt Flax Re: [Jack-Devel] netjack2 on cygwin (1413269922.12815_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] netjack2 on cygwin
+
+Still debugging ... looking for ideas/help...
+
+I can now run the cygwin jackd server ... trying to run with just the 
+dummy backend.
+
+When I run, the system is hanging in JackClientSocket::Connect.
+The hang point is the socket connect call.
+
+I have checked with the firewall down and the same problem.
+
+To get this system running I had to enable the cygserver service to 
+bring up the shm and other unix related software systems.
+
+Is it possible that a server thread isn't listening ?
+
+Matt
+
+
+On 14/10/14 17:58, Matt Flax wrote:
+> I now have jack compiling under cygwin.
+>
+> I have started debugging.
+> I am getting problems with something as innocent as the following 
+> (JackControlAPI.cpp):
+> jackctl_add_driver_parameters( ...){
+> ...
+>        switch (descriptor_ptr->type)
+>         {
+> ...
+>         case JackDriverParamUInt:
+>             jackctl_type = JackParamUInt;     <==== segfault here
+> ...
+>
+> JackParamUInt is nothing other then an enum.
+> jackctl_type is of the same type.
+>
+> Any ideas ?
+>
+> Matt
+>
+> On 10/10/14 15:35, Matt Flax wrote:
+>> I tried a rough compile of code against the distributed binaries.
+>> I couldn't get the linker to understand the static .lib files.
+>> I think that the distributed binaries are not compiled with the same 
+>> compiler which is distributed with cygwin. For that reason linkage 
+>> problems.
+>>
+>> Using waf requires some fiddling ... first of all, waf detects cygwin 
+>> as a CYGWIN platform and with some fiddling of the wscript, it is 
+>> possible to get it to recognise it as windows.
+>>
+>> I tried two different ways of compiling. Once as a posix system which 
+>> clearly didn't work as some fundamental system level functions just 
+>> aren't available in the cygwin libc system.
+>> The other way I tried was as a windows system, however the cygwin 
+>> compiler couldn't understand the asm code. It simply couldn't compile 
+>> it.
+>>
+>> Matt
+>>
+>> On 09/10/14 23:22, Stéphane Letz wrote:
+>>> 1) Any reason not to use the distributed binaries?
+>>>
+>>> 2) Have you tried to use the "waf" based compilation system that is 
+>>> supposed to work to compile jack2 with mingw?
+>>>
+>>> Stéphane
+>>>
+>>>
+>>> Le 9 oct. 2014 à 06:42, Matt Flax <[hidden]> a écrit :
+>>>
+>>>> Hi there,
+>>>>
+>>>> I am trying to compile jack2 netjack on cygwin.
+>>>>
+>>>> After manually compileing celt and opus, I am now having troubles 
+>>>> with standard compilation in the windows directory ... and other 
+>>>> stuff.
+>>>>
+>>>> For example the JackAtomic asm stuff is troublesome !
+>>>>
+>>>> Has anyone managed to compile netjack for cygwin ?
+>>>>
+>>>> thanks
+>>>> Matt
+>>>> 
+>>>> Jack-Devel mailing list
+>>>> [hidden]
+>>>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>>> 
+>>> Jack-Devel mailing list
+>>> [hidden]
+>>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>>
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1413364316.12590_0.ltw:2, <543DD5F1.7010704 at flatmax dot org>
+________________________________________________________________________________
+

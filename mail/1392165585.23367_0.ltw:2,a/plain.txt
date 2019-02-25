@@ -1,0 +1,138 @@
+Date:        Wed, 12 Feb 2014 01:39:36 +0100
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Matt Flax Re: [Jack-Devel] high sample rates cause unknown client xruns (1392161967.18286_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] high sample rates cause unknown client xruns (1392167718.26720_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] high sample rates cause unknown client xruns
+
+On Wed, Feb 12, 2014 at 10:35:28AM +1100, Matt Flax wrote:
+
+> >i don't have one. the only error message I've seen thus far is:
+> >
+> >
+> >$ jack_rec -f /dev/null -B 2048 -d 1 system:capture_1 system:capture_2
+> >disk thread finished
+> >jackrec failed with 977 overruns.
+> > try a bigger buffer than -B 2048.
+> >
+> >I don't know the insides of jack_rec well enough to know what
+> >those messages mean. Did you try "a bigger buffer than -B 2048" ?
+> I feel the same as you regarding jack_rec, not really sure what it
+> is doing internally.
+
+Have you hacked jackd, so it supports the buffer size you need?
+
+Let's assume 1024 samples @48kHz is what a contemporary system can
+handle without any trouble. Some machines can do 32 samples @48kHz, but
+let's be conservative for a start.
+
+48000/1024 = ~47 invocations per second
+
+For your 1MHz, we do the same:
+
+1000000/x = 47  --> x = 21276, rounded up to the next power-of-two, we
+arrive at 32768 samples per buffer.
+
+Assuming you use jackd2, tweak BUFFER_SIZE_MAX:
+
+common/JackConstants.h:#define BUFFER_SIZE_MAX 8192
+
+and make sure it really works ;) (I didn't test it, just grepped through
+the code).
+
+Maybe jackd -d something -p 8192 is already sufficient. It'll give you
+roughly 122 invocations per second, probably close enough to 47. ;)
+
+
+Oh, and regarding jack_rec (that's capture_client.c): Make the
+ringbuffer at least twice as large as your server's period size. So if
+you start with -p 8192, you should have at least -B 16384, which is the
+default anyway. If you want to be safe, don't hesitate to raise this to
+a couple of megabytes.
+
+Speaking of capture_client.c:
+
+--- cut ---
+ /* Write the data one frame at a time.  This is
+  * inefficient, but makes things simpler. */
+ while (info->can_capture &&
+        (jack_ringbuffer_read_space (rb) >= bytes_per_frame)) {
+               jack_ringbuffer_read (rb, framebuf, bytes_per_frame);
+
+              if (sf_writef_float (info->sf, framebuf, 1) != 1) {
+--- end ---
+
+
+The comment says it all, but for the sake of clarity, let me rephrase
+this: for every sample in the ringbuffer, the disk thread invokes
+jack_ringbuffer_read_space() followed by jack_ringbuffer_read(),
+followed by sf_writef_float(). This works if you only have chans*48k
+samples per second, but maybe at 1MHz, this is sufficiently inefficient
+to waste time with function calls and maybe atomic operations in
+jack_ringbuffer_read() (not sure, I didn't bother to check).
+
+Long story short: patch capture_client.c so that it reads multiple
+bytes_per_frame at once. You basically enlarge framebuf, read
+array_size*bytes_per_frame and pass array_size samples to
+sf_writef_float.
+
+
+Quick & Dirty & Ugly & Untested:
+
+diff --git a/example-clients/capture_client.c b/example-clients/capture_client.c
+index d3360b4..d12c47f 100644
+--- a/example-clients/capture_client.c
++++ b/example-clients/capture_client.c
+@@ -76,7 +76,7 @@ disk_thread (void *arg)
+ 	jack_thread_info_t *info = (jack_thread_info_t *) arg;
+ 	static jack_nframes_t total_captured = 0;
+ 	jack_nframes_t samples_per_frame = info->channels;
+-	size_t bytes_per_frame = samples_per_frame * sample_size;
++	size_t bytes_per_frame = samples_per_frame * sample_size * 2048;
+ 	void *framebuf = malloc (bytes_per_frame);
+ 
+ 	pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+@@ -93,7 +93,7 @@ disk_thread (void *arg)
+ 
+ 			jack_ringbuffer_read (rb, framebuf, bytes_per_frame);
+ 
+-			if (sf_writef_float (info->sf, framebuf, 1) != 1) {
++			if (sf_writef_float (info->sf, framebuf, 2048) != 1) {
+ 				char errstr[256];
+ 				sf_error_str (0, errstr, sizeof (errstr) - 1);
+ 				fprintf (stderr,
+@@ -103,7 +103,7 @@ disk_thread (void *arg)
+ 				goto done;
+ 			}
+ 
+-			if (++total_captured >= info->duration) {
++			if ((total_captured += 2048) >= info->duration) {
+ 				printf ("disk thread finished\n");
+ 				goto done;
+ 			}
+
+
+
+No idea if 2048 samples are enough.
+
+
+And while we're at it, the process() function in capture_client.c (the
+jackd side of the ringbuffer) isn't terribly efficient either. I'd
+either get rid of interleaved samples (use multiple ringbuffers instead)
+and/or prepare an intermediate buffer with the samples arranged before
+calling jack_ringbuffer_write to avoid too frequent calls.
+
+
+To sum things up: use large buffers wherever possible.
+
+
+
+Cheers
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1392165585.23367_0.ltw:2,a <20140212003936.GC25242 at ltw dot loris dot tv>
+________________________________________________________________________________
+

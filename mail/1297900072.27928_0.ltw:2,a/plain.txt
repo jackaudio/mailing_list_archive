@@ -1,0 +1,151 @@
+Date:        Wed, 16 Feb 2011 23:47:36 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+
+Subject:     Re: [Jack-Devel] Fwd: issues with latency management with "complex" clients
+
+On Wed, Feb 16, 2011 at 10:39:57PM +0100, zita kokkini wrote:
+ 
+> Consider Ardour. When  a track in Ardour is in playback mode, its
+> effectively functioning like a synthesizer (or just a simple file
+> playback client). The connections to and data arriving at the track's
+> input ports are completely irrelevant. In playback mode, the track
+> effectively has a set of output ports that should be marked
+> JackPortIsTerminal to indicate that the audio data available there
+> does not originate anywhere else in the JACK graph.
+> 
+> But now switch the track into recording mode, with monitoring enabled.
+> What appears at the track's output ports is now totally dependent on
+> the connections to the track's input ports. The track is no longer
+> functioning as a synth or file playback engine, but instead is more
+> like a passthru FX unit. Its output ports are definitely not
+> "Terminal" - all data presented at the outputs comes from the inputs.
+>
+> ... 
+> 
+> So the question is: should anything be done about this? Should ardour
+> force a recompute of the latencies when a track changes modes? This is
+> quite expensive and definitely non-RT in jack1; its doable with
+> tschak. jack2 does not have an implementation of this latency API yet.
+> Could we just redefine the latency specifications into something that
+> is still useful, but avoids this issue? Or something else?
+
+I'd say that, considering the external context, it is a non-issue.
+
+To avoid more confusion, I'll avoid the unqualified term 'monitoring'
+as this could mean a lot of different things, and instead use:
+
+'performer monitoring' (PM) : the signal of a performer's voice or
+instrument sent to the performer while recording that same voice or
+instrument.
+
+'track monitoring' (TM) : the signal of already recorderd tracks 
+listened to by a performer while adding new tracks to a session or
+punching existing tracks.
+
+'control room monitoring (CRM) : what you listen to in a control
+room that is acoustically isolated from the space used by the
+performers.
+
+There are two cases to consider:
+
+1. 'monitoring done by hardware'. This means either a sound card's
+'zero latency mixer' or a 'real' mixer are used for PM. No latency
+issues exist for the performer in that case: he/she will just sync
+to the TM. ** As far as the performer is concerned, there is no 
+signal going through Ardour **. His new signal goes in, but does
+not return to him/her via Ardour. The signals that originate in
+Ardour do not return to it.
+
+Of course Ardour itself must be aware of the latencies, and the net
+result should be that any new recorded signal must be offset w.r.t.
+the already existing ones by the round-trip latency - that will make
+then synchronous when played back together later. If Ardour already
+compensates for playback latency on the tracks that are being played,
+then it should compensate for input latency on the tracks being
+recorded - the sum of the two should be round-trip. But it still means
+two separate signal paths that each can operate without knowing the
+other one. In other words, the input latency compensation can *always*
+be done, regardless if the recording is of original tracks or dubbing.
+
+2. 'monitoring done by Ardour'. This in fact means that either the
+latencies are low enough to be of no consequence, OR there can be no
+PM at all. Otherwise the situation is the same as for 1).
+
+There is a deeper underlying problem with Ardour's current architecture,
+and it may welll be the original cause of the question you raise. This
+is that IF there is separate CRM (e.g. the case of classic studio with
+separate spaces for the performers and the sound engineeer), you in 
+fact want both 'monitoring by hardware' and 'monitoring via Ardour'
+at the same time. 
+
+For the control room, 'monitoring via Ardour' is the ideal situation,
+it means that the sound engineer can adjust his mix while recording
+new tracks, and nothing changes when later these tracks become part
+of the set being played back while eventually recording new ones.
+It's the equivalent of what was done in the days of magnetic tape
+multitracks: listening to existing tracks via the recording head,
+and new track using the signal being recorded, with the tape machine
+switching automatically between these in function of the record 
+status of each track. The difference is that in the old days you
+could use the signal being recorded for PM as well, as there was
+no latency on it.
+
+For the performer, you want PM in hardware with no latency, but TM
+of course has to come from Ardour. But TM should consist only of the
+already recorded tracks - not including the ones being recorded. 
+If you have a soundcard with at least as many channels as you have
+tracks this can be done using the soundcard's mixer or an external
+hardware one. But in the other, more common case, you need a mix for
+TM that is not the same one as the one for CRM (whithout the new 
+tracks being recorded), and this is atm possible but not really
+practical to do with Ardour. 
+
+-- 
+FA
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+> --
+> FA
+
+1297900072.27928_0.ltw:2,a <20110216234736.GC24623 at linuxaudio dot org>
+________________________________________________________________________________
+

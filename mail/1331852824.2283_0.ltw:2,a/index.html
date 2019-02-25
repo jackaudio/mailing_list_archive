@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] DLL not re-initialised after freewheeling</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] DLL not re-initialised after freewheeling</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1331852380.1480_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1331853825.3922_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1331852824.2283_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 16 Mar 2012 00:06:45 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1331852380.1480_0.ltw:2,a/index.html'>[Jack-Devel] DLL not re-initialised after freewheeling </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1331853825.3922_0.ltw:2,a/index.html'>Re: [Jack-Devel] DLL not re-initialised after freewheeling </a></td></tr>
+</table>
+<pre>
+Patch welcome.
+
+Stephane 
+
+Le 15 mars 2012 &#xE0; 23:59, Fons Adriaensen a &#xE9;crit :
+
+&gt; Hello all,
+&gt; 
+&gt; Following up my previous post, here is some hard evidence. It's
+&gt; the output of a small test program written to show the problem.
+&gt; 
+&gt; # Two values are printed in each process callback. The first one is
+&gt; # jack_last_frame_time() converted to usecs using jack_frames_to_time(),
+&gt; # in other words the DLL's estimate of the start of the current cycle.
+&gt; # The second is the current usecs time. Both are converted to seconds,
+&gt; # and the integer part of the first reading is substracted to get
+&gt; # more readable values. This is the actual code:
+&gt; #
+&gt; # int jack_callback (jack_nframes_t nframes, void *arg)
+&gt; # {
+&gt; #      jack_nframes_t  ft1;
+&gt; #      double          tj1, tj2;
+&gt; #
+&gt; #      if (freewheeling) return 0; // set by freewheeling callback.
+&gt; #
+&gt; #      ft1 = jack_last_frame_time (jack_handle);
+&gt; #      tj1 = 1e-6 * (jack_frames_to_time (jack_handle, ft1));
+&gt; #      tj2 = 1e-6 * jack_get_time ();
+&gt; #
+&gt; #      if (offset == 0) offset = (int) tj1;
+&gt; #      tj1 -= offset;
+&gt; #      tj2 -= offset;
+&gt; #      printf ("%10.6lf %10.6lf\n", tj1, tj2);
+&gt; #
+&gt; #      return 0;
+&gt; #  }
+&gt; #
+&gt; #
+&gt; # The listing starts about 4 seconds after the program is started.
+&gt; # As expected the two values are near equal, with the current time
+&gt; # around 1 ms after the cycle start time.
+&gt; ------------------------------
+&gt;  4.052306   4.052380
+&gt;  4.057639   4.057715
+&gt;  4.062972   4.063046
+&gt;  4.068305   4.068377
+&gt;  4.073637   4.073710
+&gt;  4.078970   4.079099
+&gt;  4.084303   4.084403
+&gt;  4.089636   4.089733
+&gt;  4.094969   4.095050
+&gt;  4.100302   4.100384
+&gt;  4.105635   4.105753
+&gt;  4.110968   4.111071
+&gt; ------------------------------
+&gt; # At this point Jack is put in freewheeling mode for 11 seconds.
+&gt; # Output resumes when freewheeling mode is terminated.
+&gt; # One would expect the wakeup time to be around 15 seconds or so
+&gt; # (the time actually returned by the usecs timer). But since the
+&gt; # next_wakeup time is not re-initialised after freewheeling, the DLL
+&gt; # continues with the time when freewheeling was started. Since it
+&gt; # sees a giant error of 11 seconds, it tries to catch up by increasing
+&gt; # the apparent period time, up to 120 ms in this case. The DLL recovers
+&gt; # after about 10 seconds, but until then it provides completely bogus
+&gt; # information.
+&gt; ------------------------------
+&gt;  4.116301  15.334817
+&gt;  4.234378  15.340120
+&gt;  4.351883  15.345446
+&gt;  4.468816  15.350789
+&gt;  4.585177  15.356115
+&gt;  4.700967  15.361449
+&gt;  4.816185  15.366783
+&gt;  4.930832  15.372110
+&gt;  5.044908  15.377443
+&gt;  5.158413  15.382776
+&gt;  5.271347  15.388105
+&gt;  5.383711  15.393443
+&gt;  5.495505  15.398775
+&gt;  5.606730  15.404106
+&gt;  5.717386  15.409438
+&gt;  5.827473  15.414774
+&gt;  5.936992  15.420106
+&gt; # Etc.
+&gt; # Both values converge after about 10 seconds.
+&gt; 
+&gt; Ciao,
+&gt; 
+&gt; -- 
+&gt; FA
+&gt; 
+&gt; Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+&gt; 
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1331852380.1480_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1331853825.3922_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1331852824.2283_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1331852824.2283_0.ltw:2,a&nbsp;&lt;9D6945DE-3245-416E-8073-5EEC2A490D19 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

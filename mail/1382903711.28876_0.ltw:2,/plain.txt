@@ -1,0 +1,159 @@
+Date:        Sun, 27 Oct 2013 20:54:57 +0100
+From:        Wojciech Zabolotny  <[hidden] at gmail dot com>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK Developers <[hidden] at jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] How to setup jack for transmission of audio from embedded system to jack equipped audio workstation? (1382903574.28693_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] How to setup jack for transmission of audio from embedded system to jack equipped audio workstation?
+
+Thanks a lot. So before trying to write something myself, I'll try to
+repeat my tests using netone instead of netmanager, as soon, as I have
+some free time.
+
+
+On Sun, Oct 27, 2013 at 8:52 PM, Paul Davis <[hidden]> wrote:
+> given that netjack1 and alsa_in were written by the same person, you might
+> want to consider that fact for a few minutes.
+>
+>
+> On Sun, Oct 27, 2013 at 2:53 PM, Wojciech Zabolotny <[hidden]>
+> wrote:
+>>
+>> Yes, indeed, I have got it running, but in fact i'm not fully
+>> satisfied with achieved latency.
+>> In fact I thinkthere may be a need for a dedicated solution, due to
+>> following requirements:
+>>
+>> 1. It is supposed to be a wireless guitar system, so the embedded system
+>> must
+>>    be connected via WiFi.
+>>  2. UDP over WiFi will almost for sure result in lost packets (due to
+>> collisions),
+>>     so I need a protocol with acknowledge (RUDP, UDP-RT or simply TCP/IP?)
+>> 3. At the transmitter side there is no need for buffering at all. I
+>> should simply
+>>     transmit all samples received from the ALSA driver as quickly as they
+>> come.
+>>     The buffering and synchronization should be done only on a receiver
+>> side.
+>>
+>> So I think, that the best way to go will be to modify the existing
+>> alsa_in program so that it receives samples via network...
+>>
+>> Thanks & Regards,
+>>
+>> Wojtek
+>>
+>> On Sat, Oct 26, 2013 at 11:29 AM, raf <[hidden]> wrote:
+>> > hello,
+>> >
+>> > you're close to having it work.
+>> >
+>> > The config on your workstation looks ok, the problem is on the embedded
+>> > side.
+>> >
+>> > On the embedded system, you have to start jack with the "net" backend,
+>> > not the alsa one.
+>> > jackd -R -d net  (more option available)
+>> > Doing this, the embedded system will look for a master jack which is
+>> > started on the workstation, and create the ports for audio communication.
+>> >
+>> > Then to have the signal of your guitar go through the network link, you
+>> > have to use jack_load audioadapter on the embedded system to gain access to
+>> > the soundcard.
+>> >
+>> > A lot more information on this page, will help you understand better
+>> > this configuration :
+>> > http://trac.jackaudio.org/wiki/WalkThrough/User/NetJack2
+>> >
+>> > I have tried a similar setup, and it's working great ! Good luck
+>> >
+>> > Raphaël
+>> >
+>> > Le 26 oct. 2013 à 00:05, Wojciech Zabołotny a écrit :
+>> >
+>> >> Hi,
+>> >>
+>> >> I'm preparing a jack based wireless guitar system.
+>> >> The previous solution was based on microcontroller,
+>> >> dedicated radio link and receiver imitating USB audio card
+>> >> ( http://www.ise.pw.edu.pl/~wzab/wireless_guitar_system/ ).
+>> >> In this solution I used "alsa_in" to synchronize the input stream
+>> >> with the soundcard in the receiving audio workstation.
+>> >>
+>> >> Upgrading my system I have decided to replace the microcontroller
+>> >> based transmitter with dedicated radion link with an embedded system
+>> >> equipped with the WiFi card, and use standard WiFi card as the
+>> >> receiver in the audio workstation.
+>> >>
+>> >> I have successfully implemented the driver for CS5343/4 ADC for the
+>> >> ALSA SoC and packaged the jack2 for Buildroot.
+>> >> (
+>> >> https://groups.google.com/forum/#!topic/comp.sys.raspberry-pi/EgQAQ0DNwN4 ,
+>> >>  http://lists.busybox.net/pipermail/buildroot/2013-October/081087.html
+>> >> ),
+>> >> so now I only need to integrate jack in the embedded system with jack
+>> >> in the
+>> >> workstation.
+>> >>
+>> >> And here I run into real problems.
+>> >> I'd like to have the audio workstation initialized in such a way, that
+>> >> jack is running, audio processing programs are also running and
+>> >> connected
+>> >> to jack, and the system waits for connection of the embedded system
+>> >> as an audio source.
+>> >> So I have started jack with qjackctl on my workstation. Then I should
+>> >> to
+>> >> create the audio input ports associated with the network server waiting
+>> >> for data stream coming from my embedded system. However I couldn't find
+>> >> any way to do it :-(.
+>> >> I've tried "jack_load netmanager", but it didn't create any ports.
+>> >> Adding the "-c" option didn't help
+>> >> (load netmanager -i "-c").
+>> >> So I've tried to run "jack netadapter", and it created additional
+>> >> capture ports.
+>> >> But now it is unclear for me, how to connect to it from my embedded
+>> >> system,
+>> >> because it seems, that now my audio workstation should be the slave...
+>> >>
+>> >> When I start jack in my embedded system:
+>> >> jackd -P41 -p512 -t10000 -dalsa -r48000 -p256 -n2 -Xseq  -Chw:0,0
+>> >> jack_load netmanager -i "-c"
+>> >>
+>> >> Nothing happens in the workstation. In the jack message window I can
+>> >> still see:
+>> >> Ringbuffer automatic adaptative mode size = 1024 frames
+>> >> NetAdapter started in sync mode without Master's transport sync.
+>> >> Waiting for a master...
+>> >>
+>> >> I don't know, is it possible to setup such a system with workstation
+>> >> waiting for connection of the embedded system?
+>> >> Should I use another protocol - e.g. netone?
+>> >> Should I write my own application imitating "alsa_in" but using
+>> >> the network connection?
+>> >>
+>> >> I'll appreciate any suggestions, explanantions or hints.
+>> >>
+>> >> TIA & Regards,
+>> >> Wojtek
+>> >>
+>> >>
+>> >>
+>> >>
+>> >> "jack_load netmanager" on it.
+>> >>
+>> >> 
+>> >> Jack-Devel mailing list
+>> >> [hidden]
+>> >> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>> >
+>> 
+>> Jack-Devel mailing list
+>> [hidden]
+>> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+>
+
+1382903711.28876_0.ltw:2, <CAMduVEfA5m-Smrvr+64oewbSUeMWiRWe=eRu8BDfn7OkfzwFLw at mail dot gmail dot com>
+________________________________________________________________________________
+

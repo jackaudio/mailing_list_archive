@@ -1,0 +1,39 @@
+Date:        Thu, 20 Dec 2018 14:07:04 -0600
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jaime T [Jack-Devel] Can pulseaudio-module-jack "auto-start" jackd1? (1545211887.5623_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Can pulseaudio-module-jack "auto-start" jackd1?
+
+On Wed, December 19, 2018 3:30 am, Jaime T wrote:
+> I'm running jackd1 (0.125.0) on debian 9 (stretch) and its
+> "auto-starting" facility works perfectly whenever I use jack-play.
+
+I am not positive I remember the details correctly, but I believe the auto
+start behavior is a function of the application, not the jackd server.
+
+> now want to use pulseaudio-module-jack, but "pactl load-module
+> module-jack-sink channels=2" fails (the command returns "Failure:
+> Module initialization failed" and I see "jack_client_open() failed" in
+> the journal).
+
+Perhaps pulse expects jackd to be running when the module loads.  You may
+have to start jackd manually, or switch to jackd v 2.
+
+> understand how jack-play starts jackd1. Is it dbus magic, or something
+> else?)
+
+Something else, jackd v2 has dbus support, jackd v1 does not.  I believe
+that applications are supposed to check ~/.jackdrc to determined the
+desired default command line for the non-dbus version, I'm not sure how an
+application would determine if the dbus version was available.  I guess it
+could try starting the dbus version first, and if that did not work look
+for a .jackdrc command, and if that was not available start jackd and
+accept the default behavior.
+
+-- 
+Chris Caudle
+
+1545336456.29728_0.ltw:2, <73f37c5f1f606a8676c0190629bbed53.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

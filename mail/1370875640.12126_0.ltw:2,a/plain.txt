@@ -1,0 +1,95 @@
+Date:        Mon, 10 Jun 2013 07:47:13 -0700
+From:        katutxakurra  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] jack2 on ARM - patch (1357510908.17134_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] jack2 on ARM - patch+ (1370881790.16464_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack2 on ARM - patch
+
+Hi,
+
+I've tried the patch in a gumstix overo and it seem to work if I set the
+overo as slave. However, when I try
+
+jackd -v -d alsa -d hw:2 -r 44100 &
+
+I get the error below. The overo card is in hw:2, hw:0 is dummy and hw:1 is
+loopback. The same jackd command works with them but I can't get the output
+in the headphones with those. I've tried the
+https://github.com/basilnut/jack2/ but I get the old bus error that I got
+with the 1.9.9.5 tarball.
+I'm using ./waf configure --alsa
+Have anyone used jack2 with a gumstix overo?
+I'm using a custom image built with the Yocto project and kernel 3.5.
+Another small problem is that libjack* libraries get installed in
+/usr/local/lib but jackd looks for them in /usr/lib/... moving then manually
+solved this (yes, I did ldconfig after installing it :)
+
+Thanks in advance for reading the question.
+
+[1] 302
+root@overo:~# jackdmp 1.9.9.5
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2012 Grame.
+jackdmp comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+JACK server starting in realtime mode with priority 10
+Jack: JackPosixThread::StartImp : create non RT thread
+Jack: JackPosixThread::ThreadHandler : start
+Jack: playback device hw:2
+Jack: capture device hw:2
+Jack: apparent rate = 44100
+Jack: JackDriver::Open capture_driver_name = hw:2
+Jack: JackDriver::Open playback_driver_name = hw:2
+Jack: Check protocol client = 8 server = 8
+Jack: JackEngine::ClientInternalOpe[  191.658294] twl4030-codec
+twl4030-codec: can't set twl4030-hifi hw params: -22
+n: name = system
+Jack: JackEngine::AllocateRefNum ref = 0
+Jack: JackPosixSemaphore::Allocate name = jack_sem.0_default_system val = 0
+Jack: JackEngine::NotifyAddClient: name = system
+Jack: JackGraphManager::SetBufferSize size = 1024
+Jack: JackConnectionManager::DirectConnect first: ref1 = 0 ref2 = 0
+Jack: JackGraphManager::ConnectRefNum cur_index = 0 ref1 = 0 ref2 = 0
+Jack: JackDriver::SetupDriverSync driver sem in flush mode
+creating alsa driver ... hw:2|hw:2|1024|2|44100|0|0|nomon|swmeter|-|32bit
+configuring for 44100Hz, period = 1024 frames (23.2 ms), buffer = 2 periods
+ALSA: final selected sample format for capture: 32bit integer little-endian
+ALSA: use 2 periods for capture
+ALSA: cannot set hardware parameters for capture
+ALSA: cannot configure capture channel
+Jack: JackDriver::Close
+Jack: JackConnectionManager::DirectDisconnect last: ref1 = 0 ref2 = 0
+Jack: JackGraphManager::DisconnectRefNum cur_index = 0 ref1 = 0 ref2 = 0
+Jack: JackEngine::ClientInternalClose ref = 0
+Jack: JackEngine::ClientCloseAux ref = 0
+Jack: JackGraphManager::RemoveAllPorts ref = 0
+Jack: JackPosixSemaphore::Destroy name = jack_sem.0_default_system
+Jack: ~JackDriver
+Cannot initialize driver
+Jack: no message buffer overruns
+Jack: JackPosixThread::ThreadHandler : exit
+Jack: JackPosixThread::Stop
+JackServer::Open failed with -1
+Jack: Succeeded in unlocking 82725920 byte memory area
+Jack: JackShmMem::delete size = 0 index = 0
+Jack: ~JackDriver
+Jack: Succeeded in unlocking 1040 byte memory area
+Jack: JackShmMem::delete size = 0 index = 1
+Jack: Cleaning up shared memory
+Jack: Cleaning up files
+Jack: Unregistering server `default'
+Failed to open server
+
+
+
+
+
+--
+View this message in context: http://jack-audio.10948.n7.nabble.com/Jack-Devel-jack2-on-ARM-patch-tp15962p16813.html
+Sent from the Jackit mailing list archive at Nabble.com.
+
+1370875640.12126_0.ltw:2,a <1370875632992-16813.post at n7 dot nabble dot com>
+________________________________________________________________________________
+

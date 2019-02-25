@@ -1,0 +1,51 @@
+Date:        Thu, 08 Mar 2012 09:28:38 -0500
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] FFADO issues after freewheeling (was: Re: update jack from 1.9.7 to 1.9.8) (1331215646.28813_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] FFADO issues after freewheeling (was: Re: update jack from 1.9.7 to 1.9.8) (1331672777.11451_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] FFADO issues after freewheeling (was: Re: update jack from 1.9.7 to 1.9.8)
+
+On Thu, Mar 8, 2012 at 9:06 AM, Fons Adriaensen <[hidden]> wrote:
+> On Fri, Mar 09, 2012 at 12:05:41AM +1030, Jonathan Woithe wrote:
+>
+>> FFADO isn't aware of freewheeling as such.  However, when freewheeling is
+>> started the backend streaming is stopped for the reasons Paul mentioned.
+>> When jack is taken out of freewheeling the backend is restarted again.
+>> FFADO sees the stop/start cycle but doesn't know (or care) that this is
+>> because of freewheeling.
+>
+> Paul didn't give any reasons why freewheeling is implemented that way,
+> and I'm somewhat surprised it is. To me the simplest way to do it
+> would be:
+>
+> 1. The RT thread that normally calls the backend's 'wait for next cycle'
+> function continues to do so, it feeds silence to the backend and discards
+> any input it produces. That way even the backend would be unaware of
+> freewheeling.
+>
+> 2. A second non-RT thread runs cycles as fast as it can, substituting
+> the backend buffers by dummy ones. Only two extra buffers are required
+> to do that, one (silenced) given to all clients that have system:capture
+> ports connected, and one for output (which can be shared for all system:
+> playback channels as it will be discarded anyway).
+>
+> I always imagined things worked that way...
+
+what you describe is actually more complex. it requires special
+handling of port buffers, which the current scheme(s) (multiple since
+both jack1 and jack2 do this) do not. it also requires a second thread
+which comes and goes.  the current schemes simply tell the backend
+that its freewheeling - it stops the device it is using, and simply
+wakes up the "engine" immediately that the engine returns from the
+previous "cycle" (rather than waiting for the device). almost no other
+code is required. starting and stopping devices is something that the
+backend will already have code for; the idea that such code is not
+functional if called more than once seems problematic.
+
+--p
+
+1331216976.31062_0.ltw:2,a <CAFa_cKn4KCiVjUgJFnS9X9b6x5Bk=j0EA7g=4r923V8RTJ+0wA at mail dot gmail dot com>
+________________________________________________________________________________
+

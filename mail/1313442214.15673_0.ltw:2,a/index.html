@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1313356915.31433_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1313500969.23840_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1313442214.15673_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 15 Aug 2011 23:03:15 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jeroen Van den Keybus </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Dan Swain &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Dan Swain
+<a href='../1313356915.31433_0.ltw:2,a/index.html'>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1313519247.3714_0.ltw:2,a/index.html'>Re: [Jack-Devel] Ethernet-based audio interface using (net)jack idea </a></td></tr>
+</table>
+<pre>
+Dan,
+
+2011/8/14 Dan Swain &lt;[hidden]&gt;
+
+&gt; Apologies for not getting back to this thread for a week. While I've been
+&gt; 'away', I've been thinking about how to tackle having the digital audio from
+&gt; the AD Jeroen mentioned make its way into JACK. Looking at the diagram (
+&gt; http://trac.jackaudio.org/wiki/WalkThrough/User/NetJack2) it looks like a
+&gt; backend would have to be created that talks to both the FPGA and the CS5368.
+&gt;
+&gt;
+Don't forget that the 'backend' you want to create is probably a hardware
+interface (= VHDL file) to the ADC. You will probably be clocking the ADC
+from the FPGA as a master on its MCLK pin and read your TDM frames using
+SCLK and LRCK/FS. The tricky bit is going to be the generation of this MCLK
+clock signal; it will need to become synchronized with the sync packets the
+system will receive from the master Jack server. When that happens, the ADC
+values from the ADC can be directly fed into Jack packets (after floating
+point conversion and a FIFO to cope with jitter and Ethernet packetization).
+
+It think this may eventually end up by you generating a square wave
+synchronous to the Jack server sync packets, and feeding that signal back
+(externally - FPGA PLL inputs are always dedicated inputs) into one of the
+FPGA PLLs to generate MCLK. Beware that the square wave will really need to
+be 'good' in a sense that simply clocking the FPGA PLL with sync pulses will
+not do (too low a frequency - too much jitter). Therefore you will need a
+digital PLL (= VHDL file) first. Beware that clock generation in this
+fashion isn't common at all (let alone recommended), but since it would save
+so much trouble processing the data, I think it's worth trying...
+
+If this low-level clock synchronization is not possible, be prepared for
+some tedious signal interpolation (as is actually done in 'audioadapter').
+
+The next logical place for you to look is the netjack source code, in order
+to understand the mechanism of synchronization and to find out how the Jack
+server expects the data to be laid out in the Ethernet packets (i.e. have
+the FPGA *emulate*, rather than *run*, NetJack).
+
+The hardware design for this project is not entry-level, to say the least. I
+suggest you contact Uwe Beis for assistance in this project. He apparently
+has also useful experience with the analog front end.
+
+As for PHYs, avoid anything with QFN or BGA package for a DIY project. Also,
+again, stay away from GbE, or face getting GMII timings right to 1ns.
+
+
+&gt; For now, I'd like to think that the PCM data coming from the AD can be
+&gt; directly connected to JACK's audio 'inputs'...channel 1 going to audio input
+&gt; 1, 2 to 2 and so on, and then JACK broadcasts that data to the network. In
+&gt; that case, all we'd need to do on the FPGA is route the right audio channels
+&gt; to the relevant JACK inputs running on that chip.
+&gt;
+&gt; Would that be a fair assumption?
+&gt;
+&gt;
+Yes, but I sincerely doubt you'll ever get 'jackd -dnet' running properly on
+a Nios II embedded Linux. My idea is therefore to have the FPGA (or the
+softcore CPU on it) directly generate Ethernet packets conforming to a
+predefined NetJack layout.
+
+
+
+&gt; This project may be a bit slow to get started, but I do intend on keeping
+&gt; it going!
+&gt;
+&gt; As always, thanks for all of your help!
+&gt;
+&gt; Dan
+&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1313356915.31433_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1313500969.23840_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1313442214.15673_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1313442214.15673_0.ltw:2,a&nbsp;&lt;CAPRPZsDSdj5y8nNvc7qYctjmd0EPTTHbVeYB4cK_9aZwz+ZD3g at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,60 @@
+Date:        Wed, 22 May 2013 14:36:30 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: John Emmas Re: [Jack-Devel] Fwd: [andraudio] Google I/O: High performance audio talk (1369222546.8762_0.ltw:2,RSa)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] [andraudio] Google I/O: High performance audio talk (1369228186.12804_0.ltw:2,)
+Follow-Up:   David Nielson [Jack-Devel] JACK on Android: Use cases? (1369248325.28293_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Fwd: [andraudio] Google I/O: High performance audio talk
+
+On 05/22/2013 01:35 PM, John Emmas wrote:
+
+[http://youtu.be/d3kfEeMZ65c]
+> For those of us who don't know the history behind this (and who don't
+> want to sit through a 40 minute video) what's the underlying problem
+> here...?
+
+I've just watched the video. Summary:
+
+   - Android until JellyBean had no SCHED_FIFO in the kernel.
+
+   - Android now uses SCHED_FIFO and CGROUPS with 5% budget for
+     low-latency audio while normal audio runs with SCHED_OTHER
+     (low-priority). They use the term "fast-path" for low-latency
+     access to the audio hardware. Fast-path requires OpenSLES C++ code,
+     no Java code.
+
+     The normal audio creates a submix that's fed into the fast-path
+     system. That's similar to what you have when running jackd with the
+     pulseaudio-jack modules.
+
+   - Android has no means to deal with priority inversion
+
+   - Google developers emphasise not to block in your audio thread
+     (surprise, surprise, that's mentioned in the JACK FAQ for years)
+
+   - Sample rates vary among devices (some 44.1kHz, others 48kHz)
+
+   - Hardware buffer sizes vary among devices, e.g., 240 samples/buffer
+
+   - The last two points will be addressed by adding an API to query the
+     sample rate and buffer size (Android API level 17)
+
+   - Google hardware team will fix kernel audio driver bugs
+
+The guy who wrote the synthesizer finally talked about optimisations he
+had done to his application. Nothing new: Use C++ instead of Java, use
+the correct buffer size, use aligned buffers, use SIMD asm.
+
+
+So after all, there is hope for low-latency on Android. It already works
+on some devices, more devices will follow. For the first time, the
+architecture is similar to what's known to work on (desktop) Linux.
+
+
+
+HTH
+
+1369226197.11048_0.ltw:2,a <519CBBCE.8090506 at drcomp dot erfurt dot thur dot de>
+________________________________________________________________________________
+

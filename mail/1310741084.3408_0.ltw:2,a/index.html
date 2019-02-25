@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT"</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT"</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1310721939.27389_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1310742395.5903_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1310741084.3408_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 15 Jul 2011 16:44:26 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Robin Gareus &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1310742395.5903_0.ltw:2,a/index.html'>Re: [Jack-Devel] jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT" </a></td></tr>
+</table>
+<pre>
+Le 15 juil. 2011 &#xE0; 16:33, Robin Gareus a &#xE9;crit :
+
+&gt; On 07/15/2011 02:16 PM, St&#xE9;phane Letz wrote:
+&gt;&gt; 
+&gt;&gt; Le 15 juil. 2011 &#xE0; 12:22, Robin Gareus a &#xE9;crit :
+&gt;&gt; 
+&gt;&gt;&gt; On 07/15/2011 08:55 AM, St&#xE9;phane Letz wrote:
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; Le 14 juil. 2011 &#xE0; 20:05, Robin Gareus a &#xE9;crit :
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt; On 07/14/2011 07:57 PM, St&#xE9;phane Letz wrote:
+&gt;&gt;&gt;&gt;&gt;&gt; Do you have a more complete log? Possibly in verbose (-v mode)?
+&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt; No, not yet. There's nothing in ~/.log/jack/jackdbus.log these messages
+&gt;&gt;&gt;&gt;&gt; appear in ardour's log window.
+&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt; I will re-run jackd in verbose mode later tonight or more likely tomorrow.
+&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt;&gt; PS. did you intentionally reply off-list?
+&gt;&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; Until I get some more info to answer in a sensible way yes.
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; St&#xE9;phane 
+&gt;&gt;&gt; 
+&gt;&gt;&gt; I just tried for 90mins to reproduce it with verbose logging (both jackd
+&gt;&gt;&gt; and jackdbus) and could not! :(
+&gt;&gt;&gt; 
+&gt;&gt;&gt; Anyway, there are quite a few people experiencing this - just search
+&gt;&gt;&gt; google for "JackActivationCount". The closest to s.o. tracking it down
+&gt;&gt;&gt; is: http://mailinglisps.blogspot.com/2010/02/jackosx-error-message.html
+&gt;&gt;&gt; but the assertion there does not make much sense to me.
+&gt;&gt; 
+&gt;&gt; Well this message happens when a client could not "consume"  it's activation in time on a given cycle, and it triggered again. 
+&gt;&gt; 
+&gt;&gt; What surprise me is the fact that you see it in synchronous mode, when the server should normally waits for all clients to finish.
+&gt;&gt; 
+&gt;&gt;&gt; 
+&gt;&gt;&gt; I'll keep my eyes peeled or rather the logging enabled; and hope to get
+&gt;&gt;&gt; back to you on that matter soon.
+&gt;&gt;&gt; 
+&gt;&gt;&gt; robin
+&gt;&gt;&gt; 
+&gt;&gt; OK thanks.
+&gt; 
+&gt; bummer. Seems to have been some "advanced" PEBKAC.
+&gt; 
+&gt; long story short: it was not in synchronous mode when the errors
+&gt; happened and I can reproduce the JackActivationCount by
+&gt; + running in async mode
+&gt; + using lots of DSP-load
+
+Ok, this makes much more sense!
+
+&gt; 
+&gt; But why are these messages printed out by default? Shouldn't signaling
+&gt; an x-run be enough?
+
+They are still not "strict XRun": in asynchronous mode XRuns are detected by the server which just checks that all clients have be run previous cycle. It then print something like:
+
+"JackEngine::XRun : client = XXX was not run: state = 2"
+
+Don't you see there kind of messages along the "JackActivationCount...." ones?
+
+
+&gt; IMHO these msgs should only be generated in verbose
+&gt; mode, because printing those messages just makes things worse: more
+&gt; system load due to logging, etc. -&gt; even more messages.
+
+OK this can be done quite easily...
+
+&gt; 
+&gt; esp. with ardour3 that opens a gtk-log-window and prints all those
+&gt; messages: When loading some CPU-intense plugins, at first there are one
+&gt; or two JackActivationCount messages and either it stops right after that
+&gt; or it snowballs: after a second there's one of these messages for each
+&gt; process-cycle.  qjackctl is a bit "smarter": it caches/enqueues the
+&gt; messages but does not print them immediately.
+&gt; 
+&gt; Shall I file a bug-report (against jack2) to only print those
+&gt; JackActivationCount msgs in verbose mode?
+&gt; 
+&gt; 
+&gt; As for the PEBKAC:
+&gt; Sometimes, I launch a 2nd non-RT jackd with different server-name in
+&gt; order to debug ardour3 with gdb. By doing so ~/.config/jack/conf.xml is
+&gt; overridden (disable sync mode) and next time I suspend/resume the
+&gt; machine the engine-parameters of the main/default jackdbus get re-set...
+&gt; I end up running in async mode even though the original server/backend
+&gt; was started in sync-mode. Weird. IIUC that should not happen: It is an
+&gt; engine setting not a backend setting, right?
+
+Yes -S for "synchronous" is a server setting. It can actually be used with different kind of backend.
+
+St&#xE9;phane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1310721939.27389_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1310742395.5903_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1310741084.3408_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1310741084.3408_0.ltw:2,a&nbsp;&lt;03662276-9B64-4E58-AA2D-D7FD78E1F651 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

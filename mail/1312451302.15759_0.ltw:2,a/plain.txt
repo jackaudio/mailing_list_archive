@@ -1,0 +1,37 @@
+Date:        Thu, 04 Aug 2011 11:48:15 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Sampo Savolainen <[hidden] at iki dot fi>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Sampo Savolainen Re: [Jack-Devel] Alignment (again) (1312450426.14704_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Alignment (again)
+
+Le 4 août 2011 à 11:33, Sampo Savolainen a écrit :
+
+> On Thu, Aug 4, 2011 at 7:24 AM, Gabriel Beddingfield <[hidden]> wrote:
+> 
+> I ran into a strange bug where the conclusion was that:
+> 
+>   float *buf = malloc(512*sizeof(float));
+> 
+> Is invalid/undefined code.  I don't have a copy of the C spec, but the C++ spec says, that since a `float` must be 4-byte aligned... so must a `float*`.[1]  However, malloc(3) has no alignment requirements.
+> 
+> This is a problem because, for instance, this is how Jack's ringbuffer allocates the buffer.  And then we turn around and use it for an array of float's.
+> 
+> In practice, this bug only rears its head when compiling with -O3 and some implementations libc.[2]
+> 
+> 
+> I would be very surprised if malloc() returned pointers that are not 4-byte aligned. Are you running vectorized code? x86 SIMD (SSE) vector instructions require 16-byte aligned data pointers. This is a more likely source for the segfaults.
+> 
+> But, +1 for posix_memalign()
+> 
+> 
+>  Sampo 
+
+jack2 already does 16-byte aligned data for audio buffers in shared memory. Ring buffer is another story, I'll let initial developer of the code (Paul?) answer here. Note that as least on jack2 we have to find a multi-platform solution.
+
+Stéphane 
+
+1312451302.15759_0.ltw:2,a <10FF9A6C-985B-4267-91B5-7F2808D1D8E9 at grame dot fr>
+________________________________________________________________________________
+

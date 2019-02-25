@@ -1,0 +1,295 @@
+Date:        Thu, 27 Jun 2013 23:06:31 +0200
+From:        [hidden] at trellis dot ch <[hidden] at trellis dot ch
+To:          Clemens Ladisch <[hidden] at ladisch dot de>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Clemens Ladisch Re: [Jack-Devel] jackdmp 1.9.10 stops running after some hours on BBB (1372343428.6189_0.ltw:2,a)
+Follow-Up:   Robin Gareus Re: [Jack-Devel] jackdmp 1.9.10 stops running after some hours on BBB (1372368886.23590_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jackdmp 1.9.10 stops running after some hours on BBB
+
+> [hidden] wrote:
+>> after some hours (roughly 6 hours)
+>
+> Is it always the same time?  Could it be 6 hours and 45 minutes (which
+> would correspond to 2^32 bytes)?
+>
+>
+> Regards,
+> Clemens
+>
+
+hi, it was not related to 2^32 as far as i can tell .. :(
+here is some log output from where it happens.
+
+normal operation, 15 minutes after start:
+
+Thu Jun 27 22:35:29 CEST 2013 10.10.10.214:7778 /silentjack/level ssiif
+"sj_sys_cap2" "7778" 1 51 -11.482482
+Thu Jun 27 22:35:30 CEST 2013 10.10.10.214:7778 /silentjack/level ssiif
+"sj_sys_cap2" "7778" 1 52 -11.506376
+Thu Jun 27 22:35:30 CEST 2013 10.10.10.214:7777 /silentjack/level ssiif
+"sj_sys_cap1" "7777" 1 52 -11.199789
+Thu Jun 27 22:35:31 CEST 2013 10.10.10.214:7778 /silentjack/level ssiif
+"sj_sys_cap2" "7778" 1 53 -7.855899
+Thu Jun 27 22:35:31 CEST 2013 10.10.10.214:7777 /silentjack/level ssiif
+"sj_sys_cap1" "7777" 1 53 -7.548999
+Thu Jun 27 22:35:31 CEST 2013 10.10.10.214:58175 /an1/info iiissssss
+1372365316 558 0 " 22:35:16 up 15 min,  0 users,  load average: 1.38,
+1.15, 0.77" "top - 22:35:16 [[[[up 15 min]]]],  0 users,  load average:
+1.38, 1.15, 0.77
+Thu Jun 27 22:35:31 CEST 2013 Tasks:  69 total,   1 running,  68 sleeping,
+  0 stopped,   0 zombie
+Thu Jun 27 22:35:31 CEST 2013 %Cpu(s): 26.5 us, 21.8 sy,  0.0 ni, 49.0 id,
+ 1.7 wa,  0.1 hi,  0.9 si,  0.0 st
+Thu Jun 27 22:35:31 CEST 2013 KiB Mem:    507800 total,   137836 used,  
+369964 free,     5656 buffers
+Thu Jun 27 22:35:31 CEST 2013 KiB Swap:        0 total,        0 used,    
+   0 free,   104940 cached
+Thu Jun 27 22:35:31 CEST 2013
+Thu Jun 27 22:35:31 CEST 2013 PID USER      PR  NI  VIRT  RES  SHR S  %CPU
+%MEM    TIME+  COMMAND
+Thu Jun 27 22:35:31 CEST 2013 582 ubuntu    20   0  105m  81m  80m S  34.9
+16.4   5:15.62 jacktrip
+Thu Jun 27 22:35:31 CEST 2013 558 ubuntu    20   0 93852  87m  80m S   8.7
+17.6   1:16.00 jackd
+Thu Jun 27 22:35:31 CEST 2013 2267 ubuntu    20   0  2344  928  688 R  
+8.7  0.2   0:00.06 top
+Thu Jun 27 22:35:31 CEST 2013 590 ubuntu    20   0 94524  80m  79m S   4.4
+16.2   0:13.57 silentjack
+Thu Jun 27 22:35:31 CEST 2013 1 root      20   0  2864 1788 1016 S   0.0 
+0.4   0:02.44 init
+Thu Jun 27 22:35:31 CEST 2013 2 root      20   0     0    0    0 S   0.0 
+0.0   0:00.26 kthreadd
+Thu Jun 27 22:35:31 CEST 2013 3 root      20   0     0    0    0 S   0.0 
+0.0   0:00.19 ksoftirqd/0
+Thu Jun 27 22:35:31 CEST 2013 5 root       0 -20     0    0    0 S   0.0 
+0.0   0:00.00 kworker/0:0H" "-rw-rw-r-- 1 ubuntu ubuntu     66672 Jun 27
+22:35 jackd_1372364380.log" "ubuntu     558  8.1 17.5  93852 89204 ?      
+ SLsl 22:19   1:16 jackd -R --timeout 5000 -v -d alsa -r44100 -n3 -p1024
+-d hw:1,0" "Filesystem      Size  Used Avail Use% Mounted on
+Thu Jun 27 22:35:31 CEST 2013 none            248M   79M  170M  32% /run/shm"
+
+
+jack last lines (looking good (?)):
+
+"Jack: JackSocketServerChannel::Execute : fPollTable i = 3 fd = 11
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 4 fd = 12
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 1 fd = 8
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 2 fd = 9
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 3 fd = 11
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 4 fd = 12
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 1 fd = 8
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 2 fd = 9
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 3 fd = 11
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 4 fd = 12
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 1 fd = 8
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 2 fd = 9
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 3 fd = 11
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 4 fd = 12
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 1 fd = 8
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 2 fd = 9
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 3 fd = 11
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 4 fd = 12
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 1 fd = 8
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 2 fd = 9
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 3 fd = 11
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 4 fd = 12
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 1 fd = 8
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 2 fd = 9
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 3 fd = 11
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 4 fd = 12
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 1 fd = 8
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 2 fd = 9
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 3 fd = 11
+Thu Jun 27 22:35:31 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 4 fd = 12"
+Thu Jun 27 22:35:32 CEST 2013 10.10.10.214:7778 /silentjack/level ssiif
+"sj_sys_cap2" "7778" 1 54 -11.921941
+Thu Jun 27 22:35:32 CEST 2013 10.10.10.214:7777 /silentjack/level ssiif
+"sj_sys_cap1" "7777" 1 54 -11.650131
+
+** suddenly silentjack reports -90 db on system:capture_1 (!)
+
+Thu Jun 27 22:35:33 CEST 2013 10.10.10.214:7778 /silentjack/level ssiif
+"sj_sys_cap2" "7778" 0 1 -90.000000
+Thu Jun 27 22:35:33 CEST 2013 10.10.10.214:7777 /silentjack/level ssiif
+"sj_sys_cap1" "7777" 0 1 -90.000000
+Thu Jun 27 22:35:33 CEST 2013 10.10.10.214:7778 /silentjack/silent ssf
+"sj_sys_cap2" "7778" -90.000000
+Thu Jun 27 22:35:33 CEST 2013 10.10.10.214:7777 /silentjack/silent ssf
+"sj_sys_cap1" "7777" -90.000000
+Thu Jun 27 22:35:34 CEST 2013 10.10.10.214:7777 /silentjack/level ssiif
+"sj_sys_cap1" "7777" 0 1 -90.000000
+Thu Jun 27 22:35:34 CEST 2013 10.10.10.214:7778 /silentjack/level ssiif
+"sj_sys_cap2" "7778" 0 1 -90.000000
+Thu Jun 27 22:35:34 CEST 2013 10.10.10.214:7777 /silentjack/silent ssf
+"sj_sys_cap1" "7777" -90.000000
+Thu Jun 27 22:35:34 CEST 2013 10.10.10.214:7778 /silentjack/silent ssf
+"sj_sys_cap2" "7778" -90.000000
+...
+Thu Jun 27 22:35:42 CEST 2013 10.10.10.214:34889 /an1/info iiissssss
+1372365327 558 0 " 22:35:27 up 16 min,  0 users,  load average: 1.16,
+1.12, 0.77" "top - 22:35:27 up 16 min,  0 users,  load average: 1.16,
+1.12, 0.77
+Thu Jun 27 22:35:42 CEST 2013 Tasks:  69 total,   1 running,  68 sleeping,
+  0 stopped,   0 zombie
+Thu Jun 27 22:35:42 CEST 2013 %Cpu(s): 26.4 us, 21.9 sy,  0.0 ni, 49.1 id,
+ 1.7 wa,  0.1 hi,  0.9 si,  0.0 st
+Thu Jun 27 22:35:42 CEST 2013 KiB Mem:    507800 total,   138068 used,  
+369732 free,     5672 buffers
+Thu Jun 27 22:35:42 CEST 2013 KiB Swap:        0 total,        0 used,    
+   0 free,   105160 cached
+Thu Jun 27 22:35:42 CEST 2013
+Thu Jun 27 22:35:42 CEST 2013 PID USER      PR  NI  VIRT  RES  SHR S  %CPU
+%MEM    TIME+  COMMAND
+Thu Jun 27 22:35:42 CEST 2013 558 ubuntu    20   0 94876  87m  80m S  31.7
+17.6   1:18.78 jackd
+Thu Jun 27 22:35:42 CEST 2013 582 ubuntu    20   0  105m  81m  80m S  22.7
+16.4   5:18.01 jacktrip
+Thu Jun 27 22:35:42 CEST 2013 2286 ubuntu    20   0  2344  928  688 R  
+9.1  0.2   0:00.05 top
+Thu Jun 27 22:35:42 CEST 2013 1 root      20   0  2864 1788 1016 S   0.0 
+0.4   0:02.44 init
+Thu Jun 27 22:35:42 CEST 2013 2 root      20   0     0    0    0 S   0.0 
+0.0   0:00.26 kthreadd
+Thu Jun 27 22:35:42 CEST 2013 3 root      20   0     0    0    0 S   0.0 
+0.0   0:00.19 ksoftirqd/0
+Thu Jun 27 22:35:42 CEST 2013 5 root       0 -20     0    0    0 S   0.0 
+0.0   0:00.00 kworker/0:0H
+Thu Jun 27 22:35:42 CEST 2013 6 root      20   0     0    0    0 S   0.0 
+0.0   0:00.00 kworker/u:0" "-rw-rw-r-- 1 ubuntu ubuntu    297301 Jun 27
+22:35 jackd_1372364380.log" "ubuntu     558  8.3 17.5  94876 89236 ?      
+ SLsl 22:19   1:18 jackd -R --timeout 5000 -v -d alsa -r44100 -n3 -p1024
+-d hw:1,0" "Filesystem      Size  Used Avail Use% Mounted on
+Thu Jun 27 22:35:42 CEST 2013 none            248M   79M  170M  32% /run/shm"
+
+jack log last lines:
+
+"Jack: JackEngine::ClientNotify: no callback for notification = 3
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackEngine::ClientNotify: no callback
+for notification = 3
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackEngine::ClientNotify: no callback
+for notification = 3
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 2 fd = 9
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 3 fd = 11
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 4 fd = 12
+Thu Jun 27 22:35:42 CEST 2013 Jack: **** alsa_pcm: xrun of at least 0.133
+msecs
+Thu Jun 27 22:35:42 CEST 2013 Jack: ALSA XRun wait_status = 0
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 1 fd = 8
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackRequest::Notification
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackEngine::ClientNotify: no callback
+for notification = 3
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackEngine::ClientNotify: no callback
+for notification = 3
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackEngine::ClientNotify: no callback
+for notification = 3
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackEngine::ClientNotify: no callback
+for notification = 3
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackEngine::ClientNotify: no callback
+for notification = 3
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 2 fd = 9
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 3 fd = 11
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 4 fd = 12
+Thu Jun 27 22:35:42 CEST 2013 Jack: **** alsa_pcm: xrun of at least 0.130
+msecs
+Thu Jun 27 22:35:42 CEST 2013 Jack: ALSA XRun wait_status = 0
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 1 fd = 8
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackRequest::Notification
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackEngine::ClientNotify: no callback
+for notification = 3
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackEngine::ClientNotify: no callback
+for notification = 3
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackEngine::ClientNotify: no callback
+for notification = 3
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackEngine::ClientNotify: no callback
+for notification = 3
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackEngine::ClientNotify: no callback
+for notification = 3
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 2 fd = 9
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 3 fd = 11
+Thu Jun 27 22:35:42 CEST 2013 Jack: JackSocketServerChannel::Execute :
+fPollTable i = 4 fd = 12"
+
+
+in that stage, jacktrip stopped to work but jackd log get's filled up
+happily with the above pattern.
+interestingly, all jack related processes are still visible but are not
+functional.
+
+$ jack_lsp
+Cannot read socket fd = 5 err = Success
+CheckRes error
+JackSocketClientChannel read fail
+Cannot open lsp client
+jack_client_open() failed, status = 0x21
+
+if killing all jack related processes except jackd itself, the output
+boils down to
+
+Jack: **** alsa_pcm: xrun of at least 0.228 msecs
+Jack: JackGraphManager::GetBuffer : port = 11 is released state
+Jack: JackGraphManager::GetBuffer : port = 12 is released state
+Jack: ALSA XRun wait_status = 0
+Jack: JackClientSocket::Write time out
+Jack: JackClientSocket::Write time out
+Jack: JackClientSocket::Write time out
+Jack: JackClientSocket::Write time out
+Jack: JackClientSocket::Write time out
+Jack: **** alsa_pcm: xrun of at least 0.068 msecs
+Jack: JackGraphManager::GetBuffer : port = 11 is released state
+Jack: JackGraphManager::GetBuffer : port = 12 is released state
+Jack: ALSA XRun wait_status = 0
+Jack: JackClientSocket::Write time out
+Jack: JackClientSocket::Write time out
+Jack: JackClientSocket::Write time out
+Jack: JackClientSocket::Write time out
+Jack: JackClientSocket::Write time out
+(repeat)
+
+i'm out of ideas where to look or what to log.
+
+regards
+thomas
+
+1372367203.22607_0.ltw:2,a <fa58c1a6c291b88b8c5f766f5148ab0f.squirrel at ips73 dot ips dot ch>
+________________________________________________________________________________
+

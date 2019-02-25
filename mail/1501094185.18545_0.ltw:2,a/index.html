@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Why frame sizes are limited to the powers of 2?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Why frame sizes are limited to the powers of 2?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1501056070.10059_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1501217096.23592_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1501094185.18545_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 26 Jul 2017 18:36:09 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Yuri
+<a href='../1501052326.5179_0.ltw:2,a/index.html'>[Jack-Devel] Why frame sizes are limited to the powers of 2? </a></td></tr>
+</table>
+<pre>
+On Tue, Jul 25, 2017 at 11:58:25PM -0700, Yuri wrote:
+
+&gt; The Opus codec (http://opus-codec.org/) doesn't like such frame
+&gt; sizes. It defines frame sizes in milliseconds, and allows 5 ms, 10
+&gt; ms, 20 ms, 25 ms, ... which in case of 48,000 sample rate are never
+&gt; a power of two.
+&gt; 
+&gt; It seems like Jack shouldn't be so strict in limiting frame rates to
+&gt; the powers of 2.
+&gt; 
+&gt; 
+&gt; How to solve this problem?
+
+Just put some buffering between the jack callback and the codec.
+You will need this anyway, as you can't assume that the codec and
+whatever is at the other end of the codec (file, network,...) is
+real-time safe. In practice you can be pretty sure it won't be.
+ 
+Jack is typically used to interconnect a soundcard and any number
+of applications. What if two applications have different preferred
+frame sizes ? Which one should win and impose its choice on all
+the others ? Forcing Jack to use a frame size required by any
+app is not a practical solution except in some trivial cases,
+e.g. when the app is the only one using Jack.
+
+Ciao, 
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1501056070.10059_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1501217096.23592_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1501094185.18545_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1501094185.18545_0.ltw:2,a&nbsp;&lt;20170726183609.GA129346 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

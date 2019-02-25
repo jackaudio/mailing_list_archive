@@ -1,0 +1,108 @@
+Date:        Wed, 02 Nov 2011 21:09:57 +0100
+From:        hermann  <[hidden] at web dot de>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] (1320263307.24160_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] (1320267170.30425_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] (1320315955.10418_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash]
+
+Am Mittwoch, den 02.11.2011, 20:48 +0100 schrieb Stéphane Letz:
+> Le 2 nov. 2011 à 20:33, Paul Davis a écrit :
+> 
+> > On Wed, Nov 2, 2011 at 3:14 PM, hermann <[hidden]> wrote:
+> > 
+> >> To make the mess complete, the weak linking doesn't work as
+> >> advertised by the jackd developers. At least my understanding and
+> >> that of the ubuntu / debian packagers seems to be:
+> >> 
+> >>  1) you can compile and link with either package (works)
+> >>  2) when the function is not in the shared library used at
+> >>     runtime, the function address will be 0. Does NOT work.
+> >> 
+> >> 2) only works when the shared lib used at runtime is the same as
+> >> the one used when linking. The compiler / linker will set the address
+> >> of a weak function that it does not find in the libraries supplied to
+> >> constant 0. Even when the funktion is in the library which is used at
+> >> runtime, there will be no runtime linking.
+> > 
+> > I have no idea what you are trying to say here.
+> > 
+> > If the function prototype was declared with weak linkage, and the
+> > symbol is not found at runtime, then this condition:
+> > 
+> >     if (function_name)
+> > 
+> > will evaluate to false.
+> > 
+> > ardour is doing this all the time.
+> > 
+> > its fairly clear from your test program that you have not include
+> > weakjack.h which is required to get weak linkage declarations.
+> > 
+> > --p
+> 
+> /**
+>  * get the assigned uuid for client.
+>  * safe to call from callback and all other threads.
+>  * memory needs to be freed.
+>  */
+> 
+> char *jack_client_get_uuid (jack_client_t *client) JACK_WEAK_EXPORT;
+> 
+> 
+> Freed by jak_free API yes ? ==> should be added in the doc 
+> 
+> /**
+>  * Get the session ID for a client name.
+>  * The session manager needs this to reassociate a client name to the session_id.
+>  */
+> char *jack_get_uuid_for_client_name (jack_client_t *client,
+>                                      const char    *client_name) JACK_WEAK_EXPORT;
+> 
+> 
+> Freed by jak_free API yes ? ==> should be added in the doc 
+> 
+> /**
+>  * Get the client name for a session_id.
+>  *
+>  * In order to snapshot the graph connections, the session manager needs to map
+>  * session_ids to client names.
+>  */
+> char *jack_get_client_name_by_uuid (jack_client_t *client,
+>                                     const char    *client_uuid ) JACK_WEAK_EXPORT;
+> 
+> Freed by jak_free API yes ? ==> should be added in the doc 
+> 
+> 
+> 
+> jack_client_get_uuid missing in JACK2:
+> 
+> code from JACK1:
+> 
+> char *
+> jack_client_get_uuid( jack_client_t *client )
+> { 
+> 	char retval[16];
+> 
+> 	snprintf( retval, sizeof(retval), "%d", client->control->uid );
+> 
+> 	return strdup(retval);
+> }
+> 
+> ==> Torben, I guess JACK1  client->control->uid correspond to JACK2  fSessionID field in JackClientControl yes?
+> 
+> Thanks.
+> 
+> Stéphane 
+
+Stéphane, is there any chance that this comes in sync for both jack
+versions ?
+
+greets
+hermann
+
+1320264635.26709_0.ltw:2,a <1320264597.2111.43.camel at box>
+________________________________________________________________________________
+

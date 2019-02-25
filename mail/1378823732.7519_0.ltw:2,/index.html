@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Using the callback free API with self-created RT-threads</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Using the callback free API with self-created RT-threads</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1378605713.26074_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1378824592.8919_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1378823732.7519_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 10 Sep 2013 16:35:02 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Wolfgang Lorenz </span> &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1378824592.8919_0.ltw:2,/index.html'>[Jack-Devel] FAIR </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1378824903.9537_0.ltw:2,/index.html'>Re: [Jack-Devel] Using the callback free API with self-created RT-threads </a></td></tr>
+</table>
+<pre>
+Hello,
+
+I'm currently trying to create a JACK-based backend for an already
+existing audio processing software. The software creates multiple
+RT-threads and at the end of each cycle hands the control to the audio
+driver, which does the communication to whatever interface is chosen.
+So far, nothing new... Using the callback free API, the communication
+to the jack server went well, until the point where I shut down the
+jack server and the jack client blocked unrecoverably in the
+jack_cycle_wait() call.
+
+Some studies of the jack2-sources showed, that jack_cycle_wait() is
+waiting 0x7FFFFFFF microseconds (about 2147.4836 seconds) for the
+signal to wake up, and afterwards kills the thread, if the signal
+didn't arrive. I guess that it is expected, that jack_cycle_wait() is
+solely called from the callback function provided by
+jack_set_process_thread(). I'm guilty, because this is, what I am not
+doing. Since I am already operating in a RT thread, I just call
+jack_client_wait() from the thread my method is called on. Using the
+JACK-provided thread would only mean to introduce yet another
+synchronization point -- which by the way would be the same as in the
+callback API.
+
+Thinking about it, I don't really understand why the thread has to be
+killed, after the time out. Even if jack_cycle_wait() was called from
+the callback function, a return value of 0 should suffice to signal the
+jack client, to please return from the function -- the thread would
+close down automatically afterwards.
+
+Also, the maximum time out duration is somewhat impractical, especially
+in audio processing terms, as it leaves the system hanging with no
+possibility to correctly handling any anomalies. I think the best way
+here would be to leave it to the user, what time is adequate.
+
+As a conclusion, I can't use this API, though it looked very promising,
+and I will have to implement the callback way with some means of
+synchronization. (Even if this was "fixed" in any way now, I need to
+stay compatible with some older versions.)
+
+But what I wanted to know is: Is this really the way the callback-free
+API is supposed to work? Does anybody else see this as a problem or bug
+that should be fixed?
+
+
+Sincerely,
+  Wolfgang Lorenz
+
+
+PS: Is this the same as http://trac.jackaudio.org/ticket/27 ?
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1378605713.26074_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1378824592.8919_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1378823732.7519_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1378823732.7519_0.ltw:2,&nbsp;&lt;20130910163502.3bb854de at mike&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

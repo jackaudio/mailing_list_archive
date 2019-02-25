@@ -1,0 +1,120 @@
+Date:        Tue, 28 Jan 2014 15:32:11 -0800
+From:        Bradley Justice  <[hidden] at gmail dot com>
+To:          Christian Schoenebeck <[hidden] at crudebyte dot com>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>, 김정연 <[hidden] at gmail dot com>
+In-Reply-To: Christian Schoenebeck Re: [Jack-Devel] JACK2 for Android newly released! (1390930167.2369_0.ltw:2,)
+Follow-Up:   Patrick Shirkey Re: [Jack-Devel] JACK2 for Android newly released! (1390990147.17283_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] JACK2 for Android newly released!
+
+modprobe does not exist in any version of Android I have looked at. Google
+is fond of monolithic kernels.
+
+Likewise with aplay or any other ALSA utilities. However, you can mine
+/proc/asound for information, at least on Nexus.
+
+Brad Justice
+
+
+On Tue, Jan 28, 2014 at 8:30 AM, Christian Schoenebeck <
+[hidden]> wrote:
+
+> On Tuesday 28 January 2014 14:23:30 김정연 wrote:
+> > > support the "USB audio class" standard protocol nowadays. Support for
+> > > such devices is provided by a standard Linux kernel module which is
+> > > platform independent.
+> >
+> > Yes. android officially support USB Audio by framework level.
+> > But, how to JACK access and use /dev/usb/... as audio device using jack
+> > driver?
+> > I have no background about that.
+> > Are there any bridge between usb~alsa?
+>
+> Like already suggested by Patrick, you need the ALSA USB audio kernel
+> module
+> (modprobe snd-usb-audio), which already comes with the official Linux
+> kernel.
+> The driver module file should be at a location like:
+>
+>
+> /lib/modules/KERNEL_NAME_AND_VERSION/kernel/sound/usb/snd-usb-audio.ko
+>
+> By the way, devices under /dev/usb are just shown if there is a compatible
+> driver available & loaded on the system. Otherwise the USB device will
+> never
+> appear under /dev/usb at all.
+>
+> Once you loaded the kernel module, check whether the USB audio device is
+> visible in the ALSA system, i.e with
+>
+>         aplay -l
+>
+> if yes, you can use i.e. "aplay -D DEVICENAME /foo/some.wav" to output some
+> sound file to the USB audio device.
+>
+> If you do not have that kernel module and are not permitted to add it to
+> the
+> Android release, you might solve it in user space. But that would mean
+> quite
+> some work: Since around kernel 2.6.2x there is something called "USB file
+> system" (usbfs). If that is enabled in your kernel configuration, then
+> every
+> USB device attached will automatically appear under /proc/bus/usb/, that
+> is no
+> matter whether there is a driver for it or not. usbfs allows to communicate
+> with USB devices in user space, by simply conveniently opening their "USB
+> endpoint" file under /proc/bus/usb/ and reading/writing to it by a normal
+> application. However you might then need to write such an application on
+> your
+> own, by looking at what snd-usb-audio for example does or by reading the
+> "USB
+> audio class" protocol definition, since I am not aware of some
+> daemon/application ready to be used for that purpose.
+>
+> If you solved that, you have the next problem: the JACK server is usually
+> started with exactly one audio device. JACK2 has a slave driver concept,
+> however I can't remember the details about it right now. Maybe Stéphane or
+> somebody can comment it. I guess you would need to restart the JACK server
+> each time a USB audio device was attached or detached, supplying the USB
+> device(s) as slave device(s) at command line. Maybe you could also control
+> that at runtime by dealing with JACK2's driver API.
+>
+> > > Are you running a hypervisor kernel like OKL4 on lowest level and
+> > > Android/Linux on top of it? Or is the Android/Linux kernel running
+> >
+> > directly on
+> >
+> > > the ARM CPU?
+> >
+> > I have no idea about hypervisor or something.
+>
+> Hypervisor kernels are often used on mobile devices on lowest level. They
+> are
+> acting as kind of virtual machine layer for the "actual" operating systems
+> running on top of the hypervisor kernel. This is usually done for two
+> purposes: a) it allows multiple OSs to run at the same time, i.e. one OS
+> for
+> controlling embedded communication components, and in parallel the actual
+> end
+> user advertised OS like Android or Symbian. Further it allows b) the same
+> OS
+> binaries to run on a variety of hardware without modifications, saving
+> development costs.
+>
+> So whether or not there is a hypervisor kernel running, could have a large
+> impact on the question whether you are actually able to run audio apps with
+> low latency at all. So you might talk to somebody responsible for kernel
+> level
+> issues there at Samsung to find out whether that is the case.
+>
+> Best regards,
+> Christian Schoenebeck
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+
+1390951943.27361_0.ltw:2, <CALNZyLH=NpgY8=SojPgMxg4VyGo1Zg1GxOqqX2_aLpLnUNpwyw at mail dot gmail dot com>
+________________________________________________________________________________
+

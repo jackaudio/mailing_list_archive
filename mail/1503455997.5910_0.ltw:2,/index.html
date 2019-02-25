@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack: "Too many servers already active"</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack: "Too many servers already active"</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1503453288.3050_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1503587686.28704_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1503455997.5910_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 23 Aug 2017 04:38:06 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Malik Costet </span> &lt;[hidden] at malikc dot neomailbox dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Yuri &lt;[hidden] at rawbw dot com&gt;, [hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Yuri
+<a href='../1503453288.3050_0.ltw:2,/index.html'>Re: [Jack-Devel] Jack: "Too many servers already active" </a></td></tr>
+</table>
+<pre>
+On 2017-08-23 03:54, Yuri wrote:
+&gt; On 08/22/17 18:39, Yuri wrote:
+&gt;&gt;
+&gt;&gt; This patch should help: https://github.com/jackaudio/jack1/pull/74
+&gt; 
+&gt; 
+&gt; I take it back.
+&gt; 
+&gt; 
+&gt; Jack has 8 slots for servers in the shared memory segment. On one hand,
+&gt; you are saying that no jackd is running when the problem occurs. On the
+&gt; other hand, jack already checks for dead pids and discards them. But, in
+&gt; the end, it fails to find even one available entry in this 8-element
+&gt; table. Something funny is going on. You need to print what pids are in
+&gt; this table when it fails. Need step-by-step log in jack_register_server .
+&gt; 
+&gt; You are using Pi? Maybe nobody ever ran jack on Pi?
+
+Yuri, this is highly interesting.
+
+I can think of something that happened during testing which might
+correspond to what you found, although it still leaves some questions open.
+
+First a quick overview of my setup. My main process is a Java
+application. That application creates jackd instances via a fork (i.e.,
+spawns a new process). It also creates jack_clients via native calls
+(using Neil C. Smith's jna-jack lib [1]) to connect to those newly
+created servers.
+
+Now, one of the problems I encountered today was that something went
+south when I tried to deactivate() those clients. Namely that I got a
+message on stderr that the JVM couldn't detach the native thread, upon
+which the entire JVM froze on me, with me having to SIGKILL it to get
+rid of it. Note that I also had manually to kill the jackd process, but
+that was achieved with a simple SIGTERM.
+
+This did indeed happened about 8 times (I have since circumvented the
+problem by calling close() instead of deactivate() on the client; not
+happy because I don't understand what the problem was, but at least it
+doesn't happen any more).
+
+There's still two problems however:
+ - I can guarantee that none of my Java process nor any jackd instances
+were running what the problem happened -- or least none that showed up
+in ps.
+ - I /think/ that I started the server successfully, after having had
+those had freezes, but before I had the "Too many servers active" error.
+
+Discarding the second problem for the time being, as I am not sure of
+it, the first one still remains. If, as you say, jack checks for dead
+PIDs, how can it not find free slots if no processes are running? Or
+does it perhaps not check the OS, but some internal register? In which
+case the freeze and kill would prevent that register from being cleared?
+This still doesn't make perfect sense, however, since, as mentioned
+above, I SIGTERM'd jackd, which can hardly count as a hard exit.
+The one thing that was broken was the jack_client in my JVM. So could
+that be it? Could it be that because of its freeze, even after having
+been killed, the JVM somehow retained resources associated with the
+client, and that *that* prevented jack from cleaning up its dead instances?
+
+Questions, questions.
+
+In case I get that issue again, would you mind telling in more detail
+what I need to do to get the information you mentioned, or really any
+pertinent information?
+
+Oh, and lastly and for reference, I'm running Jack 1.9.10.
+
+Regards,
+ M.
+
+[1] &lt;https://github.com/jaudiolibs/jnajack&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1503453288.3050_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1503587686.28704_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1503455997.5910_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1503455997.5910_0.ltw:2,&nbsp;&lt;0fe8f290-3e5c-d480-5b17-f8ca5e34f1b4 at malikc dot neomailbox dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

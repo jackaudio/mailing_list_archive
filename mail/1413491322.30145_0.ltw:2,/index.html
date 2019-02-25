@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Jack1 Questions</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Jack1 Questions</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1413467910.30869_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1413753147.3603_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1413491322.30145_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 16 Oct 2014 21:28:31 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Daniel Hams </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jack-Devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+Hi jack-devel,
+
+I'm embarking on a journey to learn the jack server internals and how it works. As part of that I'm doing a little C++'ifying of the jack1 source.
+
+Why didn't I look at jack2 which is already C++? It&#146;s easier for me to learn by doing some coding and jack1 seems to be less of a moving target for that.
+
+As such, I have a couple of questions about the jack1 source that perhaps some of the esteemed people on this list could help me with.
+
+If this isn't the place for this and you'd rather not have it on the list, just let me know.
+
+* jack_load_internal_clients (jackd.c:95)
+
+I've tested the formats from the comments and see the following
+
+client-name:client-type/args - parses as "(client-name)(client-type)(args)"
+client-type/args             - fails due to client-name being NULL
+client-name:client-type      - parses as "(client-name)(client-type)(NULL)"
+client-type                  - parses as "(client-type)(client-type)(NULL)"
+
+The second one seems to contradict the comments in the code (not outrageous, we've all done it).
+I&#146;ve copied the behaviour for now. Perhaps it should mirror the fourth one in copying the client-type into the client-name?
+
+* Unblocking of signals
+
+controlapi.c:841 uses SIG_SETMASK to pthread_sigmask to unblock signals
+jackd.c:382 uses SIG_UNBLOCK to sigprocmask to unblock signals
+
+Any idea why the difference between these two? I've checked the man pages and it seems that sigprocmask should be used in a single threaded process.
+
+* Rechain graph - loop exit condition (engine.c:3205)
+
+I'm having trouble understanding how the while(next) is being exited as the if() seems to happen on an invariant. Am I thinking too single threadedly?
+
+* seq_number atomic in the client control packed structure (internal.h:168)
+
+The existing atomics don&#146;t play nice when included with C++ and I&#146;ve had to move it out into a process global atomic (attempting to put the std::atomic_uint into the structure causes warnings about packing).
+
+I can&#146;t see the problems this has caused (moving it out of the struct) - any ideas? It doesn't seem to _need_ to be in that structure.
+
+Thanks for any pointers and help that can be given.
+
+Cheers,
+
+Dan
+
+For anyone interested in the repository for this it's here: 
+
+https://github.com/danielhams/jack1
+
+on the "c++changes" branch. You'll need at least a C++14 compliant compiler (&gt;= G++ 4.9) and boost 1.56.
+
+What it isn't:
+
+* It's not for end users. You don't get any benefits from this, but you definitely get bugs and stability issues.
+* No testing for anything other than Linux + alsa. I'm testing the linux alsa bits (alsa driver + midi bits) for a simple routing scenario, but nothing more. There probably are things I've broken. Platforms other than Linux are bound to be broken, I'm afraid.
+* Not intended to be merged upstream. This is an educational endevour and I've gone a bit gung ho and slapped things around e.g. my preferences for formatting. If there is interest in taking jack1 in this direction we would have to discuss the correct incremental steps to submit patches along those lines.
+* Not to be taken as good C++. I'm a mediocre C++ programmer at best, so there are probably better ways to do some of the things I've done.
+* It's not a full transliteration. It's more or less the C sources renamed to .[c|h]pp and using a C++ compiler modulo the bits I've started to look at.
+
+What it is:
+
+* Lots of build warnings. C++ is a little more strict about warnings, and there's quite a few things I haven't got around to resolving.
+* Updated build script to look for a conforming C++14 compiler and boost 1.56 libraries and setup the appropriate flags
+* Mirrored C++ code directories with some C++'ified code and makefiles
+* Updated install targets that will install sibling jackdpp, libjackpp, libjackserverpp and jackpp drivers
+* Refactored command line options handling to use boost::program_options - still not tackled the drivers parameters.
+* Started refactoring some of the code to use C++ idioms (engine.clients change to a std::vector instead of JSList, for example)
+* Will happily launch from within qjackctl / command line using the same arguments
+* Lots more to be done - i've not even got as far as namespaces or proper constructor/destructors for things....
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1413467910.30869_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1413753147.3603_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1413491322.30145_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1413491322.30145_0.ltw:2,&nbsp;&lt;8CBEF078-8F4E-4D83-80EA-E93C6F9D0AC4 at gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

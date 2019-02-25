@@ -1,0 +1,47 @@
+Date:        Thu, 20 Jul 2017 16:36:32 +0200
+From:        Thomas Brand  <[hidden] at trellis dot ch>
+To:          [hidden] at chriscaudle dot org
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Chris Caudle Re: [Jack-Devel] Jack won't start on boot (1500560528.21891_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack won't start on boot
+
+On Thu, July 20, 2017 16:21, Chris Caudle wrote:
+> On Thu, July 20, 2017 5:35 am, Yuri wrote:
+>
+>> The fact that any DBus-linked program requires X indicates some
+>> problem. This should never happen.
+>
+> It did not require X, just that the DISPLAY environment variable be set.
+> Explained later by Rowan.
+>
+>
+
+according to common/Jackdmp.cpp:320 it seems that the environment variable
+$JACK_NO_AUDIO_RESERVATION would be the envisioned way to go. i haven't
+found this in the manpage, probably it's missing.
+
+what if there would be a variable that if NOT set would fallback when DBus
+fails:
+
+#if defined(JACK_DBUS) && defined(__linux__)
+    if (getenv("JACK_NO_AUDIO_RESERVATION")) {
+        server_ctl = jackctl_server_create(NULL, NULL);
+    }
+    else {
+        server_ctl = jackctl_server_create(audio_acquire, audio_release);
+        /* If device reservation with DBus failed and fallback isn't
+         * explicitely turned off, try to start without DBus
+         */
+        if (server_ctl == NULL && !getenv("JACK_NO_DBUS_FALLBACK")) {
+            fprintf(stderr, "Failed to connect to DBus. Falling back...\n");
+            server_ctl = jackctl_server_create(NULL, NULL);
+        }
+    }
+
+cheers
+Tom
+
+1500561516.23161_0.ltw:2,a <04c935ba60f869503a137139929cc9a7.squirrel at ips73 dot ips dot ch>
+________________________________________________________________________________
+

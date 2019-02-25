@@ -1,0 +1,53 @@
+Date:        Fri, 22 Jul 2011 11:46:09 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          torbenh Hohn <[hidden] at gmx dot de>, Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   torbenh Re: [Jack-Devel] Jack session API implementation in jack2 (1312554973.27743_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Jack session API implementation in jack2
+
+Hi, 
+
+Looking at Jack session API implementation in jack2 (the goal being to add support for internal server clients also...) I see at least two issues:
+
+- if a client calls jack_session_notify and a client fails to answer what happens? As far as I understand the code the initial jack_session_notify call will possibly block infinitely in the "while(true)" loop...
+
+int Read(JackChannelTransaction* trans)
+    {
+        CheckRes(JackResult::Read(trans));
+        while (true) {
+            JackSessionCommand buffer;
+
+            CheckRes(trans->Read(buffer.fUUID, sizeof(buffer.fUUID)));
+            if (buffer.fUUID[0] == '\0')
+                break;
+
+            CheckRes(trans->Read(buffer.fClientName, sizeof(buffer.fClientName)));
+            CheckRes(trans->Read(buffer.fCommand, sizeof(buffer.fCommand)));
+            CheckRes(trans->Read(&(buffer.fFlags), sizeof(buffer.fFlags)));
+
+            fCommandList.push_back(buffer);
+        }
+        return 0;
+    }
+
+- if a first client calls jack_session_notify and a second one does jack_session_notify before the first "asynchronous server/clients round trip" is finished, the code here JackEngine.cpp line 942 is called AFAICS: 
+
+   if (fSessionPendingReplies != 0) {
+        JackSessionNotifyResult res(-1);
+        res.Write(socket);
+        jack_log("JackEngine::SessionNotify ... busy");
+        return;
+    }
+
+Agin don't this code finally enter the possibly blocking Read given just before?
+
+Comments? How this design can be improved?
+
+Thanks.
+
+Stephane 
+
+1311327981.9831_0.ltw:2,a <2A29EEBA-14E6-4800-898D-432D037F56ED at grame dot fr>
+________________________________________________________________________________
+

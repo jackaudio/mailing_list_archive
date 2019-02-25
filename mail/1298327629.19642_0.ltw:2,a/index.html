@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] backend switching - another way</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] backend switching - another way</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298326092.16604_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298328291.20899_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298327629.19642_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 21 Feb 2011 23:33:26 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Arnold Krille </span> &lt;[hidden] at arnoldarts dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1298325064.14546_0.ltw:2,a/index.html'>Re: [Jack-Devel] backend switching - another way </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1298328291.20899_0.ltw:2,a/index.html'>Re: [Jack-Devel] backend switching - another way </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1298339901.11363_0.ltw:2,a/index.html'>Re: [Jack-Devel] backend switching - another way </a></td></tr>
+</table>
+<pre>
+Hi,
+
+On Monday 21 February 2011 22:50:50 Fons Adriaensen wrote:
+&gt; On Mon, Feb 21, 2011 at 10:17:17PM +0100, Arnold Krille wrote:
+&gt; &gt; On Monday 21 February 2011 19:53:03 Fons Adriaensen wrote:
+&gt; &gt; &gt; I've been musing for a long time over the idea 'what if Jack ports
+&gt; &gt; &gt; were persistent' ? In other words, if they could exists irrespective
+&gt; &gt; &gt; of the application that uses them is running or not.
+&gt; &gt; &gt; 
+&gt; &gt; &gt; This has some far-reaching consequences of course, but there is
+&gt; &gt; &gt; subset of this idea that is not as mad as it seems (IMHO).
+&gt; &gt; &gt; 
+&gt; &gt; &gt; ** What if physical ports were persistent ? **
+&gt; &gt; 
+&gt; &gt; I like the idea!
+&gt; &gt; 
+&gt; &gt; Still I would like to extend the question: What if there where virtual
+&gt; &gt; ports?
+&gt; &gt; 
+&gt; &gt; These virtual ports would be configured in a configuration(-file) if
+&gt; &gt; present or by the first client providing these. If no config-file was
+&gt; &gt; there to make the ports persitent forever, they would stay as long as
+&gt; &gt; jack is running, regardless of the backend actually in use.
+&gt; I don't see much difference between your 'virtual' ports and the
+&gt; 'persistent' ones I proposed.
+
+You seemed to limit your persistent ports to hardware-ports. I like to remove 
+the distinction between backends and clients and thus between hardware and 
+software ports. And I think that virtual/persitent ports can be benefitial to 
+other apps/use-cases as well as for abstracting the actual hardware/backend.
+
+&gt; &gt; I would very much like to remove the distinction between "clients" and
+&gt; &gt; "backends". After all a traditional client (be it a separate process or
+&gt; &gt; an in- server-client) is just a client that is capable of free-wheeling.
+&gt; 
+&gt; There is a fundamental difference: the backend is what you wait for
+&gt; to start a cycle, it's the first to be read and the last to be written.
+
+Yep, so the backend is a client that is master-clock-capable. Other then that 
+its a normal client with ports and a processing-callback. Just give it a 
+callback or something appropriate to run as master and otherwise tell it when 
+it is not running as master.
+
+&gt; &gt; and backend is just an in-server-client that is not (necessarily)
+&gt; &gt; free-wheeling capable but definitely master-clock-capable.
+&gt; &gt; Thinking about it, even this is not true, the "null"-backend would be the
+&gt; &gt; master-clock for freewheeling. Thus hardware-clients would be not-
+&gt; &gt; freewheeling-capable. And as long as all clients are either synced or at
+&gt; &gt; least have resampling-capabilites (for unsynced hardware-clients), there
+&gt; &gt; is no difference between clients and backends...
+&gt; 
+&gt; Freewheeling is an option. The 'default' backend (used when the official
+&gt; one goes away without notice) should be the dummy one with the same sample
+&gt; rate and period as the real one it replaces.
+&gt; 
+&gt; &gt; Some benefits of this would be:
+&gt; &gt;  - Several backends running at the same time (like
+&gt; &gt;  alsa-on-the-pci-soundcard,
+&gt; &gt; 
+&gt; &gt; alsa-on-usb-soundcard and firewire).
+&gt; I don't see how you could have more than one at any time.
+
+Given the premise that the soundcards are either all synced externally or the 
+clients/backend accessing them do resampling if needed, I don't see any reason 
+to limit jack to "run on one sounddevice only". In fact alsa_in/alsa_out and 
+the netjack[12] are already showing the need/use-case for multiple backends 
+possibly at the same time.
+
+Given the rise of network audio systems and pluggable audio devices via 
+firewire and usb, I don't see any reason why jack shouldn't allow multiple 
+backends/hardware-accessing clients at the same time. And the only thing that 
+distinguishes as backend from a client is the ability to drive the jack-
+processing. And that doesn't justify two different code-paths from my pov.
+
+This idea is invading more deeply into the jack internals then your approach. 
+But its not changing anything for existing clients. Its only changing 
+something for existing backends. And when these backends become clients with 
+an additional feature through a defined interface, these could also be used 
+independent of the jack-flavour. So instead of threee implementations for the 
+alsa-backend, there would be one. And this one implementation would also 
+superseed the alsa_in/alsa_out apps. Sounds good to me...
+
+Have fun,
+
+Arnold
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298326092.16604_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298328291.20899_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298327629.19642_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1298327629.19642_0.ltw:2,a&nbsp;&lt;201102212333.30437.arnold at arnoldarts dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

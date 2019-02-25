@@ -1,0 +1,535 @@
+Date:        Fri, 17 Apr 2015 10:18:05 -0400
+From:        Ron  <[hidden] at aol dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   r00t Re: [Jack-Devel] Jack on Raspberry PI 2 (1432897486.2700_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Jack on Raspberry PI 2
+
+73
+Ron / W4MMP
+
+On 4/17/2015 08:23, [hidden] wrote:
+> Send Jack-Devel mailing list submissions to
+> 	[hidden]
+>
+> To subscribe or unsubscribe via the World Wide Web, visit
+> 	http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> or, via email, send a message with subject or body 'help' to
+> 	[hidden]
+>
+> You can reach the person managing the list at
+> 	[hidden]
+>
+> When replying, please edit your Subject line so it is more specific
+> than "Re: Contents of Jack-Devel digest..."
+>
+>
+> Today's Topics:
+>
+>     1. Re: running jackd from rc.local (Adrian Knoth)
+>     2. alsa_* device or resource is busy (Athanasios Silis)
+>     3. Re: alsa_* device or resource is busy (Adrian Knoth)
+>     4. Re: Jack on Raspberry PI 2 (Ron) (Ron)
+>     5. Re: Jack on Raspberry PI 2 (Ron) (Jeremy Jongepier)
+>     6. Re: alsa_* device or resource is busy (Ralf Mardorf)
+>     7. Re: alsa_* device or resource is busy (Athanasios Silis)
+>
+>
+> ----------------------------------------------------------------------
+>
+> Message: 1
+> Date: Fri, 17 Apr 2015 12:04:32 +0200
+> From: Adrian Knoth <[hidden]>
+> To: Athanasios Silis <[hidden]>, 	Jeremy Jongepier
+> 	<[hidden]>
+> Cc: Developers JACK <[hidden]>
+> Subject: Re: [Jack-Devel] running jackd from rc.local
+> Message-ID: <[hidden]>
+> Content-Type: text/plain; charset=windows-1252; format=flowed
+>
+> On 04/17/15 12:00, Athanasios Silis wrote:
+>
+>> that did it.
+>> I know little about pam.d because I mostly use slackware. so may I ask:
+>>
+>> if this code snippet was commented out up until now, who/what givew me
+>> elevated permissions when I log into my ubuntu session?
+> The same line, just in a different file under /etc/pam.d/ - most likely
+> named after your logon manager (gdm I guess).
+>
+>
+> ------------------------------
+>
+> Message: 2
+> Date: Fri, 17 Apr 2015 14:16:51 +0300
+> From: Athanasios Silis <[hidden]>
+> To: Developers JACK <[hidden]>
+> Subject: [Jack-Devel] alsa_* device or resource is busy
+> Message-ID:
+> 	<CADgchnvUANaho4R5ch+4mz=CKzeSJ=[hidden]>
+> Content-Type: text/plain; charset="utf-8"
+>
+> hi all, continuing from a previous email where I try to start up several
+> audio applications from a custom init script , which is run from rc.local,
+> I noticed that I get several
+> Capture open error: Device or resource busy
+> error messages for the alsa_(in|out) instances I set up:
+>
+> alsa_out -d hw:DSP24,0 -c 10 -j dsp_out -r 48000 -p128 -n2 &
+> alsa_in -d hw:DSP24,0 -c 12 -j dsp_in -r 48000 -p128 -n2 &
+> alsa_out -d hw:Intel -c 8 -j hda_out -r 48000 -p128 -n3 &
+> alsa_in -d hw:Intel -c 2 -j hda_in -r 48000 -p128 -n3 &
+>
+> These work when I use the script manually by logging in the pc.
+> but from rc.local the seems to be a problem with alsa.
+> on some reboots, perhaps one (random) of these will work , but usually non
+> of the 4 will be loaded correctly.
+>
+> what could be conflicting here?
+> -------------- next part --------------
+> An HTML attachment was scrubbed...
+> URL: <http://lists.jackaudio.org/private.cgi/jack-devel-jackaudio.org/attachments/20150417/68e699de/attachment-0001.htm>
+>
+> ------------------------------
+>
+> Message: 3
+> Date: Fri, 17 Apr 2015 13:38:36 +0200
+> From: Adrian Knoth <[hidden]>
+> To: Athanasios Silis <[hidden]>, 	Developers JACK
+> 	<[hidden]>
+> Subject: Re: [Jack-Devel] alsa_* device or resource is busy
+> Message-ID: <[hidden]>
+> Content-Type: text/plain; charset=windows-1252; format=flowed
+>
+> On 04/17/15 13:16, Athanasios Silis wrote:
+>
+>> hi all, continuing from a previous email where I try to start up
+>> several audio applications from a custom init script , which is run
+>> from rc.local,
+> I originally wanted to point out that the use of rc.local for this stuff
+> is discouraged, but you've just discovered this yourself now.
+>
+> You should really consider your approach and come up with something
+> else.
+>
+>> what could be conflicting here?
+> Everything. Your login manager is probably using the card.
+>
+> The whole concept of integrating desktop distros with rc.local for audio
+> is not going to fly, because the distros set device permissions based on
+> the logged in user.
+>
+> There might also be a system-wide pulseaudio daemon running, probably as
+> root. You might get away with pasuspender -- alsa_out, but I wouldn't be
+> surprised if not, unless you wrap your su call in pasuspender.
+>
+> Also note that you shouldn't be using alsa_in/out at all, use zita-a2j
+> and zita-j2a or use jackd-0.124.x where you can simply specify
+> additional cards:
+>
+>      $ jackd -A Intel -d alsa -d hw:DSP24,0
+>
+> I don't know what you're trying to achieve, but I see mostly two
+> options:
+>
+>     (a) if you don't need a desktop, don't use one.
+>     (b) if you do need a desktop, use their autostart features
+>
+> For (b): You can have auto-login for a certain user. You can have
+> autostart for this user. Just run your script from the usual XDG
+> directories (or however your distro implements autostart).
+>
+> Also consider switching to KXstudio - a lot of work went into it to make
+> things work. An integration effort other distros never bothered to do.
+>
+>
+> Cheers
+>
+>
+> ------------------------------
+>
+> Message: 4
+> Date: Fri, 17 Apr 2015 08:01:10 -0400
+> From: Ron <[hidden]>
+> To: [hidden]
+> Subject: Re: [Jack-Devel] Jack on Raspberry PI 2 (Ron)
+> Message-ID: <[hidden]>
+> Content-Type: text/plain; charset=windows-1252; format=flowed
+>
+> Hi,
+> (I hope I am using email correctly.  This is the first time I have used
+> an email list such as this)
+>
+> First, let me say thanks to everyone that responded.  The web page link
+> really helped.  I have not investigated installing the Raspberry repo of
+> jack as of yet.  I will look into that a bit later.   For now I will
+> stick with using the source I have from the jack website.
+>
+> OK,  success (sort of).
+> I changed the shared memory size (/dev/shm) to 128M.  Now the jackd
+> server starts and stay running.  However when using qjackctl I still
+> receive the cannot lock memory message however as I said the server
+> actually stays running.  Jackd message output:
+>
+> 07:36:18.155 Patchbay deactivated.
+> 07:36:18.177 Statistics reset.
+> 07:36:18.206 ALSA connection change.
+> Cannot connect to server socket err = No such file or directory
+> Cannot connect to server request channel
+> jack server is not running or cannot be started
+> 07:36:18.235 ALSA connection graph change.
+> 07:36:20.455 JACK is starting...
+> 07:36:20.458 /usr/local/bin/jackd -r -dalsa -dhw:0 -r48000 -p1024 -n2
+> Cannot connect to server socket err = No such file or directory
+> Cannot connect to server request channel
+> jack server is not running or cannot be started
+> 07:36:20.530 JACK was started with PID=2680.
+> jackdmp 1.9.11
+> Copyright 2001-2005 Paul Davis and others.
+> Copyright 2004-2014 Grame.
+> jackdmp comes with ABSOLUTELY NO WARRANTY
+> This is free software, and you are welcome to redistribute it
+> under certain conditions; see the file COPYING for details
+> JACK server starting in non-realtime mode
+> Cannot lock down 82278944 byte memory area (Cannot allocate memory)
+> creating alsa driver ... hw:0|hw:0|1024|2|48000|0|0|nomon|swmeter|-|32bit
+> control device hw:0
+> ALSA: Cannot open PCM device alsa_pcm for capture. Falling back to
+> playback-only mode
+> configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 2 periods
+> ALSA: final selected sample format for playback: 16bit little-endian
+> ALSA: use 2 periods for playback
+> 07:36:22.657 JACK connection change.
+> 07:36:22.667 Server configuration saved to "/home/ron/.jackdrc".
+> 07:36:22.670 Statistics reset.
+> 07:36:22.688 Client activated.
+> 07:36:22.701 JACK connection graph change.
+> Cannot lock down 82278944 byte memory area (Cannot allocate memory)
+>
+>
+> BUT if I start jackd via a terminal session (cygwin terminal) and enter:
+>
+> /usr/local/bin/jackd -r -dalsa -dhw:0 -r48000 -p1024 -n2
+> jackd responses with:
+>
+> ron@squireoaksfarm-radio ~/Desktop $ /usr/local/bin/jackd -r -dalsa
+> -dhw:0 -r48000 -p1024 -n2
+> jackdmp 1.9.11
+> Copyright 2001-2005 Paul Davis and others.
+> Copyright 2004-2014 Grame.
+> jackdmp comes with ABSOLUTELY NO WARRANTY
+> This is free software, and you are welcome to redistribute it
+> under certain conditions; see the file COPYING for details
+> JACK server starting in non-realtime mode
+> creating alsa driver ... hw:0|hw:0|1024|2|48000|0|0|nomon|swmeter|-|32bit
+> control device hw:0
+> ALSA: Cannot open PCM device alsa_pcm for capture. Falling back to
+> playback-only mode
+> configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 2 periods
+> ALSA: final selected sample format for playback: 16bit little-endian
+> ALSA: use 2 periods for playback
+>
+> As you can see the jackd server does NOT report  can not lock memory.
+> Why is this?
+>
+> Also ASLA is reporting it can not open the device for capture.  Why is this?
+>
+> Sorry, but I'm really new to sound and sound device management on
+> Linux.  My ultimate goal is to get an application running that requires
+> jack and this is my first stumbling block on on that path.
+>
+> 73
+> Ron / W4MMP
+>
+> On 4/17/2015 06:00, [hidden] wrote:
+>> Send Jack-Devel mailing list submissions to
+>> 	[hidden]
+>>
+>> To subscribe or unsubscribe via the World Wide Web, visit
+>> 	http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>> or, via email, send a message with subject or body 'help' to
+>> 	[hidden]
+>>
+>> You can reach the person managing the list at
+>> 	[hidden]
+>>
+>> When replying, please edit your Subject line so it is more specific
+>> than "Re: Contents of Jack-Devel digest..."
+>>
+>>
+>> Today's Topics:
+>>
+>>      1. Jack on Raspberry PI 2 (Ron)
+>>      2. running jackd from rc.local (Athanasios Silis)
+>>      3. Re: running jackd from rc.local (Jeremy Jongepier)
+>>      4. Re: Jack on Raspberry PI 2 (Jeremy Jongepier)
+>>      5. Re: running jackd from rc.local (Athanasios Silis)
+>>
+>>
+>> ----------------------------------------------------------------------
+>>
+>> Message: 1
+>> Date: Thu, 16 Apr 2015 21:20:46 -0400
+>> From: Ron <[hidden]>
+>> To: [hidden]
+>> Subject: [Jack-Devel] Jack on Raspberry PI 2
+>> Message-ID: <[hidden]>
+>> Content-Type: text/plain; charset="utf-8"; Format="flowed"
+>>
+>> Hello,
+>> Sorry about that.  My mistake.
+>>
+>
+>
+> ------------------------------
+>
+> Message: 5
+> Date: Fri, 17 Apr 2015 14:13:46 +0200
+> From: Jeremy Jongepier <[hidden]>
+> To: [hidden]
+> Subject: Re: [Jack-Devel] Jack on Raspberry PI 2 (Ron)
+> Message-ID: <[hidden]>
+> Content-Type: text/plain; charset="windows-1252"
+>
+> On 04/17/2015 02:01 PM, Ron wrote:
+>> Hi,
+>> (I hope I am using email correctly.  This is the first time I have used
+>> an email list such as this)
+>>
+> Hello Ron,
+>
+> Top posting is discouraged, other than that all is well ;)
+>
+>> First, let me say thanks to everyone that responded.  The web page link
+>> really helped.  I have not investigated installing the Raspberry repo of
+>> jack as of yet.  I will look into that a bit later.   For now I will
+>> stick with using the source I have from the jack website.
+>>
+>> OK,  success (sort of).
+>> I changed the shared memory size (/dev/shm) to 128M.  Now the jackd
+>> server starts and stay running.  However when using qjackctl I still
+>> receive the cannot lock memory message however as I said the server
+>> actually stays running.  Jackd message output:
+>>
+>> 07:36:18.155 Patchbay deactivated.
+>> 07:36:18.177 Statistics reset.
+>> 07:36:18.206 ALSA connection change.
+>> Cannot connect to server socket err = No such file or directory
+>> Cannot connect to server request channel
+>> jack server is not running or cannot be started
+>> 07:36:18.235 ALSA connection graph change.
+>> 07:36:20.455 JACK is starting...
+>> 07:36:20.458 /usr/local/bin/jackd -r -dalsa -dhw:0 -r48000 -p1024 -n2
+>> Cannot connect to server socket err = No such file or directory
+>> Cannot connect to server request channel
+>> jack server is not running or cannot be started
+>> 07:36:20.530 JACK was started with PID=2680.
+>> jackdmp 1.9.11
+>> Copyright 2001-2005 Paul Davis and others.
+>> Copyright 2004-2014 Grame.
+>> jackdmp comes with ABSOLUTELY NO WARRANTY
+>> This is free software, and you are welcome to redistribute it
+>> under certain conditions; see the file COPYING for details
+>> JACK server starting in non-realtime mode
+>> Cannot lock down 82278944 byte memory area (Cannot allocate memory)
+>> creating alsa driver ... hw:0|hw:0|1024|2|48000|0|0|nomon|swmeter|-|32bit
+>> control device hw:0
+>> ALSA: Cannot open PCM device alsa_pcm for capture. Falling back to
+>> playback-only mode
+>> configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 2 periods
+>> ALSA: final selected sample format for playback: 16bit little-endian
+>> ALSA: use 2 periods for playback
+>> 07:36:22.657 JACK connection change.
+>> 07:36:22.667 Server configuration saved to "/home/ron/.jackdrc".
+>> 07:36:22.670 Statistics reset.
+>> 07:36:22.688 Client activated.
+>> 07:36:22.701 JACK connection graph change.
+>> Cannot lock down 82278944 byte memory area (Cannot allocate memory)
+> Please post the gpu_mem setting you're using in /boot/config.txt
+>
+>>
+>> BUT if I start jackd via a terminal session (cygwin terminal) and enter:
+>>
+>> /usr/local/bin/jackd -r -dalsa -dhw:0 -r48000 -p1024 -n2
+>> jackd responses with:
+>>
+>> ron@squireoaksfarm-radio ~/Desktop $ /usr/local/bin/jackd -r -dalsa
+>> -dhw:0 -r48000 -p1024 -n2
+>> jackdmp 1.9.11
+>> Copyright 2001-2005 Paul Davis and others.
+>> Copyright 2004-2014 Grame.
+>> jackdmp comes with ABSOLUTELY NO WARRANTY
+>> This is free software, and you are welcome to redistribute it
+>> under certain conditions; see the file COPYING for details
+>> JACK server starting in non-realtime mode
+>> creating alsa driver ... hw:0|hw:0|1024|2|48000|0|0|nomon|swmeter|-|32bit
+>> control device hw:0
+>> ALSA: Cannot open PCM device alsa_pcm for capture. Falling back to
+>> playback-only mode
+>> configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 2 periods
+>> ALSA: final selected sample format for playback: 16bit little-endian
+>> ALSA: use 2 periods for playback
+>>
+>> As you can see the jackd server does NOT report  can not lock memory.
+>> Why is this?
+> Not sure, maybe because the desktop consumes a lot of memory.
+>
+>> Also ASLA is reporting it can not open the device for capture.  Why is
+>> this?
+> Probably because you're using the onboard audio which doesn't do
+> capturing, only playback. You can circumvent this message by appending
+> your JACK command with -P.
+> Or are you using an USB interface that can capture?
+>
+>> Sorry, but I'm really new to sound and sound device management on
+>> Linux.  My ultimate goal is to get an application running that requires
+>> jack and this is my first stumbling block on on that path.
+> Which application is this about?
+>
+>> 73
+>> Ron / W4MMP
+>
+> -------------- next part --------------
+> A non-text attachment was scrubbed...
+> Name: signature.asc
+> Type: application/pgp-signature
+> Size: 836 bytes
+> Desc: OpenPGP digital signature
+> URL: <http://lists.jackaudio.org/private.cgi/jack-devel-jackaudio.org/attachments/20150417/3881d6af/attachment-0001.pgp>
+>
+> ------------------------------
+>
+> Message: 6
+> Date: Fri, 17 Apr 2015 14:19:10 +0200
+> From: Ralf Mardorf <[hidden]>
+> To: [hidden]
+> Subject: Re: [Jack-Devel] alsa_* device or resource is busy
+> Message-ID: <20150417141910.751c01ff@archlinux>
+> Content-Type: text/plain; charset=US-ASCII
+>
+> On Fri, 17 Apr 2015 13:38:36 +0200, Adrian Knoth wrote:
+>> Just run your script from the usual XDG directories (or however your
+>> distro implements autostart).
+> Likely the default DE for Ubuntu Studio still is XFCE4. If so, the OP
+> could run xfce4-session-settings, likely also available by the main
+> menu.
+>
+> xfce4-session-settings -> tab "Application Autostart" -> "+ Add"
+>
+>
+> ------------------------------
+>
+> Message: 7
+> Date: Fri, 17 Apr 2015 15:23:39 +0300
+> From: Athanasios Silis <[hidden]>
+> To: Adrian Knoth <[hidden]>
+> Cc: Developers JACK <[hidden]>
+> Subject: Re: [Jack-Devel] alsa_* device or resource is busy
+> Message-ID:
+> 	<CADgchntC43QAwuA+F4=[hidden]>
+> Content-Type: text/plain; charset="utf-8"
+>
+> Lots of good info, thanks.
+> I will certainly abandon the rc.local approach and try with autostart.
+> The pc I am refering to above is a jackd client, so the "system* hooks
+> connect to the jack master, that is why I need to enable the local
+> soundcards (on the jack client) through alsa_* . I shall change that to
+> zita_* as well.
+>
+> yes ubuntu studio uses xfce4 . I shall try KXStudio as well :)
+>
+>
+> On Fri, Apr 17, 2015 at 2:38 PM, Adrian Knoth <[hidden]>
+> wrote:
+>
+>> On 04/17/15 13:16, Athanasios Silis wrote:
+>>
+>>   hi all, continuing from a previous email where I try to start up
+>>> several audio applications from a custom init script , which is run
+>>> from rc.local,
+>>>
+>> I originally wanted to point out that the use of rc.local for this stuff
+>> is discouraged, but you've just discovered this yourself now.
+>>
+>> You should really consider your approach and come up with something
+>> else.
+>>
+>>   what could be conflicting here?
+>> Everything. Your login manager is probably using the card.
+>>
+>> The whole concept of integrating desktop distros with rc.local for audio
+>> is not going to fly, because the distros set device permissions based on
+>> the logged in user.
+>>
+>> There might also be a system-wide pulseaudio daemon running, probably as
+>> root. You might get away with pasuspender -- alsa_out, but I wouldn't be
+>> surprised if not, unless you wrap your su call in pasuspender.
+>>
+>> Also note that you shouldn't be using alsa_in/out at all, use zita-a2j
+>> and zita-j2a or use jackd-0.124.x where you can simply specify
+>> additional cards:
+>>
+>>     $ jackd -A Intel -d alsa -d hw:DSP24,0
+>>
+>> I don't know what you're trying to achieve, but I see mostly two
+>> options:
+>>
+>>    (a) if you don't need a desktop, don't use one.
+>>    (b) if you do need a desktop, use their autostart features
+>>
+>> For (b): You can have auto-login for a certain user. You can have
+>> autostart for this user. Just run your script from the usual XDG
+>> directories (or however your distro implements autostart).
+>>
+>> Also consider switching to KXstudio - a lot of work went into it to make
+>> things work. An integration effort other distros never bothered to do.
+>>
+>>
+>> Cheers
+>>
+> -------------- next part --------------
+> An HTML attachment was scrubbed...
+> URL: <http://lists.jackaudio.org/private.cgi/jack-devel-jackaudio.org/attachments/20150417/ed39041c/attachment.htm>
+>
+> ------------------------------
+>
+> Subject: Digest Footer
+>
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+>
+> ------------------------------
+>
+> End of Jack-Devel Digest, Vol 106, Issue 10
+> *******************************************
+
+
+HI, I hope I'm using the email correctly now.  Thanks.
+
+OK, yes I'm thick as a brick some times.  Yes,  the bcm2835 sound device 
+only has output.  Doh!
+gpu_mem=16.  However I had it as high as 128M and it made no difference.
+
+The application is an amateur radio application called OpenExpertSDR.   
+Source located here: https://github.com/florintanasa/OpenExpertSDR.   
+Originally the application was using portaudio to communicate with sound 
+devices, but then the author decided to change to Jack.  I don't have a 
+clue why.
+Trust me,  Jack has been the lesser of problems while attempting to 
+build this application.  It requires Qt5 which is not available with 
+Raspbian (as yet).  Building Qt5 from source has been a real challenge. 
+   I have been to the depths of dependance hell and back again.
+
+Once I have all the bugs worked out, I will then install a USB sound 
+card.  Hopefully configuring it will not be as much as a challenge as 
+getting the rest of the stuff working has been.
+
+Thanks very much for your help,
+Ron
+
+1429280297.2975_0.ltw:2, <5531161D.2050102 at aol dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,77 @@
+Date:        Mon, 18 Jul 2011 12:15:22 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Nedko Arnaudov <[hidden] at arnaudov dot name>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Nedko Arnaudov Re: [Jack-Devel] jackd-logging -- was jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT" (1310959862.24926_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jackd-logging -- was jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT"
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Hi Nedko,
+
+Thanks for all the feedback on the recent emails.
+
+On 07/18/2011 08:30 AM, Nedko Arnaudov wrote:
+> Robin Gareus <[hidden]> writes:
+>> Maybe it's rather time for a smarter smart-logger :-)
+>>
+>> xruns are not the only issue. I just managed to fill
+>> ~/.log/jack/jackdbus.log with 16MB of 4-line repeats:
+>>
+[snip]
+> 
+> Maybe, or have better logging in jack2. Inspecting several old lines on
+> each new log line is probably waste of CPU. Do you have a motivation to
+> implement such supersmart logger?
+
+The motivation would be that JACK could use the limited manpower better
+than re-working the logging mechanism.
+
+I suppose several other projects could benefit from such a "buffering
+smart-logger", too. I did not do my homework: maybe a tool/library like
+this already exists?!
+
+Waste of CPU.. Maybe. One certainly needs to limit the max number of
+lines to buffer and search backwards. A sane value may be 8 and strcmp()
+is fast. It bails out after the first mismatched char.
+
+Certainly the bit of CPU overhead can be neglected compared to jackd
+flushing 4+ log-lines for each process-cycle to disk otherwise.
+
+but maybe there's a better solution than this pragmatic approach. Any ideas?
+
+> If this error log line sequence is generated in single thread, error
+> messages can be collected and then logged as a single line. Not sure how
+> viable such solution is in the C++ do-it-right (tm) land. C++ exceptions
+> are not universally accepted.
+
+Also the messages are spread out through different source-files and
+classes. For debugging it certainly helps to have a trace.
+
+Sure, they could still be collated into a single line for a "simple
+smart-logger"; but I estimate this to be more work and more tricky to
+get right. or am I missing something?
+
+>> Simply launching a new client (here jack_lsp) after supercollider
+>> crashed made the issue go away. no jack-engine re-start needed.
+> 
+> This indicates issue with jack2 itself. Either genuinely wrong logic
+> somewhere or it gets fooled by external events. IMO.
+
+I sent the log-file and info off-list to Stephane.
+
+Cheers!
+robin
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk4kB7oACgkQeVUk8U+VK0K9hgCfc0ZUEPc8HpH2WkCLTnnKYEih
+0osAnRbEc1dlI00zPBkig23Xp4DaeguM
+=Lvp3
+-----END PGP SIGNATURE-----
+
+1310984147.9418_0.ltw:2,a <4E2407BA.8050804 at gareus dot org>
+________________________________________________________________________________
+

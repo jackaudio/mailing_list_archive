@@ -1,0 +1,245 @@
+Date:        Sat, 06 May 2017 13:32:03 +0200
+From:        David Kastrup  <[hidden] at gnu dot org>
+To:          [hidden] at lists dot jackaudio dot org
+
+Subject:     Re: [Jack-Devel] How does --hwmon work?
+
+Ralf Mardorf <[hidden]> writes:
+
+> On Sat, 6 May 2017 10:00:41 +0000, Fons Adriaensen wrote:
+>>On Sat, May 06, 2017 at 11:27:31AM +0200, Ralf Mardorf wrote:
+>>> Some things simply can't be done with a KORG nanoKONTROL
+>>> and a computer.  
+>>
+>>For anything non-trivial, just count the number of mic stands and
+>>kilometers of cable you'll need and then work out if that fits in
+>>your cabin luggage :-)
+>
+> Exactly! 
+>
+> So my guess is, that David does something more or less simply that
+> requires hardware monitoring, hence hdspmixer with it's 8 presets for
+> most of us, would be all we need. Neither the old, nor the new KORG
+> nanoKONTROL provides much scenes and channels, so it anyway wouldn't be
+> comfortable to use a nanoKONTROL to do the main mix, as well as the
+> monitoring. However, we don't now what he wants to do, that requires
+> hardware monitoring, so it's just guessing.
+
+Uh, I described the exact application I was currently working on where I
+found the existing connectivity lacking.
+
+To make it easy for you, let's append the scripts in their current
+state:
+
+Here is olifant.sh:
+
+--- cut ---
+#!/bin/sh
+# Hammerfall DSP
+# Routing is input,output,gain (with 32768 being 0dB)
+#
+# Inputs to HDSP Mixer
+# =====================================================================
+# Multiface analogue inputs 1-8      = amixer source channels 0-7
+# [8-15 unused for Hammerfall DSP]
+# Multiface ADAT inputs 1-8          = amixer source channels 16-23
+# Multiface SPDIF input              = amixer source channels 24-25
+# alsa_pcm:playback_1-26             = amixer source channels 26-51
+
+# Outputs from HDSP Mixer
+# =====================================================================
+# Multiface analogue outputs 1-8     = amixer destination channels 0-7
+# [8-15 unused for Hammerfall DSP]
+# Multiface ADAT outputs 1-8         = amixer destination channels 16-23
+# Multiface SPDIF output             = amixer destination channels 24-25
+# Multiface line (headphone) output  = amixer destination channels 26-27
+
+# Mapping between Multiface inputs and alsa_pcm:capture channels
+# =====================================================================
+# Multiface analogue inputs 1-8      = capture_1-8
+# Multiface ADAT inputs 1-8          = capture_9-16
+# Multiface SPDIF input              = capture_17-18
+
+amixer -q -D hw:DSP -s <<EOF
+sset 'Sample Clock Source' 'Internal 96.0 kHz'
+cset numid=5 26,0,10000
+cset numid=5 27,1,10000
+cset numid=5 26,26,10000
+cset numid=5 27,27,10000
+EOF
+
+OLIFANT_AMIXER_DEVICE="hw:DSP"
+OLIFANT_AMIXER_UNMUTE="cset numid=5 0,0,32768
+cset numid=5 1,1,32768
+cset numid=5 0,26,32768
+cset numid=5 1,27,32879"
+OLIFANT_AMIXER_MUTE="cset numid=5 0,0,0
+cset numid=5 1,1,0
+cset numid=5 0,26,0
+cset numid=5 1,27,0"
+
+export OLIFANT_AMIXER_DEVICE OLIFANT_AMIXER_UNMUTE OLIFANT_AMIXER_MUTE
+
+jackd --silent -d alsa -X seq -d hw:DSP -s -H -r 96000 -p 2048 -n 2 & sleep 1
+aeolus -I Aeolus2 -S $HOME/.aeolus/stops & sleep 1
+jack_connect aeolus:out.L system:playback_1
+jack_connect aeolus:out.R system:playback_2
+
+# Oh come on, this is too stupid for words: there must be a better way
+# to look up a port alias.  And besides, mididings should really also
+# accept an alias.
+
+INPUT=$(jack_lsp -A|awk '/^[^ ]/{canon=$0};/Hammerfall-DSP:midi\/playback_1/{print canon;exit};{next}')
+
+mididings -I "$INPUT" -O aeolus:Midi/in -f $HOME/share/mididings/olifant.py
+
+--- cut ---
+
+And here is $HOME/share/mididings/olifant.py:
+
+from mididings import *
+from mididings.extra import *
+from mididings.extra.inotify import AutoRestart
+
+# command line processing?
+import os
+if 'OLIFANT_AMIXER_DEVICE' in os.environ:
+    import subprocess
+    amixer_pipe = subprocess.Popen(['amixer','-q','-D',
+                                    os.environ['OLIFANT_AMIXER_DEVICE'],
+                                    '-s'],stdin=subprocess.PIPE)
+    amixer_unmute = os.environ.get ('OLIFANT_AMIXER_UNMUTE')
+    amixer_mute = os.environ.get ('OLIFANT_AMIXER_MUTE')
+    def roland_unmute (ev):
+        if amixer_unmute:
+            amixer_pipe.stdin.write (amixer_unmute + '\n')
+    def roland_mute (ev):
+        if amixer_mute:
+            amixer_pipe.stdin.write (amixer_mute + '\n')
+else:
+    def roland_unmute (ev):
+        return
+    def roland_mute (ev):
+        return
+
+config(
+    backend='jack-rt',
+    client_name='olifant',      # Gives Roland a big organ
+    initial_scene=1,
+)
+
+hook(
+    AutoRestart ()
+)
+
+rolandAI = 1                    # accordion treble
+rolandAII = 2                   # accordion chord (non-Roland setting)
+rolandAP = 3                    # accordion bass/free bass (non-Roland)
+rolandADrum = 10                # drums
+rolandI = 4                     # orchestra/organ treble
+rolandP = 5                     # orchestra/organ bass buttons
+rolandII = 6                    # orchestra/organ chord buttons
+rolandIII = 7                   # free bass manual
+rolandSets = 13                 # set selection
+aeolusP = 1                     # Pedal
+aeolusI = 2                     # Great
+aeolusII = 3                    # Choir
+aeolusIII = 4                   # Schwell
+aeolusCtl = 2                   # Global control channel
+
+# It's a bit complex to decide just when to switch the Roland sound
+# off via mixer (which will disable both treble and bass) and when
+# not.
+#
+# Various policies may be implemented, but here we use a comparatively
+# simple default:
+#
+# For playing organ parts in the right hand, we want to have ready
+# access to register switches of the right hand (which would reenable
+# a temporarily muted Roland voice).  So in the organ registers of the
+# right hand, we mute the Roland.
+#
+# There is one major nuisance: switching from organ mode to accordion
+# mode may well not send any Midi event at all.  As a result, we will
+# detect a scene change only once a note is played (or a register is
+# pressed).
+
+scene_sets = {
+    1: Scene ("Roland mode",
+              ChannelFilter(rolandI) >>
+              ProgramSplit({5:[SceneSwitch(2),
+                               Program (1, aeolusCtl, 1)],
+                            6:[SceneSwitch(2),
+                               Program (1, aeolusCtl, 3)],
+                            7:[SceneSwitch(2),
+                               Program (1, aeolusCtl, 5)],
+                            8:[SceneSwitch(2),
+                               Program (1, aeolusCtl, 7)],
+                            9:[SceneSwitch(2),
+                               Program (1, aeolusCtl, 2)],
+                            10:[SceneSwitch(2),
+                                Program (1, aeolusCtl, 4)],
+                            11:[SceneSwitch(2),
+                                Program (1, aeolusCtl, 6)],
+                            12:[SceneSwitch(2),
+                                Program (1, aeolusCtl, 8)]}),
+              [Call(roland_unmute)]),
+    2: Scene ("Organ mode",
+              Split({NOTE:
+                     ChannelSplit({rolandAI: SceneSwitch (1),
+                                   rolandI: Channel (aeolusI),
+                                   (rolandAII,rolandII): Channel (aeolusII),
+                                   rolandIII: Transpose (-12) >> Channel (aeolusIII),
+                                   (rolandAP,rolandP): Transpose (12) >> Channel (aeolusP)}),
+                     PROGRAM:
+                     ChannelSplit({rolandAI: SceneSwitch (1),
+                                   rolandI:
+                                   ProgramSplit({
+                                       (1,2,3,4): SceneSwitch(1),
+                                       5: Program (1, aeolusCtl, 1),
+                                       6: Program (1, aeolusCtl, 3),
+                                       7: Program (1, aeolusCtl, 5),
+                                       8: Program (1, aeolusCtl, 7),
+                                       9: Program (1, aeolusCtl, 2),
+                                       10: Program (1, aeolusCtl, 4),
+                                       11: Program (1, aeolusCtl, 6),
+                                       12: Program (1, aeolusCtl, 8)}),
+                                   rolandSets: Ctrl(1, aeolusCtl, 32, EVENT_PROGRAM)})}),
+              [Call(roland_mute)])
+    }
+
+run (scenes = scene_sets)
+
+--- cut ---
+
+olifant.py, the mididings script, is supposed to be generally useful to
+people independent of what sound card they use.
+
+It needs to switch off the Roland accordion output in the mixer (that's
+what the roland_mute and roland_unmute calls are for), and it does not
+make sense to simulate a hardware mixer with the more demanding
+full-duplex software-mixing approach.  So what I do here in order to
+keep things generally useful is passing an ALSA device and amixer
+commands to use via environment variables.  That will cover the vast
+majority of the use cases workable via hardware mixers accessible in
+some manner via ALSA.
+
+But it is a total crock to use that side path for functionality that
+falls squarely in the realm of sound routing.  When there is no viable
+hardware mixer, one has to use Jackd routing anyway.  So what's wrong
+with Jackd gaining the ability to offload work to hardware whenever the
+hardware is able to do the job?
+
+This particular application can be fudged around, sure.  But it's not
+like software-controllable setup of hardware monitoring is useless for
+recording applications like Ardour.  And it does make sense to save your
+monitoring solutions as part of an Ardour session rather than having to
+manage them with separate applications not connected with the Ardour
+session control.
+
+-- 
+David Kastrup
+
+1494070346.6175_0.ltw:2,a <87efw243ws.fsf at fencepost dot gnu dot org>
+________________________________________________________________________________
+

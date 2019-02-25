@@ -1,0 +1,43 @@
+Date:        Tue, 05 Jul 2011 08:17:10 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] mumbo jumbo on a wiki page (1309811961.6314_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] mumbo jumbo on a wiki page
+
+Le 4 juil. 2011 à 22:38, Paul Davis a écrit :
+
+> On Mon, Jul 4, 2011 at 3:58 PM, Fons Adriaensen <[hidden]> wrote:
+>> On Mon, Jul 04, 2011 at 03:21:37PM -0400, Paul Davis wrote:
+>> 
+>>> trying to describe it at all is tricky, because it *is* tricky to even
+>>> know for sure if you need them.
+>> 
+>> True. But I was hoping for your exposé as to how A3 deals
+>> with SMP machines (which are the norm today) :-))
+> 
+> more or less the way you describe. torben did the implementation.
+> 
+
+In Faust we use a Work Stealing Scheduler to deal with this kind of DAG:
+
+http://www.grame.fr/Ressources/pub/FAUST_LAC2010.pdf
+
+The difference is that since the DAG is known in advance we can "compile" the given activation code for each task (which task are to be computed next, which tasks is to be pushed on a queue). Tasks are indentified by an index and we used lock-free code (CAS based) to access the queues. 
+
+You can possibly look at the generated code by using Faust2 branch on GIT :
+
+http://faudiostream.git.sourceforge.net/git/gitweb.cgi?p=faudiostream/faudiostream;a=summary
+
+and generate code for a given example, like:
+
+faust -sch -a jack-gtk.cpp examples/freeverb.dsp
+
+Then this "static" (DAG know in advance) method can probably be generalized to dynamic graphs.
+
+Stéphane
+
+1309846648.18632_0.ltw:2,a <5EC4697B-B2ED-4830-959D-B586B7CF49BA at grame dot fr>
+________________________________________________________________________________
+

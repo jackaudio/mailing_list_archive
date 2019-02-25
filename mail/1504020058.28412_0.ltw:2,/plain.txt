@@ -1,0 +1,87 @@
+Date:        Tue, 29 Aug 2017 17:20:45 +0200
+From:        Ralf Mattes  <[hidden] at mh-freiburg dot de>
+To:          Malik Costet <[hidden] at malikc dot neomailbox dot net>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Malik Costet Re: [Jack-Devel] Jack server keeps playing sound after client disconnetcs (1504016820.23581_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] ?==?utf-8?q? Jack server keeps playing sound after client disconnetcs
+
+Am Dienstag, 29. August 2017 16:24 CEST, Malik Costet <[hidden]> schrieb:
+
+> On 2017-08-29 13:31, Thomas Brand wrote:
+> > If It plays forever now that's indeed strange.
+> > Can you describe the sound? Is it "normal", like a song that just
+> > continues normally or more like crackle, arbitrary buffer data? Where does
+> > that data come from if the client is dead? Where do the clients get their
+> > data to put to jack? Do you see any remains of a dead client in the
+> > system?
+
+I think it's waisted time to play the guessing game without better information
+to start with:
+
+how was the jack server started? Jackd's client treatment can be heavily changed with
+command line parameters (-t/--timeout and -Z/--nozombies).
+
+A reasonable test case (a sine tone is probably the worst tone to detect if it's one buffer
+played over and over or something still feeding frames to jack) and a test program that
+doesn't involve a client-server setup (where both client and server register with jack) and
+a real KILL signal to kill the sound generating process (sclang does all sorts of things after
+receiving a signal. Just do a proper sclang termination (i.e. send Ctr-D/EOF to the repl) to
+see what sort of shutdown handlers clang has (BTW, on my clang installation Ctr-C just
+does a clear-line, so no idea what clang binary Yuri uses ...).
+
+> Correct me if I'm wrong: jack_client has a process callback that it
+> registers with jackd, which invokes it and expects a 0 status code
+> indicating that it should continue playing the buffers, right?
+
+No, afaik that callback gets invoked from a (realtime priority) thread in the
+client process (that thread is managed by libjack.so, _not_ the server). Jackd
+merely signals that it's time to update the buffers.
+
+> I mean,
+> that data structure resides (or at least exists) in jackd's program
+> space, right?
+
+No, that callback is in the client's address space. Jackd and each client
+share memory segments (shared memory), IIRC one segment per client port.
+
+> Could it be that if jackd misses the client's disconnect, it keeps
+> invoking that callback,
+
+No client (process killed) -> no callback.
+My first hypothesis would have been a kill that doesn't kill all threads and
+a callback that would continue to fill the frame buffer, but that would be seen
+in ps ...
+
+> but because the client isn't there any more, the
+> status code automatically stays 0 and hence it carries on rendering and
+> re-rendering that buffer indefinitely?
+
+That's why it's so important to know how jack was invoked. Killing a process
+does not remove shared memory segments (after all, that's why they are called
+"shared"). It would be a reasonable guess that these segments continue to live
+and jackd doesn't detect that the client disapeared (again: this depends on jackd's
+startup/configuration). BUT: Yuri claims that jack_lsp does not list those client ports!
+
+So, from the symptoms given to us (no client process/thread, jackd claims that the client
+disapeared) it's hard to think of a situation where jackd would still be reading samples from
+the shared memory (on Linux the first thing I'd do would be to look at those segments and check
+how many processes are using them: $ fuser -u /dev/shm/sem.jack_sem.1000_default_GrandOrgue).
+
+> If that's the case, it might have been a better idea to use non-zero
+> status codes to indicate continue; although it's likely too late to
+> change that.
+
+That's a libjack API, not a jack client/server API.
+
+Cheers, Ralf Mattes
+
+> M.
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1504020058.28412_0.ltw:2, <bdf-59a58680-723-502e4680 at 126894462>
+________________________________________________________________________________
+

@@ -1,0 +1,31 @@
+Date:        Thu, 07 Jun 2012 19:09:19 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Tommaso Cucinotta <[hidden] at sssup dot it>
+Cc:          JACK Developers <[hidden] at jackaudio dot org>
+In-Reply-To: Tommaso Cucinotta [Jack-Devel] Jack Fifo vs pthread_condvar ? (1339106290.30203_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack Fifo vs pthread_condvar ?
+
+On Thu, Jun 7, 2012 at 5:57 PM, Tommaso Cucinotta <
+[hidden]> wrote:
+
+> Hi all,
+>
+> after some time, I'm re-looking at the audio cycle in Jack, and I'm not
+> sure I've got right this: does the suspension of the Jack client threads on
+> Linux rely ultimately on FIFOs ? (i.e., read() and write() syscalls). Would
+> it be possible to use a pthread-synchronized mutex and condvar in shared
+> memory, instead ? (quite sure you can place a pthread_mutex in shmem on
+> Linux, but don't know about pthread_cond_wait()).
+>
+
+if there's a reason to switch, the thing to switch to is a semaphore, or
+even a raw futex. there's no justification for switching to pthread
+synchronization objects. there is some evidence that at this point in time,
+semaphores are faster. the synchronization via FIFOs does not happen via
+read/write syscalls, but via poll(2) and write(2). the reads just empty the
+FIFO and are not related to sync.
+
+1339110568.32240_0.ltw:2,a <CAFa_cK=0gxrEKZftaPXSAY3H0G29MHu1shTDQOsp0e6Txkyppw at mail dot gmail dot com>
+________________________________________________________________________________
+

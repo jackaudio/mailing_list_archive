@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1517323747.4550_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1517326368.8069_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1517325852.7431_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 30 Jan 2018 16:23:27 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Christian Affolter </span> &lt;[hidden] at purplehaze dot ch&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Thomas Brand
+<a href='../1517317602.28998_0.ltw:2,/index.html'>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Thomas Brand
+<a href='../1517327588.9587_0.ltw:2,/index.html'>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Christian Affolter
+<a href='../1517332563.16161_0.ltw:2,/index.html'>Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device </a></td></tr>
+</table>
+<pre>
+Hi Thomas,
+
+On 30.01.2018 14:05, Thomas Brand wrote:
+&gt;&gt;&gt; this sounds like a SR mismatch but it's not obvious.
+&gt;&gt;
+&gt;&gt; Yes, most likely.
+&gt;&gt;
+&gt;&gt;
+&gt;&gt;
+&gt;&gt;&gt; before you debug more, can you try to record with
+&gt;&gt;&gt; https://github.com/kmatheussen/jack_capture ?
+&gt;&gt;&gt;
+&gt;&gt;
+&gt;&gt; This results in the same issue. I've started jack_capture with the
+&gt;&gt; following parameters:
+&gt;&gt;
+&gt;&gt; jack_capture -b 32 -c 2 -d 10 -fn /tmp/test-jack_capture.wav \ -p
+&gt;&gt; system:capture_1 \
+&gt;&gt; -p system:capture_2
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; The resulting file:
+&gt;&gt; https://filebin.ca/3pykjU8lo2jO/test-jack_capture.wav
+&gt;&gt;
+&gt;&gt;
+&gt;&gt;
+&gt;&gt;&gt; A simple test is to connect system:capture to system:playback and see
+&gt;&gt;&gt; if you get what's expected on your headphone/speakers.
+&gt;&gt;
+&gt;&gt; Yes, but unfortunately it's a virtual device running on a headless
+&gt;&gt; server without any speakers attached. The playout would go into the
+&gt;&gt; Livewire+ network where I would have to re-capture it from another
+&gt;&gt; system.
+&gt;&gt;
+&gt; 
+&gt; you can try to run jack with --verbose, maybe it gives another hint.
+
+I did that already, see the pastbin links below:
+
+&gt;&gt;&gt;&gt;&gt; # Starting jackd
+&gt;&gt;&gt;&gt;&gt; # Verbose output at: https://pastebin.com/YzHEGSnR
+&gt;&gt;&gt;&gt;&gt; jackd -d alsa -d hw:0
+
+&gt;&gt;&gt;&gt;&gt;&gt; # Capture via jackrec
+&gt;&gt;&gt;&gt;&gt;&gt; # This results in a too high pitched WAV file
+&gt;&gt;&gt;&gt;&gt;&gt; # Verbose output at: https://pastebin.com/PCnymKLA
+
+
+
+&gt; you can run jack_bufsize to be absolutely sure it runs at the correct SR.
+
+jack_bufsize
+buffer size = 1024  sample rate = 48000
+
+
+&gt; you can play a file in jack, record that and see if it's ok. if that's the
+&gt; case, most probably jack is running ok.
+
+I did that with mpg123, which works correctly (see below)
+
+&gt;&gt;&gt;&gt;&gt; I've also tried to play an mp3 file via mpg123 over jack (without the
+&gt;&gt;&gt;&gt;&gt; involvement of the Alsa device) and record it again with jackrec.
+&gt;&gt;&gt;&gt;&gt; This works and sounds correct.
+
+
+&gt; the alsa device could be the issue. you could try to start a dummy jack
+&gt; and add the alsa device with alsa_in to see if it makes a difference.
+&gt; also make sure that you use a vanilla jack (git clone
+&gt; https://github.com/jackaudio/jack2/) to rule out any other side-effect.
+
+OK, I will compile from source later an re-run the captures.
+
+
+Thanks again
+Chris
+
+&gt;&gt;&gt; On Tue, January 30, 2018 12:35, Christian Affolter wrote:
+&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; Hi everyone,
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; capturing from ALSA capture devices via the Jack2 sound server
+&gt;&gt;&gt;&gt; (1.9.12),
+&gt;&gt;&gt;&gt; results in too high pitched wav files (they are playing "too fast" and
+&gt;&gt;&gt;&gt;  sound like the "chipmunks"). If I run the same capture directly from
+&gt;&gt;&gt;&gt; the ALSA devices (without Jack involved), everything sounds as
+&gt;&gt;&gt;&gt; expected without any problems.
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; Audio examples:
+&gt;&gt;&gt;&gt; Capture via jackrec: https://filebin.ca/3pyMxBw8cexQ/test-jackrec.wav
+&gt;&gt;&gt;&gt; Capture via arecord: https://filebin.ca/3pyOPjcKGym5/test-arecord.wav
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; The device in question is a "virtual" Axia-ALSA (Livewire+) audio
+&gt;&gt;&gt;&gt; device on CentOS 7 which operates at a sample rate of 48kHz and a bit
+&gt;&gt;&gt;&gt; depth of either 16 or 32. As far as I can see, the sample rate and
+&gt;&gt;&gt;&gt; format detection on the Jack side looks correct. I'm therefore looking
+&gt;&gt;&gt;&gt; for some guidance on how to further debug this, I most certainly
+&gt;&gt;&gt;&gt; missed something obvious.
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; I've also tried to play an mp3 file via mpg123 over jack (without the
+&gt;&gt;&gt;&gt;  involvement of the Alsa device) and record it again with jackrec.
+&gt;&gt;&gt;&gt; This
+&gt;&gt;&gt;&gt; works and sounds correct.
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; Here is what I've tried and what the environment looks like:
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; # Capabilities of the Axia-ALSA device
+&gt;&gt;&gt;&gt; arecord -D hw:0 --dump-hw-params
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; Recording WAVE 'stdin' : Unsigned 8 bit, Rate 8000 Hz, Mono
+&gt;&gt;&gt;&gt; HW Params of device "hw:0":
+&gt;&gt;&gt;&gt; --------------------
+&gt;&gt;&gt;&gt; ACCESS:  MMAP_INTERLEAVED RW_INTERLEAVED
+&gt;&gt;&gt;&gt; FORMAT:  S16_LE S32_LE
+&gt;&gt;&gt;&gt; SUBFORMAT:  STD
+&gt;&gt;&gt;&gt; SAMPLE_BITS: [16 32]
+&gt;&gt;&gt;&gt; FRAME_BITS: [16 256]
+&gt;&gt;&gt;&gt; CHANNELS: [1 8]
+&gt;&gt;&gt;&gt; RATE: 48000
+&gt;&gt;&gt;&gt; PERIOD_TIME: (41 1365334)
+&gt;&gt;&gt;&gt; PERIOD_SIZE: [2 65536]
+&gt;&gt;&gt;&gt; PERIOD_BYTES: [64 131072]
+&gt;&gt;&gt;&gt; PERIODS: [1 1024]
+&gt;&gt;&gt;&gt; BUFFER_TIME: (41 1365334)
+&gt;&gt;&gt;&gt; BUFFER_SIZE: [2 65536]
+&gt;&gt;&gt;&gt; BUFFER_BYTES: [64 131072]
+&gt;&gt;&gt;&gt; TICK_TIME: ALL
+&gt;&gt;&gt;&gt; --------------------
+&gt;&gt;&gt;&gt; arecord: set_params:1299: Sample format non available
+&gt;&gt;&gt;&gt; Available formats:
+&gt;&gt;&gt;&gt; - S16_LE
+&gt;&gt;&gt;&gt; - S32_LE
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; # Capture via arecord directly from the ALSA device (without jackd)
+&gt;&gt;&gt;&gt; # This works as expected and the WAV file sounds fine
+&gt;&gt;&gt;&gt; arecord -D hw:0 -c 2 -d 10 -r 48000 -f S32_LE -v /tmp/test-arecord.wav
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; Recording WAVE '/tmp/test-arecord.wav' : Signed 32 bit Little Endian,
+&gt;&gt;&gt;&gt;  Rate 48000 Hz, Stereo
+&gt;&gt;&gt;&gt; Hardware PCM card 0 'Axia' device 0 subdevice 0
+&gt;&gt;&gt;&gt; Its setup is:
+&gt;&gt;&gt;&gt; stream       : CAPTURE access       : RW_INTERLEAVED format       :
+&gt;&gt;&gt;&gt; S32_LE
+&gt;&gt;&gt;&gt; subformat    : STD channels     : 2 rate         : 48000 exact rate
+&gt;&gt;&gt;&gt; :
+&gt;&gt;&gt;&gt; 48000 (48000/1)
+&gt;&gt;&gt;&gt; msbits       : 32 buffer_size  : 16384 period_size  : 4096 period_time
+&gt;&gt;&gt;&gt; :
+&gt;&gt;&gt;&gt; 85333
+&gt;&gt;&gt;&gt; tstamp_mode  : NONE tstamp_type  : MONOTONIC period_step  : 1
+&gt;&gt;&gt;&gt; avail_min
+&gt;&gt;&gt; :
+&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; 4096
+&gt;&gt;&gt;&gt; period_event : 0 start_threshold  : 1 stop_threshold   : 16384
+&gt;&gt;&gt;&gt; silence_threshold: 0
+&gt;&gt;&gt;&gt; silence_size : 0 boundary     : 4611686018427387904 appl_ptr     : 0
+&gt;&gt;&gt;&gt; hw_ptr : 0
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; # playing arecord wav (via my local notebook's HDA Intel PCH
+&gt;&gt;&gt;&gt; # device), sounds correct
+&gt;&gt;&gt;&gt; aplay test-arecord.wav
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; Playing WAVE 'test-arecord.wav' : Signed 32 bit Little Endian, Rate
+&gt;&gt;&gt;&gt; 48000 Hz, Stereo
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; # Starting jackd
+&gt;&gt;&gt;&gt; # Verbose output at: https://pastebin.com/YzHEGSnR
+&gt;&gt;&gt;&gt; jackd -d alsa -d hw:0
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; jackdmp 1.9.12 Copyright 2001-2005 Paul Davis and others. Copyright
+&gt;&gt;&gt;&gt; 2004-2016 Grame.
+&gt;&gt;&gt;&gt; Copyright 2016-2017 Filipe Coelho.
+&gt;&gt;&gt;&gt; jackdmp comes with ABSOLUTELY NO WARRANTY This is free software, and
+&gt;&gt;&gt;&gt; you are welcome to redistribute it under certain conditions; see the
+&gt;&gt;&gt;&gt; file COPYING for details
+&gt;&gt;&gt;&gt; no message buffer overruns no message buffer overruns no message
+&gt;&gt;&gt;&gt; buffer overruns JACK server starting in realtime mode with priority 20
+&gt;&gt;&gt;&gt;  self-connect-mode is "Don't restrict self connect requests"
+&gt;&gt;&gt;&gt; audio_reservation_init Acquire audio card Audio0 creating alsa driver
+&gt;&gt;&gt;&gt; ... hw:0|hw:0|1024|2|48000|0|0|nomon|swmeter|-|32bit
+&gt;&gt;&gt;&gt; configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 2
+&gt;&gt;&gt;&gt; periods ALSA: final selected sample format for capture: 32bit integer
+&gt;&gt;&gt;&gt;  little-endian ALSA: use 2 periods for capture ALSA: final selected
+&gt;&gt;&gt;&gt; sample format for playback: 32bit integer little-endian ALSA: use 2
+&gt;&gt;&gt;&gt; periods for playback
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; # Capture via jackrec
+&gt;&gt;&gt;&gt; # This results in a too high pitched WAV file
+&gt;&gt;&gt;&gt; # Verbose output at: https://pastebin.com/PCnymKLA
+&gt;&gt;&gt;&gt; jackrec -f /tmp/test-jackrec.wav -d 10 -b 32 system:capture_1
+&gt;&gt;&gt;&gt; system:capture_2
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; # playing jackrec wav (via my local notebook's HDA Intel PCH
+&gt;&gt;&gt;&gt; # device), sounds incorrect
+&gt;&gt;&gt;&gt; aplay test-jackrec.wav
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; Playing WAVE 'test-jackrec.wav' : Signed 32 bit Little Endian, Rate
+&gt;&gt;&gt;&gt; 48000 Hz, Stereo
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; System environment:
+&gt;&gt;&gt;&gt; Distribution: CentOS 7.4.1708
+&gt;&gt;&gt;&gt; Kernel:       3.10.0-693.17.1.el7.x86_64
+&gt;&gt;&gt;&gt; ALSA Utils:   1.1.3
+&gt;&gt;&gt;&gt; Jackd:        1.9.12
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; The jackd was rebuilt from Fedora source RPM to be able to test with
+&gt;&gt;&gt;&gt; the latest version:
+&gt;&gt;&gt;&gt; https://build.opensuse.org/package/show/home:radiorabe:audio/jack-aud
+&gt;&gt;&gt;&gt; io-c onnection-kit
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; Many thanks and best regards
+&gt;&gt;&gt;&gt; Chris
+&gt;&gt;&gt;&gt; 
+&gt;&gt;&gt;&gt; Jack-Devel mailing list
+&gt;&gt;&gt;&gt; [hidden]
+&gt;&gt;&gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;
+&gt;&gt;&gt;
+&gt;&gt;
+&gt;&gt;
+&gt; 
+&gt; 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1517323747.4550_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1517326368.8069_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1517325852.7431_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1517325852.7431_0.ltw:2,&nbsp;&lt;b5aab2d7-3b0b-3fca-07c4-f69a45afbb4f at purplehaze dot ch&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

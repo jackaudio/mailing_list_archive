@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How do I replicate the -P parameter when using dbus</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How do I replicate the -P parameter when using dbus</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1321970999.4945_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1321993938.12894_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1321983621.26535_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 22 Nov 2011 19:37:37 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Nedko Arnaudov </span> &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Roger James &lt;[hidden] at beardandsandals dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Roger James
+<a href='../1321960750.21541_0.ltw:2,a/index.html'>[Jack-Devel] How do I replicate the -P parameter when using dbus </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Roger James
+<a href='../1321993938.12894_0.ltw:2,a/index.html'>Re: [Jack-Devel] How do I replicate the -P parameter when using dbus </a></td></tr>
+</table>
+<pre>
+Hi Roger,
+
+Roger James &lt;[hidden]&gt; writes:
+
+&gt; My hardware setup requires the -P command line option to successfully
+&gt; start a jack server. This works fine when set in qjackctrl (Audio
+&gt; mode: Playback) as long as the dbus option is not selected. However
+&gt; when the dbus option is selected the server hangs on startup. Looking
+&gt; at the qjackctl code and the contents of conf.xml shows that when
+&gt; Playback mode is selected the only affect on the conf.xml parameters
+&gt; is that duplex is set to false, this is exactly the same when the
+&gt; Capture mode is selected so there is no differentiation between
+&gt; Playback and Capture modes in the parameters. This looks like a
+&gt; qjackctl bug, but putting that to one side for the moment as well as
+&gt; presumption that my server hangs because it is not getting clock/data
+&gt; from one of the digital capture ports.
+&gt;
+&gt; I have experimented to see what should be set in the dbus parameters
+&gt; to replicate the -P option. Using jack_control I have tried various
+&gt; combinations of settings for the duplex, playback, capture, inchannels
+&gt; and outchannels parameters, but I have not found one combination that
+&gt; successfully starts the server.
+&gt;
+&gt; My question is, is the replication of the -P parameter possible using
+&gt; the dbus server, and if so what is the magic combination?
+
+What is the full jackd commandline that works for you?
+
+Are you using the JACK driver for ALSA, right? If so, the driver
+parameter name that matches the jackd`s '-P' is 'playback'. Make sure
+that 'device' parameter is not set. Note that jack_control has no
+command for resetting parameters to their defaults, only for setting
+them. ladiconf can do this though. If you want to reset all parameters,
+delete the conf.xml file and reactivate jackdbus.
+
+jackdbus (and control api) parameters are ordered and the alsa driver
+puts the device parameter after the capture and playback parameters. So
+if you set the device parameter, it will override the playback
+parameter. Quick look into jackd (jack2) code suggests that jackd has
+the same behaviour. so specifying both -P and -d (regardless of the
+order) will cause -P to be ignored.
+
+Here is the relevant code of the alsa driver:
+
+            case 'C':
+                capture = TRUE;
+                if (strcmp (param-&gt;value.str, "none") != 0) {
+                    capture_pcm_name = strdup (param-&gt;value.str);
+                    jack_log("capture device %s", capture_pcm_name);
+                }
+                break;
+
+            case 'P':
+                playback = TRUE;
+                if (strcmp (param-&gt;value.str, "none") != 0) {
+                    playback_pcm_name = strdup (param-&gt;value.str);
+                    jack_log("playback device %s", playback_pcm_name);
+                }
+                break;
+
+            case 'D':
+                playback = TRUE;
+                capture = TRUE;
+                break;
+
+            case 'd':
+                playback_pcm_name = strdup (param-&gt;value.str);
+                capture_pcm_name = strdup (param-&gt;value.str);
+                jack_log("playback device %s", playback_pcm_name);
+                jack_log("capture device %s", capture_pcm_name);
+                break;
+
+
+The the internal order of these parameters is:
+ * "capture", 'C'
+ * "playback", 'P'
+ * "device", 'd'
+ * "duplex", 'D'
+
+-- 
+Nedko Arnaudov &lt;GnuPG KeyID: 5D1B58ED&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1321970999.4945_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1321993938.12894_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1321983621.26535_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1321983621.26535_0.ltw:2,a&nbsp;&lt;87zkfoawim.fsf at arnaudov dot name&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

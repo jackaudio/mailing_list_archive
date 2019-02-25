@@ -1,0 +1,149 @@
+Date:        Fri, 07 Sep 2012 17:33:25 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          "[hidden] at lists dot jackaudio dot org Developers" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources (1347023207.8506_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources (1347037078.32312_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources (1347041202.6379_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Switch from CELT to Opus in JACK1/JACK2 sources
+
+On 09/07/2012 03:06 PM, Stéphane Letz wrote:
+> 
+> Le 7 sept. 2012 à 13:27, Robin Gareus a écrit :
+>> opus_encode() will not always result in a fixed length.
+>> In particular if the input is silent or if the bitrate is large,
+>> fCompressedSizeByte will be less than the max possible.
+>>
+>> To work arount this I use the first 4 bytes of the actual payload to
+>> transmit the fCompressedSizeByte per channel - I have not yet committed
+>> that patch.
+>>
+>> Would this be the way to go? Any better alternatives?
+> 
+> Seems reasonable.
+
+OK.
+
+>> Although most agree that nejack is a valid use-case for opus
+>> custom-modes, upstream is reluctant to enable custom-modes by default,
+>> because it breaks interoperability
+> 
+> In what way?
+
+In principle every opus stream should be playable with any other opus
+application e.g. firefox.
+
+IMHO this is a non-issue, because netjack's protocol is not intended to
+inter-operate with anything except other jack instances, anyway.
+
+
+>> A drawback from custom-mode is that compression is not as good as it can
+>> be (it has not been optimized).
+> 
+> But will it be at some point?
+
+I don't know. It does not seem to be high priority. AFAIU some of the
+experimental improvements are also tied to the fixed frame-rates.
+
+
+> I think we should clearly avoid degrading the performances (and
+> adding code complexity with any buffering scheme..) because of this
+> kind of reasons.  Going from CELT to Opus is not "our" choice, so we
+> should keep pushing to keep the best we can.
+
+
+The question boils down to this:
+
+  A)  use standard opus modes
+     + makes some opus-devs and packagers happy
+     - adds latency
+     - adds code-complexity to jack (re-framing to N*120 frames)
+     + possibly improved compressed sound-quality
+
+  B) use opus custom-modes.
+     - may not be available on all systems
+       (requires libopus to be compiled with --enable-custom-modes)
+     + no additional latency
+     + simple code in jack
+     - possibly substandard compression quality
+       (should still be better than celt, though)
+
+
+I'm leaning towards (B). Favor simplicity and fixed low latency over
+quality when using compression. -- Users who require high-quality or
+loss-less transmission won't be using Celt, Opus or whatever, anyway.
+
+(A) Re-framing the buffers, modifying the port-latencies on netjack, etc
+are no complicated tasks per se. ..but taking care of all details and
+integration is certainly not trivial.
+
+ciao,
+robin
+
+
+PS Here are some excerpts of the IRC discussion on #celt
+
+14:55 < rgareus> Hi. Is there any reason why debian's libopus comes
+without '--enable-custom-modes' ?
+[..]
+15:22 < Garf> why does jack need custom modes to begin with?
+15:22 < rgareus> Garf: because it has a fixed frame/period cycle.
+15:23 < rgareus> and the frames/period is usually a power of two.
+15:25 < Garf> why should opus have to care about that?
+15:25 < Garf> this reeks of serious misdesign elsewhere
+15:25 < ron_> mostly to (try and) avoid the risk of people who shouldn't
+be using custom modes using them anyway because of a misunderstanding
+15:27 <+derf> Well, the point of opus-custom is for cases where you're
+not trying to interoperate with anyone else, and don't need any of the
+voice modes.
+15:27 < rgareus> netjack is pretty much isolated. it only talks to other
+jackd instances.
+[..]
+15:36 <+derf> rgareus: Well, as I said, you reframe things from 256
+samples or whatever to 240 samples, and add 10 ms of delay.
+[..]
+15:42 <+derf> The lowest standard Opus supports at all is 5 ms.
+[..]
+15:44 <+derf> 120 sample frame size + 120 sample overlap + 56 sample
+reframing buffer.
+[..]
+15:50 < rgareus> Am I understanding it correctly that the only downside
+of --enable-custom-modes in the deb package would be, that some API
+users would abuse it and thereby break compatibility?
+15:50 <+gmaxwell> opus custom also loses most of the exp encoder
+enhancements. It's worth making an effort to not use it.
+15:51 <+derf> And it's nowhere near as well tested.
+[..]
+[..]
+22:17 <+bemasc> rgareus: For 64-sample frames, I think the minimum
+additional latency of Opus would be 232 samples, compared to 64 in
+opus-custom, or a difference of 168 samples = 3.5ms.  If you think it's
+worth losing your chance at compatibility with a whole universe of
+standard Opus decoders (e.g. every copy of Firefox), then you should use
+opus-custom.
+[..]
+22:43 < rgareus> bemasc: netjack's data stream is not intended to
+interoperate with any other application, least of all browsers. It is
+used to bridge JACK (as in http://jackaudio.org) servers over a network.
+Apart from audio-data, the netjack protocol includes MIDI, transport
+information (SMPTE and Bar-beat-tick,..) and other jack-settings such as
+port-latencies,..
+[..]
+22:49 <+bemasc> rgareus: Cool.  FYI, standard Opus is designed to be
+able to do a lot of these things, like synchronized massively
+multichannel streams (over RTP).
+22:49 < rgareus> celt-custom worked fine.. until debian decided to drop
+celt :) hence this work on replacing it with opus.
+22:50 <+bemasc> Interop may not be on the roadmap now, but I maintain
+that it might make sense.  For example, I hope that live concert mixing
+systems from different vendors will eventually interoperate over
+multichannel Opus-RTP.
+22:52 <+bemasc> There's even an RTP mapping for MIDI!
+[..]
+23:31 < jmspeex> About netjack, I honestly think it's a good reason for
+using opus-costom
+
+1347032022.22602_0.ltw:2,a <504A13C5.3000404 at gareus dot org>
+________________________________________________________________________________
+

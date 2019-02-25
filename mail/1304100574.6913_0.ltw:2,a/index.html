@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4356) for Windows 64 and 32 bits</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4356) for Windows 64 and 32 bits</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1304095076.28625_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1304101946.8312_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1304100574.6913_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 29 Apr 2011 11:08:59 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at charityfinders dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Peter L Jones &lt;[hidden] at drealm dot info&gt;, St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Peter L Jones
+<a href='../1304068227.31906_0.ltw:2,a/index.html'>Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4356) for Windows 64 and 32 bits </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Peter L Jones
+<a href='../1304191786.32005_0.ltw:2,a/index.html'>Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4356) for Windows 64 and 32 bits </a></td></tr>
+</table>
+<pre>
+On Fri, Apr 29, 2011 at 2:09 AM, Peter L Jones &lt;[hidden]&gt; wrote:
+
+&gt; I tried using the alias names (e.g. "winmme:AudioFire4 MIDI:in2") and QJackCtl
+&gt; showed the latency tester connecting to the ports. &#xA0;However, it refused to run
+&gt; the test, just sitting at "Waiting for connections ..." until I hit Ctrl-C.
+&gt; Any ideas on that?
+
+Not really.  I don't have a Windows machine. :(  I assume that a
+semaphore isn't signaling correctly.
+
+&gt; Anyway, here are the latest results. &#xA0;It's a bit of a mixed bag compared with
+&gt; the earlier test (4340 version). &#xA0;Average latency is down, average jitter is
+&gt; up. &#xA0;My AudioFire4 is the only device on my Firewire bus and it's using the
+&gt; latest Windows 7 Echo Audio driver.
+
+Can you run JACK in verbose mode and send me the output of JACK?  I've
+inserted debugging code around the MIDI output timer calls so that I
+can figure out if the timer is the source of the jitter on Windows.
+
+What I find most interesting is that this result:
+
+&gt; Reported out-port latency: 11.61-12.63 ms (512-557 frames)
+&gt; Reported in-port latency: 11.61-12.63 ms (512-557 frames)
+&gt; Average latency: 45.98 ms (2028.04 frames)
+&gt; Lowest latency: 32.13 ms (1417 frames)
+&gt; Highest latency: 61.53 ms (2714 frames)
+&gt; Peak MIDI jitter: 29.41 ms (1297 frames)
+&gt; Average MIDI jitter: 6.10 ms (268.63 frames)
+
+... and this result:
+
+&gt;&gt; Reported out-port latency: 2.67-3.67 ms (128-176 frames)
+&gt;&gt; Reported in-port latency: 2.67-3.67 ms (128-176 frames)
+&gt;&gt; Average latency: 43.34 ms (2080.89 frames)
+&gt;&gt; Lowest latency: 30.98 ms (1528 frames)
+&gt;&gt; Highest latency: 68.25 ms (3195 frames)
+&gt;&gt; Peak MIDI jitter: 37.27 ms (1667 frames)
+&gt;&gt; Average MIDI jitter: 3.81 ms (166.13 frames)
+
+... have similar latency and jitter values, but have completely
+different reported in-port and out-port latency values, meaning that
+you ran JACK with two different period-size/period-count/sample-rate
+combinations, and yet the MIDI latency was still about the same, which
+means there's something that's not changing with regards to latency.
+I can think of a few possibilities:
+
+1.) The timer code could be erroneous.  If I can see the JACK output
+in verbose mode, then I can take steps in figuring out if this is the
+problem.
+
+2.) The timer resolution could be off.  The code attempts to set the
+timer resolution to the lowest possible available resolution, but
+Windows is not very good at doing things in realtime.  One possible
+solution to this problem would be to explicitly set the process
+priority.  I've talked a bit with St&#xE9;phane about this.  Seeing the
+output of JACK in verbose mode will help me figure out if this is the
+problem.
+
+If this is the problem, then I can investigate the usage of other
+Windows timing mechanisms.  Windows has a lot of different timers, but
+it's not always clear which timers work well and which ones don't.
+Right now, the code uses a "waitable timer", but it could use a queue
+timer.  The multimedia timers are marked as obsolete for whatever
+reason, though a lot of multimedia code still appears to use them.
+
+3.) The offset I'm computing for received MIDI events could be off.
+The WinMME library has this weird convention whereby it resets a
+millisecond counter to 0 somewhere inside 'midiInStart', and all
+received MIDI events then have a timestamp computed, which is
+basically a millisecond offset to the time that the millisecond
+counter was reset.  Unfortunately, there's no way to figure out what
+the absolute time was when the counter was reset in 'midiInStart',
+what the counter is at any time, and how much time passes between the
+time that the driver "timestamps" the MIDI event, and the time that
+the MIDI in callback is called with the message itself.  It's *very*
+frustrating.
+
+I've seen a few different schemes that attempt to solve this problem.
+The scheme I'm using increases latency a bit, but *should* cause 0
+jitter, which I think is more important than a bit of latency.
+
+4.) The timing of the WinMME driver could be off.  This is the
+worst-case scenario, as there's absolutely nothing that can be done
+about this.
+
+Anyway, if you (or anyone reading this) could send me the verbose
+output, then I can get started on figuring out the problem.
+
+Thank you for all of your help thus far.  I appreciate it a lot. :)
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1304095076.28625_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1304101946.8312_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1304100574.6913_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1304100574.6913_0.ltw:2,a&nbsp;&lt;BANLkTi=CWQT-04vxBbt0kDVOBF7nRhYR2w at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

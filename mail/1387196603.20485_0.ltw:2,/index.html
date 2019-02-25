@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Any plans for meta-data API in jack2?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Any plans for meta-data API in jack2?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1387147436.8386_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1387200377.26912_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1387196603.20485_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 16 Dec 2013 13:31:11 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Christian Schoenebeck </span> &lt;[hidden] at crudebyte dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Filipe Coelho
+<a href='../1387147436.8386_0.ltw:2,/index.html'>Re: [Jack-Devel] Any plans for meta-data API in jack2? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1387200377.26912_0.ltw:2,/index.html'>Re: [Jack-Devel] Any plans for meta-data API in jack2? </a></td></tr>
+</table>
+<pre>
+On Sunday 15 December 2013 23:43:42 Filipe Coelho wrote:
+&gt; &gt; you could probably recycle at least a bit from JACK iOS for that.
+&gt; 
+&gt; I know, I already made that work with raw JACK2 previously (no iOS code
+&gt; needed).
+
+Perfect!
+
+&gt; I believe the meta-data API was quickly added after I posted that
+&gt; message in fear it would be accepted in JACK2. Paul was really not a fan
+&gt; of that custom-data version... ;)
+
+Oh reeeally, I didn't notice that.. ;-)
+
+The custom data API stuff was a quick shot for iOS anyway. We just needed an 
+extension for app/client icons. Actually I just wanted to add something like 
+this:
+
+    /// Defines exactly one pixel (32 bits) with alpha (translucency) channel.
+    struct JackRGBA {
+        char r; ///&lt; Red component.
+        char g; ///&lt; Green component.
+        char b; ///&lt; Blue component.
+        char a; ///&lt; Alpha (translucency) component.
+    } __attribute__ (packed);
+
+    /// A picture in raw format (32 bit RGBA).
+    struct JackRGBAImage {
+        JackRGBA** data; ///&lt; Accessed like foo.data[y][x];
+        int w; ///&lt; Width in pixels.
+        int h; ///&lt; Height in pixels.
+    };
+
+    /// Get icon of another JACK client, auto scaled to required size.
+    JackRGBAImage* jack_get_client_icon(jack_client_t* client,
+                                        const char* client_name,
+                                        int preferred_icon_width);
+
+    /// Register an icon for own JACK client.
+    int jack_publish_icon(jack_client_t* client, const JackRGBAImage* icon);
+
+    ...
+
+But it was immediately rejected by Stephane and Paul with the words "Pictures 
+in the JACK API??? I think the sky is falling!". :-)
+
+Anyhow, ... guess we soon have the meta data API in JACK2 as well. Looking 
+forward to your patch Filipe!
+
+CU
+Christian
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1387147436.8386_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1387200377.26912_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1387196603.20485_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1387196603.20485_0.ltw:2,&nbsp;&lt;201312161331.11685.schoenebeck at crudebyte dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

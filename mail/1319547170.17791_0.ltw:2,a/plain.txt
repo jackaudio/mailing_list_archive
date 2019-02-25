@@ -1,0 +1,85 @@
+Date:        Tue, 25 Oct 2011 15:51:46 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          IL'dar AKHmetgaleev <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: IL'dar AKHmetgaleev Re: [Jack-Devel] EMU 0404 with jack dbus (1319545549.16249_0.ltw:2,a)
+Follow-Up:   IL'dar AKHmetgaleev Re: [Jack-Devel] EMU 0404 with jack dbus (1319548885.19484_0.ltw:2,a)
+Follow-Up:   IL'dar AKHmetgaleev Re: [Jack-Devel] EMU 0404 with jack dbus (1319591981.27668_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] EMU 0404 with jack dbus
+
+"IL'dar AKHmetgaleev" <[hidden]> writes:
+
+> /usr/bin/jackd --realtime -dalsa -r44100 -p256 -n1 --duplex -Phw:1
+> -o2 -i2
+
+-n1 makes no sense. jackd man page states: The default is 2, the minimum
+allowable.
+
+>> Show the contents of the jackdbus conf file -
+>> ~/.config/jack/conf.xml
+>
+>  <engine>
+>   <option name="driver">alsa</option>
+>  </engine>
+
+Check if the default value of realtime parameter is "true". If not, set
+realtime explicitly. jack running in non-realtime mode may explain
+xruns.
+
+Also check the jackdbus log file. Upon JACK server start, jackdbus will
+log whether JACK server is being started in realtime or non-realtime
+mode. If realtime mode is enabled you should see line like "JACK server
+starting in realtime mode with priority 10". If non-realtime mode is
+set, you should see "JACK server starting in non-realtime mode"
+instead.
+
+>   <driver name="alsa">
+>    <option name="device">hw:1</option>
+>    <option name="rate">44100</option>
+>    <option name="period">256</option>
+>    <option name="nperiods">1</option>
+>   </driver>
+
+Your driver configuration in jackdbus differs from the one you use in
+jackd.
+
+ * -P jackd parameter corresponds to "playback" jackdbus driver
+   parameter.
+ * --duplex jackd parameter corresponds to "duplex" jackdbus driver
+   parameter.
+ * -o jackd parameter corresponds to "outchannels" jackdbus driver
+   parameter
+ * -i jackd parameter corresponds to "inchannels" jackdbus driver
+   parameter
+
+AFAIK changes in playback/capture/duplex parameter values can cause
+xruns.
+
+>> What ebuild (version) you use? Is it from proaudio overlay or from
+>> ladi-overlay?
+>
+> I'm using jack-audio-connection-kit from pro-audio overlay. Should I
+> cheak ebuild form ladi-overlay?
+
+The jack2 ebuild from proaudio overlay should be ok. ladi-overlay
+provides some additional tweaks that are useful in ladish
+setups. ladi-overlay 2.9999 ebuild is based on latest (1.9.7 ATM)
+release of jack2 though. Its not fixed because ladi branch of jack2
+sometimes gets fixes/backports that are important for ladish setups.
+
+> One more thing. If I set sound card rate to 44100 and run jack with
+> 48000 sound becomes slowed down but without lags.
+
+Sounds like jack <-> alsa negotiation is not working properly.
+
+> Forgot verison. I'm using media-sound/jack-audio-connection-kit-2.9999
+
+So latest svn trunk. Latest at the time of emerge.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1319547170.17791_0.ltw:2,a <878vo9cjz1.fsf at arnaudov dot name>
+________________________________________________________________________________
+

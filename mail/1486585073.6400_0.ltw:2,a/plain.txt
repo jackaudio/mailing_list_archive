@@ -1,0 +1,56 @@
+Date:        Wed, 08 Feb 2017 19:47:20 +0000
+From:        John Rigg  <[hidden] at jrigg dot co dot uk>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Jörg Müller Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels (1486574217.20755_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Cannot combine audio devices with more than 64 channels
+
+On Wed, Feb 08, 2017 at 06:16:46PM +0100, Jörg Müller wrote:
+> So the bug has been fixed on the alsa-side. However, when I start jack via:
+> 
+> wfs@wfs16:~$ jackd -p 1024 -d alsa -C madifx_record_all -P madifx_playback_all
+> jackdmp 1.9.10
+> Copyright 2001-2005 Paul Davis and others.
+> Copyright 2004-2014 Grame.
+> jackdmp comes with ABSOLUTELY NO WARRANTY
+> This is free software, and you are welcome to redistribute it
+> under certain conditions; see the file COPYING for details
+> no message buffer overruns
+> no message buffer overruns
+> no message buffer overruns
+> JACK server starting in realtime mode with priority 10
+> self-connect-mode is "Don't restrict self connect requests"
+> audio_reservation_init
+> Acquire audio card Audio0
+> creating alsa driver ...
+> madifx_playback_all|madifx_record_all|1024|2|48000|0|0|nomon|swmeter|-|32bit
+> configuring for 48000Hz, period = 1024 frames (21.3 ms), buffer = 2 periods
+> ALSA: final selected sample format for capture: 32bit float little-endian
+> ALSA: use 8 periods for capture
+> ALSA: final selected sample format for playback: 32bit float little-endian
+> ALSA: use 8 periods for playback
+> jackd: ../linux/alsa/JackAlsaDriver.cpp:122: virtual int
+> Jack::JackAlsaDriver::Attach(): Assertion `fCaptureChannels < 256'
+> failed.
+> Aborted (core dumped)
+> 
+> The corresponding cpp-file at that line compares against a variable
+> called "DRIVER_PORT_NUM", which is a constant defined in
+> "common/JackConstants.h" on line 53 on the github repo. Could that be
+> the problem?
+
+It looks like the line
+
+#define DRIVER_PORT_NUM 256
+
+is causing the problem.
+
+I only have 24 input and output channels on my hardware, so I just tried
+recompiling jack2 with DRIVER_PORT_NUM 24 and it gives the same type of
+error.
+
+John
+
+1486585073.6400_0.ltw:2,a <20170208194720.GA27969 at localhost dot localdomain>
+________________________________________________________________________________
+

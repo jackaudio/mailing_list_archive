@@ -1,0 +1,52 @@
+Date:        Wed, 27 Nov 2013 20:52:09 +0100
+From:        Supertux  <[hidden] at riotmusic dot de>
+To:          [hidden] at jackaudio dot org
+Follow-Up:   Tweed Re: [Jack-Devel] jack-transport sync-capabilities over network (1385741194.24855_0.ltw:2,)
+
+Subject:     [Jack-Devel] jack-transport sync-capabilities over network
+
+Hello there!
+
+I want to use jack-transport to sync some apps over network. Maybe I did
+something wrong, because the slave lags about 2 seconds behind... Or is
+jack-transport not made for this job?
+
+My setup:
+
+I'm running jackd (with qjackctl) on the master with these parameters:
+
+/usr/bin/jackd -P89 -p512 -u -dalsa -dhw:DSP -r48000 -p64 -n2 -s
+
+runs smooth without xruns on a 4-core Xeon-machine. After that a script
+is run to establish the net- (and some MIDI-)stuff:
+
+#!/bin/bash
+jack_netsource -i3 -o2 -I1 -O1 -n8 -H laptop &
+a2j &
+exit 0
+
+...with "laptop" being my slave-machine, a Thinkpad T410. This one
+I'm launching with:
+
+/usr/bin/jackd -P70 -p128 -t1000 -u -dnet -i2 -o3
+
+Nevermind the audio-connections. It's a leftover from another project I'm
+using. Shouldn't be a problem for jack-transport, right?
+
+The 2 computers are connected over GBit-ethernet. Got some net-xruns
+from time to time, but nothing permanent.
+
+As I already said above: When I start jack-transport on master, the
+slave lags about 2 seconds behind. 
+When I stop jack-transport on master, the slave is immediately
+synced to the masters time. No lag - but just when jack-transport is
+stopped.
+  
+Have I missed something?
+
+Greets!
+Mitsch
+
+1385581941.6644_0.ltw:2,a <1385581929.5053.32.camel at thinkpad dot confusion>
+________________________________________________________________________________
+

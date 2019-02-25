@@ -1,0 +1,53 @@
+Date:        Tue, 11 Dec 2012 16:28:01 +0000
+From:        John Rigg  <[hidden] at jrigg dot co dot uk>
+To:          Devin Anderson <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Devin Anderson Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355249148.24939_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] ALSA PCM multi plugin and xruns
+
+On Sun, Dec 09, 2012 at 05:03:57PM -0800, Devin Anderson wrote:
+> On Sun, Dec 9, 2012 at 6:46 AM, John Rigg wrote:
+> > What code did you add to display the extra messages?
+> I added:
+> 
+> 	if ((ret != LONG_MAX) && (ret != avail)) {
+> 		fprintf(stderr, "snd_pcm_multi_avail_update: sync issue: %d %d\n",
+> ret, avail);
+> 	}
+> 
+> ... to the function `snd_pcm_multi_avail_update` in
+> src/pcm/pcm_multi.c of the alsa-lib package.  I added the code just
+> below:
+> 
+> 	if (avail < 0) {
+> 		return avail;
+> 	}
+> 
+> It should print data to the console when there is a difference between
+> the number of frames available from one card and the number of frames
+> available from another card.
+
+I added the above code to pcm_multi.c (in alsa-lib-1.0.26)
+then ran jackd using the following command:
+
+jackd -d alsa -C capture16 -P playback16 -r 44100
+
+where capture16 and playback16 are the pcm_multi devices in my .asoundrc.
+This was with two ice1712 cards, with default period size of 1024.
+
+When jackd detected no xruns it produced this message repeatedly:
+snd_pcm_multi_avail_update: sync issue: 1025 1024
+
+When jackd detected xruns it produced this message:
+snd_pcm_multi_avail_update: sync issue: 1024 0
+There appeared to be two of these messages for every xrun
+indication.
+
+Does this make sense?
+
+John
+
+1355242695.14723_0.ltw:2, <20121211162801.GA3126 at localhost0 dot localdomain>
+________________________________________________________________________________
+

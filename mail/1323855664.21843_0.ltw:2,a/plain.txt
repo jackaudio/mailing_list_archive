@@ -1,0 +1,143 @@
+Date:        Wed, 14 Dec 2011 04:40:35 -0500
+From:        Tim E. Real  <[hidden] at rogers dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] The Situation(s) With JACK (1323851465.14087_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] The Situation(s) With JACK (1323858339.27306_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] The Situation(s) With JACK
+
+On December 14, 2011 9:31:00 AM Stéphane Letz wrote:
+> Le 14 déc. 2011 à 00:46, Tobias Hoffmann a écrit :
+> > Stéphane Letz wrote:
+> >>> And there are people out there that would be willing to connect via
+> >>> netjack, but without using jack at one end -->> 
+> >> Already possible in NetJack2 (that is in SVN tree and in future 1.9.8
+> >> version): the "network stack" in available as a pure C API defined
+> >> here:
+> >> http://trac.jackaudio.org/browser/jack2/trunk/jackmp/common/jack/net.
+> >> h and compiled in a separated library called "libjacknet".> 
+> > Ok, I certainly know more about netjack1 than netjack2. But I'm also
+> > thinking here about hardware implementations (e.g. VHDL + Soft-CPU).
+> OK.
+> 
+> >>> and need good documentation of the wire format.  From this
+> >>> perspective, and thinking of possible dependencies like DNS-SD, I'm
+> >>> even not too sure, if network protocols (esp. the "network manager"
+> >>> part should be "designed into the jack core".>> 
+> >> Let me explain how NetJack2 is currently structured: [...]
+> > 
+> > Thank you. What I meant was, that from my experience with other network
+> > audio protocols, that there is a "manager" part (maybe with auto-master
+> >  ability by an election protocol), which handles the "who connects to
+> > whom", and the parameter stuff, and there is the "raw audio transfer"
+> > part.
+> OK. This is "somewhat" done like that, but can be certainly be improved. I'm
+> open to every proposal.
+> > The other thing I'm kind of undecided about is the usage of Multicast in
+> > netjack2. On one hand it sure has merrits,
+> It was done like that back in 2008 when we started this work with Romain
+> Moret.
+> > OTOH I can't stop asking myself: do we really need it, are there other
+> > ways, etc. And then, if we really need it / want it, maybe only for
+> > some cases (say, ease of use), why not use some standardized mechanisms
+> > like multicast DNS-SD, ...
+> Could certainly be done with more standard ways.
+> 
+> >> 2) An "adapter" concept : basically the idea is to "adapt" the network
+> >> stream on the slave audio system. [...] Adapters are also developed
+> >> as "in-server" JACK clients.
+> > 
+> > Maybe this questions are stupid (I'm sure lacking good knowledge of
+> > jacks internals), but I'm not sure I really understand it: - "in-server
+> > JACK client"   is whats essentially called "plugin" in other software?
+> Yes in some way.
+> 
+> > - to get the audio into jack in this case, the "backend/driver API" is
+> > used?
+> No: an "in-server JACK client" uses the same client API (with some
+> differences to open/close the client). Then it is compiled a a shared lib,
+> (or DLL) and then dynamically loaded in the server.
+> > - and is it correct to say the big difference between a driver and a
+> > client, that the backend/driver provides the timing?
+> More or less yes.
+> 
+> >> My general felling is that this design already has some qualities that
+> >> make more suitable for future evolutions in the right direction. The
+> >> "in-server" JACK clients model allows fine control with any strong
+> >> control API based approach (like the DBus+ladish one), since
+> >> in-server client can be configurated and loaded/unloaded dynamically
+> >> in the server. NetJack2 is currently limited to LAN, so the real
+> >> weakness (compared to NetJack1) is the lack of "internet" support for
+> >> the data transfer protocol. Here again, we have to choose the right
+> >> horse...
+> > 
+> > I'm sure not against netjack2, but my software developer-nature really
+> > desires to break things down into well-separated pieces with defined
+> > (internal) API. My way of solving programming problems is by defining
+> > APIs.
+> Make sense. Right now part of this "well-separated pieces" are described as
+> C++ classes or interfaces.
+> >>> Another thing that has been brought up in the discussion is a
+> >>> standardized driver API for all implementations. IMHO this could
+> >>> have a big impact on jacks future.>> 
+> >> JACK2 used a C++ based class hierarchy for drivers. This model allows
+> >> to share common behaviors in a base JackAudioDriver class. Then real
+> >> drivers for specific API have to be developed as a subclass of it.
+> >> See the PortAudio driver as an simple example: [...]> 
+> > I'd would like to see a C driver API, but that's only a nuance.
+> 
+> Sometime C++ inheritance mechanism add more flexibility.
+> 
+> > My general intention is to say: Don't think of jack as a monolithic
+> > entity, but of exchangeable parts, even if we risk even more user
+> > confusion in the short-term.
+> I perfectly agree ((-;... Basically I'm proposing a C++ based more modular
+> design and implementation since something like...2005 and after initial war
+> "C versus C++"...  now we are in 2011 and there is still no clear choice of
+> what code base should be used.
+> > And one word about jack2's usage of C++... my feeling, when looking at
+> > the code, is that jack2 classes are essentially "C code" where every
+> > method or whatever is packed into some other class, because C++ has
+> > classes, but not because it makes the structure clearer. The term "C++
+> > code" however means to me, that e.g. classes are used, where they
+> > provide encapsulation of a certain behavior, that C structures and
+> > free-standing functions are used, where this is the most fitting
+> > abstraction, templates are used for ..., etc. -- to put it in one word:
+> > readability
+> > 
+> > Tobias
+> 
+> This is a mix of real inheritance base C++ code (for backend/driver),
+> clients... and sometimes use of C++ typing system with a compilation time
+> choice of what actual class has to be used (for server/client communication
+> channels, synchronization primitives....). This is the result of gradual
+> evolution over time, and choice between what C++ virtual method mecanism is
+> helpful for or possibly "removes"  (like some speed in some precise
+> cases..)
+> 
+> But yes, not pure C++.
+> 
+> But the question is still always the same: does the the jack-dev community
+> think the "C code base" can be used to continue development, or the "C++
+> code base" (even will all it's imperfections that we can discuss and
+> comment forever....., but that we can also gradually improve).
+> 
+> This choice has to be done now.
+> 
+> Stéphane
+> 
+
+Thanks for explaining, I was about to ask why hesitation to fully embrace C++?
+Technical?
+Would it say, cause embedded HW code to grow, eating up space?
+Or some third party possibly legacy code to break?
+
+It's neat that both versions 1 + 2 API currently 'just work' - for now, but 
+ is it a luxury which can't last much longer?
+
+Anyway modern C++ gets my ++.
+Watching the threads, thanks. Tim.
+
+1323855664.21843_0.ltw:2,a <1757304.dX0aKp9nW5 at amd64-desktop>
+________________________________________________________________________________
+

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack 1.9.8 + many many connections = problems?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack 1.9.8 + many many connections = problems?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325071615.20554_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325100474.741_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325095362.23953_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 28 Dec 2011 10:02:27 -0800 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fernando Lopez-Lezcano </span> &lt;[hidden] at ccrma dot Stanford dot EDU&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1325071615.20554_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack 1.9.8 + many many connections = problems? </a></td></tr>
+</table>
+<pre>
+On 12/28/2011 03:26 AM, Fons Adriaensen wrote:
+&gt; On Tue, Dec 27, 2011 at 06:03:23PM -0800, Fernando Lopez-Lezcano wrote:
+&gt;
+&gt;&gt; It would seem that something bad is happening when all ports are being
+&gt;&gt; connected and the end result is that inside jack some of the soundcard
+&gt;&gt; ports seem to go nowhere.
+&gt;&gt;
+&gt;&gt; The aj-snapshot process that connects everything takes a bit to run and
+&gt;&gt; as it progresses jack reports more and more xruns until it finishes. It
+&gt;&gt; would seem that something is running inside jack when ports are
+&gt;&gt; connected that is proportional to the number of existing connections
+&gt;&gt; (the graph reordering?, that would make sense - but it should not
+&gt;&gt; generate xruns, right?).
+&gt;&gt;
+&gt;&gt; It also appears to be that if I minimize the number of ports I'm
+&gt;&gt; connecting the problem goes away (but then of course the system is not
+&gt;&gt; completely functional :-).
+&gt;&gt;
+&gt;&gt; Clues?
+&gt;&gt; Ways to debug?
+&gt;
+&gt; The complexity of the graph doesn't directly depend on the number
+&gt; of ports - all that matters is if app A is driving app B or not.
+&gt; The algorithms used to manage the graph should take advantage
+&gt; of that, but I don't know if they do. Anyway I'd suspect the
+&gt; problem to be with individual port/conncection management.
+&gt;
+&gt; Suggestions:
+&gt;
+&gt; - If you have any apps using port/connection callbacks, remove
+&gt;    these.
+
+Hmmm, I'll check, I don't think so (all apps are stock except for the sc 
+program - I'm not setting any callbacks myself).
+
+I did try to use "-v" in jackd to see more details but the amount of 
+stuff being printed out slowed down things so much it did not work (most 
+was about recalculating port latencies - maybe after each connection?).
+
+&gt; - Patch aj-snapshot so it delivers a fixed number of requests
+&gt;    per unit time instead of running as-fast-as-possible.
+
+I did add a delay after each connection yesterday and it did not seem to 
+make a difference.
+
+One more test that occurred to me overnight is to send noise over the 
+troublesome channels starting right before the aj-snapshot run starts, 
+to really really make sure that the connection process is what is 
+causing the problem.
+
+Thanks for the suggestions!
+-- Fernando
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1325071615.20554_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1325100474.741_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1325095362.23953_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1325095362.23953_0.ltw:2,a&nbsp;&lt;4EFB59B3.2000507 at localhost&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

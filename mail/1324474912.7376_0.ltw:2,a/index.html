@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How to get mplayer and firefox/flash to play</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How to get mplayer and firefox/flash to play</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324468792.30591_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324474971.7407_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324474912.7376_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 21 Dec 2011 08:41:12 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1324468792.30591_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to get mplayer and firefox/flash to play </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1324476414.8605_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to get mplayer and firefox/flash to play </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1324479945.11715_0.ltw:2,a/index.html'>Re: [Jack-Devel] How to get mplayer and firefox/flash to play </a></td></tr>
+</table>
+<pre>
+On Wed, Dec 21, 2011 at 6:59 AM, Fons Adriaensen &lt;[hidden]&gt; wrote:
+
+&gt; Please rewind a few posts and read again. I never said it should be
+&gt; done in kernel space.
+
+OK, it sounded it lot like that, since you wrote:
+
+&gt;that by a client-side library. So ALSA shouldn't try and
+&gt;provide all those variations, it should just have provided
+&gt;such a library. Same for resampling, format conversions etc.
+&gt;The only thing that ALSA should have provided natively is
+&gt;multi-client access.
+
+I interpreted that to mean something other than what you did.
+
+&gt; And what I have in mind is very close to what ALSA actually does,
+
+Indeed. The dmix device actually does almost precisely what you
+describe, and will appear in device listings *if* its configured in
+the relevant system-wide or per-user ALSA config file. Two years ago,
+most distributions shipped with dmix configured. With PulseAudio
+spreading, and more powerful, they tend to no longer do so. I remember
+Fedora at one point shipping with default=dmix, so that all audio
+processes that just opened the default device got their audio mixed
+(in user space, without a server). Note that there is also a
+server/client based solution too - I don't think its been used much by
+anyone.
+
+But there's a second problem. Look at the output of aplay -L. Now
+compare it to the list of devices shown by, say, qjackctl in its setup
+dialog. You'll note that they are not the same. The real problem here
+is not the gap between h/w device names and plugin device names. The
+problem is that there are indeed two namespaces within ALSA, one that
+references a card number, device number and possibly subdevice number,
+the other than is an alias for either a plugin or something specified
+using the first namespace. According to aplay, these two namespaces
+consist of:
+
+    -l, --list-devices      list all soundcards and digital audio devices
+    -L, --list-pcms         list device names
+
+So, having defined the "jack" plugin device, aplay -L will list it
+just like "default" and "hdmi" and "front" and so forth. But you're
+right that it doesn't show up in the other namespace, because its not
+a "card". So I agree that you're completely correct when you say:
+
+&gt; 3. ALSA doesn't present them in the same way as HW devices
+&gt; &#xA0; (it tries to some extent) and consequenctly any app that
+&gt; &#xA0; just scans for HW cards, (typically the closed source
+&gt; &#xA0; things like Skype etc.) won't ever use them.
+
+but that the real problem is that ALSA hasn't really said which
+namespace applications are supposed to be using in the first place. By
+the way, you *can* make Skype use them. My version of skype uses an
+ALSA plugin to do "ringing" (not for the regular voice stream).
+
+&gt; 4. They don't work as expected (try running Jack on plughw:x,y),
+
+well, it depends on what "work as expected" means. plughw:x,y does
+work with JACK, but how well depends on precisely what configuration
+you ask for and how much it differs from the native capabilities of
+hw:x,y
+
+&gt; problem is that the Juce code chokes on 64-ch cards such as the
+&gt; MADI ones. OK, just define a 'route' ALSA device (IIRC) with
+&gt; less channels (it needs 8) or us the ALSA-&gt;Jack plugin. But that
+&gt; doesn't work because ALSA doesn't present them as real devices.
+&gt; By not doing that it misses the whole point of having such plugs
+&gt; in the first place.
+
+absolutely. but ALSA does present them as "real devices", just in one
+of two namespaces and the app has no reason to choose the one in which
+they appear. its pretty pathetic.
+
+&gt; (1) can't be done if the sound card is supposed to be shared
+&gt; between different apps. Selecting the sample rate, format etc.
+&gt; should done by the a configuration utility. After that apps are
+&gt; supposed to use the sound card as it is.
+
+this is the way pro-audio apps work on many platforms (not all - try
+digital performer sometime on OS X with the h/w running at a different
+rate from the DP session). its very far from how almost all desktop
+apps work on most platforms.
+
+&gt; 5. Separates HW configuration from actually using a soundcard.
+&gt; In other words the API to be used by a normal client informs
+&gt; the client of the current sample rate, format, buffers size
+&gt; and whatever, but does not require or even allow the client
+&gt; to set any of those. Same for the access model: only mmap,
+&gt; and clients are supposed to run their audio code in RT. All
+&gt; this is very similar to the restrictions that Jack imposes.
+
+restrictions which ensure that JACK is not adopted by many
+programmers, and because of the SNAFU'ed state of the rest of Linux,
+make life complicated for users because RT access is considered
+"special".
+
+&gt; Clients that can't live with the restrictions of (5) link
+&gt; with a library (part of the ALSA system) that provides sample
+&gt; rate conversion, buffering, alternative access methods, and
+&gt; whatever you can imagine in an easy way. This library replaces
+&gt; all of dmix, dsnoop, route, etc.
+
+you should read the code of libasound (the ALSA library). it does
+precisely what you're describing (not necessarily optimally) but it
+really does aspire to be precisely what you're describing.
+
+&gt; All this would actually be simpler than what we have now.
+
+I still don't understand how this all works without a server/client
+architecture. Dmix tries to do this, and its too clever for its own
+good (or that of users). The server/client nature of JACK and
+PulseAudio is one of the things that makes them fragile (to whatever
+extent they are fragile), and thus unloved by people negatively
+impacted by this sort of architecture (and often unnecessarily).
+
+OTOH, its interesting that OS X Lion now appears to have moved to this
+design (server/client) too. "coreaudiod" now appears to a central
+user-space funnelling point for all audio on that platform, whether
+the app user or developer likes it or not. The server gets started by
+the system (and restarted when it crashes, and it does crash).
+
+I don't want to defend ALSA. Many aspects of its architecture are, in
+retrospect, really wrong. But as with X, its also unfair to criticize
+it without understanding how it really works or where the real
+problems are.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1324468792.30591_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1324474971.7407_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1324474912.7376_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1324474912.7376_0.ltw:2,a&nbsp;&lt;CAFa_cKn=+0WaTJbwqRZHRR_4GOt3wEEB0NfYe-ZpHh2RVUdy4A at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

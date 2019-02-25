@@ -1,0 +1,82 @@
+Date:        Fri, 03 Jan 2014 18:02:30 +0100
+From:        Kjetil Matheussen  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Lucio Crusca Re: [Jack-Devel] routing alsa through jack (1388770209.27188_0.ltw:2,)
+Follow-Up:   David Re: [Jack-Devel] routing alsa through jack (1388774849.2564_0.ltw:2,)
+Follow-Up:   Dominique Michel Re: [Jack-Devel] routing alsa through jack (1388865555.1217_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] routing alsa through jack
+
+Lucio Crusca:
+>
+> Now I have my alsa<->jack routuing working with alsa_in and alsa_out.
+> I'd like to move to zita.
+>
+> My working script is:
+>
+> #--8X--------------
+> jackd -R -P 95 -T -ndefault -d alsa  --period 128 --device hw:1 &
+> sleep 1
+>
+> # create the loop ALSA <-> JACK
+> alsa_out -j ploop -dploop -q 1 &
+> alsa_in -j cloop -dcloop -q 1 &
+>
+> # wait 1 second
+> sleep 1
+>
+> # cloop ports -> jack output ports
+> jack_connect cloop:capture_1 system:playback_1
+> jack_connect cloop:capture_2 system:playback_2
+>
+> # jack input ports -> ploop ports
+> jack_connect system:capture_1 ploop:playback_1
+> jack_connect system:capture_2 ploop:playback_2
+> #--8X--------------
+>
+
+I used this setup a while too, but it didn't work
+very well. There was a latency on around a second,
+and I also got some scratching noises now and then.
+
+So a while ago (still), I changed my .asoundrc file like this:
+
+pcm.rawjack {
+    type jack
+    playback_ports {
+        0 system:playback_1
+        1 system:playback_2
+    }
+    capture_ports {
+        0 system:capture_1
+        1 system:capture_2
+    }
+}
+
+pcm.jack {
+    type plug
+    slave { pcm "rawjack" }
+    hint {
+  description "JACK Audio Connection Kit"
+    }
+}
+
+pcm.!default {
+    type plug
+    slave { pcm "rawjack" }
+}
+
+
+And suddenly I got no noticable delay, no scratching
+sounds now and then, and almost no trouble [1].
+
+What am I missing? Why run through the trouble
+of setting up alsa_in, do the loop-thing, scripting,
+and so forth?
+
+[1] Only trouble: I have to restart the chrome
+browser after stopping and starting jack.
+
+1388768557.24461_0.ltw:2, <CAC6niEKyMTjC++2qJFB3DdFTFuvtTW5b8wNV1Aj-5j3DsMeE1g at mail dot gmail dot com>
+________________________________________________________________________________
+

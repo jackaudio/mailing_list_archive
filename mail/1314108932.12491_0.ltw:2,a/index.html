@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Testing jack_iodelay</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Testing jack_iodelay</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1314103582.908_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1314172021.31540_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1314108932.12491_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 23 Aug 2011 14:15:14 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK Developers &lt;[hidden] at jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1314085230.27675_0.ltw:2,a/index.html'>[Jack-Devel] Testing jack_iodelay </a></td></tr>
+</table>
+<pre>
+On Tue, Aug 23, 2011 at 09:40:21AM +0200, St&#xE9;phane Letz wrote:
+
+&gt; I'm currently testing jack_iodelay with jack2 SVN on OSX and get this kind of result:
+&gt; 
+&gt; Signal below threshold...
+&gt;    926.942 frames     21.019 ms total roundtrip latency
+&gt; 	extra loopback latency: 21 frames
+&gt; 	use 10 for the backend arguments -I and -O
+&gt; 
+&gt; Since OSX CoreAudio drivers report their internal latencies (as the "input latency offset", "input latency", "output latency", "output latency offset"), and since those values are reported in JACK notion of in/out latency, the result should be better.
+&gt; 
+&gt; What is the expected precision of jack_iodelay?
+
+There are two aspects to this, precision and error probability.
+
+The precision depends on a phase measurement done at 1/16 of
+the sample rate. This produces a delay value in the range
+[0..16) samples. The real value is course this one plus k * 16
+samples, k integer. For a decent audio card the precision will
+be around 1/1000 of a sample, it depends mostly on S/N ratio.
+
+Phase measurements on additional frequencies are used to find
+the value of k. Each such measurement multiplies the unambiguous
+range by a value of N. In the original version of jdelay (which
+is the code used by jack_iodelay) N = 8. This is done in such
+a way that small errors in the phase measurement have no effect
+at all - the value is compared to N expected ones and the nearest
+one is chosen. The system also checks for consistency between
+the results. 
+
+If the audio channel has a delay that is reasonably independent
+of frequency no such errors will occur until the signal is really
+very bad. But with N = 8 they are possible if you have things
+like equalisers in the signal chain.
+
+The latest release of jack_delay uses N = 2, which of course
+requires more frequencies for the same range, but tolerates
+much larger frequency-dependent delays.
+
+Ciao,
+
+-- 
+FA
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1314103582.908_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1314172021.31540_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1314108932.12491_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1314108932.12491_0.ltw:2,a&nbsp;&lt;20110823141514.GA18448 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

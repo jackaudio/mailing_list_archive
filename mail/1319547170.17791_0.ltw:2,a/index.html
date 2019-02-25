@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] EMU 0404 with jack dbus</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] EMU 0404 with jack dbus</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1319545739.16551_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1319547395.18085_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1319547170.17791_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 25 Oct 2011 15:51:46 +0300 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Nedko Arnaudov </span> &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>To</td><td>IL'dar AKHmetgaleev &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>IL'dar AKHmetgaleev
+<a href='../1319545549.16249_0.ltw:2,a/index.html'>Re: [Jack-Devel] EMU 0404 with jack dbus </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>IL'dar AKHmetgaleev
+<a href='../1319548885.19484_0.ltw:2,a/index.html'>Re: [Jack-Devel] EMU 0404 with jack dbus </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>IL'dar AKHmetgaleev
+<a href='../1319591981.27668_0.ltw:2,a/index.html'>Re: [Jack-Devel] EMU 0404 with jack dbus </a></td></tr>
+</table>
+<pre>
+"IL'dar AKHmetgaleev" &lt;[hidden]&gt; writes:
+
+&gt; /usr/bin/jackd --realtime -dalsa -r44100 -p256 -n1 --duplex -Phw:1
+&gt; -o2 -i2
+
+-n1 makes no sense. jackd man page states: The default is 2, the minimum
+allowable.
+
+&gt;&gt; Show the contents of the jackdbus conf file -
+&gt;&gt; ~/.config/jack/conf.xml
+&gt;
+&gt;  &lt;engine&gt;
+&gt;   &lt;option name="driver"&gt;alsa&lt;/option&gt;
+&gt;  &lt;/engine&gt;
+
+Check if the default value of realtime parameter is "true". If not, set
+realtime explicitly. jack running in non-realtime mode may explain
+xruns.
+
+Also check the jackdbus log file. Upon JACK server start, jackdbus will
+log whether JACK server is being started in realtime or non-realtime
+mode. If realtime mode is enabled you should see line like "JACK server
+starting in realtime mode with priority 10". If non-realtime mode is
+set, you should see "JACK server starting in non-realtime mode"
+instead.
+
+&gt;   &lt;driver name="alsa"&gt;
+&gt;    &lt;option name="device"&gt;hw:1&lt;/option&gt;
+&gt;    &lt;option name="rate"&gt;44100&lt;/option&gt;
+&gt;    &lt;option name="period"&gt;256&lt;/option&gt;
+&gt;    &lt;option name="nperiods"&gt;1&lt;/option&gt;
+&gt;   &lt;/driver&gt;
+
+Your driver configuration in jackdbus differs from the one you use in
+jackd.
+
+ * -P jackd parameter corresponds to "playback" jackdbus driver
+   parameter.
+ * --duplex jackd parameter corresponds to "duplex" jackdbus driver
+   parameter.
+ * -o jackd parameter corresponds to "outchannels" jackdbus driver
+   parameter
+ * -i jackd parameter corresponds to "inchannels" jackdbus driver
+   parameter
+
+AFAIK changes in playback/capture/duplex parameter values can cause
+xruns.
+
+&gt;&gt; What ebuild (version) you use? Is it from proaudio overlay or from
+&gt;&gt; ladi-overlay?
+&gt;
+&gt; I'm using jack-audio-connection-kit from pro-audio overlay. Should I
+&gt; cheak ebuild form ladi-overlay?
+
+The jack2 ebuild from proaudio overlay should be ok. ladi-overlay
+provides some additional tweaks that are useful in ladish
+setups. ladi-overlay 2.9999 ebuild is based on latest (1.9.7 ATM)
+release of jack2 though. Its not fixed because ladi branch of jack2
+sometimes gets fixes/backports that are important for ladish setups.
+
+&gt; One more thing. If I set sound card rate to 44100 and run jack with
+&gt; 48000 sound becomes slowed down but without lags.
+
+Sounds like jack &lt;-&gt; alsa negotiation is not working properly.
+
+&gt; Forgot verison. I'm using media-sound/jack-audio-connection-kit-2.9999
+
+So latest svn trunk. Latest at the time of emerge.
+
+-- 
+Nedko Arnaudov &lt;GnuPG KeyID: 5D1B58ED&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1319545739.16551_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1319547395.18085_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1319547170.17791_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1319547170.17791_0.ltw:2,a&nbsp;&lt;878vo9cjz1.fsf at arnaudov dot name&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

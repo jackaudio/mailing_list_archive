@@ -1,0 +1,42 @@
+Date:        Sun, 09 Dec 2012 03:27:01 -0800
+From:        Devin Anderson  <[hidden] at gmail dot com>
+To:          Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Devin Anderson Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355034800.2308_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] ALSA PCM multi plugin and xruns
+
+On Sat, Dec 8, 2012 at 10:33 PM, Devin Anderson
+<[hidden]> wrote:
+
+> I tried adding the following code just before the last return
+> statement in `alsa_driver_wait`:
+>
+>         /* if the number of available frames is less than the expected frame
+>            count, then handle this as a buffer underrun */
+>
+>         if (avail < driver->frames_per_cycle) {
+>                 *status = alsa_driver_xrun_recovery (driver, delayed_usecs);
+>                 return 0;
+>         }
+>
+> ... and the situation improved considerably.  The onslaught of xruns
+> is now limited to a few at most.
+
+I spoke too soon.  While the xrun count is significantly less, and
+there are only a few xruns in the beginning, eventually, the xruns
+start piling on more and more.  It certainly *seems* like a
+synchronization issue.
+
+This is really frustrating.
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+psinsights - http://psinsights.googlecode.com/
+synthclone - http://synthclone.googlecode.com/
+
+1355052429.20274_0.ltw:2, <CAG7zqTo6B9nf0S1D_sePetz0cBJdRnVTRCePJdLi35=fHzhXiQ at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,50 @@
+Date:        Sat, 26 Dec 2015 12:43:26 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] jack dsp load calculation (1450898995.24104_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] jack dsp load calculation
+
+On 12/23/2015 08:29 PM, Paul Davis wrote:
+> On Wed, Dec 23, 2015 at 10:35 AM, Robin Gareus <[hidden]> wrote:
+> 
+>>
+>> Short spikes, which are in most cases the cause for xruns, are simply
+>> ignored in the calculation: For them to show up, currently three
+>> criteria must be met: The spike must be in the last 32 jack-cycles, be >
+>> 95% and the control application must read the value near the end of
+>> those 32 cycles (see [1], very high LPF).
+>>
+> 
+> there is a justification for this. your paragraph starts with the claim
+> that these short spikes correspond to xruns. there is a counter-claim that
+> they represent measurement error.
+> 
+> i'm in full agreement with your argument *if* it can be shown that the
+> spikes are not measurement errors
+
+If jack can't keep track of the time properly we have much more serious
+issues.
+
+jackd on POSIX systems is robust. The time is queried in a high priority
+thread and jack2 offers `--clocksource` for a user to tweak it if needed.
+
+> (or, alternatively, that measurement
+> error is best excluded via a different heuristic).
+
+Yes, outliers - e.g jumps on suspend/resume or leap-seconds
+(non-monotonic clock) must be skipped.
+
+In Ardour we ended up ignoring negative deltas and jumps larger than 10
+times the cycle-length. (This in particular is relevant for AMD machines
+and Windows XP where the clock is per cpu-core.)
+
+Early 4.X had a sigma-cut (based on running variance) but that turned
+out too be too statistical for the case of displaying peak-computing power.
+
+so long,
+robin
+
+1451130215.18422_0.ltw:2,a <567E7D5E.60404 at gareus dot org>
+________________________________________________________________________________
+

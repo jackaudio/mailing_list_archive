@@ -1,0 +1,58 @@
+Date:        Thu, 19 Jul 2012 11:57:42 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Basil Nutmeg <[hidden] at li95-58 dot members dot linode dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Basil Nutmeg Re: [Jack-Devel] packed data structures in jack2 (1342712525.8573_0.ltw:2,a)
+Follow-Up:   Basil Nutmeg Re: [Jack-Devel] packed data structures in jack2 (1342719142.19020_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] packed data structures in jack2
+
+On Thu, Jul 19, 2012 at 11:41 AM, Basil Nutmeg <
+[hidden]> wrote:
+
+On Thu, Jul 19, 2012 at 06:54:41AM +0200, Stéphane Letz wrote:
+> > The point to pack memory is to allow a 64 bits server to be used with 32
+> bits clients or the contrary. Since shared memory is going to be used by
+> "both sides", the only safe way we found was to use packed memory struct.
+>
+> Ah, thanks, I see now. I see how putting packed on everything does make
+> this easier. However, it also makes the code unusable on some platforms
+> and slow on others. Would you be open to alternative approaches here? I'd
+> be willing to do some work to help out
+
+
+ [ ... ]
+
+
+>
+> /* ... this type has the same layout between 32-bit and 64-bit. */
+> struct A_with_alignment {
+>   aligned_char x;
+>   aligned_int64_t i;
+> };
+>
+
+this translates to:
+
+     struct A_with_alignment {
+          char     x    __attribute__((aligned(sizeof(char));
+          int64_t i     __attribute__((aligned(sizeof(int64_t));
+      };
+
+which i think is not the same as what "packed" does at all. it could be
+enough though, and arguably is better because it preserves aligned access.
+
+however, as stephane noted: far easier to just change the macros that do
+this stuff so that they are no-ops.
+
+
+> As another idea would be to have a source file which simply includes all
+> the important headers and is compiled with -Wpadded and maybe even
+> -Werror, to catch any mistakes.
+>
+
+i don't this is portable to non-gnu compilers. i could be wrong.
+
+1342713471.10064_0.ltw:2,a <CAFa_cK=opzN6Feii206g9wrwxVsCugdDOfNao-O2WDKqAeqZyQ at mail dot gmail dot com>
+________________________________________________________________________________
+

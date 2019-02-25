@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK 2 is not real time safe on posix?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK 2 is not real time safe on posix?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1429437563.9317_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1429448821.26255_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1429446593.23786_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 19 Apr 2015 14:29:32 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Lars Luthman </span> &lt;[hidden] at larsluthman dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Johannes Lorenz
+<a href='../1429437563.9317_0.ltw:2,/index.html'>[Jack-Devel] JACK 2 is not real time safe on posix? </a></td></tr>
+</table>
+<pre>
+On Sun, 2015-04-19 at 11:59 +0200, Johannes Lorenz wrote: 
+&gt; Hello,
+&gt; 
+&gt; it is often being said that JACK 2 is real time safe, for example in
+&gt; the JACK faq. I wondered how JACK 2 suspends a thread, so I checked
+&gt; what happens after the JackClient finished CallProcessCallback(): 
+&gt; 
+&gt;   JackClient::CallProcessCallback()
+&gt;   -&gt; JackClient::CycleWaitAux()
+&gt;   -&gt; JackClient::WaitSync()
+&gt;   -&gt; JackGraphManager::SuspendRefNum()
+&gt;   -&gt; JackConnectionManager::SuspendRefNum()
+&gt;   -&gt; virtual JackSynchro::TimedWait()
+&gt; 
+&gt; However, I found only two classes in the `posix' folder that implement
+&gt; this virtual function: 
+&gt; 
+&gt;   * JackPosixSemaphore: uses `sem_timedwait()' to block
+&gt;   * JackFifo: uses `read()' to block
+&gt; 
+&gt; However, both `sem_timedwait()' and `read()' are syscalls, so they
+&gt; contain context switch, which means they are non realtime. Actually,
+&gt; the JACK documentation warns to use function like these if you pass a
+&gt; process() callback to jack [1]. 
+&gt; 
+&gt; So how can JACK claim it would be realtime? (No objections, I just
+&gt; don't understand it)
+
+The next JACK client in the graph, and the JACK server, run in different
+processes from the currently running client (except for internal clients
+and multiple clients per process, but those are special cases) so there
+has to be a context switch if you want to pass control to them.
+
+It's realtime safe as long as you know that those system calls pass
+control to the thread you want them to pass control to and not some
+other random thread that has nothing to do with JACK. As long as the
+semaphores are posted and waited on in the right order, and the
+scheduler is properly configured, and all the threads have the right
+priority, it will work. You could in theory pass control to other
+threads in your process callback in a realtime safe way if everything
+was designed correctly, but there isn't much point in doing so and it's
+difficult to get right. Most of the time, for most of the uses, I/O
+functions, lock functions etc are not realtime safe.
+
+
+--ll
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1429437563.9317_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1429448821.26255_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1429446593.23786_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1429446593.23786_0.ltw:2,&nbsp;&lt;1429446572.5917.351.camel at miskatonic&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,90 @@
+Date:        Thu, 14 Jul 2011 16:58:24 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Jack Developers <[hidden] at lists dot jackaudio dot org>
+Cc:          Nedko Arnaudov <[hidden] at arnaudov dot name>
+
+Subject:     Re: [Jack-Devel] Jack2 patches to add mingw build target to waf scripts
+
+Le 14 juil. 2011 à 06:41, Tim Mayberry a écrit :
+
+> Hi Stéphane,
+> 
+> I've been working on a windows port of Ardour on and off for a few
+> years. I believe we spoke briefly on IRC a few months ago and I
+> mentioned a had a patch to the JACK2 build system to compile it for
+> windows using the mingw compiler.
+> 
+> The Ardour port is coming along ok, I've talked with Paul and we will
+> probably add support for building Ardour for Windows after Ardour 3.0
+> is released and then try to work on fixing the bugs in the next
+> development cycle etc. You can have a look at a few images and a short
+> video here if you like: http://timbyr.net/images and
+> http://timbyr.net/images/Ardour-3.0-windows-installer.ogg
+> 
+> I've been developing Ardour for windows by cross compiling Ardour and
+> some of the library dependencies on Fedora. Fedora has packaged the
+> mingw compiler and some of the libraries like Gtk+ for a while now:
+> http://fedoraproject.org/wiki/MinGW and hopefully as of Fedora 16 the
+> mingw-64 compiler will be used. OpenSuse also has had MinGW packages
+> for some time.
+> 
+> I've had a bit of time to clean up the patches for JACK2 enough that
+> you may be interested in looking at them and seeing whether it is
+> worth adding them to JACK2.
+> 
+> So I modified the waf build system and added a --dist-target flag that
+> can be used to cross compile with the mingw compiler. There are also
+> the flags to enable --portaudio and --winmme drivers.
+> 
+> I had to update waf to be able to generate the windows import
+> libraries correctly, so the patches I've attached assume that you have
+> first updated waf to the latest version in the 1.5 series which is
+> 1.5.19.
+> 
+> The first two patches, 0001 and 0002 aren't related to the mingw build
+> but are required to fix the waf scripts with the new version of
+> waf(1.5.19), the first fixes the formatting of the configure output
+> and the second fixes the build for linux, I haven't tested for Mac OS
+> X, maybe similar small changes are necessary.
+> 
+> The 0003 patch adds the --dist-target flag and the changes necessary
+> to build the client lib, server and drivers using mingw.
+> 
+> The 0004 patch is something I found necessary to build using mingw,
+> I'm not sure why, it may be I'm not defining something correctly in
+> the build but I haven't spent much time to find out.
+> 
+> The 0005 patch was necessary because I haven't been successful in
+> cross compiling portaudio with asio support yet, because of issues
+> with autotools/libtool etc. This means that if you were to use this
+> patch you need to define HAVE_ASIO in the other windows build files to
+> get ASIO support in the jack_portaudio driver. I'd also like to
+> eventually get mingw JACK2 packages added to Fedora, which can't use
+> the ASIO driver(I believe) so I think being able to compile without
+> ASIO support a good idea.
+> 
+> Patch 0006 are changes required to get the example clients to build,
+> the changes are mostly untested but fairly trivial.
+> 
+> These patches are against a fairly recent trunk version of JACK2 and
+> should apply. I haven't done much testing of the resulting binaries
+> but if I install my development version of Ardour(which includes
+> JACK2) on a clean windows install and start JACK2 with something like
+> $jackd.exe -S -X winmme -d portaudio then Ardour plays back audio OK.
+> I haven't tested anything to do with midi yet, sorry.
+> 
+> Thanks for your time,
+> 
+> Tim.
+
+All patches committed on a git "mingw" branch and pushed here: http://repo.or.cz/w/jack2.git/shortlog/refs/heads/mingw
+
+Required waf 1.5.19 version still not added. 
+
+Testing welcome.
+
+Stephane
+
+1310655520.32638_0.ltw:2,a <1C43AB92-1DAF-4CE5-BDED-7D1FEE54DB6C at grame dot fr>
+________________________________________________________________________________
+

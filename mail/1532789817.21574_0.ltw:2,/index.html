@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Fwd: Possible error codes for jack_midi_event_get()?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Fwd: Possible error codes for jack_midi_event_get()?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1532548155.23592_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1532802150.3977_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1532789817.21574_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 28 Jul 2018 16:55:57 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Matthias Geier </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Hanspeter Portner
+<a href='../1532802150.3977_0.ltw:2,/index.html'>Re: [Jack-Devel] Fwd: Possible error codes for jack_midi_event_get()? </a></td></tr>
+</table>
+<pre>
+Dear list.
+
+I'm the author of one of the Python bindings for JACK:
+https://jackclient-python.readthedocs.io/
+
+I was a bit lazy when implementing a generator function that's
+supposed to yield all incoming MIDI events one-by-one.
+
+Here's the code if somebody is interested (it's using CFFI and the
+_lib object is a wrapper for the JACK API):
+
+
+    def incoming_midi_events(self):
+        event = self._event
+        buf = _lib.jack_port_get_buffer(
+            self._ptr, self._client.blocksize)
+        for i in range(_lib.jack_midi_get_event_count(buf)):
+            err = _lib.jack_midi_event_get(event, buf, i)
+            # TODO: proper error handling if this ever happens:
+            assert not err, err
+            yield event.time, _ffi.buffer(event.buffer, event.size)
+
+
+As you can see, I didn't check the return value of
+jack_midi_event_get(), I just added an "assert" statement hoping that
+somebody would report it if the call to jack_midi_event_get() would
+ever fail.
+
+I didn't hear anything for a long time, but recently I got a bug
+report where the assertion was violated:
+https://github.com/spatialaudio/jackclient-python/issues/54
+
+This shows that jack_midi_event_get() can raise an error, even if I
+check with jack_midi_get_event_count() beforehand.
+
+My question is now: how should I react to this error?
+
+Shall I ...
+
+* discard the current event and continue reading further events?
+
+* discard the current and all following events in this block?
+
+* raise an error?
+
+* do something else?
+
+Can I guarantee that no incoming MIDI events get lost?
+
+Another related question: what error code is supposed to be returned?
+The documentation
+(http://www.jackaudio.org/api/group__MIDIAPI.html#ga838c794bd1451bfd47edde1c7cd1ff4f)
+mentions ENODATA, but according to my bug report, ENOBUFS (-105) was
+returned.
+
+Is this a bug in JACK or an omission in the documentation?
+
+I don't know which JACK version was used, the OS was Ubuntu 18.04 LTS 64 bits.
+
+cheers,
+Matthias
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1532548155.23592_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1532802150.3977_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1532789817.21574_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1532789817.21574_0.ltw:2,&nbsp;&lt;CAFesC-cFeTxUcah698tsLoBs24sDa+L_upmkVC_Wxgoz5PDz3w at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

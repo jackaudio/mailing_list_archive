@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Problems with audioadapter used with capture only interface</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Problems with audioadapter used with capture only interface</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1388280323.27449_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388324554.16550_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388313809.5598_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 29 Dec 2013 11:43:13 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Wojciech Zabolotny </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK Developers &lt;[hidden] at jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Wojciech Zabolotny
+<a href='../1388276836.25293_0.ltw:2,/index.html'>[Jack-Devel] Problems with audioadapter used with capture only interface </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Wojciech Zabolotny
+<a href='../1388324625.16573_0.ltw:2,/index.html'>Re: [Jack-Devel] Problems with audioadapter used with capture only interface </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Jeremy Jongepier
+<a href='../1388343381.28514_0.ltw:2,/index.html'>Re: [Jack-Devel] Problems with audioadapter used with capture only interface </a></td></tr>
+</table>
+<pre>
+What worked for me, was (in three different consoles of the embedded system):
+# jackd -r -dnet -i -C0 -P1
+# alsa_in -d hw:0,1 -r48000 -p256 -n3
+# jack_connect alsa_in:capture_1 system:playback_1
+however then I had some problems with xruns/latency
+
+Is such solution acceptable as a substitute of not working audioadapter?
+Can I expect that with fixed audioadapter I should be able to reach lower
+latency and less risk of xrun?
+
+
+On Sun, Dec 29, 2013 at 1:27 AM, Wojciech Zabolotny &lt;[hidden]&gt; wrote:
+&gt; Hi,
+&gt;
+&gt; I wanted to use jack2 with an embedded system equipped with capture
+&gt; only interface.
+&gt; I can start the server with the net backend:
+&gt;
+&gt; # jackd -r -dnet  -C0 -P1
+&gt; jackdmp 1.9.10
+&gt; Copyright 2001-2005 Paul Davis and others.
+&gt; Copyright 2004-2013 Grame.
+&gt; jackdmp comes with ABSOLUTELY NO WARRANTY
+&gt; This is free software, and you are welcome to redistribute it
+&gt; under certain conditions; see the file COPYING for details
+&gt; JACK server starting in non-realtime mode
+&gt; NetDriver started in async mode without Master's transport sync.
+&gt; Waiting for a master...
+&gt; Initializing connection with WZlap...
+&gt; **************** Network parameters ****************
+&gt; Name : buildroot
+&gt; Protocol revision : 7
+&gt; MTU : 1500
+&gt; Master name : WZlap
+&gt; Slave name : buildroot
+&gt; ID : 26
+&gt; Transport Sync : no
+&gt; Send channels (audio - midi) : 0 - 0
+&gt; Return channels (audio - midi) : 1 - 0
+&gt; Sample rate : 48000 frames per second
+&gt; Period size : 256 frames per period
+&gt; Network latency : 5 cycles
+&gt; SampleEncoder : Float
+&gt; Slave mode : async
+&gt; ****************************************************
+&gt;
+&gt; However, when I try to load the audioadapter i get:
+&gt;
+&gt; # jack_load audioadapter -i "-C hw:0,1 -r48000 -p256 -n3 "
+&gt; could not load audioadapter, intclient = 0 status = 0x 1
+&gt;
+&gt; and the server displays:
+&gt; Ringbuffer automatic adaptative mode size = 4096 frames
+&gt; ../linux/alsa/JackAlsaAdapter.h:226, alsa error -2 : No such file or directory
+&gt;
+&gt; I have checked the line ../linux/alsa/JackAlsaAdapter.h:226 and found,
+&gt; that the "open" function defined here ALWAYS tries to open the
+&gt; soundcard both as capture and playback device.
+&gt;
+&gt; How can I patch this function so that the playback part is attemted to
+&gt; open only if the audiodapter is loaded for playback or both for
+&gt; capture and playback?
+&gt;
+&gt; Probably people wanting to use audioadapter with playback only devices
+&gt; will face the similar problem...
+&gt;
+&gt;
+&gt; --
+&gt; TIA &amp; Reagrds,
+&gt; Wojciech M. Zabo&#x142;otny
+&gt; My GPG/PGP keys:
+&gt; standard: B191 ACF0 7909 83FA 3F9B  450C 407E 3C4B 4569 D119
+&gt; confidential: 2BF3 F90F 6EA8 7D35 59FD  5080 78ED 33DE 1312 D8F8
+
+
+
+-- 
+Wojciech M. Zabo&#x142;otny
+My GPG/PGP keys:
+standard: B191 ACF0 7909 83FA 3F9B  450C 407E 3C4B 4569 D119
+confidential: 2BF3 F90F 6EA8 7D35 59FD  5080 78ED 33DE 1312 D8F8
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1388280323.27449_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388324554.16550_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388313809.5598_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1388313809.5598_0.ltw:2,&nbsp;&lt;CAMduVEe=oium-5a+6Lb+bw4HHRDKpgQ0Ro-6Ct1Co-ywbs6kSg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

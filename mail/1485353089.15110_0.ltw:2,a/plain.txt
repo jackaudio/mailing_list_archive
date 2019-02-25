@@ -1,0 +1,42 @@
+Date:        Wed, 25 Jan 2017 14:04:36 +0000
+From:        John Emmas  <[hidden] at tiscali dot co dot uk>
+To:          Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Ralf Mattes Re: [Jack-Devel] ?==?utf-8?q? jack-headers merge ( the future of JACK(2)) (1485336951.29286_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack-headers merge ( the future of JACK(2))
+
+On 25/01/2017 09:41, Ralf Mattes wrote:
+>   
+> Am Mittwoch, 25. Januar 2017 09:24 CET, John Emmas <[hidden]> schrieb:
+>   
+>> IIRC Jack2 currently has some structs which need to get built with
+>> 1-byte alignment for the various struct fields (except on one particular
+>> platform).  Let's say the Jack1 & Jack2 headers got merged...  wouldn't
+>> that problem get amplified and possibly break compatibility for either
+>> Jack1 or Jack2?
+> I think that that "public" jack header would only contain declarations for
+> jack's public API, and that should be the same for all implementations
+>
+
+A very quick search through the source files suggests that there are 2 
+such structs in the public header file (jack/types.h) - namely:-
+
+       _jack_latency_range
+       _jack_position
+
+Whoever's doing the merge will need to be aware that the above structs 
+require 1-byte alignment in Jack2 which is probably different from their 
+alignment in Jack1 (assuming they're also present in Jack1).
+
+For some background...  the above structs (plus several others) 
+originally used the more conventional, 8-byte alignment.  But it turned 
+out that gcc and msvc couldn't agree on what constituted 8-byte 
+alignment.  This meant that a Jack2 client built with msvc would crash 
+if the server was built with gcc (or vice versa).  This got fixed by 
+changing the alignment to 1-byte.
+
+John
+
+1485353089.15110_0.ltw:2,a <5888B074.8010601 at tiscali dot co dot uk>
+________________________________________________________________________________
+

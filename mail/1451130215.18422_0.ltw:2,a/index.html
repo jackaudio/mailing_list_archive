@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack dsp load calculation</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack dsp load calculation</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1451125775.14242_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1451134630.22937_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1451130215.18422_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 26 Dec 2015 12:43:26 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1450898995.24104_0.ltw:2,/index.html'>Re: [Jack-Devel] jack dsp load calculation </a></td></tr>
+</table>
+<pre>
+On 12/23/2015 08:29 PM, Paul Davis wrote:
+&gt; On Wed, Dec 23, 2015 at 10:35 AM, Robin Gareus &lt;[hidden]&gt; wrote:
+&gt; 
+&gt;&gt;
+&gt;&gt; Short spikes, which are in most cases the cause for xruns, are simply
+&gt;&gt; ignored in the calculation: For them to show up, currently three
+&gt;&gt; criteria must be met: The spike must be in the last 32 jack-cycles, be &gt;
+&gt;&gt; 95% and the control application must read the value near the end of
+&gt;&gt; those 32 cycles (see [1], very high LPF).
+&gt;&gt;
+&gt; 
+&gt; there is a justification for this. your paragraph starts with the claim
+&gt; that these short spikes correspond to xruns. there is a counter-claim that
+&gt; they represent measurement error.
+&gt; 
+&gt; i'm in full agreement with your argument *if* it can be shown that the
+&gt; spikes are not measurement errors
+
+If jack can't keep track of the time properly we have much more serious
+issues.
+
+jackd on POSIX systems is robust. The time is queried in a high priority
+thread and jack2 offers `--clocksource` for a user to tweak it if needed.
+
+&gt; (or, alternatively, that measurement
+&gt; error is best excluded via a different heuristic).
+
+Yes, outliers - e.g jumps on suspend/resume or leap-seconds
+(non-monotonic clock) must be skipped.
+
+In Ardour we ended up ignoring negative deltas and jumps larger than 10
+times the cycle-length. (This in particular is relevant for AMD machines
+and Windows XP where the clock is per cpu-core.)
+
+Early 4.X had a sigma-cut (based on running variance) but that turned
+out too be too statistical for the case of displaying peak-computing power.
+
+so long,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1451125775.14242_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1451134630.22937_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1451130215.18422_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1451130215.18422_0.ltw:2,a&nbsp;&lt;567E7D5E.60404 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

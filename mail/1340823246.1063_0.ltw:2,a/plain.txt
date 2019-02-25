@@ -1,0 +1,49 @@
+Date:        Wed, 27 Jun 2012 20:53:52 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Tim Pitman [Jack-Devel] Proper way to play 2 channels on the same output. (1340821936.31607_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Proper way to play 2 channels on the same output.
+
+On Wed, Jun 27, 2012 at 11:32:01AM -0700, Tim Pitman wrote:
+
+> Hi,
+
+Hi!
+
+> me a delay effect. This works fine on my USB DAC, but for some reason
+> when I use my motherboard's audio sometimes when 2 tones (one from
+> zynaddsubfx and one being repeated by my app) at the same time on the
+> same channel, the sound is distorted. I have a feeling that I'm
+> missing something obvious.
+
+Clipping? That is, the sum of the two signals exceed the maximum or
+minimum value? In jack, it's -1.0 .. 1.0.
+
+So instead of simply copying the samples, multiply them with let's say
+0.5 and check if the problem still exists. Or simply lower the volume in
+zynaddsubfx.
+
+Easy test setup: record zynaddsubfx and your delay output in one channel
+and see if it exceeds the range. You can even write a client that simply
+checks for too large values:
+
+   for (int i=0; i < nframes; i++) {
+      if (fabsf(inbuffer[i]) > 1.0) {
+	 printf ("Signal too large\n"); /* bad! not RT-safe */
+      }
+   }
+
+
+Disclaimer: don't do printf in the process() callback in production
+code.
+
+
+HTH
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1340823246.1063_0.ltw:2,a <20120627185352.GV6396 at ltw dot loris dot tv>
+________________________________________________________________________________
+

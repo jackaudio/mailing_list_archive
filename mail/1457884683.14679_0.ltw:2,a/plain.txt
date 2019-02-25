@@ -1,0 +1,46 @@
+Date:        Sun, 13 Mar 2016 16:57:51 +0100
+From:        Frank Schäfer  <[hidden] at centrum dot cz>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Robin Gareus Re: [Jack-Devel] Cannot access portbuffer memory from C++ (1457891920.24445_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Cannot access portbuffer memory from C++
+
+Hello all,
+
+I have written a small oscillator application in C++
+
+Fiddling with errors and producing output to see where I am brougt me to a question:
+
+I had only ``printf( "Processing ...\n" ); in my process callback.
+My program started to produce output the moment when ``jack_activate( client );'' is called.
+Isn't this a bit waste of CPU due to the fact that the process_audio callback copies plenty of data to a port which is not used yet?
+
+I'd expect to get output from this (nothing sounding yet) program at the moment when it calls ``jack_connect''
+
+for now I have this in my oscillator constructor:
+... code snippet
+...
+   make_wave();
+   jack_activate( client );
+   //FIXME: throw exception if an error with client activation
+   //FIXME: this should be placed elsewhwere and replaced by:
+   //          jack_activate -> jack_connect for port connections
+   //          jack_deactivate for port disconnections
+   //       the process callback will be called for every activated client
+   //       even no port is connected consuming unnecesary CPU power
+}
+...
+
+Is this intended behavior? I'll leave the workaround in the comments in my code snippet in place then.
+
+
+I am using JACK 1.9.10 on a Linux x86_64 machine
+# uname -a
+Linux frankies 3.13.0-79-lowlatency #123-Ubuntu SMP PREEMPT
+
+Cheers
+Frank
+
+1457884683.14679_0.ltw:2,a <20160313165751.353FD7E5 at centrum dot cz>
+________________________________________________________________________________
+

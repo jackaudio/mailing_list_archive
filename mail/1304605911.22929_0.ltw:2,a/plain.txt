@@ -1,0 +1,101 @@
+Date:        Thu, 05 May 2011 23:31:18 +0900
+From:        Sean Beeson  <[hidden] at gmail dot com>
+To:          [hidden] at jackaudio dot org
+In-Reply-To: Harry Van Haaren Re: [Jack-Devel] C++ development of Jack enabled applications--particularly SysExec (1304549259.20890_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] C++ development of Jack enabled applications--particularly SysExec (1304606099.23074_0.ltw:2,a)
+Follow-Up:   Gabriel M. Beddingfield Re: [Jack-Devel] C++ development of Jack enabled applications--particularly SysExec (1304606462.23534_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] C++ development of Jack enabled applications--particularly SysExec
+
+Thank you for the reply, Harry.
+
+
+> On Wed, May 4, 2011 at 10:39 PM, Sean Beeson <[hidden]> wrote:
+>
+>> Since in c under the Connections everything, other than audio signals,
+>> are under the ALSA tab anymore, has everyone dropped using Jack midi ports
+>> and Jack is making midi connections with ALSA. What is that or the
+>> difference of those? :-)
+>>
+>
+> ALSA midi still exists, its used by some apps, but JACK midi is preferred
+> for JACK-Capable apps, as the MIDI stays sample accurate with the Audio
+> stream. When using ALSA for MIDI & Jack for audio this is not the case. Most
+> newely released MIDI programs will support JACK midi.
+>
+
+
+So, is my understanding correct that in the Connections window of QjackCtl
+the MIDI tab is Jack MIDI and the ALSA tab has ALSA midi ports?
+
+
+>
+>
+>> Secondly, I want to do this in C++ because I already have OOP in my brain
+>> and I have run into some wiki discussions about needing to use a wrapper for
+>> the best results. Considering my first question, what's the common trend on
+>> that?
+>>
+>
+> I just use the standard  jack.h  c header, and wrote my own class around
+> that... there is a "jackmm" file up on sourceforge, I belive it works but
+> have no experience. Most of the docs online refer to the C API, so I'd stick
+> with that one to have a reference to look at.. Your choice though!
+>
+
+You gave a lot of signposts to look for. It`s encouraging to hear you have
+good results wrapping the C API and I won't sweat having to someone else's.
+
+
+>
+>
+>> Lastly, since Jack has some issues with sysexec information, has anyone
+>> had good luck with Jack and sysexec messages? I do send small sysexec
+>> messages, say for one or two parameter changes, without a problem in
+>> Rosegarden, but large amounts of data doesn't work so well.
+>>
+>
+> Currently JACK doesn't support large sys-ex messages. (Correct me if im
+> wrong JACK-devs..) but I think the reason is to do with the size of the MIDI
+> buffer that JACK uses. It wouldn't make sense to make it an arbitrary
+> "large" size, as one could technically over-flow the buffer. So at the
+> moment (again I'm not the most experienced) but I belive that JACK MIDI uses
+> a buffer that holds the standard "3 part" midi message, (ie: a bufffer that
+> contains 3 char's.)
+>
+
+What an editor would really only be doing is taking parameter changes from
+software that has graphical representations of pots, sliders, on/off buttons
+and the like and sending CC# changes, NRPNs(LSB and MSB) with a value, and
+system exclusive messages(varying amounts of data sent in hexadecimal
+numbers encapsulated in a start and end id) and just sending it over a MIDI
+channel(through Jack) to and from the hardware. The question is whether Jack
+can handle the larger sysexec messages. I know ALSA does fine with them
+because I can use amidi to do a global or program system dump and it saves
+the information without a problem, but I have never gotten amidi to work
+over a port while Jack was also running. Depending on how fast hardware does
+a data dump maybe Jack can handle passing on the data in it's 3 chars(how
+many hex numbers is that?) to a program that can collect them together.
+Basically the editors aren't so complicated. A librarian would just be a
+program that sends and receives sysexec data dumps to store to disk, read
+from disk and send to a device and maybe a nice interface to view a
+synths/hardware's patches.
+
+
+>
+> Finally, you've set quite a high goal for yourself with the editors, I
+> personally wouldn't be up for a project so large as my first.. But if you
+> have program design experience & whatnot, don't let me discourage you!
+> Cheers, -Harry
+>
+
+Yeah, I do have a few years behind me developing database
+applications(mainly java/c#). It's the understanding of the Jack API,
+wxWidgets and learning C/C++(or relearning it after over 10 years of not
+using it since my undergraduate days) that are the main hurdles.
+
+Sean
+
+1304605911.22929_0.ltw:2,a <BANLkTik9TqfMAivK=fnhzeHw09HAr=17rQ at mail dot gmail dot com>
+________________________________________________________________________________
+

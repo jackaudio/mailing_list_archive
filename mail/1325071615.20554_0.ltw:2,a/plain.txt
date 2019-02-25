@@ -1,0 +1,52 @@
+Date:        Wed, 28 Dec 2011 11:26:44 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fernando Lopez-Lezcano [Jack-Devel] jack 1.9.8 + many many connections = problems? (1325037816.11061_0.ltw:2,a)
+Follow-Up:   Fernando Lopez-Lezcano Re: [Jack-Devel] jack 1.9.8 + many many connections = problems? (1325095362.23953_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack 1.9.8 + many many connections = problems?
+
+On Tue, Dec 27, 2011 at 06:03:23PM -0800, Fernando Lopez-Lezcano wrote:
+
+> It would seem that something bad is happening when all ports are being  
+> connected and the end result is that inside jack some of the soundcard  
+> ports seem to go nowhere.
+>
+> The aj-snapshot process that connects everything takes a bit to run and  
+> as it progresses jack reports more and more xruns until it finishes. It  
+> would seem that something is running inside jack when ports are  
+> connected that is proportional to the number of existing connections  
+> (the graph reordering?, that would make sense - but it should not  
+> generate xruns, right?).
+>
+> It also appears to be that if I minimize the number of ports I'm  
+> connecting the problem goes away (but then of course the system is not  
+> completely functional :-).
+>
+> Clues?
+> Ways to debug?
+
+The complexity of the graph doesn't directly depend on the number
+of ports - all that matters is if app A is driving app B or not.
+The algorithms used to manage the graph should take advantage
+of that, but I don't know if they do. Anyway I'd suspect the 
+problem to be with individual port/conncection management.
+
+Suggestions:
+
+- If you have any apps using port/connection callbacks, remove
+  these.
+
+- Patch aj-snapshot so it delivers a fixed number of requests
+  per unit time instead of running as-fast-as-possible.
+
+Ciao,
+
+-- 
+FA
+
+Vor uns liegt ein weites Tal, die Sonne scheint - ein Glitzerstrahl.
+
+1325071615.20554_0.ltw:2,a <20111228112644.GA9063 at linuxaudio dot org>
+________________________________________________________________________________
+

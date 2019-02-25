@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Jack session API implementation in jack2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Jack session API implementation in jack2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1311168954.17713_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1311476440.21697_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1311327981.9831_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 22 Jul 2011 11:46:09 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>torbenh Hohn &lt;[hidden] at gmx dot de&gt;, Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>torbenh
+<a href='../1312554973.27743_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack session API implementation in jack2 </a></td></tr>
+</table>
+<pre>
+Hi, 
+
+Looking at Jack session API implementation in jack2 (the goal being to add support for internal server clients also...) I see at least two issues:
+
+- if a client calls jack_session_notify and a client fails to answer what happens? As far as I understand the code the initial jack_session_notify call will possibly block infinitely in the "while(true)" loop...
+
+int Read(JackChannelTransaction* trans)
+    {
+        CheckRes(JackResult::Read(trans));
+        while (true) {
+            JackSessionCommand buffer;
+
+            CheckRes(trans-&gt;Read(buffer.fUUID, sizeof(buffer.fUUID)));
+            if (buffer.fUUID[0] == '\0')
+                break;
+
+            CheckRes(trans-&gt;Read(buffer.fClientName, sizeof(buffer.fClientName)));
+            CheckRes(trans-&gt;Read(buffer.fCommand, sizeof(buffer.fCommand)));
+            CheckRes(trans-&gt;Read(&amp;(buffer.fFlags), sizeof(buffer.fFlags)));
+
+            fCommandList.push_back(buffer);
+        }
+        return 0;
+    }
+
+- if a first client calls jack_session_notify and a second one does jack_session_notify before the first "asynchronous server/clients round trip" is finished, the code here JackEngine.cpp line 942 is called AFAICS: 
+
+   if (fSessionPendingReplies != 0) {
+        JackSessionNotifyResult res(-1);
+        res.Write(socket);
+        jack_log("JackEngine::SessionNotify ... busy");
+        return;
+    }
+
+Agin don't this code finally enter the possibly blocking Read given just before?
+
+Comments? How this design can be improved?
+
+Thanks.
+
+Stephane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1311168954.17713_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1311476440.21697_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1311327981.9831_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1311327981.9831_0.ltw:2,a&nbsp;&lt;2A29EEBA-14E6-4800-898D-432D037F56ED at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

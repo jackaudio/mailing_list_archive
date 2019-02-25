@@ -1,0 +1,42 @@
+Date:        Mon, 11 Apr 2011 21:20:31 -0700
+From:        Devin Anderson  <[hidden] at charityfinders dot com>
+To:          [hidden] at chriscaudle dot org, JACK Developers <[hidden] at jackaudio dot org>
+In-Reply-To: Devin Anderson Re: [Jack-Devel] need a little help with jack_midi_latency_test (1302580580.26415_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] need a little help with jack_midi_latency_test
+
+On Mon, Apr 11, 2011 at 8:56 PM, Devin Anderson
+<[hidden]> wrote:
+
+>> /usr/local/bin/jackd -t2000 -Xalsarawmidi -dalsa -dhw:0 -r44100 -p2048 -n2
+>> -i2 -zt
+>>
+>> jack_midi_latency_test -m 3 -s 8192 -t 5 "system:1-1 Lexicon Lambda 1 out"
+>> "system:1-1 Lexicon Lambda 1 in"
+>
+> A test with these parameters will take more than a couple minutes.
+
+In asynchronous mode, with your period size set to 2048 and your frame
+rate set to 44100, your in port latency will be around 46.5 ms, and
+your out port latency will be around 93 ms.  If you add the two
+together and multiply by 8192, you have a little over 19 minutes.
+
+The reason this takes as long as it does is because the MIDI hardware
+driver wants to align MIDI messages with audio so that your external
+devices sync with JACK.  IOW, if you send a MIDI note on message to a
+JACK soft-synth and a hardware synth, the notes should sound like they
+occur at the same time.  If you do this with an ALSA port that isn't
+wrapped with a JACK MIDI driver, the hardware synth will send out
+audio for the note before the soft-synth's audio gets to whatever
+audio interface you're using.
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+
+1302582062.27731_0.ltw:2,a <BANLkTimWqWT_ifiTNWQ2ZgJASaiL6LXhXg at mail dot gmail dot com>
+________________________________________________________________________________
+

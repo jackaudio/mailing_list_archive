@@ -1,0 +1,39 @@
+Date:        Fri, 11 May 2012 08:40:08 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Athanasios Silis <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Athanasios Silis [Jack-Devel] problem with jack's watchdog killing jackd process after a 3-4 seconds of operation (1336739327.2381_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] problem with jack's watchdog killing jackd process after a 3-4 seconds of operation
+
+On Fri, May 11, 2012 at 8:28 AM, Athanasios Silis
+<[hidden]> wrote:
+> hello everyone,
+> i'm trying to setup jack in a slackware box.
+>
+> I have installed and enabled set_rlimits and can get jack to powerup , but
+> that only last a few seconds..
+> Then the watchdog kills the jack process. why? under what circumstances does
+> that happen?
+
+(1) the watchdog kills the whole show if no apparent progress is made.
+In your case, given the absence of clients, that probably means that
+the backend is never woken, and so jackd appears to the watchdog to be
+stuck, rather than just waiting for a wakeup from the audio interface.
+You could run with -r which will not involve the watchdog but that is
+just going to mask the actual problem, which is probably something to
+do with the linkage between the VM's ALSA driver and the real thing.
+
+(2) it may be possible to run jack successfully on a VM, but i don't
+personally find it interesting and have no intent of trying to debug
+why it doesn't work. I believe that a few people have managed this in
+the past, but it presumably depends a lot on the implementation of the
+specific VM (and may even depend on the implementation of the host
+system drivers. Other people might have some further insight into the
+issues, but I don't expect to.
+
+--p
+
+1336740018.3451_0.ltw:2,a <CAFa_cK=vO=+CdsEF6PSaN+=PTRw11YYV-yfoHkLcQyNYvRYCMw at mail dot gmail dot com>
+________________________________________________________________________________
+

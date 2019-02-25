@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK_PROMISCUOUS_SERVER not working</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK_PROMISCUOUS_SERVER not working</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1369013238.31694_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1369156192.16695_0.ltw:2,RSa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1369021116.19243_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 20 May 2013 04:38:11 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Christian Jaeger </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Christian Jaeger
+<a href='../1369013238.31694_0.ltw:2,a/index.html'>[Jack-Devel] JACK_PROMISCUOUS_SERVER not working </a></td></tr>
+</table>
+<pre>
+I've fixed it by changing the two GetUID methods to return -1 in case the
+env var is set. There was a reference to JACK_PROMISCUOUS_SERVER in
+common/JackTools.cpp (that wasn't sufficient to get it to work [anymore])
+that I've removed now since it's not necessary anymore with the GetUID
+change:
+
+ https://github.com/pflanze/jack2/compare/master...fix_promiscous
+
+(Merge the fix_promiscous branch from https://github.com/pflanze/jack2.git)
+
+Maybe one of the two GetUID methods could be eliminated? I haven't looked
+whether there is more duplication to eliminate or whether there is a reason
+for it.
+
+Now it works as long as umask is 0 for both the server and the client. I'm
+going to look into changing that.
+
+(BTW I did add some assert statements to check snprintf result values
+https://github.com/pflanze/jack2/compare/fix_promiscous...nonworkingassertbut
+strangely one of the asserts failed when exiting the server normally,
+so I'm leaving it out of my build now.)
+
+Christian.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1369013238.31694_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1369156192.16695_0.ltw:2,RSa/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1369021116.19243_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1369021116.19243_0.ltw:2,a&nbsp;&lt;CAEjYwfU7grv-XNjz_fcvDxydra6Mbep3xxFb-P4z6pt9Tnd4Yg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

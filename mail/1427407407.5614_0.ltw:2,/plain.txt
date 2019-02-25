@@ -1,0 +1,90 @@
+Date:        Fri, 27 Mar 2015 09:03:16 +1100
+From:        Matt Flax  <[hidden] at flatmax dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Christian Schoenebeck Re: [Jack-Devel] netjack audio routing from smart OSs (IOS and Android) (1427380101.14269_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] netjack audio routing from smart OSs (IOS and Android)
+
+OK,
+
+I hear what you are all saying.
+Let us simplify and refocus the concept in a manner that makes it easier.
+
+Lets assume all netjack servers are on other devices. We want to fling 
+audio from the smartOS with our players and streamers (in our hand - or 
+otherwise) to various computers around the place.
+
+I understand there are two issues, technical and licensing. For now lets 
+put licensing aside whilst we address the technical and at a later stage 
+work out what is legal once we have the concept. Legally we may never be 
+able to release the binaries, however source code in uncompiled form in 
+a repository shouldn't be a problem.
+
+W.R.T. latency. Consider for now that large latency is OK, once it is 
+implemented we can find out our limitations. If worst comes to worst, 
+then it may only suit playback, that in itself is still useful.
+
+On the smart device, if netjack is the sync. and the source, it is 
+probable that the audio will be produced and consumed as required by the 
+OS subsystem which is funneling (IAA on apple and the Media classes on 
+Android) to this device. In other words, it is likely that we don't need 
+to worry about clock sources and things like that, they are already 
+taken care for us, there may be problems in connecting to multiple 
+netjack servers, however this again is something which can be debugged 
+during implementation. In all likelyhood some clients will xrun for the 
+slowest servers (when they are all connected at the same time), however 
+the rate of xruns should be low and can be reduced further by using the 
+same hardware for the jack servers.
+
+It appears that it may be difficult to get this running on IOS, 
+particularly if it requires a large rewrite to get it working with 
+CFMessagePort.
+Perhaps for now we can focus on Android. We can further simplify things 
+by looking for netjack integration alone this should reduce dependency 
+issues and may make the whole thing more vanilla.
+
+The question still remains ... is there example code out there for 
+interfacing at this low level to the Android audio media routing subsystem ?
+
+Matt
+
+On 27/03/15 00:28, Christian Schoenebeck wrote:
+> On Thursday 26 March 2015 15:01:32 Ralf Mardorf wrote:
+>> A long time ago, when jack didn't crash on that iPad, there were quasi
+>> no jack clients available.
+> That's the list of apps that support(ed) JACKiOS:
+>
+> 	http://www.crudebyte.com/jack-ios/apps/
+>
+> In the meantime I got response from Apple engineers, and they clearly stated
+> that the IPC mechanism used by JACKiOS (POSIX shm & POSIX semaphores) was from
+> their perspective not intended to exist on iOS (iOS and OS X share a major
+> part of kernel, drivers and API code) and that they disabled that IPC
+> mechanism starting with iOS 7, because it was "a bug".
+>
+> I have to note though, that the CFMessagePort API is still available as a
+> primitive way of IPC on iOS. You have to know though how to use it exactly in
+> order that it works on iOS 7 and higher. It seems to me as if Apple engineers
+> intentionally left the CFMessagePort API available (in a constrained way) so
+> that the "Audiobus" app continues to work, which became quite popular for
+> audio interconnection between apps on iOS.
+>
+> Unfortunately the CFMessagePort API is not a real alternative for JACK. We
+> would need to rewrite a major part of JACK(2) so that it would work with
+> CFMessagePort and in the end you would have all the drawbacks and
+> inefficiencies of Audiobus, including loss of SMP support, latencies issues
+> and so on. So IMO it is not worth the effort. And in the end, even if someone
+> would put efforts in "fixing" JACK on iOS this way, you'll never know if Apple
+> engineers react with a next update of iOS by putting a new spoke into your
+> wheels.
+>
+> CU
+> Christian
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1427407407.5614_0.ltw:2, <55148224.40402 at flatmax dot org>
+________________________________________________________________________________
+

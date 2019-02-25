@@ -1,0 +1,39 @@
+Date:        Thu, 04 Aug 2011 08:53:12 -0500
+From:        Gabriel Beddingfield  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Gabriel Beddingfield Re: [Jack-Devel] Alignment (again) (1312462673.1036_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Alignment (again)
+
+OK... after further thought, I retract my proposal.
+
+On Thu, Aug 4, 2011 at 7:57 AM, Gabriel Beddingfield <[hidden]> wrote:
+> But now that I think of it... the problem with jack_ringbuffer is actually
+> pretty fundamental.
+>
+> Suppose you allocate a ringbuffer of size N (where N is a power of 2). The
+> storage space is (N-1).  So even if you start with an aligned pointer...
+> when you wrap around it will no longer be aligned. :-/
+
+When using the read/write vectors... the programmer must never EVER:
+
+  - Assume that the read/write vector jack_ringbuffer_data_t::buf
+    is aligned.
+
+  - Directly cast jack_ringbuffer_data_t::buf to anything with
+    a size > 1 byte.
+
+I.e. the read/write vectors are only suitable for memcopying the data
+to a properly aligned float* buffer.  Therefore, I'll instead submit a
+documentation patch... to warn about this.
+
+-gabriel
+
+p.s. I made this programming error while playing around with
+read/write vectors in trying to create a test case for memory ordering
+issues.  (No flames or continued discussions, I was just having some
+fun.)
+
+1312466019.8260_0.ltw:2,a <CAPbw_hxLLcU=Pz-nu48pGuYt31TRDyrGBfe_62XJ_VAf+DmjQg at mail dot gmail dot com>
+________________________________________________________________________________
+

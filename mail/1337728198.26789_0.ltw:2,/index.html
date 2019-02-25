@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] su, limits, PAM and JACK</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] su, limits, PAM and JACK</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1337725687.23110_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1337728924.27837_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1337728198.26789_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 22 May 2012 23:09:49 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jamie Heilman </span> &lt;[hidden] at audible dot transient dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Robin Gareus &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK Mailing List &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1337705611.24758_0.ltw:2,/index.html'>[Jack-Devel] su, limits, PAM and JACK </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1337728924.27837_0.ltw:2,/index.html'>Re: [Jack-Devel] su, limits, PAM and JACK </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Jeremy Henty
+<a href='../1337730469.30129_0.ltw:2,/index.html'>Re: [Jack-Devel] su, limits, PAM and JACK </a></td></tr>
+</table>
+<pre>
+Robin Gareus wrote:
+&gt; Hya,
+&gt; 
+&gt; This is somewhat off-topic, but I think someone here may know the answer.
+&gt; 
+&gt; For an installation, I'm trying to start jackd during boot on a headless
+&gt; box, but it fails to acquire real-time privileges.
+&gt; 
+&gt; 'user' is in the audio group, and limits.conf is set up. All works fine
+&gt; if I log-in as 'user' and launch `jackd -d alsa ..` manually.
+&gt; 
+&gt; If I log in as root (or call it from init):
+&gt; 
+&gt;   su user -c 'jackd ..'     # fails -&gt; no rt priv
+&gt;   su user -l -c 'jackd ..'  # fails -&gt; no rt priv
+&gt; 
+&gt; the actual error message from jack is
+&gt;   Cannot use real-time scheduling (RR/10)(1: Operation not permitted)
+&gt; 
+&gt; If I change /etc/pam.d/su and add (or un-comment)
+&gt; "session    required   pam_limits.so"
+&gt; 
+&gt;   su user -l -c 'jackd ..'  # works now (also from init on boot.)
+&gt; 
+&gt; Well. Next step is to not use 'su' but proper POSIX setgid(), setuid().
+&gt; Alas, I seem to miss some crucial step that sets up the proper limits
+&gt; after calling setuid().
+
+Chances are your PAM stack isn't configured to use pam_limits.so for
+su sessions, which means using su won't pay any attention to the
+setttings in limits.conf until it is.  That said, don't do that.
+Using su programatically to switch users is a bad idea becuase su's
+behavior is notoriously unportable anyway.
+
+&gt; Any idea what that may be?
+
+I run jackd on boot on headless virtuals, and I use Gerrit Pape's
+daemontools-a-like runit to do it.  That said, the recipe is the more
+or less the same regardless of technique.  My jackd-net/run script is:
+
+#!/bin/bash
+exec 2&gt;&amp;1
+ulimit -l unlimited -r 95       # XXX ulimit -r is a bashism
+exec chpst -u jackd jackd -d net -a 0 -i 0 -o 2 -I 0 -O 0
+
+That script is run as superuser, so that breaks down into:
+
+1) allow unlimited bytes to be locked into memory
+2) allow a maximum real-time scheduling priority of 95
+3) switch group to audio (implied because the jackd user's primary
+   group is audio on this system) then switch user to jackd. (chpst is
+   part of runit)
+
+&gt; Run the following as root from a console (don't use sudo or su to
+&gt; acquire root priv) to reproduce the problem:
+&gt; 
+&gt; #!/usr/bin/perl
+&gt; use POSIX qw(setuid setgid);
+&gt; my ($login,$pass,$uid,$gid) = getpwnam('user');
+&gt; my $audiog  = getgrnam('audio');
+&gt; setgid($audiog);
+&gt; setuid($uid);
+&gt; print `id`; # shows the UID and GID just fine
+&gt; system('jackd -d alsa -d hw:1');
+&gt; # Cannot use real-time scheduling (RR/10)(1: Operation not permitted)
+&gt; # Aarrrrg!
+&gt; # help please
+
+Right, your perl script is missing two calls to setrlimit(2) for
+RLIMIT_RTPRIO and RLIMIT_MEMLOCK.  afaik there's no native wrapper for
+setrlimit in perl though, so you'll probably have to install
+BSD::Resource and use that or something similar.  Or call your perl
+script from a bash script that does the above ulimit first.
+
+Normally I would never write bash-specific shell, because while bash
+is a fine login shell, it's a bloated horror and a lousy replacement
+for /bin/sh ... but unfortunately bash's builtin ulimit is one of only
+that I know supports setting RLIMIT_RTPRIO.
+
+-- 
+Jamie Heilman                     http://audible.transient.net/~jamie/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1337725687.23110_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1337728924.27837_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1337728198.26789_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1337728198.26789_0.ltw:2,&nbsp;&lt;20120522230948.GA18937 at cucamonga dot audible dot transient dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

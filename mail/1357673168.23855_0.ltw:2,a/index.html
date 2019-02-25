@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] A couple of related issues in jackd on ARM</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] A couple of related issues in jackd on ARM</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357673129.23800_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357674332.25723_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357673168.23855_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 09 Jan 2013 06:25:59 +1100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Patrick Shirkey </span> &lt;[hidden] at boosthardware dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>MONTANARO Luciano (MM)
+<a href='../1357672415.22666_0.ltw:2,a/index.html'>[Jack-Devel] A couple of related issues in jackd on ARM </a></td></tr>
+</table>
+<pre>
+On Wed, January 9, 2013 6:13 am, MONTANARO Luciano (MM) wrote:
+&gt; Hi all again,
+&gt; I am having new problems with jackd2, after our embedded platform switched
+&gt; to the 3.1 kernel.
+&gt; Actually, I think they were present with our previous kernel as well, but
+&gt; they have become systematic while once they were sporadic.
+&gt;
+&gt; I think I have found the problematic code, but I need some insight from
+&gt; someone that knows the code.
+&gt; The first problem I am seeing is a very high number of xrun notifications,
+&gt; tens of them a second.
+
+You can use -s, --softmode  to disable xrun reporting
+
+
+&gt; They is due to alsa_driver_wait() returning with 0 as its frame number,
+&gt; which normally means an xrun has occurred, but in this case what seems to
+&gt; be happening is that jack_wait returns "normally", but with a
+&gt; capture_avail of 0 and a playback_avail of 512 on 9 calls out of 10. The
+&gt; tenth call I get both capture_avail and playback_avail set to 512. The
+&gt; wait_status is set to 0, as in "everything normal", I guess, and so I
+&gt; tried to modify JackAlsaDriver to skip the notification in this case, and
+&gt; things seem to be working fine, no noticeable glitches in the audio
+&gt; playback at all.
+&gt;
+&gt; The second problem I was referring to is that this high number of
+&gt; notifications is triggering a problem in the JackRequest code:
+&gt; The CheckRes() macro checks for errors from the Read/Write calls, but
+&gt; these calls may silently fail: they can return without writing or reading,
+&gt; and this is accounted as success, but then Read() may return uninitialized
+&gt; data or Write is not retried when it should.
+&gt;
+&gt; There is code like this:
+&gt;
+&gt;          CheckRes(JackRequest::Write(trans));
+&gt;          CheckRes(trans-&gt;Write(&amp;fName, sizeof(fName)));
+&gt;          CheckRes(trans-&gt;Write(&amp;fProtocol, sizeof(int)));
+&gt;          CheckRes(trans-&gt;Write(&amp;fOptions, sizeof(int)));
+&gt;          CheckRes(trans-&gt;Write(&amp;fUUID, sizeof(int)));
+&gt;
+&gt; Where I think after each Write there is potential for a needed retry,
+&gt; which is not done at all. Am I missing something?
+&gt;
+&gt; I am using Jackd2 1.9.8, but the affected code has changed little in the
+&gt; latest git revisions.
+&gt;
+&gt; Thanks in advance for your support,
+&gt;
+&gt; Regards,
+&gt; Luciano Montanaro
+&gt;
+&gt;
+&gt; ====
+&gt; a38ecd0f049af3b809c5444f66186cdb25ed52fe
+&gt;  dist/jackd2/src/linux/alsa/JackAlsaDriver.cpp |    6 ++++--
+&gt;  1 files changed, 4 insertions(+), 2 deletions(-)
+&gt;
+&gt; diff --git a/dist/jackd2/src/linux/alsa/JackAlsaDriver.cpp
+&gt; b/dist/jackd2/src/linux/alsa/JackAlsaDriver.cpp
+&gt; index a79772f..effb8dd 100644
+&gt; --- a/dist/jackd2/src/linux/alsa/JackAlsaDriver.cpp
+&gt; +++ b/dist/jackd2/src/linux/alsa/JackAlsaDriver.cpp
+&gt; @@ -387,8 +387,10 @@ retry:
+&gt;          /* we detected an xrun and restarted: notify
+&gt;           * clients about the delay.
+&gt;           */
+&gt; -        jack_log("ALSA XRun wait_status = %d", wait_status);
+&gt; -        NotifyXRun(fBeginDateUst, fDelayedUsecs);
+&gt; +       if (wait_status != 0) {
+&gt; +            jack_log("ALSA XRun wait_status = %d", wait_status);
+&gt; +            NotifyXRun(fBeginDateUst, fDelayedUsecs);
+&gt; +       }
+&gt;          goto retry; /* recoverable error*/
+&gt;      }
+&gt;
+&gt;
+&gt;
+&gt; --
+&gt; Luciano Montanaro
+&gt; EntryNAV - Audio Software Integrator
+&gt; Magneti Marelli Electronic Systems
+&gt; Viale Carlo Emanuele II 150, Venaria Reale (To)
+&gt;
+&gt;
+&gt; Confidential Notice: This message - including its attachments - may
+&gt; contain proprietary, confidential and/or legally protected information and
+&gt; is intended solely for the use of the designated addressee(s) above. If
+&gt; you are not the intended recipient be aware that any downloading, copying,
+&gt; disclosure, distribution or use of the contents of the above information
+&gt; is strictly prohibited.
+&gt; If you have received this communication by mistake, please forward the
+&gt; message back to the sender at the email address above, delete the message
+&gt; from all mailboxes and any other electronic storage medium and destroy all
+&gt; copies.
+&gt; Disclaimer Notice: Internet communications cannot be guaranteed to be safe
+&gt; or error-free. Therefore we do not assure that this message is complete or
+&gt; accurate and we do not accept liability for any errors or omissions in the
+&gt; contents of this message.
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+
+
+--
+Patrick Shirkey
+Boost Hardware Ltd
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1357673129.23800_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1357674332.25723_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1357673168.23855_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1357673168.23855_0.ltw:2,a&nbsp;&lt;57424.188.25.63.205.1357673159.squirrel at boosthardware dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

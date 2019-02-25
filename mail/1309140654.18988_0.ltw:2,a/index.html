@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JACK midi events lost on 64 bit machines</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JACK midi events lost on 64 bit machines</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1309135855.10077_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1309163591.15577_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1309140654.18988_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 26 Jun 2011 19:09:54 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at charityfinders dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Carlos Eduardo da Fonseca &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Carlos Eduardo da Fonseca
+<a href='../1309135855.10077_0.ltw:2,a/index.html'>[Jack-Devel] JACK midi events lost on 64 bit machines </a></td></tr>
+</table>
+<pre>
+Hi Carlos,
+
+On Sun, Jun 26, 2011 at 5:50 PM, Carlos Eduardo da Fonseca
+&lt;[hidden]&gt; wrote:
+
+&gt; I have an application using JACK MIDI under Linux. It works perfectly on 32
+&gt; bit machines, but on my new one, which is 64 bits, I get event loss all the
+&gt; time.
+
+Your message doesn't mention which version of JACK you are running on
+your new machine, or which version of JACK you ran on your old
+machine.  That data might be helpful.
+
+&gt; #define MidiMessageSize 3
+&gt;
+&gt; jack_client_t* client;
+&gt; jack_port_t* midi_out_port;
+&gt;
+&gt; char current_message[MidiMessageSize];
+&gt;
+&gt; jack_ringbuffer_t* midi_rb;
+&gt;
+&gt; int process (jack_nframes_t nframes, void *arg) {
+&gt;   void* output_buffer = jack_port_get_buffer(midi_out_port, nframes);
+&gt;   jack_midi_clear_buffer(output_buffer);
+&gt;   int read_space = jack_ringbuffer_read_space(midi_rb);
+&gt;   if (read_space == 0) return 0;
+&gt;   int i;
+&gt;   for (i = 0; i &lt; read_space; i += MidiMessageSize) {
+&gt;     jack_ringbuffer_read(midi_rb, current_message, MidiMessageSize);
+&gt;     jack_midi_event_write(output_buffer, i/MidiMessageSize,
+&gt; 			   (jack_midi_data_t*)current_message, MidiMessageSize);
+&gt;     if (jack_midi_get_lost_event_count(midi_out_port)) {
+&gt;       printf("Lost\n"); /* Never get here on 32 bit but always on 64 */
+&gt;     }
+&gt;   }
+&gt;   jack_ringbuffer_reset(midi_rb);
+&gt;   return 0;
+&gt; }
+
+If your period size is smaller than the amount of messages retrieved
+from your ringbuffer during a process call, then your timestamp (i /
+MidiMessageSize) will become out-of-bounds.  However, at least with
+JACK 2, the error wouldn't increment the lost event count.
+
+With JACK 2, events may be considered "lost" 1.) during mixdown, when
+two or more MIDI buffers are having their contents transferred to
+another MIDI buffer and a MIDI message can't be transferred to the
+MIDI buffer, and 2.) when space cannot be reserved in the MIDI buffer
+for your event when calling 'jack_midi_event_write' or
+'jack_midi_event_reserve'.  You can find the relevant code here:
+
+    http://trac.jackaudio.org/browser/jack2/trunk/jackmp/common/JackMidiAPI.cpp
+
+... and here:
+
+    http://trac.jackaudio.org/browser/jack2/trunk/jackmp/common/JackMidiPort.cpp
+
+The second case is the only case that matters in this situation, as
+you're calling 'jack_midi_clear_buffer' on the output buffer at the
+beginning of every process call, which will reset the lost event count
+to zero. You can check for the second case by checking if the return
+value of 'jack_midi_event_write' is -ENOBUFS.
+
+FYI, 'jack_ringbuffer_reset' is not thread-safe.  Calling it in a
+process callback is probably a bad idea.
+
+-- 
+Devin Anderson
+devin (at) charityfinders (dot) com
+
+CharityFinders - http://www.charityfinders.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1309135855.10077_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1309163591.15577_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1309140654.18988_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1309140654.18988_0.ltw:2,a&nbsp;&lt;BANLkTik145H8_vfKaTOKyYyB1ngOeW7CHg at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

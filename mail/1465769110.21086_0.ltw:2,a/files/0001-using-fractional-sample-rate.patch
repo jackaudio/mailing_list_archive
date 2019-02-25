@@ -1,0 +1,218 @@
+From 82be5f6962637d358459aba2480f11cfb69b26f7 Mon Sep 17 00:00:00 2001
+From: Markus Grabner <grabner@icg.tugraz.at>
+Date: Sun, 12 Jun 2016 21:02:11 +0200
+Subject: [PATCH] using fractional sample rate
+
+---
+ example-clients/alsa_in.c  | 31 ++++++++++++++++++++-----------
+ example-clients/alsa_out.c | 29 +++++++++++++++++++----------
+ 2 files changed, 39 insertions(+), 21 deletions(-)
+
+diff --git a/example-clients/alsa_in.c b/example-clients/alsa_in.c
+index 1a8c033..5b14356 100644
+--- a/example-clients/alsa_in.c
++++ b/example-clients/alsa_in.c
+@@ -48,7 +48,7 @@ double offset_integral = 0;
+ 
+ // ------------------------------------------------------ commandline parameters
+ 
+-int sample_rate = 0;				 /* stream rate */
++float sample_rate = 0.0f;				 /* stream rate */
+ int num_channels = 2;				 /* count of channels */
+ int period_size = 1024;
+ int num_periods = 2;
+@@ -151,11 +151,13 @@ static int set_hwformat( snd_pcm_t *handle, snd_pcm_hw_params_t *params )
+ #endif
+ }
+ 
+-static int set_hwparams(snd_pcm_t *handle, snd_pcm_hw_params_t *params, snd_pcm_access_t access, int rate, int channels, int period, int nperiods ) {
++static int set_hwparams(snd_pcm_t *handle, snd_pcm_hw_params_t *params, snd_pcm_access_t access, float rate, int channels, int period, int nperiods ) {
+ 	int err, dir=0;
+ 	unsigned int buffer_time;
+ 	unsigned int period_time;
+ 	unsigned int rrate;
++	float rrate_exact;
++	unsigned int rate_num, rate_den;
+ 	unsigned int rchannels;
+ 
+ 	/* choose all parameters */
+@@ -192,19 +194,25 @@ static int set_hwparams(snd_pcm_t *handle, snd_pcm_hw_params_t *params, snd_pcm_
+ 	rrate = rate;
+ 	err = snd_pcm_hw_params_set_rate_near(handle, params, &rrate, 0);
+ 	if (err < 0) {
+-		printf("Rate %iHz not available for playback: %s\n", rate, snd_strerror(err));
++		printf("Rate %fHz not available for playback: %s\n", rate, snd_strerror(err));
+ 		return err;
+ 	}
+-	if (rrate != rate) {
+-		printf("WARNING: Rate doesn't match (requested %iHz, get %iHz)\n", rate, rrate);
+-		sample_rate = rrate;
++	err = snd_pcm_hw_params_get_rate_numden(params, &rate_num, &rate_den);
++	if (err < 0) {
++		printf("Couldn't get exact rate: %s\n", snd_strerror(err));
++		return err;
++	}
++	rrate_exact = (float)rate_num / rate_den;
++	if (rrate_exact != rate) {
++		printf("WARNING: Rate doesn't match (requested %fHz, get %fHz)\n", rate, rrate_exact);
++		sample_rate = rrate_exact;
+ 	}
+ 	/* set the buffer time */
+ 
+ 	buffer_time = 1000000*(uint64_t)period*nperiods/rate;
+ 	err = snd_pcm_hw_params_set_buffer_time_near(handle, params, &buffer_time, &dir);
+ 	if (err < 0) {
+-		printf("Unable to set buffer time %i for playback: %s\n",  1000000*period*nperiods/rate, snd_strerror(err));
++		printf("Unable to set buffer time %i for playback: %s\n",  (int)(1000000*period*nperiods/rate+0.5), snd_strerror(err));
+ 		return err;
+ 	}
+ 	err = snd_pcm_hw_params_get_buffer_size( params, &real_buffer_size );
+@@ -219,7 +227,7 @@ static int set_hwparams(snd_pcm_t *handle, snd_pcm_hw_params_t *params, snd_pcm_
+ 	period_time = 1000000*(uint64_t)period/rate;
+ 	err = snd_pcm_hw_params_set_period_time_near(handle, params, &period_time, &dir);
+ 	if (err < 0) {
+-		printf("Unable to set period time %i for playback: %s\n", 1000000*period/rate, snd_strerror(err));
++		printf("Unable to set period time %i for playback: %s\n", (int)(1000000*period/rate+0.5), snd_strerror(err));
+ 		return err;
+ 	}
+ 	err = snd_pcm_hw_params_get_period_size(params, &real_period_size, NULL );
+@@ -236,6 +244,7 @@ static int set_hwparams(snd_pcm_t *handle, snd_pcm_hw_params_t *params, snd_pcm_
+ 		printf("Unable to set hw params for playback: %s\n", snd_strerror(err));
+ 		return err;
+ 	}
++
+ 	return 0;
+ }
+ 
+@@ -282,7 +291,7 @@ static int set_swparams(snd_pcm_t *handle, snd_pcm_sw_params_t *swparams, int pe
+ 
+ // ok... i only need this function to communicate with the alsa bloat api...
+ 
+-static snd_pcm_t *open_audiofd( char *device_name, int capture, int rate, int channels, int period, int nperiods ) {
++static snd_pcm_t *open_audiofd( char *device_name, int capture, float rate, int channels, int period, int nperiods ) {
+   int err;
+   snd_pcm_t *handle;
+   snd_pcm_hw_params_t *hwparams;
+@@ -639,7 +648,7 @@ int main (int argc, char *argv[]) {
+ 		strcpy(jack_name,optarg);
+ 		break;
+ 	    case 'r':
+-		sample_rate = atoi(optarg);
++		sample_rate = atof(optarg);
+ 		break;
+ 	    case 'c':
+ 		num_channels = atoi(optarg);
+@@ -734,7 +743,7 @@ int main (int argc, char *argv[]) {
+     
+     jack_sample_rate = jack_get_sample_rate( client );
+ 
+-    if( !sample_rate )
++    if( sample_rate == 0.0f )
+ 	sample_rate = jack_sample_rate;
+ 
+     // now open the alsa fd...
+diff --git a/example-clients/alsa_out.c b/example-clients/alsa_out.c
+index d5fd268..57bb3df 100644
+--- a/example-clients/alsa_out.c
++++ b/example-clients/alsa_out.c
+@@ -48,7 +48,7 @@ double offset_integral = 0;
+ 
+ // ------------------------------------------------------ commandline parameters
+ 
+-int sample_rate = 0;				 /* stream rate */
++float sample_rate = 0.0f;				 /* stream rate */
+ int num_channels = 2;				 /* count of channels */
+ int period_size = 1024;
+ int num_periods = 2;
+@@ -151,11 +151,13 @@ static int set_hwformat( snd_pcm_t *handle, snd_pcm_hw_params_t *params )
+ #endif
+ }
+ 
+-static int set_hwparams(snd_pcm_t *handle, snd_pcm_hw_params_t *params, snd_pcm_access_t access, int rate, int channels, int period, int nperiods ) {
++static int set_hwparams(snd_pcm_t *handle, snd_pcm_hw_params_t *params, snd_pcm_access_t access, float rate, int channels, int period, int nperiods ) {
+ 	int err, dir=0;
+ 	unsigned int buffer_time;
+ 	unsigned int period_time;
+ 	unsigned int rrate;
++	float rrate_exact;
++	unsigned int rate_num, rate_den;
+ 	unsigned int rchannels;
+ 
+ 	/* choose all parameters */
+@@ -192,11 +194,17 @@ static int set_hwparams(snd_pcm_t *handle, snd_pcm_hw_params_t *params, snd_pcm_
+ 	rrate = rate;
+ 	err = snd_pcm_hw_params_set_rate_near(handle, params, &rrate, 0);
+ 	if (err < 0) {
+-		printf("Rate %iHz not available for playback: %s\n", rate, snd_strerror(err));
++		printf("Rate %fHz not available for playback: %s\n", rate, snd_strerror(err));
+ 		return err;
+ 	}
+-	if (rrate != rate) {
+-		printf("Rate doesn't match (requested %iHz, get %iHz)\n", rate, rrate);
++	err = snd_pcm_hw_params_get_rate_numden(params, &rate_num, &rate_den);
++	if (err < 0) {
++		printf("Couldn't get exact rate: %s\n", snd_strerror(err));
++		return err;
++	}
++	rrate_exact = (float)rate_num / rate_den;
++	if (rrate_exact != rate) {
++		printf("Rate doesn't match (requested %fHz, get %fHz)\n", rate, rrate_exact);
+ 		return -EINVAL;
+ 	}
+ 	/* set the buffer time */
+@@ -204,7 +212,7 @@ static int set_hwparams(snd_pcm_t *handle, snd_pcm_hw_params_t *params, snd_pcm_
+ 	buffer_time = 1000000*(uint64_t)period*nperiods/rate;
+ 	err = snd_pcm_hw_params_set_buffer_time_near(handle, params, &buffer_time, &dir);
+ 	if (err < 0) {
+-		printf("Unable to set buffer time %i for playback: %s\n",  1000000*period*nperiods/rate, snd_strerror(err));
++		printf("Unable to set buffer time %i for playback: %s\n",  (int)(1000000*period*nperiods/rate+0.5), snd_strerror(err));
+ 		return err;
+ 	}
+ 	err = snd_pcm_hw_params_get_buffer_size( params, &real_buffer_size );
+@@ -219,7 +227,7 @@ static int set_hwparams(snd_pcm_t *handle, snd_pcm_hw_params_t *params, snd_pcm_
+ 	period_time = 1000000*(uint64_t)period/rate;
+ 	err = snd_pcm_hw_params_set_period_time_near(handle, params, &period_time, &dir);
+ 	if (err < 0) {
+-		printf("Unable to set period time %i for playback: %s\n", 1000000*period/rate, snd_strerror(err));
++		printf("Unable to set period time %i for playback: %s\n", (int)(1000000*period/rate+0.5), snd_strerror(err));
+ 		return err;
+ 	}
+ 	err = snd_pcm_hw_params_get_period_size(params, &real_period_size, NULL );
+@@ -236,6 +244,7 @@ static int set_hwparams(snd_pcm_t *handle, snd_pcm_hw_params_t *params, snd_pcm_
+ 		printf("Unable to set hw params for playback: %s\n", snd_strerror(err));
+ 		return err;
+ 	}
++
+ 	return 0;
+ }
+ 
+@@ -282,7 +291,7 @@ static int set_swparams(snd_pcm_t *handle, snd_pcm_sw_params_t *swparams, int pe
+ 
+ // ok... i only need this function to communicate with the alsa bloat api...
+ 
+-static snd_pcm_t *open_audiofd( char *device_name, int capture, int rate, int channels, int period, int nperiods ) {
++static snd_pcm_t *open_audiofd( char *device_name, int capture, float rate, int channels, int period, int nperiods ) {
+   int err;
+   snd_pcm_t *handle;
+   snd_pcm_hw_params_t *hwparams;
+@@ -642,7 +651,7 @@ int main (int argc, char *argv[]) {
+ 		strcpy(jack_name,optarg);
+ 		break;
+ 	    case 'r':
+-		sample_rate = atoi(optarg);
++		sample_rate = atof(optarg);
+ 		break;
+ 	    case 'c':
+ 		num_channels = atoi(optarg);
+@@ -737,7 +746,7 @@ int main (int argc, char *argv[]) {
+     
+     jack_sample_rate = jack_get_sample_rate( client );
+ 
+-    if( !sample_rate )
++    if( sample_rate == 0.0f )
+ 	sample_rate = jack_sample_rate;
+ 
+     static_resample_factor =  (double) sample_rate / (double) jack_sample_rate;
+-- 
+2.6.6
+

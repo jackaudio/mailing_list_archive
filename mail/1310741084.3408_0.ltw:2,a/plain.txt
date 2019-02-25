@@ -1,0 +1,107 @@
+Date:        Fri, 15 Jul 2011 16:44:26 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Robin Gareus <[hidden] at gareus dot org>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Robin Gareus Re: [Jack-Devel] jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT" (1310742395.5903_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jackd2+ardour3 - tracking down "JackActivationCount::Signal value = 0 ref = INT"
+
+Le 15 juil. 2011 à 16:33, Robin Gareus a écrit :
+
+> On 07/15/2011 02:16 PM, Stéphane Letz wrote:
+>> 
+>> Le 15 juil. 2011 à 12:22, Robin Gareus a écrit :
+>> 
+>>> On 07/15/2011 08:55 AM, Stéphane Letz wrote:
+>>>> 
+>>>> Le 14 juil. 2011 à 20:05, Robin Gareus a écrit :
+>>>> 
+>>>>> On 07/14/2011 07:57 PM, Stéphane Letz wrote:
+>>>>>> Do you have a more complete log? Possibly in verbose (-v mode)?
+>>>>> 
+>>>>> No, not yet. There's nothing in ~/.log/jack/jackdbus.log these messages
+>>>>> appear in ardour's log window.
+>>>>> 
+>>>>> I will re-run jackd in verbose mode later tonight or more likely tomorrow.
+>>>>> 
+>>>>> PS. did you intentionally reply off-list?
+>>>>> 
+>>>> 
+>>>> Until I get some more info to answer in a sensible way yes.
+>>>> 
+>>>> Stéphane 
+>>> 
+>>> I just tried for 90mins to reproduce it with verbose logging (both jackd
+>>> and jackdbus) and could not! :(
+>>> 
+>>> Anyway, there are quite a few people experiencing this - just search
+>>> google for "JackActivationCount". The closest to s.o. tracking it down
+>>> is: http://mailinglisps.blogspot.com/2010/02/jackosx-error-message.html
+>>> but the assertion there does not make much sense to me.
+>> 
+>> Well this message happens when a client could not "consume"  it's activation in time on a given cycle, and it triggered again. 
+>> 
+>> What surprise me is the fact that you see it in synchronous mode, when the server should normally waits for all clients to finish.
+>> 
+>>> 
+>>> I'll keep my eyes peeled or rather the logging enabled; and hope to get
+>>> back to you on that matter soon.
+>>> 
+>>> robin
+>>> 
+>> OK thanks.
+> 
+> bummer. Seems to have been some "advanced" PEBKAC.
+> 
+> long story short: it was not in synchronous mode when the errors
+> happened and I can reproduce the JackActivationCount by
+> + running in async mode
+> + using lots of DSP-load
+
+Ok, this makes much more sense!
+
+> 
+> But why are these messages printed out by default? Shouldn't signaling
+> an x-run be enough?
+
+They are still not "strict XRun": in asynchronous mode XRuns are detected by the server which just checks that all clients have be run previous cycle. It then print something like:
+
+"JackEngine::XRun : client = XXX was not run: state = 2"
+
+Don't you see there kind of messages along the "JackActivationCount...." ones?
+
+
+> IMHO these msgs should only be generated in verbose
+> mode, because printing those messages just makes things worse: more
+> system load due to logging, etc. -> even more messages.
+
+OK this can be done quite easily...
+
+> 
+> esp. with ardour3 that opens a gtk-log-window and prints all those
+> messages: When loading some CPU-intense plugins, at first there are one
+> or two JackActivationCount messages and either it stops right after that
+> or it snowballs: after a second there's one of these messages for each
+> process-cycle.  qjackctl is a bit "smarter": it caches/enqueues the
+> messages but does not print them immediately.
+> 
+> Shall I file a bug-report (against jack2) to only print those
+> JackActivationCount msgs in verbose mode?
+> 
+> 
+> As for the PEBKAC:
+> Sometimes, I launch a 2nd non-RT jackd with different server-name in
+> order to debug ardour3 with gdb. By doing so ~/.config/jack/conf.xml is
+> overridden (disable sync mode) and next time I suspend/resume the
+> machine the engine-parameters of the main/default jackdbus get re-set...
+> I end up running in async mode even though the original server/backend
+> was started in sync-mode. Weird. IIUC that should not happen: It is an
+> engine setting not a backend setting, right?
+
+Yes -S for "synchronous" is a server setting. It can actually be used with different kind of backend.
+
+Stéphane 
+
+1310741084.3408_0.ltw:2,a <03662276-9B64-4E58-AA2D-D7FD78E1F651 at grame dot fr>
+________________________________________________________________________________
+

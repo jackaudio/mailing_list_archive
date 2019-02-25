@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [LAD] [Jack-Devel] jack2's dbus name</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [LAD] [Jack-Devel] jack2's dbus name</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1245336473.22396_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1245347529.14855_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1245342112.31614_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 18 Jun 2009 18:21:05 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Lennart Poettering </span> &lt;[hidden] at 0pointer dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org, Linux Audio Developers &lt;[hidden] at lists dot linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>[hidden] at gmx dot de
+<a href='../1245336473.22396_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] jack2's dbus name </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1245347529.14855_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] jack2's dbus name </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Nedko Arnaudov
+<a href='../1245438548.11894_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] jack2's dbus name </a></td></tr>
+</table>
+<pre>
+On Thu, 18.06.09 16:09, [hidden] ([hidden]) wrote:
+
+&gt; &gt; I think org.jackaudio.service should be fine. I don't think this
+&gt; &gt; automatic logic needs to work on non-D-Bus jack builds. As I see it
+&gt; &gt; you don't need to make any changes on jack for this to work. All I
+&gt; &gt; need is the guarantee that by the time the service name is registered
+&gt; &gt; on the bus jack is fully accessible. Otherwise we had a race here: if
+&gt; &gt; PA looks for the org.jackaudio.service name to appear on the bus and
+&gt; &gt; then imemdiately connects to it while jack isn't fully accessible yet
+&gt; &gt; PA would fail.
+&gt; 
+&gt; the existence of org.jackaudio.service object does not guarantee,
+&gt; that jackd is connectable.
+
+I'd consider that brokeness in Jack then. Taking the name on the bus
+sould be the last step during initialization. Otherwise you'll always
+be in racy situations where clients try to talk to JACK while JACK is
+only half-way initialized.
+
+&gt; 
+&gt; i guess we need a signal, which tells that a server has been started,
+&gt; but i leave this to the dbus guys.
+
+Nope. That is the wrong approach.
+
+&gt; my primary concern is to have the pa jack backend fixed. 
+&gt; lennart himself said its a TOY. and it really is.
+
+Aha.
+
+&gt; i dont really understand why it works, but its pretty broken, for
+&gt; sure.
+
+Aha.
+
+&gt; static int jack_process(jack_nframes_t nframes, void *arg) {
+&gt;     struct userdata *u = arg;
+&gt;     unsigned c;
+&gt;     jack_nframes_t frame_time;
+&gt;     pa_assert(u);
+&gt; 
+&gt;     /* We just forward the request to our other RT thread */
+&gt; 
+&gt;     for (c = 0; c &lt; u-&gt;channels; c++)
+&gt;         pa_assert_se(u-&gt;buffer[c] = jack_port_get_buffer(u-&gt;port[c], nframes));
+&gt; 
+&gt;     frame_time = jack_frame_time(u-&gt;client);
+&gt; 
+&gt;     pa_assert_se(pa_asyncmsgq_send(u-&gt;jack_msgq, PA_MSGOBJECT(u-&gt;sink), SINK_MESSAGE_RENDER, &amp;frame_time, nframes, NULL) == 0);
+&gt;     return 0;
+&gt; }
+&gt; 
+&gt; 
+&gt; it needs to be decoupled using a ringbuffer.
+
+Uh? That is actually what happens. 
+
+This is a bit more complex than you might think. Jack's thread
+management is very unflexible and insists on controlling the entire
+thread life cycle, only calling into client code in very few
+occasions. This is a bit too limited for PA which needs better control
+on the RT loops so that it can properly priorize/order the work it
+needs to do in it. To work around that I decided to run two RT
+threads, one where PA does its own RT looping, and the one jack
+controls. The latter then simply relays the process requests
+synchronously to the former. This of course comes at the cost of a
+needless context switch, however both threads are RT. The normal PA RT
+loop thread communicates lock-free and asynchronously with the rest of
+the PA code.
+
+Yes, having to work around JACK's API like this is certainly not
+nice. But aside from the extra context switch this shouldn't be too
+bad.
+
+Of course it would great if JACK would be more flexible with its RT
+loop handling. What I am missing is basically a way to
+asynchronously/lock-free trigger execution of a callback function in
+the RT loop at a suitable place. By a "suitable place" I mean that the
+RT loop delays execution of this callback until a time where its
+impact would be minimal, i.e. right after a completed process() and a
+quick verification that the next process() cycle is still a bit away.
+
+Why does pa need those callbacks? In contrast to JACK we need to be
+able to modify our pipelines during playback without having that cause
+drop-outs in any way. To accomplish that updates to pipeline related
+data structures that need to be accessed by the RT loop are as far as
+possible done in the main thread, however usually the last remaining
+bit for activating those changes is left for the RT loop to do itself,
+asynchronously and only when it can be sure that nothing else needs to
+be done. That way we can have those data structures implemented
+lock-free without really having to implement them with all that
+lock-free complexity.
+
+&gt; and maybe pulse should be running with a higher blocksize than jack ?
+
+PA does not use fixed block sizes. We always use the largest chunk
+sizes the applications pass to us and break them up into smaller
+pieces only when really necessary. We really try our best not having
+to touch/convert/split/copy user supplied PCM data if we don't have
+to.
+
+Lennart
+
+-- 
+Lennart Poettering                        Red Hat, Inc.
+lennart [at] poettering [dot] net
+http://0pointer.net/lennart/           GnuPG 0x1A015CC4
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1245336473.22396_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1245347529.14855_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1245342112.31614_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1245342112.31614_0.ltw:2,a&nbsp;&lt;20090618162104.GA2593 at tango dot 0pointer dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

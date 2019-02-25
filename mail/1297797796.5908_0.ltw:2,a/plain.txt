@@ -1,0 +1,48 @@
+Date:        Tue, 15 Feb 2011 13:22:41 -0600
+From:        Jack O'Quin  <[hidden] at gmail dot com>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] buffer size callback, revisit (1297794381.31427_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] buffer size callback, revisit (1297797964.6362_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] buffer size callback, revisit
+
+On Tue, Feb 15, 2011 at 12:26 PM, Paul Davis <[hidden]> wrote:
+> On Tue, Feb 15, 2011 at 1:21 PM, Jack O'Quin <[hidden]> wrote:
+>> On Tue, Feb 15, 2011 at 12:13 PM, Paul Davis <[hidden]> wrote:
+>>
+>>> you have a client. it registers a buffer size callback. it relies on
+>>> it to get the current buffer size.
+>>
+>> Ah. I was assuming it had to initialize things, first.
+>>
+>> Clearly not an elegant interface, but that's what it requires, right?
+>
+> its the initialization that leads to the race condition. you cannot
+> ensure that the buffer size didn't change between you determining it
+> and your first process() callback.
+
+Hence, the callback needs to reallocate.
+
+That is why I asked: shouldn't JACK invoke the callback before the
+first process call? What breaks if it does?
+
+>> You'd have to code it to work correctly either way. I'm still not
+>> quite sure why that's not possible.
+>
+> you don't know if the jackd implementation you are talking to is going
+> to call your bufsize callback during jack_activate(). it might, it
+> might not. what possible strategies can you follow?
+
+The best the client can do is code it to work if JACK works correctly.
+
+If JACK does not, the best hope is not to change the buffer size.
+That's been the de facto solution for the past ten years or so. I
+doubt very many JACK clients ever worked correctly with this
+interface.
+-- 
+ joq
+
+1297797796.5908_0.ltw:2,a <AANLkTikdo1beQnE374WQQ_EGHT7sn5dh+0o+_4_UUBWn at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,72 @@
+Date:        Sat, 13 Jun 2015 13:25:10 +0200
+From:        Kjetil Matheussen  <[hidden] at gmail dot com>
+To:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Kjetil Matheussen Re: [Jack-Devel] 64 bit jack applications compiled with mingw crashes (1434210281.10978_0.ltw:2,)
+Follow-Up:   Robin Gareus Re: [Jack-Devel] 64 bit jack applications compiled with mingw crashes (1434219384.16075_0.ltw:2,)
+
+Subject:     [Jack-Devel] 64 bit jack applications compiled with mingw crashes
+
+Hi,
+
+I'm trying to compile a 64 bit jack application (radium) with mingw-64.
+When I compile it in 32 bit mode, it works fine, but when creating a 64
+bit version, it crashes when calling a jack_* function.
+
+
+The same happens when trying to run a simple test program:
+
+"
+#include <jack/jack.h>
+int main(){
+  jack_ringbuffer_create(8000); // (Also crashes if callling
+jack_client_open)
+  return 0;
+}
+"
+
+
+If I compile it like this (32 bit):
+
+$ i686-w64-mingw32-gcc winjacktest.c -I/home/kjetil/.wine/drive_c/Program\
+Files/Jack/includes /home/kjetil/.wine/drive_c/Program\
+Files/Jack/lib/libjack.lib
+
+...it works
+
+But if I compile it like this (64 bit):
+
+$ x86_64-w64-mingw32-gcc winjacktest.c
+-I/home/kjetil/.wine/drive_c/Program\ Files/Jack/includes
+/home/kjetil/.wine/drive_c/Program\ Files/Jack/lib/libjack64.lib
+
+...it crashes.
+
+
+I also have a backtrace. The second last frame in the backtrace is the call
+to "jack_ringbuffer",
+while the last frame shows that an unrelated function is called instead of
+jack_rinbuffer_create.
+So it seems like either the stack itself is a little bit corrupted, or
+libjack64.lib sends the program
+further to a random place in the program instead of the libjack64.dll
+library. The latter might
+be more likely though, since it's the same backtrace every time.
+
+
+I've tried installed both the 32 bit and the 64 bit version of
+jack which are available for download at jackaudio.org. Same behaviour for
+both.
+
+My gcc is a little bit old, but I guess that isn't the reason for the crash:
+
+$ x86_64-w64-mingw32-gcc --version
+x86_64-w64-mingw32-gcc (GCC) 4.7.2 20120920 (Fedora MinGW 4.7.2-7.fc17)
+$ i686-w64-mingw32-gcc --version
+i686-w64-mingw32-gcc (GCC) 4.7.2 20120920 (Fedora MinGW 4.7.2-7.fc17)
+
+
+Thanks for any help. Please let me know if there's anything I should try.
+
+1434194717.32652_0.ltw:2, <CAC6niE+XDkk7D-gyaDDefkxeYH2P=BtgqbS8WQL4Npq4MCFjkQ at mail dot gmail dot com>
+________________________________________________________________________________
+

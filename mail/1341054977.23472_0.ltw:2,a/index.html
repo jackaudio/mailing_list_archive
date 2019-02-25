@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Alsa Jack Plugin</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Alsa Jack Plugin</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1341053800.21677_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1341055108.23648_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1341054977.23472_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 30 Jun 2012 13:16:08 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Patrick Shirkey </span> &lt;[hidden] at boosthardware dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>James Warden
+<a href='../1341053800.21677_0.ltw:2,a/index.html'>Re: [Jack-Devel] Alsa Jack Plugin </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1341055108.23648_0.ltw:2,a/index.html'>Re: [Jack-Devel] Alsa Jack Plugin </a></td></tr>
+</table>
+<pre>
+On Sat, June 30, 2012 12:56 pm, James Warden wrote:
+&gt; Hi,
+&gt;
+&gt; Just a guess, as I have not been dealing with these things for ages ...
+&gt;
+&gt; It could well be that the alsa-jack plugin only declares two ports ? In
+&gt; which case you would have to expand the plugin's code to allow for more
+&gt; than 2 ports ... :(
+&gt;
+&gt; But again, it's just a guess ...
+&gt;
+
+
+Virtual devices used to be done with pcm plugin not the jack plugin.
+
+That config won't work unless the virtual ports have been exposed to jack.
+
+This should work but it's a bit old so not sure if they have changed
+anything to break it since it was originally written.
+
+====
+# create a virtual four-channel device with two sound devices:
+# This is in fact two interleaved stereo streams in
+# different memory locations, so JACK will complain that it
+# cannot get mmap-based access. see below.
+
+pcm.multi {
+        type multi;
+        slaves.a.pcm "hw:0,0";
+        slaves.a.channels 2;
+        slaves.b.pcm "hw:1,0";
+        slaves.b.channels 2;
+        bindings.0.slave a;
+        bindings.0.channel 0;
+        bindings.1.slave a;
+        bindings.1.channel 1;
+        bindings.2.slave b;
+        bindings.2.channel 0;
+        bindings.3.slave b;
+        bindings.3.channel 1;
+}
+
+# JACK will be unhappy if there is no mixer to talk to, so we set
+# this to card 0. This could be any device but 0 is easy.
+
+ctl.multi {
+        type hw;
+        card 0;
+}
+
+# This creates a 4 channel interleaved pcm stream based on
+# the multi device. JACK will work with this one.
+
+pcm.ttable {
+        type route;
+        slave.pcm "multi";
+        slave.channels 4;
+        ttable.0.0 1;
+        ttable.1.1 1;
+        ttable.2.2 1;
+        ttable.3.3 1;
+}
+# see above.
+ctl.ttable {
+        type hw;
+        card 0;
+}
+====
+
+&gt; J.
+&gt;
+&gt;
+&gt;
+&gt; ________________________________
+&gt;  From: Paul Davis &lt;[hidden]&gt;
+&gt; To: Salvatore De Paolis &lt;[hidden]&gt;
+&gt; Cc: [hidden]
+&gt; Sent: Saturday, June 30, 2012 12:53 PM
+&gt; Subject: Re: [Jack-Devel] Alsa Jack Plugin
+&gt;
+&gt;
+&gt;
+&gt;
+&gt;
+&gt; On Sat, Jun 30, 2012 at 5:17 AM, Salvatore De Paolis &lt;[hidden]&gt;
+&gt; wrote:
+&gt;
+&gt; On Fri, 22 Jun 2012 00:00:32 +0200
+&gt;&gt;Salvatore De Paolis &lt;[hidden]&gt; wrote:
+&gt;&gt;
+&gt;&gt;&gt; Hi, I've been following a tutorial where it shows how to set jack with
+&gt;&gt;&gt; alsa.
+&gt;&gt;&gt; I don't know though if is possible to have such a configuration because
+&gt;&gt;&gt; it
+&gt;&gt;&gt; doesn't seem to work. Only 0 and 1 seems to be working but when adding
+&gt;&gt;&gt; more than 2 playback ports only the first two are emitting sound the
+&gt;&gt;&gt; other
+&gt;&gt;&gt; are just silently connected,
+&gt;&gt;&gt;
+&gt;&gt;&gt; pcm.!default {
+&gt;&gt;&gt; &#xA0; &#xA0; &#xA0; type plug
+&gt;&gt;&gt; &#xA0; &#xA0; &#xA0; slave { pcm "jack" }
+&gt;&gt;&gt; }
+&gt;&gt;&gt;
+&gt;&gt;&gt; pcm.jack {
+&gt;&gt;&gt; &#xA0; &#xA0; &#xA0; type jack
+&gt;&gt;&gt; &#xA0; &#xA0; &#xA0; playback_ports {
+&gt;&gt;&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; 0 &#xA0; &#xA0; &#xA0; system:playback_1
+&gt;&gt;&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; 1 &#xA0; &#xA0; &#xA0; system:playback_2
+&gt;&gt;&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; 2 &#xA0; &#xA0; &#xA0; system:playback_3
+&gt;&gt;&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; 3 &#xA0; &#xA0; &#xA0; system:playback_4
+&gt;&gt;&gt; &#xA0; &#xA0; &#xA0; }
+&gt;&gt;&gt; &#xA0; &#xA0; &#xA0; capture_ports {
+&gt;&gt;&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; 0 &#xA0; &#xA0; &#xA0; system:capture_1
+&gt;&gt;&gt; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; &#xA0; 1 &#xA0; &#xA0; &#xA0; system:capture_2
+&gt;&gt;&gt; &#xA0; &#xA0; &#xA0; }
+&gt;&gt;&gt; }
+&gt;&gt;&gt;
+&gt;&gt;&gt; Is it a limitation of the plugin? Any hints are welcome
+&gt;&gt;&gt; Regards,
+&gt;&gt;
+&gt;
+&gt; its not the wrong list. silence means that nobody knows the answer and/or
+&gt; has the time to reply. nothing more (or less).
+&gt;
+&gt;
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+
+
+--
+Patrick Shirkey
+Boost Hardware Ltd
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1341053800.21677_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1341055108.23648_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1341054977.23472_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1341054977.23472_0.ltw:2,a&nbsp;&lt;63857.175.39.33.120.1341054968.squirrel at boosthardware dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

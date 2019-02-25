@@ -1,0 +1,57 @@
+Date:        Sun, 19 Apr 2015 14:29:32 +0200
+From:        Lars Luthman  <[hidden] at larsluthman dot net>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Johannes Lorenz [Jack-Devel] JACK 2 is not real time safe on posix? (1429437563.9317_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] JACK 2 is not real time safe on posix?
+
+On Sun, 2015-04-19 at 11:59 +0200, Johannes Lorenz wrote: 
+> Hello,
+> 
+> it is often being said that JACK 2 is real time safe, for example in
+> the JACK faq. I wondered how JACK 2 suspends a thread, so I checked
+> what happens after the JackClient finished CallProcessCallback(): 
+> 
+>   JackClient::CallProcessCallback()
+>   -> JackClient::CycleWaitAux()
+>   -> JackClient::WaitSync()
+>   -> JackGraphManager::SuspendRefNum()
+>   -> JackConnectionManager::SuspendRefNum()
+>   -> virtual JackSynchro::TimedWait()
+> 
+> However, I found only two classes in the `posix' folder that implement
+> this virtual function: 
+> 
+>   * JackPosixSemaphore: uses `sem_timedwait()' to block
+>   * JackFifo: uses `read()' to block
+> 
+> However, both `sem_timedwait()' and `read()' are syscalls, so they
+> contain context switch, which means they are non realtime. Actually,
+> the JACK documentation warns to use function like these if you pass a
+> process() callback to jack [1]. 
+> 
+> So how can JACK claim it would be realtime? (No objections, I just
+> don't understand it)
+
+The next JACK client in the graph, and the JACK server, run in different
+processes from the currently running client (except for internal clients
+and multiple clients per process, but those are special cases) so there
+has to be a context switch if you want to pass control to them.
+
+It's realtime safe as long as you know that those system calls pass
+control to the thread you want them to pass control to and not some
+other random thread that has nothing to do with JACK. As long as the
+semaphores are posted and waited on in the right order, and the
+scheduler is properly configured, and all the threads have the right
+priority, it will work. You could in theory pass control to other
+threads in your process callback in a realtime safe way if everything
+was designed correctly, but there isn't much point in doing so and it's
+difficult to get right. Most of the time, for most of the uses, I/O
+functions, lock functions etc are not realtime safe.
+
+
+--ll
+
+1429446593.23786_0.ltw:2, <1429446572.5917.351.camel at miskatonic>
+________________________________________________________________________________
+

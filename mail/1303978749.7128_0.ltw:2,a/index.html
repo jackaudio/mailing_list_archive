@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] ringbuffer problems</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] ringbuffer problems</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303975961.1592_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303980167.9887_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303978749.7128_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 28 Apr 2011 10:18:48 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Arnold Krille </span> &lt;[hidden] at arnoldarts dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Tim E. Real
+<a href='../1303975152.32455_0.ltw:2,a/index.html'>Re: [Jack-Devel] ringbuffer problems </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Tim E. Real
+<a href='../1304036842.2830_0.ltw:2,a/index.html'>Re: [Jack-Devel] ringbuffer problems </a></td></tr>
+</table>
+<pre>
+Hi,
+
+On Thursday 28 April 2011 09:00:21 Tim E. Real wrote:
+&gt; On April 28, 2011 02:03:07 am Arnold Krille wrote:
+&gt; &gt; On Thursday 28 April 2011 07:28:27 Timothy Godfrey wrote:
+&gt; &gt;  - Multiple readers in several threads reading from the same ringbuffer.
+&gt; &gt; &gt; Would
+&gt; &gt; &gt; constitute a violation of the rule, 'Their identities cannot be
+&gt; &gt; &gt; interchanged'?
+&gt; &gt; This rule is there because when one thread is the reader and then another
+&gt; &gt; thread starts reading, there is a chance that for a short time both
+&gt; &gt; threads read. And that is not safe
+&gt; Not even reading by two threads is safe? Why is that?
+&gt; Do you mean 'getting' (removal) from the buffer? That makes sense.
+
+"Reading" from ringbuffers seems to be widely accepted as "getting".
+
+&gt; What about simple 'peek' operations (without removal), is that OK?
+
+That can work, but it doesn't have to. What one thread sees while peeking is 
+probably not the same it sees the next time it accesses the buffer if another 
+thread is the real "reader" (the one who modifies the read-pointer).
+Even worse: [thread A is the writer, thread B the reader, thread C the 
+"peeker"]
+ - Thread A writes something to the ringbuffer. Now the size is &gt; 0.
+ - Thread C peeks and saves the pointer to the data it peeks at.
+ - Thread B reads all available data from the buffer.
+ - Thread A writes as much new data in the buffer as it can. The buffer is now 
+filled with new data.
+ - When Thread C accesses the memory from the peeking, the data in there is 
+not what it was when it first peeked at it. There is even no guarantee that it 
+now points to a valid "entry point" in the data stream. What was boundary of a 
+double could now be in the middle of the bytes of a new double.
+
+Simply put: Don't do that! Its not guaranteed to work.
+
+&gt; &gt; without locks on the ringbuffer or somewhere
+&gt; &gt; else. (Same for writers.)
+&gt; 
+&gt; MusE is using custom ring buffers.
+&gt; (Admittedly I think we're breaking some of those rules in a few places.)
+&gt; They have some code for atomization with locks, but it seems unused ATM.
+&gt; I can turn it on, but I wonder if I should.
+&gt; 
+&gt; The ring buffers have a volatile size member.
+&gt; What effect does the volatile keyword have, in general?
+&gt; From the "Introduction to the Volatile Keyword" at Embedded dot com:
+&gt; "A variable should be declared volatile whenever its value could change
+&gt;  unexpectedly.  ...&lt;such as&gt; global variables within a multi-threaded
+&gt;  application ...So all shared global variables should be declared
+&gt; volatile."
+&gt; I try to follow that rule, but I gather use of volatile may not be enough,
+&gt;  that locks may be required in some cases?
+
+The usage of 'volatile' prevents the compiler from optimizing the access to 
+that variable. For example inside a loop you will see strange results when you 
+access a variable that is changed from outside while the loop is running. 
+Without 'volatile' some reads of that variable will not give what you expect 
+as the compiler just makes the loop use the value from the last access. Or 
+maybe even the value from before the loop started. (That behaviour even 
+changes whether you enable debug compile or compile with optimizations.)
+With volatile you tell the compiler to always access the variable.
+
+However this is _no_ protection for ringbuffers (regardless whether they carry 
+binary streams or messages) where there is more then one reader or more then 
+one writer! This will not work without the usage of atomic locks.
+
+But the size-member of ringbuffers is essentially useless, its only nice-to-
+have. For writing to a ringbuffer, the size is only a first-order assumption how 
+much data fits in (as reader-threads might read data while you write). What 
+counts is the information "full" because you have to stop writing when the 
+buffer is full.
+For readers size is also only a first-order assumption as there might be new 
+data written to the buffer while it reads. The only hard information here is 
+"empty" when there is no data to read.
+And the information "full" or "empty" is what you get from comparing the read- 
+and write-pointers (doesn't matter whether these are real pointers, counting 
+integers or iterators).
+If the size-member is volatile this only prevents readers from reading to 
+slow. But the real state information is in the pointers and these should 
+therefor be volatile too. Or simply make the whole ringbuffer_t volatile...
+
+Have fun,
+
+Arnold
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303975961.1592_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303980167.9887_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303978749.7128_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1303978749.7128_0.ltw:2,a&nbsp;&lt;201104281018.52475.arnold at arnoldarts dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

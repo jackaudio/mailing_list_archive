@@ -1,0 +1,66 @@
+Date:        Fri, 02 Feb 2018 11:40:48 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Stefan Hellkvist <[hidden] at stagecast dot se>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Stefan Hellkvist Re: [Jack-Devel] MacOS support (1517565120.30448_0.ltw:2,)
+Follow-Up:   Michael Re: [Jack-Devel] MacOS support (1517586391.26401_0.ltw:2,)
+Follow-Up:   Thomas Brand Re: [Jack-Devel] MacOS support (1518865782.5836_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] MacOS support
+
+> Le 2 févr. 2018 à 10:51, Stefan Hellkvist <[hidden]> a écrit :
+> 
+>> 
+>> 
+>> Oh, and go here to find binaries and sources:
+>>  http://www.jackaudio.org/downloads/
+>> 0.92_b3 is the same as 1.9.12, not 1.9.10.
+> 
+> 
+> Yes, this is one of the versions I tried. 
+> 
+> What I am trying to do is to use a tool jltcdump which is part of ltc-tools (brew install ltc-tools) - a tool for reading so called linear timecodes (smtpe) encoded in audio. 
+> 
+> Part of my problems is to begin with the two versions of jack - Jack1 and Jack2 - which seems to both exist and both be “stable”. The binary above - 0.92_b3 seems to be of the Jack2 kind if I am not mistaken. When I install that version it (JackPilot) starts fine but I don’t seem to be able to re-route the default audio device in System preferences to use JackRouter. JackRouter shows up in System preferences but there is nothing that indicates that any app that uses audio (such as iTunes) actually connects. I was hoping for functionality as in the Youtube tutorial from 2013 - https://www.youtube.com/watch?v=FhrJ9rTMcBU - where different audio clients show up in the routes of JackPilot but this is not repeatable for me as it was back in 2013 at least. 
+> 
+> Also, when I build and run ltc-tools with the above release I get some errors like these: 
+> $ ./jltcdump
+> unknown option character l
+> connect(2) call to jackdmp 1.9.11/jack-502/default/jack_0 failed (err=No such file or directory)
+> 
+> 
+> It seems like there is a call to “jackdmp” with some “unknown option character l”, so there seems to be some incompatibility with ltc-tools and this version of libjack (at least that is my guess). 
+> 
+> 
+> So then I instead try and install jack with “brew install jack” and I install a ltc-tools (brew install ltc-tools) which depend on this version of jack (which I guess is Jack1 ?). I then start jackd manually with jackd -d coreaudio and it starts. But with this setting there is nothing showing up at all in audio System Preferences. And I also get these errors "could not handle external client request” when a client accesses. The jltcdump program in this case seems to think that it has connected to the call to jackdmp seems to work with this version of jack. But it does not seem to receive any audio and jack d shows errors like "could not handle external client request” which makes me suspicious that there is some issue. So then I search for this error and find these GitHub discussions: https://github.com/Qix-/CaptainJack/issues/3 https://github.com/jackaudio/jack2/issues/305
+> 
+> …which, together with my own experiences and confusions, made me to believe that jack is broken on OSX. Then others here say that it is indeed working…which make me even more confused. But perhaps it is different use cases that we are talking about and jack on MacOS might still support some of them but perhaps not all. 
+> 
+> I also tried to use PortAudio (https://github.com/gordonklaus/portaudio) to do other types of audio processing, but this one also depends on jack and I got similar faults. So to me it seems like there are quite a few audio tools (don’t know how much they are used on MacOS though) that depend on jack and these tools have at least at some point been working on MacOS but that, at least to me, it seems like jack has fallen behind on MacOS which brings with it these other tool-chains. Not complaining at all. Just wanted to know if someone else was feeling the same pain - and it seems, as I said, that some things are working for some people. 
+> 
+> /Stefan
+> 
+
+Let me explain once again, and hopefully the last one ((-;
+
+- we (at Grame) did a port of JACK1 C code base back in 2004-2005. This was actually more a prof of concept since we had to use very low-level mach specific primitives to make it work on OSX. 
+
+- at the same time we also developed this JackRouter JACK<==>CoreAudio bridge, a user-land audio device that allows any CoreAudio application to become a JACK client. We packaged JACK1 + JackRouter in the early version of the JackOSX tool. 
+
+- we started the  « rewrite JACK code base in C++, and work on the multi-processor model in 2005, on OS X first. This work was presented at LAC 2005. Port of this new code base on Linux was done later, then Windows starting in 2006. 
+
+- since C++ JACK code base was cleaner (my personal point of view of course..), more portable, and much more stable on OSX… we decide to put it in next versions of JackOSX tool.  This C++ code base became JACK2 at some point.
+
+- at some point  (I don’t know exactly when) macports packagers decided, without consulting the JACK community at all... to package JACK1 in macport. This was actually a very poor idea. For years people could either install JACK1 from macport, or install everything (that is tools for users + all the stuff needed for developers...) using JackOSX. This was the recipe for all kind of hairy problems...
+
+- JackRouter could be used by any CoreAudio application and also *be selected as the audio default device* in the OS X system (so to be used be applications like iTunes or Quicktime) up to OS X 10.8 (or 10.9, not sure anymore..). This « JackRouter as the default audio device »  broke at that time, for several technical reasons. One is that Apple decided to progressively raise their security model (sandbox model...whatever), and second was that the JackRouter driver model become obsolete. It would have to be entirely rewritten with the new recommended CoreAudio user-land driver model. I never had time to really estimate if the new model could 1) fit with JACK server/client model and all the needs in low-level OS primitives like sockets, shared memory, process synchronization.. 2) could really solve the « JackRouter use when selected as the audio default device » issue.
+
+- I had to solve a specific issue in 10.10 (I think ?) when mach semaphore primitive could not be used anymore, and we have to switch to Posix Semaphore. After this change JACK2 continued to work up to 10.13 High Sierra, but without this «  JackRouter as the audio default device » . This last development is now in JackOSX 0.92_b3.
+
+- we at Grame dropped the JACK project entirely. I think that having a new really usable JACK on OS X implementation is a bit or dedicated work…In the meantime we can hope that JackOSX 0.92_b3 will stay alive a bit longer.
+
+Stéphane 
+
+1517568080.2817_0.ltw:2, <702D9B64-FFEF-44E4-AEE6-25EF6A1777A5 at grame dot fr>
+________________________________________________________________________________
+

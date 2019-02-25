@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] major change in jack1 MIDI handling</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] major change in jack1 MIDI handling</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1382121986.10831_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1382160481.15219_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1382122658.11263_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 18 Oct 2013 11:57:32 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Devin Anderson </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1381923661.11662_0.ltw:2,/index.html'>Re: [Jack-Devel] major change in jack1 MIDI handling </a></td></tr>
+</table>
+<pre>
+Hi St&#xE9;phane,
+
+On Wed, Oct 16, 2013 at 4:40 AM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+
+&gt;&gt; 2.) Then there's the JackDriver class that extends the
+&gt;&gt; JackDriverInterface class.  The class is meant to be a base class, but
+&gt;&gt; it implements all three of the virtual functions.  These
+&gt;&gt; implementations are meant to be called by subclasses that override the
+&gt;&gt; JackDriver virtual functions, which is an ugly anti-pattern.
+&gt;
+&gt; Well the point is to have JackDriver implement *common* cases, and
+&gt; sub-classes possibly re-implement the Open methods, calling the
+&gt; *generic* case and then adding their specific stuff.
+
+I'm not sure there's a well-defined generic case here.
+
+&gt;&gt;  If
+&gt;&gt; JackDriver's Open functions are called without the overriding wrapper
+&gt;&gt; function, then hilarity may ensue when the underlying JackDriver part
+&gt;&gt; of the class thinks the driver has been successfully opened.
+&gt;
+&gt; Yes right, this is a pattern I had already seen elsewhere, what would
+&gt; you suggest as a better model?
+
+See my previous message. :)
+
+&gt;&gt; 3.) There's also JackThreadDriver, which also extends the
+&gt;&gt; JackDriverInterface class (not JackDriver!).
+&gt;
+&gt; Yes the JackThreadDriver class is meant as a decorator kind of
+&gt; pattern, so implementing the "interface", so JackDriverInterface
+&gt; class
+
+Yes.  I tend to like the decorator pattern, as long as it's not
+overused.  The confusing part is that JackThreadedDriver appears to be
+a class that Jack uses internally to wrap a driver, and isn't for
+driver development itself.
+
+I suppose this problem goes away if you have a well-defined driver
+development API.
+
+&gt;&gt; 4.) Speaking of returning -1 for non-realtime errors, I'm of the
+&gt;&gt; opinion that throwing exceptions is a fantastic way to handle errors.
+&gt;&gt; It's okay to write data to stderr and to indicate that some sort of
+&gt;&gt; error happened, but it's even better to throw an exception containing
+&gt;&gt; a reason for the error occurring so that it can be handled at an
+&gt;&gt; appropriate place for handling errors.  Also, not checking return
+&gt;&gt; values for error codes again and again is a good thing.  Note that
+&gt;&gt; JACK 1 also has this problem; however, given that it's written in C,
+&gt;&gt; I'm a little more forgiving.
+&gt;
+&gt; What would you suggest as a was to better use exceptions in the
+&gt; backend class hierarchy?
+
+I'd like to see exceptions used to indicate errors instead of return
+codes such that instead of errors being propagated up to where there
+supposed to be handled by checking return codes over and over, an
+exception is thrown and the callers that aren't interested in doing
+any specific error handling can simply make sure they're using RAII in
+case an exception happens, and the exception can be caught at the
+point where error handling should occur.
+
+-- 
+Devin Anderson
+surfacepatterns (at) gmail (dot) com
+
+blog - http://surfacepatterns.blogspot.com/
+midisnoop - http://midisnoop.googlecode.com/
+psinsights - http://psinsights.googlecode.com/
+synthclone - http://synthclone.googlecode.com/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1382121986.10831_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1382160481.15219_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1382122658.11263_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1382122658.11263_0.ltw:2,&nbsp;&lt;CAG7zqTpnLPhPoXWA7a6cgoRWMy_BM-vXxiO2Ud60evuA6gzjiQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

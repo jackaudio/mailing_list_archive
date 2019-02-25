@@ -1,0 +1,40 @@
+Date:        Thu, 15 Aug 2013 14:53:24 +0200
+From:        Adrian Knoth  <[hidden] at drcomp dot erfurt dot thur dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Anders Tornvig [Jack-Devel] Stopping jack from callback (1376569676.14314_0.ltw:2,a)
+Follow-Up:   Anders Tornvig Re: [Jack-Devel] Stopping jack from callback (1376573508.16930_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Stopping jack from callback
+
+On Thu, Aug 15, 2013 at 02:27:27PM +0200, Anders Tornvig wrote:
+
+> int process (jack_nframes_t nframes, void *arg) {
+>    DPOAE *dpoae = (DPOAE *)arg;
+>    dpoae->m++;
+> }
+
+Just return 1 in the process cycle if your variable reaches the
+threshold, and jackd will deactivate you.
+
+
+So it's:
+
+int process (jack_nframes_t nframes, void *arg) {
+   DPOAE *dpoae = (DPOAE *)arg;
+
+   return (dpoae->m++ > 100) ? 1 : 0;
+}
+
+or something less hacky. You'd probably set your global stop variable,
+too, just to inform main() about it. ;)
+
+
+
+Cheers.
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+
+1376571212.15466_0.ltw:2,a <20130815125324.GM5601 at ltw dot loris dot tv>
+________________________________________________________________________________
+

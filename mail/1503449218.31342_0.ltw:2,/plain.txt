@@ -1,0 +1,56 @@
+Date:        Wed, 23 Aug 2017 02:45:07 +0200
+From:        Malik Costet  <[hidden] at malikc dot neomailbox dot net>
+To:          Yuri <[hidden] at rawbw dot com>, [hidden] at lists dot jackaudio dot org
+In-Reply-To: Yuri Re: [Jack-Devel] Jack: "Too many servers already active" (1503448901.31113_0.ltw:2,)
+Follow-Up:   Yuri Re: [Jack-Devel] Jack: "Too many servers already active" (1503451048.1005_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Jack: "Too many servers already active"
+
+On 2017-08-23 02:41, Yuri wrote:
+> On 08/22/17 17:21, Malik Costet wrote:
+>> Today, to my surprise, I seem to have hit upon some kind of limit, for
+>> attempts to launch a server (via the command-line) fail with the message
+>> "Too many servers already active". I haven't kept count, but I might
+>> have successfully started and stopped a couple dozen instances of JACK
+>> before that happened (only ever one at a time, though).
+> 
+> 
+> Quick search through the Jack code shows that this message results from
+> Jack attempting to be helpful that ends up being unhelpful:
+> 
+>>         case ENOSPC:
+>>                 fprintf (stderr, "too many servers already active\n");
+>>                 exit (2);
+> 
+> ...
+> 
+> #define    ENOSPC        28        /* No space left on device */
+> 
+> 
+> You have a 'disk-full' condition. This most likely has nothing to do
+> with having "too many servers already active".
+> 
+> Jack needs to use strerror() instead.
+
+Thanks for the quick reply, but... hmm. I'm gonna check this if and when
+I reproduce the situation, but my machine would seem to have bucketloads
+of space available:
+$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root        15G  3.8G   11G  27% /
+devtmpfs        459M     0  459M   0% /dev
+tmpfs           463M   76K  463M   1% /dev/shm
+tmpfs           463M  6.3M  457M   2% /run
+tmpfs           5.0M  4.0K  5.0M   1% /run/lock
+tmpfs           463M     0  463M   0% /sys/fs/cgroup
+/dev/mmcblk0p1   63M   21M   43M  33% /boot
+tmpfs            93M     0   93M   0% /run/user/1000
+
+Do you have any indication which filesystem/location JACK would be
+looking for the condition? Could it also be a case of flag misuse?
+
+M.
+
+1503449218.31342_0.ltw:2, <43f6088d-0096-87de-d799-47c205caa246 at malikc dot neomailbox dot net>
+________________________________________________________________________________
+

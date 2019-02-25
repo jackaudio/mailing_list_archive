@@ -1,0 +1,124 @@
+Date:        Wed, 12 Dec 2012 19:59:51 +1100
+From:        Patrick Shirkey  <[hidden] at boosthardware dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Arnold Krille Re: [Jack-Devel] speaker management (1355269655.25168_0.ltw:2,)
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] speaker management (1355304872.28767_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] speaker management
+
+On Wed, December 12, 2012 10:46 am, Arnold Krille wrote:
+> On Wed, 12 Dec 2012 08:45:00 +1100 (EST) "Patrick Shirkey"
+> <[hidden]> wrote:
+>> On Wed, December 12, 2012 7:26 am, Arnold Krille wrote:
+>> > On Tue, 11 Dec 2012 08:14:35 -0600 David Nielson
+>> > <[hidden]> wrote:
+>> >> On 12/11/2012 03:30 AM, Arnold Krille wrote:
+>> >> > I did something similar two years back: Recorded the
+>> >> > impulse-response of my home-office, feed them to drc and then
+>> >> > used the resulting files with jconvolver to correct four
+>> >> > channels of speakers. I planned to do more but the amp for
+>> >> > channels 3-8 is a diy-project and time ran out...
+>> >>
+>> >> What were the results? I've thought about doing something similar
+>> >> and wonder if it's worth my time.
+>> >
+>> > The results where very good and very worth the time! I started with
+>> > good quality speakers and a fine listening experience. Then I
+>> > introduced drc (and used some x-over with fons ambisonics decoder to
+>> > feed the bass only to the bigger front speakers) and was blown away
+>> > by the amazing sound. Of course it took some sinus-sweeps to get the
+>> > room-response but none of the neighbors complained;-)
+>> >
+>> > If I find more time for audio again, I might even incorporate such a
+>> > thing into my live setup.
+>> >
+>> > The only downside: when you start doing something with permanent drc
+>> > and have to run drc and your regular synth/recording sessions on the
+>> > same machine, you understand fons fighting for session managers that
+>> > can be told to get out of your way and ignore certain apps with
+>> > their settings (while still managing the same apps in different
+>> > instances).
+>> This seems like it should be a simple flag in the session API. Can you
+>> explain this issue a little more?
+>
+> Lets see if I can manage to explain, maybe fons will chip in:
+>
+> The average jack session is with several apps all used for one project.
+> you save the project and want to save the settings for all the apps.
+> you restore (aka load) a project and want all the apps to come up again
+> with the correct settings. All current session managers aim to make
+> this as simple as possible (preferable by even supporting apps that
+> don't have native session-management support). And thats a fine goal.
+>
+> But when you do drc and/or ambisonics you end with a setup slightly
+> more complicated: there are some apps that are independant of the
+> project and stationary to the machine. Some of these apps might even be
+> the ones all the other apps should use as "hardware outputs" instead of
+> the real hardware outputs.
+> No problem when a) the session manager ignores these apps and b) the
+> project is not meant to be movable to a different machine.
+> By making session-management easier for 'most' people, todays
+> session-managers
+> break a) and forcefully support apps that don't want to be supported.
+> And as neither jack supports something like static port aliases nor
+> as session-managers correctly support the notion of distinct apps
+> as "the global environment", b) breaks. Because nowadays the session
+> connects to "alsa_pcm:playback_[12]" on one machine and has to connect
+> to "jconvolver:in_[12]" on another machine.
+>
+> So while session management nowadays is easy for 'most' people and
+> use-cases, its actually made impossible for these special cases.
+> Special cases like: I have this super-cool ardour-project using two
+> dozen synths and playing out to my native home-cinema surround-set. And
+> the audio is so cool that I want to play the same project on one of the
+> bigger ambisonics/wfs setups at the next LAC. Only my project connects
+> to 'alsa_pcm:playback_[1-6]' and when I do that on the wfs-machine I am
+> lucky when nothing of the hardware breaks because I sent my bass-beats
+> to the highest speaker of a four-way...
+>
+>> If the app doesn't have support for jack session management how can
+>> the session manager be in the way?
+>
+> See above, when you write a session-manager for audio and want it to be
+> used, you support apps that don't support you...
+>
+>
+> There are probably some easy solutions to these problems outlined
+> above. But its "special cases" and it seemed to me the last years that
+> many developers don't want to deal with this and don't want to listen
+> to the people that have to deal with this.
+>
+
+
+This all looks solveable to me. We have a few specific limitations. What
+is the easiest way to enable the flexibility required?
+
+
+> But I am happy if I am proven wrong: if there is a session-management
+> for audio-projects that knows which app is part of the project and
+> which is part of the environment. If there is even a session-management
+> that knows about something like "the environment" apart from
+> alsa_pcm.
+>
+
+We can assign static names to jack ports. IIUC, the main issue appears to
+be that alsa i/o cannot be easily renamed/mapped in a session file.
+
+So do we need a way to override the jack portnames in the JACK API?
+
+Seems like a reasonable addition to the API to me.
+
+Can you isolate the other issues that you feel would not be solved in this
+case?
+
+
+
+
+
+--
+Patrick Shirkey
+Boost Hardware Ltd
+
+1355302800.25199_0.ltw:2, <60915.188.25.62.163.1355302791.squirrel at boosthardware dot com>
+________________________________________________________________________________
+

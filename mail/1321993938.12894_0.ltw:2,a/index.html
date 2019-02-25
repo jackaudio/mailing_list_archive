@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How do I replicate the -P parameter when using dbus</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How do I replicate the -P parameter when using dbus</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1321983621.26535_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1321994251.13375_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1321993938.12894_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 22 Nov 2011 20:30:44 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Roger James </span> &lt;[hidden] at beardandsandals dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Nedko Arnaudov
+<a href='../1321983621.26535_0.ltw:2,a/index.html'>Re: [Jack-Devel] How do I replicate the -P parameter when using dbus </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1321994251.13375_0.ltw:2,a/index.html'>Re: [Jack-Devel] How do I replicate the -P parameter when using dbus </a></td></tr>
+</table>
+<pre>
+Hi Nedko
+
+On 22/11/11 17:37, Nedko Arnaudov wrote:
+&gt; Hi Roger,
+&gt;
+&gt; Roger James&lt;[hidden]&gt;  writes:
+&gt;
+&gt;&gt; My hardware setup requires the -P command line option to successfully
+&gt;&gt; start a jack server. This works fine when set in qjackctrl (Audio
+&gt;&gt; mode: Playback) as long as the dbus option is not selected. However
+&gt;&gt; when the dbus option is selected the server hangs on startup. Looking
+&gt;&gt; at the qjackctl code and the contents of conf.xml shows that when
+&gt;&gt; Playback mode is selected the only affect on the conf.xml parameters
+&gt;&gt; is that duplex is set to false, this is exactly the same when the
+&gt;&gt; Capture mode is selected so there is no differentiation between
+&gt;&gt; Playback and Capture modes in the parameters. This looks like a
+&gt;&gt; qjackctl bug, but putting that to one side for the moment as well as
+&gt;&gt; presumption that my server hangs because it is not getting clock/data
+&gt;&gt; from one of the digital capture ports.
+&gt;&gt;
+&gt;&gt; I have experimented to see what should be set in the dbus parameters
+&gt;&gt; to replicate the -P option. Using jack_control I have tried various
+&gt;&gt; combinations of settings for the duplex, playback, capture, inchannels
+&gt;&gt; and outchannels parameters, but I have not found one combination that
+&gt;&gt; successfully starts the server.
+&gt;&gt;
+&gt;&gt; My question is, is the replication of the -P parameter possible using
+&gt;&gt; the dbus server, and if so what is the magic combination?
+&gt; What is the full jackd commandline that works for you?
+&gt;
+&gt; Are you using the JACK driver for ALSA, right? If so, the driver
+&gt; parameter name that matches the jackd`s '-P' is 'playback'. Make sure
+&gt; that 'device' parameter is not set. Note that jack_control has no
+&gt; command for resetting parameters to their defaults, only for setting
+&gt; them. ladiconf can do this though. If you want to reset all parameters,
+&gt; delete the conf.xml file and reactivate jackdbus.
+&gt;
+&gt; jackdbus (and control api) parameters are ordered and the alsa driver
+&gt; puts the device parameter after the capture and playback parameters. So
+&gt; if you set the device parameter, it will override the playback
+&gt; parameter. Quick look into jackd (jack2) code suggests that jackd has
+&gt; the same behaviour. so specifying both -P and -d (regardless of the
+&gt; order) will cause -P to be ignored.
+&gt;
+&gt; Here is the relevant code of the alsa driver:
+&gt;
+&gt;              case 'C':
+&gt;                  capture = TRUE;
+&gt;                  if (strcmp (param-&gt;value.str, "none") != 0) {
+&gt;                      capture_pcm_name = strdup (param-&gt;value.str);
+&gt;                      jack_log("capture device %s", capture_pcm_name);
+&gt;                  }
+&gt;                  break;
+&gt;
+&gt;              case 'P':
+&gt;                  playback = TRUE;
+&gt;                  if (strcmp (param-&gt;value.str, "none") != 0) {
+&gt;                      playback_pcm_name = strdup (param-&gt;value.str);
+&gt;                      jack_log("playback device %s", playback_pcm_name);
+&gt;                  }
+&gt;                  break;
+&gt;
+&gt;              case 'D':
+&gt;                  playback = TRUE;
+&gt;                  capture = TRUE;
+&gt;                  break;
+&gt;
+&gt;              case 'd':
+&gt;                  playback_pcm_name = strdup (param-&gt;value.str);
+&gt;                  capture_pcm_name = strdup (param-&gt;value.str);
+&gt;                  jack_log("playback device %s", playback_pcm_name);
+&gt;                  jack_log("capture device %s", capture_pcm_name);
+&gt;                  break;
+&gt;
+&gt;
+&gt; The the internal order of these parameters is:
+&gt;   * "capture", 'C'
+&gt;   * "playback", 'P'
+&gt;   * "device", 'd'
+&gt;   * "duplex", 'D'
+&gt;
+The command string that works for me with the command line server is
+/usr/bin/jackd -dalsa -dhw:0 -r44100 -p1024 -n2 -P
+
+This is what qjackctrl generates if you select Audio mode "Playback" and 
+turn dbus support off.
+
+After killing off the pulseaudio server completely I finally managed to 
+find a set of parameters that would start the dbus server and only 
+provide playback ports.
+
+For the conf.xml file these look like this,
+
+&lt;driver name="alsa"&gt;
+&lt;option name="capture"&gt;0&lt;/option&gt;
+&lt;option name="duplex"&gt;false&lt;/option&gt;
+&lt;option name="inchannels"&gt;0&lt;/option&gt;
+&lt;/driver&gt;
+
+I also managed to successfully start the server with these parameters 
+merged into the dbus parameters generated by qjackctl as follows.
+
+&lt;driver name="alsa"&gt;
+&lt;option name="capture"&gt;0&lt;/option&gt;
+&lt;option name="device"&gt;hw:0&lt;/option&gt;
+&lt;option name="rate"&gt;44100&lt;/option&gt;
+&lt;option name="period"&gt;1024&lt;/option&gt;
+&lt;option name="nperiods"&gt;2&lt;/option&gt;
+&lt;option name="hwmon"&gt;false&lt;/option&gt;
+&lt;option name="hwmeter"&gt;false&lt;/option&gt;
+&lt;option name="duplex"&gt;false&lt;/option&gt;
+&lt;option name="softmode"&gt;false&lt;/option&gt;
+&lt;option name="monitor"&gt;false&lt;/option&gt;
+&lt;option name="dither"&gt;n&lt;/option&gt;
+&lt;option name="inchannels"&gt;0&lt;/option&gt;
+&lt;option name="shorts"&gt;false&lt;/option&gt;
+&lt;/driver&gt;
+
+I too have seen a mention somewhere that the equivalent to -P is 
+"playback", but my experiments seem to suggest otherwise. As the does 
+the output of the dp command in jack_control
+
+roger@gatekeeper:~/.config/jack$ jack_control dp
+--- get driver parameters (type:isset:default:value)
+              capture: Provide capture ports.  Optionally set device 
+(str:set:none:0)
+             playback: Provide playback ports.  Optionally set device 
+(str:notset:none:none)
+               device: ALSA device name (str:notset:hw:0:hw:0)
+                 rate: Sample rate (uint:notset:48000:48000)
+               period: Frames per period (uint:notset:1024:1024)
+             nperiods: Number of periods of playback latency 
+(uint:notset:2:2)
+                hwmon: Hardware monitoring, if available 
+(bool:notset:False:False)
+              hwmeter: Hardware metering, if available 
+(bool:notset:False:False)
+               duplex: Provide both capture and playback ports 
+(bool:set:True:False)
+             softmode: Soft-mode, no xrun handling 
+(bool:notset:False:False)
+              monitor: Provide monitor ports for the output 
+(bool:notset:False:False)
+               dither: Dithering mode (char:notset:n:n)
+           inchannels: Number of capture channels (defaults to hardware 
+max) (uint:set:0:0)
+          outchannels: Number of playback channels (defaults to hardware 
+max) (uint:notset:0:0)
+               shorts: Try 16-bit samples before 32-bit 
+(bool:notset:False:False)
+        input-latency: Extra input latency (frames) (uint:notset:0:0)
+       output-latency: Extra output latency (frames) (uint:notset:0:0)
+          midi-driver: ALSA MIDI driver name (seq|raw) 
+(str:notset:none:none)
+roger@gatekeeper:~/.config/jack$
+
+It says that the playback parameter has a type of string and a default 
+value when not set of the string "none". According to my reading of what 
+jack_control is saying the string value of the parameter has both to 
+convey whether playback ports are to be provided or not be provided and 
+optionally the name of the device to be used. It does not have any 
+affect on whether capture ports are provided. My experiments seem to 
+show that the unset value "none" means provide playback ports and use 
+the device name from the device parameter. So  I guessed that the 
+similar thing applied to the capture parameter and that a value of 0 
+(zero) meant do not provide any ports. When I set capture to zero duplex 
+to false and inchannels to zero it finally burst in life and did what I 
+wanted which was to provide the system maximum of playback ports and 
+zero capture ports as the command line server does when the -P option is 
+specified.
+
+roger@gatekeeper:~/.config/jack$ jack_lsp
+system:playback_1
+system:playback_2
+system:playback_3
+system:playback_4
+system:playback_5
+system:playback_6
+system:playback_7
+system:playback_8
+
+However this still leaves me with the problem that qjacktrl cannot be 
+configured to generate these parameters. When the the Audio mode of 
+Playback is selected the input device (used for the capture paramteter), 
+output (used for the playback parameter) and input channels (used for 
+the inchannels parameter) are grayed out, and because they are in this 
+state reset commands for them are sent to dbus.
+
+I guess if I want to use qjackctl I will have to go back to figuring why 
+the server hangs when capture ports are specified on my system that has 
+a standard onboard nVidia HDA chipset. But that is for another day.
+
+Roger
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1321983621.26535_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1321994251.13375_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1321993938.12894_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1321993938.12894_0.ltw:2,a&nbsp;&lt;4ECC0674.5010102 at beardandsandals dot co dot uk&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,65 @@
+Date:        Mon, 25 May 2009 16:26:27 -0700
+From:        Fernando Lopez-Lezcano  <[hidden] at ccrma dot Stanford dot EDU>
+To:          Fons Adriaensen <[hidden] at kokkinizita dot net>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>
+In-Reply-To: Fons Adriaensen Re: [LAD] [Jack-Devel] A picture...of the global mess (1242762519.17582_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] A picture...of the global mess
+
+On Tue, 2009-05-19 at 21:39 +0200, Fons Adriaensen wrote:
+> On Tue, May 19, 2009 at 04:49:07PM +0200, Stéphane Letz wrote:
+> 
+> > Note that we may remove the "jackcontrol + jackserver" separation by 
+> > starting the server inside jackcontrol process. But then if the server 
+> > crash, jackcontrlol is dead. This may be solved by an "jackcontrol deamon" 
+> > automatic relaunch feature...
+> 
+> Having a permanent jackd - a real daemon started as a
+> service by the runlevel scripts - is the solution I'd
+> prefer.
+
+I would agree (sorry for the late response). Dbus _is_ actually a
+server, and an external one that does not have anything to do with jack.
+It is just convenient, but the assumption that it will always be there
+is flawed. 
+
+-- Fernando
+
+
+
+> You talk to it via libjack using the mechanisms already
+> present in jack - sockets and shared memory. It is this
+> jackd that will start a server, either requested explicitly
+> by a control client, or as the result of a jack client
+> using jack_client_open() to a nonexistant server. The 
+> latter is detected by jackd via the normal libjack
+> paths.
+> 
+> Servers should probably be separate processes (so they
+> can be owned by a user).
+> 
+> For those that want it this jackd can have a dbus control
+> client, which could also be a daemon but this time started
+> probably from the login scripts. 
+> 
+> What is gained is that there is ***no dbus inside jack***
+> It is this idea of using dbus for internal communication
+> that I find utterly revolting. It creates a dependency
+> on dbus (which is unnecessary) and on a session login
+> (which is limiting its use), and it opens the gates for
+> all sorts of sick desktop-zealot inspired persistence
+> and stability risks.
+> 
+> It's also just bad design, comparable to using a $3000
+> precision programmable voltage source in a circuit where
+> a 10 cent zener diode would do. Or replacing a fixed 
+> cable by a switch matrix. Or talking to your wife via
+> a lawyer. 
+> 
+> Ciao,
+> 
+> 
+
+1243293975.20309_0.ltw:2,a <1243293987.29995.40.camel at localhost dot localdomain>
+________________________________________________________________________________
+

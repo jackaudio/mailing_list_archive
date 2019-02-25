@@ -1,0 +1,48 @@
+Date:        Thu, 28 Apr 2011 03:00:21 -0400
+From:        Tim E. Real  <[hidden] at rogers dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Arnold Krille Re: [Jack-Devel] ringbuffer problems (1303970606.23378_0.ltw:2,a)
+Follow-Up:   Arnold Krille Re: [Jack-Devel] ringbuffer problems (1303978749.7128_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] ringbuffer problems
+
+On April 28, 2011 02:03:07 am Arnold Krille wrote:
+> Hi,
+>
+> On Thursday 28 April 2011 07:28:27 Timothy Godfrey wrote:
+>  - Multiple readers in several threads reading from the same ringbuffer.
+>
+> > Would
+> > constitute a violation of the rule, 'Their identities cannot be
+> > interchanged'?
+>
+> This rule is there because when one thread is the reader and then another
+> thread starts reading, there is a chance that for a short time both threads
+> read. And that is not safe 
+Not even reading by two threads is safe? Why is that?
+Do you mean 'getting' (removal) from the buffer? That makes sense.
+What about simple 'peek' operations (without removal), is that OK? 
+
+> without locks on the ringbuffer or somewhere
+> else. (Same for writers.)
+
+MusE is using custom ring buffers. 
+(Admittedly I think we're breaking some of those rules in a few places.)
+They have some code for atomization with locks, but it seems unused ATM.
+I can turn it on, but I wonder if I should.
+
+The ring buffers have a volatile size member.
+What effect does the volatile keyword have, in general? 
+From the "Introduction to the Volatile Keyword" at Embedded dot com:
+"A variable should be declared volatile whenever its value could change 
+ unexpectedly.  ...<such as> global variables within a multi-threaded 
+ application ...So all shared global variables should be declared volatile."
+
+I try to follow that rule, but I gather use of volatile may not be enough,
+ that locks may be required in some cases? 
+
+Thanks. Tim E.
+
+1303975152.32455_0.ltw:2,a <201104280300.21223.termtech at rogers dot com>
+________________________________________________________________________________
+

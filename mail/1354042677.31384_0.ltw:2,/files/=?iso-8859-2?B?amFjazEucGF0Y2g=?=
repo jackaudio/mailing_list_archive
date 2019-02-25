@@ -1,0 +1,53 @@
+--- jackd/engine.c
++++ /root/engine.c
+@@ -205,7 +205,6 @@
+ 		}
+ 
+ 	} else {
+-
+ 		if (!S_ISDIR (statbuf.st_mode)) {
+ 			jack_error ("%s already exists, but is not"
+ 				    " a directory!\n", path);
+@@ -217,6 +216,26 @@
+ }
+ 
+ static int
++make_session_directory (const char *path, char *client_name) {
++
++	struct stat statbuf;
++
++	if (stat (path, &statbuf)) {
++		if (mkdir (path, 0777) != 0) {
++			jack_error ("cannot create session directory (%s) for client %s: %s",
++				path, client_name, strerror (errno));
++			return -1;
++		}
++	} else if (!S_ISDIR (statbuf.st_mode)) {
++		jack_error ("%s already exists, but is not"
++			" a directory!\n", path);
++		return -1;
++	}
++
++	return 0;
++}
++
++static int
+ make_socket_subdirectories (const char *server_name)
+ {
+ 	struct stat statbuf;
+@@ -2806,11 +2825,10 @@
+                         } else {
+                                 snprintf (event.x.name, sizeof (event.x.name), "%s/%s/", req->x.session.path, client->control->name );
+                         }
+-			if (mkdir (event.x.name, 0777) != 0) {
+-                                jack_error ("cannot create session directory (%s) for client %s: %s",
+-                                            event.x.name, client->control->name, strerror (errno));
+-                                break;
+-                        }
++
++			if (make_session_directory (event.x.name, client->control->name) != 0) 
++                               	break;
++
+ 			reply = jack_deliver_event (engine, client, &event);
+ 
+ 			if (reply == 1) {

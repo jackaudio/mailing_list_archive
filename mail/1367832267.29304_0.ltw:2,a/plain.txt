@@ -1,0 +1,38 @@
+Date:        Mon, 06 May 2013 11:24:20 +0200
+From:        MONTANARO Luciano (MM)  <[hidden] at magnetimarelli dot com>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>, Stéphane Letz <[hidden] at grame dot fr>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] Jack thread cancellation (1367597016.6775_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] Jack thread cancellation (1367832894.30383_0.ltw:2,a)
+
+Subject:     [Jack-Devel] R: Jack thread cancellation
+
+Da: Paul Davis [mailto:[hidden]]
+Inviato: venerdì 3 maggio 2013 18:04
+A: Stéphane Letz
+Cc: MONTANARO Luciano (MM); [hidden]
+Oggetto: Re: [Jack-Devel] Jack thread cancellation
+
+> Quitting from inside a thread is one thing.
+> Cancelling a thread from outside using pthread mechanisms is unreliable. It may never hit a cancellation point.
+
+Well, that is why I suppose the ASYNCHRONOUS flag was used. For the processing threads, the chance is it will never call a cancellation point.
+However, both the MessageBuffer thread and the SocketClient threads will happyly log messages, and if a cancellation happens at that point, a crash is the likely result.
+
+When we noticed the problem in JackMessageBuffer, we tried to wrap the body of the Execute()  in pthread_setcancelstate(PTHREAD_CANCEL_DISABLE/ENABLE) (Actually, an RAII pattern), but the same problem is now happening elsewhere.
+
+> Killing a thread is different, though somewhat platform dependent.
+
+Well, thanks for the clarification.
+
+Luciano
+
+VISITA IL NOSTRO NUOVO SITO WEB! - VISIT OUR NEW WEB SITE!   www.magnetimarelli.com
+
+Confidential Notice: This message - including its attachments - may contain proprietary, confidential and/or legally protected information and is intended solely for the use of the designated addressee(s) above. If you are not the intended recipient be aware that any downloading, copying, disclosure, distribution or use of the contents of the above information is strictly prohibited.
+If you have received this communication by mistake, please forward the message back to the sender at the email address above, delete the message from all mailboxes and any other electronic storage medium and destroy all copies.
+Disclaimer Notice: Internet communications cannot be guaranteed to be safe or error-free. Therefore we do not assure that this message is complete or accurate and we do not accept liability for any errors or omissions in the contents of this message.
+
+1367832267.29304_0.ltw:2,a <67BA5DEFFBE7BF46B4C53F7E5FC5AD4423A1920629 at MXCL13 dot fgremc dot it>
+________________________________________________________________________________
+

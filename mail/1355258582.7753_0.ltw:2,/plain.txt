@@ -1,0 +1,43 @@
+Date:        Tue, 11 Dec 2012 20:52:56 +0000
+From:        John Rigg  <[hidden] at jrigg dot co dot uk>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Devin Anderson Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355252196.29795_0.ltw:2,)
+Follow-Up:   John Rigg Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355259344.8907_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] ALSA PCM multi plugin and xruns
+
+On Tue, Dec 11, 2012 at 10:56:30AM -0800, Devin Anderson wrote:
+> On Tue, Dec 11, 2012 at 10:25 AM, Paul Davis <[hidden]> wrote:
+> >
+> > On Tue, Dec 11, 2012 at 1:22 PM, Devin Anderson <[hidden]>
+> > wrote:
+> >> What about cases where the word clock sync of a sound card isn't quite
+> >> as tight as it should be?  Does ALSA have control over that?
+> >
+> > my understanding is that word clock sync is all-or-nothing. you're either
+> > precisely in sync or not at all.
+
+Yes. Sync is achieved by using a phase-locked loop (PLL). It's either locked
+completely or not at all. The PLL typically runs at 128 or 256 x fs, so
+even if it takes a few tens of cycles to lock after startup, it synchronises
+pretty quickly compared with the word clock period.
+  
+> Do you know offhand if `snd_pcm_link()` is supposed to synchronize the
+> poll file descriptors such that the poll file descriptors of the
+> master aren't set with events until both the master card and the card
+> it's linked to are ready with I/O?  If so, then the bug is probably
+> there somewhere.  If not, then I wonder how this synchronization is
+> supposed to happen.
+
+IIRC the link code didn't appear in early versions of pcm_multi and
+was only added in alsa-lib-1.0.9rc1 (Jan 2005). It broke duplex operation
+with pcm_multi. I commented it out for months to work around it on my own
+systems. Eventually a change was made in JACK to make it work again. Some
+info can be found here if interested:
+http://search.gmane.org/?query=pcm_multi&group=gmane.linux.alsa.devel
+
+John
+
+1355258582.7753_0.ltw:2, <20121211205256.GA3460 at localhost0 dot localdomain>
+________________________________________________________________________________
+

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Bug#686777: netjack2 + opus custom modes + debian</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Bug#686777: netjack2 + opus custom modes + debian</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1372670150.10938_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1372689632.2294_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1372670298.11184_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 01 Jul 2013 11:15:10 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Ron &lt;[hidden] at debian dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Adrian Knoth &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt;, [hidden] at bugs dot debian dot org, [hidden] at jackaudio dot org, Debian Multimedia Maintainers &lt;[hidden] at lists dot alioth dot debian dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Ron
+<a href='../1372555204.29751_0.ltw:2,a/index.html'>Re: Bug#686777: netjack2 + opus custom modes + debian </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Ron
+<a href='../1372694373.5881_0.ltw:2,a/index.html'>Re: Bug#686777: netjack2 + opus custom modes + debian </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Ron
+<a href='../1372694609.5981_0.ltw:2,a/index.html'>Bug#686777: netjack2 + opus custom modes + debian </a></td></tr>
+</table>
+<pre>
+On 06/30/2013 03:11 AM, Ron wrote:
+
+&gt; My understanding of the background prior to that is that Robin had some
+&gt; discussion with some of the developers at FOMS, who at the time suggested
+&gt; the custom modes probably would be appropriate for the use described to
+&gt; them.
+
+correct. derf aka Tim Terriberry in this case.
+
+[..]
+
+&gt; The custom modes are not interoperable with anything else, nor are they
+&gt; a part of the codec standard, but they do exist in the code for people
+&gt; with very specialised needs in 'closed' applications, where the need for
+&gt; oddball frame sizes strongly outweighs any other considerations of
+&gt; interoperability, or codec performance (the latter being both in the
+&gt; sense of processing resources *and* more importantly audio quality).
+
+jack in particular was one of the use-cases for opus-devs to justify
+custom modes.
+
+&gt; My understanding at present is that the primary (only?) reason that
+&gt; netjack is using custom modes is so that it can use 64 sample frames
+&gt; which shaves ~1ms of latency off the usual 2.5ms (120 sample) minimum
+&gt; frame size for normal opus modes.  We didn't quite get to the bottom
+&gt; of all of that before Robin had to leave, so at present my only
+&gt; understanding of the reason for that is that "pro audio equipment"
+&gt; can operate with lower latencies than normal sound cards which makes
+&gt; this desirable.
+
+not quite.
+
+netjack is using opus custom modes so that jack can use the same
+period-size across the complete jack system.
+
+Adding buffering on either side (sender + receiver) to align jack + opus
+buffers will always result in additional latency.
+
+For large jack buffersizes or long-distance communication that
+additional latency may be negligible, but it still is more latency.
+
+Furthermore, aligning non-audio jack-data (transport + MIDI) with sample
+accuracy to those opus-audio-buffers is far from trivial.
+
+It's not impossible, but it is quite complex because jack is not
+designed to cater for that case.
+
+
+&gt; What I still don't understand though is why if you are using Pro audio
+&gt; equipment the degradation in audio quality that this would bring (which
+&gt; is significant) would be acceptable for that use? 
+
+a) because some users demand it :)
+b) because celt is no longer available on most distros
+
+low, fixed latency is most important.
+
+There are countless solutions for high-quality streaming - where latency
+and jitter is irrelevant, but basically only netjack that provides
+synchroneous low latency.
+
+[..]
+
+&gt; Which basically makes the question become: "If you are using Pro audio
+&gt; equipment and ~1ms of latency does make a difference to you, then
+&gt; wouldn't a lossless transport mode be more appropriate for that anyway?"
+
+on a LAN, yes lossless. Over Wifi it may make sense to compress lossy to
+accommodate more channels. On WAN there are e.g. remote jam-sessions,
+phone relays, live monitoring,.. - none of which requires high quality,
+but all require fixed low latency.
+
+[..]
+
+&gt; The upstream developers have reaffirmed that they definitely do not
+&gt; want to enable the custom modes by default in what they release, so
+&gt; even if we do override that here for the .debs, there'll still be a
+&gt; question of our compatibility with other distros and users.
+
+yes, the solution for that would be to add opus as git-submodule to jack
+and statically link netjack against it. That'd also accommodate windows,
+OSX and *BSD builds of jackd.
+
+[..]
+
+&gt;  - Can jack really make a case for needing this in a way that actually
+&gt;    delivers real benefits to jack users.  (Robin has said that this is
+&gt;    also 'complicated', but I still don't fully understand why yet).
+
+see above. Sample-sync alignment with other data-types is not easy.
+Asynchronous (buffered) communication is orthogonal to everything else
+in jack. It will likely be rejected upstream. jack does not aim to do
+everything. JACK tries to address 95% and do that right and not care
+about the last 5% edge-cases.
+
+On top of of that, there are currently no volunteers to implement
+"vanilla opus" on netjack2 (and also no volunteer to implement that in
+netjack1). I was scratching my own itch with netjack2+opus. works for me.
+
+The only case for non-custom modes would be:
+ 1) interoperability with other opus apps
+ 2) higher quality encoding
+
+(1) is never going to work out. netjack consists of N audio-channels, M
+midi-channels. Both include per-port latencies (min,max). And netjack
+also comprises transport information (timecode, tempo, bar-beat-tick,
+audio-frames per video-frame, etc). It is not a data stream that will be
+consumed by non-jack.
+
+(2) if a user chooses lossy encoding s/he does not really care about
+quality anyway. jack's main features is no-copy zero-latency with local
+clients, being able to include remote clients on the network that align
+sample-sync and respond reliably is the main use-case.
+
+
+ciao,
+robin
+
+-- 
+To unsubscribe, send mail to [hidden].
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1372670150.10938_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1372689632.2294_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1372670298.11184_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1372670298.11184_0.ltw:2,a&nbsp;&lt;51D1489E.1010007 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

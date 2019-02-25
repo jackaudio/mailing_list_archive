@@ -1,0 +1,60 @@
+Date:        Wed, 09 Jan 2013 18:19:17 +0100
+From:        Pawel / Xj  <[hidden] at wp dot pl>
+To:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Pawel / Xj [Jack-Devel] Graph callback and client state (1357668603.16445_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] Odp: Graph callback and client state (1357756090.30979_0.ltw:2,a)
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] Odp: Graph callback and client state (1357810007.24826_0.ltw:2,)
+
+Subject:     [Jack-Devel] Odp: Graph callback and client state
+
+Hi,
+
+About second question.
+I can't find in API anything for how check is client is active.
+I put my nose into Jack1 code and find this (jackd/engine.c)
+
+	if (!srcclient->control->active) {
+		jack_error ("cannot connect ports owned by inactive clients;"
+			    " \"%s\" is not active", srcclient->control->name);
+		return -1;
+	}
+
+I have two ideas:
+- jack_port_is_active() API call for check state of srcclient->control->active
+
+- return some special code from jack_connect
+
+What do you thing about that ?
+
+BTW. can someone know how it is with inactive ports in Jack2 ?
+
+Pawel
+
+Dnia 8-01-2013 o godz. 19:09 Pawel / Xj napisa³(a):
+> Hi,
+> 
+> I have two simple questions mostly to Jack1 devs.
+> 
+> 1) Do you agree that requiring "process" callback by "graph" callback is 
+> bug ?
+> There is no problem with this in Jack2.
+> If yes, is this place is good for report this, or you need some more 
+> official document ;-).
+> 
+> 2) How can I detect (in correct way) is client is activated ?
+> Because now jack_connect doesn't handle this and that cause serious 
+> problem while restoring session from script.
+> This was not tested on Jack2.
+> 
+> Best Regards
+> Pawel
+> 
+> 
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1357751964.24284_0.ltw:2,a <50eda6957d80f8.81326827 at wp dot pl>
+________________________________________________________________________________
+

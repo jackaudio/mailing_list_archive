@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Variable delay line problem</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Variable delay line problem</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1334167043.16779_0.ltw:2,Sa/index.html'>Prev</a></td><td><a href='../1334325999.23032_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1334323258.18854_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 13 Apr 2012 17:20:33 +0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane VAXELAIRE </span> &lt;[hidden] at free dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Elliott Chapin
+<a href='../1334325999.23032_0.ltw:2,a/index.html'>Re: [Jack-Devel] Variable delay line problem </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Chris Caudle
+<a href='../1334329176.27787_0.ltw:2,a/index.html'>Re: [Jack-Devel] Variable delay line problem </a></td></tr>
+</table>
+<pre>
+Hello,
+
+I don't know if there are DSP gurus in there, but I have a little problem with basic flanger effect.
+I read a few articles / book pieces about this.
+
+I understood that a flanger is just an extremely short delay line (max 15ms) with a variable delay length.
+The variable length can follow an LFO wave, I tried with a simple cosine here.
+
+So here is what I do in a loop through all jack buffer samples :
+
+    max = "number of delay buffer samples";
+    for( int i=0; i&lt;size; i++)
+    {  
+        sample = buffer[i];
+
+    // Get current delay buffer index
+        n = (float)this-&gt;dl.getCurrent() / max;
+    // Compute an index between 0 and max based on a LFO, in this case simple cos(2*PI*n)
+        dn = max*0.5f - this-&gt;depth * cos( 2*PI*n);
+    // Return the index of delayed sample index "dn" * decay value between 0 and 1
+        temp = this-&gt;dl.process( sample, dn);
+        //temp = this-&gt;dl.process( buffer[i], 300);
+    // Output original sample + delayed one
+        buffer[i] = sample + temp;
+        //buffer[i] = temp;
+    }   
+
+First of all, I'm not sure about what should be 'n' here. Then I found formulas for dn that use a frequency like :
+dn = D/2 * (1 - cos(2*PI*n*F));
+I don't know either what should be F in my code.
+
+But I have to specify that I get dn indexes that seem to evolve like a Cosine between 0 and max sample of the delay buffer.
+So it would "seem" to work in that area.
+
+In the meantime, all I hear is the original signal + a not nice to hear distorted version of the original sound (the temp part as I verified byt outputting it alone).
+I tried with a constant dn value like 300 ms and I get a normal delay.
+I basically round dn by casting float to an int but I even tried to add interpolation between sample dn and dn+1 in cases where dn is not integer. Nothing changed.
+
+I've spent a few hours trying to understand the concepts and to try variants looking for what could be wrong. I'm lost for now.
+
+Regards
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1334167043.16779_0.ltw:2,Sa/index.html'>Prev</a></td><td><a href='../1334325999.23032_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1334323258.18854_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1334323258.18854_0.ltw:2,a&nbsp;&lt;84C79E00-C43F-4689-A0CA-2B1436CE6DC0 at free dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

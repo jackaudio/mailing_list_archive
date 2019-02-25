@@ -1,0 +1,63 @@
+Date:        Thu, 12 May 2016 16:04:34 -0500
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: aledez0 Re: [Jack-Devel] 32 channel limit (1463076442.9920_0.ltw:2,a)
+Follow-Up:   aledez0 Re: [Jack-Devel] 32 channel limit (1463095439.28639_0.ltw:2,a)
+Follow-Up:   John Emmas Re: [Jack-Devel] 32 channel limit (1463124263.6236_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] 32 channel limit
+
+On Thu, May 12, 2016 12:02 pm, aledez0 wrote:
+> what i have done in the past to get 32 was go into the jack ini file and
+> change the values there. i tried going higher than 32 but it still only
+> goes to 32. in pro tools it shows all 64 outs but when i route signal
+> from 63, 64 to my output speakers it doesn't work.
+
+You changed the jack ini file, or the jackrouter ini file?  I don't use
+jack on Windows, but my understanding is that there is an additional
+component known as jackrouter present when you need to connect
+applications such as ProTools which do not have native jack support, and
+that component presents an ASIO interface to the windows applications, and
+a jack client interface to the jack server.
+
+My guess (again, not using jack on windows myself) is that both jackrouter
+and jack server would need to be configured for a higher port count.
+
+If you are using the instructions here:
+http://www.jackaudio.org/faq/jack_on_windows.html
+
+The change in the parameters passed to jack server to increase port count
+would be in this step on that page:
+
+Add the following information to the Target property:
+"C:\Program Files\Jack\jackd.exe" -R -S -d portaudio -d "ASIO::ASIO4ALL v2"
+
+I don't see a port count defined there, and I'm not sure how jack on
+windows defines the default number of ports, but you could for example add
+-p 64 between the "-S" and the "-d portaudio" arguments.  Order is
+important, because the arguments before the driver are for jack server
+itself, arguments after the driver name (port audio and ASIO) are for the
+driver, not the server.
+
+It would probably be good to run that exact command line copied and pasted
+into a cmd window to make sure there are no errors or warnings reported,
+if you start that from a desktop shortcut and there is an error, the
+window will close before you get a chance to read the error message.
+
+After that is working you can change the IO count in the jackrouter.ini
+file to match the 64 port count.  Actually, 64 for the jack server would
+include however many connections you want from ProTools plus your sound
+card connections, so depending on how many connections you want to make
+from ProTools simultaneously you may need a few more in the jackd
+configuration than in the jackrouter configuration.
+
+There seem to be relatively few Windows users on the jack development
+mailing list, you may have better luck finding someone who knows for sure
+on the Harrison forums.
+
+-- 
+Chris Caudle
+
+1463087116.20971_0.ltw:2,a <2922d6c0002ad3dd8c0b0bb02b9d67d5.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

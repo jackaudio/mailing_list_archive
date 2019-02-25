@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] speaker management</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] speaker management</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1355302800.25199_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1355308301.2223_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1355304872.28767_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 12 Dec 2012 11:33:46 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Nedko Arnaudov </span> &lt;[hidden] at arnaudov dot name&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Arnold Krille &lt;[hidden] at arnoldarts dot de&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Patrick Shirkey
+<a href='../1355302800.25199_0.ltw:2,/index.html'>Re: [Jack-Devel] speaker management </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Patrick Shirkey
+<a href='../1355308301.2223_0.ltw:2,/index.html'>Re: [Jack-Devel] speaker management </a></td></tr>
+</table>
+<pre>
+"Patrick Shirkey" &lt;[hidden]&gt; writes:
+&gt; On Wed, December 12, 2012 10:46 am, Arnold Krille wrote:
+&gt;&gt; The average jack session is with several apps all used for one project.
+&gt;&gt; you save the project and want to save the settings for all the apps.
+&gt;&gt; you restore (aka load) a project and want all the apps to come up again
+&gt;&gt; with the correct settings. All current session managers aim to make
+&gt;&gt; this as simple as possible (preferable by even supporting apps that
+&gt;&gt; don't have native session-management support). And thats a fine goal.
+&gt;&gt;
+&gt;&gt; But when you do drc and/or ambisonics you end with a setup slightly
+&gt;&gt; more complicated: there are some apps that are independant of the
+&gt;&gt; project and stationary to the machine. Some of these apps might even be
+&gt;&gt; the ones all the other apps should use as "hardware outputs" instead of
+&gt;&gt; the real hardware outputs.
+&gt;&gt; No problem when a) the session manager ignores these apps and b) the
+&gt;&gt; project is not meant to be movable to a different machine.
+&gt;&gt; By making session-management easier for 'most' people, todays
+&gt;&gt; session-managers
+&gt;&gt; break a) and forcefully support apps that don't want to be supported.
+&gt;&gt; And as neither jack supports something like static port aliases nor
+&gt;&gt; as session-managers correctly support the notion of distinct apps
+&gt;&gt; as "the global environment", b) breaks. Because nowadays the session
+&gt;&gt; connects to "alsa_pcm:playback_[12]" on one machine and has to connect
+&gt;&gt; to "jconvolver:in_[12]" on another machine.
+
+How this is not solved in ladish? This is exactly the reason for its
+studio/room separation.
+
+&gt;&gt; So while session management nowadays is easy for 'most' people and
+&gt;&gt; use-cases, its actually made impossible for these special cases.
+&gt;&gt; Special cases like: I have this super-cool ardour-project using two
+&gt;&gt; dozen synths and playing out to my native home-cinema surround-set. And
+&gt;&gt; the audio is so cool that I want to play the same project on one of the
+&gt;&gt; bigger ambisonics/wfs setups at the next LAC. Only my project connects
+&gt;&gt; to 'alsa_pcm:playback_[1-6]' and when I do that on the wfs-machine I am
+&gt;&gt; lucky when nothing of the hardware breaks because I sent my bass-beats
+&gt;&gt; to the highest speaker of a four-way...
+
+This is solved years ago in ladish.
+
+&gt;&gt;&gt; If the app doesn't have support for jack session management how can
+&gt;&gt;&gt; the session manager be in the way?
+&gt;&gt;
+&gt;&gt; See above, when you write a session-manager for audio and want it to be
+&gt;&gt; used, you support apps that don't support you...
+
+Yes, ladish can reconnect apps that don't know about session
+support. Some other session management system can do it as well.
+
+&gt;&gt; There are probably some easy solutions to these problems outlined
+&gt;&gt; above. But its "special cases" and it seemed to me the last years that
+&gt;&gt; many developers don't want to deal with this and don't want to listen
+&gt;&gt; to the people that have to deal with this.
+
+I dealed with this kind of special cases for years. Did I miss some of
+them?
+
+&gt; This all looks solveable to me. We have a few specific limitations. What
+&gt; is the easiest way to enable the flexibility required?
+
+install jackdbus and ladish :P
+
+&gt;&gt; But I am happy if I am proven wrong: if there is a session-management
+&gt;&gt; for audio-projects that knows which app is part of the project and
+&gt;&gt; which is part of the environment. If there is even a session-management
+&gt;&gt; that knows about something like "the environment" apart from
+&gt;&gt; alsa_pcm.
+
+ladish
+
+&gt; We can assign static names to jack ports. IIUC, the main issue appears to
+&gt; be that alsa i/o cannot be easily renamed/mapped in a session file.
+
+jack aliases can do this for you but from my POV they are just a
+workaround for the real problem. Obviously I think the way ladish solves
+this issue is better :)
+
+&gt; So do we need a way to override the jack portnames in the JACK API?
+&gt;
+&gt; Seems like a reasonable addition to the API to me.
+
+we already have it - jack aliases (altrough i dont recommend using them)
+
+&gt; Can you isolate the other issues that you feel would not be solved in this
+&gt; case?
+
+I'm interested in this as well.
+
+-- 
+Nedko Arnaudov &lt;GnuPG KeyID: 5D1B58ED&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1355302800.25199_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1355308301.2223_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1355304872.28767_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1355304872.28767_0.ltw:2,&nbsp;&lt;87r4mvbon9.fsf at arnaudov dot name&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

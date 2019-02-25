@@ -1,0 +1,162 @@
+Date:        Thu, 28 Sep 2017 15:21:32 -0500
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Philippe Bekaert Re: [Jack-Devel] AES67 / SMPTE ST 2110-30 (1506598628.5423_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] AES67 / SMPTE ST 2110-30
+
+On Wed, September 27, 2017 9:20 am, Philippe Bekaert wrote:
+> Anyone working on AES67 / ST 2110-30 interfacing with jack audio?
+
+Merging Technology is working on an ALSA virtual sound card that
+interfaces to a Ravenna device.  Should work with generic AES67 devices as
+well.
+
+The state of the driver is very strange, the source is marked GPL2 or
+later, but it is stored in a git repository with password.  So I can give
+you the copy of the source I have, but you have to talk to Merging to get
+access to the repository.
+Additionally there is a user space daemon required to configure the
+driver, connect to streams, etc. that is not released.  I do not have a
+copy of that yet, I am just studying the kernel mode ALSA driver at the
+moment, but I do not understand the intentions of Merging Technologies
+yet, I think the kernel mode driver will never be accepted upstream if
+they have a closed user mode component.  Probably the kernel mode is GPL2
+just to meet requirements to link with the kernel.
+
+Also the current version of the kernel driver does not compile.  There are
+a couple of obvious mistakes that I have just not had time to correct and
+send back patches yet, but the fact that the mistakes are so  obvious does
+not give me confidence that Merging is appying much attention to this
+driver at the moment.
+
+On Thu, September 28, 2017 6:36 am, Philippe Bekaert wrote:
+> though support for some non-consumer features like PTPv2
+> is needed for high timing precision.
+
+As far as I can tell none of the existing vendors of audio hardware is
+using switches with transparent clock support.  For lowest latency you
+would need a network card with hardware timestamping, but some not very
+expensive Intel cards have that, and software timestamping works if you
+accept  higher latency.  Basically just restating what you wrote
+previously.
+
+> My impression is that AES67 is way better received by industry
+
+Especially now that Dante has an AES67 compatible mode.  MOTU has AVB
+pro-sumer style equipment, but for true professional equipment it seems
+that most gear uses Dante (which now has an AES67 compatible mode in the
+latest firmware versions) or Ravenna (started primarily in broadcast by
+now promoted very heavily by Merging for recording use).
+
+> I’ll start with the manual configuration.
+
+I think Ravenna uses SIP, which should be relatively well supported with
+libraries developed for telephony and chat use.  Maybe a configuration
+interface that passes in the required information, and then you can have
+separate front ends, one completely manual, one which queries SIP, etc.
+
+> Some aspects of AES67 may be subject to patents (the standard specs
+> document explicitly mentions audinate).
+
+Ravenna stick to IETF specified protocols and is explicitly patent free. 
+I am not sure what the Audinate patents cover, but the guys who developed
+Ravenna are convinced they do not cover implementations which stick to
+using just the IETF protocols plus PTPv2.
+
+> AES67 is the greatest common factor in proprietary interfaces including
+> Ravenna, Dante, a.s.o. Ravenna, Dante a.s.o have AES67 compliant profiles.
+
+I would not call Ravenna a proprietary interface, since you can download
+the description of the protocol with no license, and it explicitly just
+groups together existing protocols defined by IEEE and IETF.
+
+> You’ll be able to connect your jackaudio linux box to Ravenna, Dante etc…
+> equipment if you set up that equipment in AES67 compliant mode
+
+Note that the earlier Dante design used a different clocking and discovery
+scheme, only the newest revision has an AES67 compliant mode.  And AES67
+is basically a subset of Ravenna, so if you have additional options for
+buffer size and sample rate beyond the minimum required by AES67 it should
+be pretty easy to be fully Ravenna compliant.
+
+> My intention is to implement AES67 support as a jack client operating
+> entirely in user space.
+
+Another approach might be to use the GPL2 or later implementation of ALSA
+virtual sound card and do a reverse engineered user space tool to
+configure the ALSA driver.  Should be a similar amount of work but then
+the driver would work for any ALSA capable software.
+Now that I think about it probably would not make much difference, I can't
+think of any audio production software on linux which is not jack capable.
+
+> The alternative is the implement it as a virtual sound card driver, but
+> that seems more involved.
+
+Indeed, but that work is already done.  It just needs to be more widely
+distributed.
+
+> Ideally, I should be able to adjust the audio card clock to the system
+> clock or PTPv2 hardware clock on the network interface itself.
+
+I'm not aware of any audio hardware that lets you do that.  You could
+potentially have a device which locks to the PTP clock and lets you
+specify the sample rate for creating a word clock or AES11 clock for
+synchronizing other equipment.
+
+> Instead, I intend to stick with sample rate conversion, to keep audio
+from the
+> network and in your audio card synchronised, and prevent glitches.
+
+I would recommend the zita resampling library.  Jackd 1.x family already
+incorporates that, jackd v2 family needs to use zita-a2j and zita-j2a
+external clients.  Those should work unmodified to transfer between a
+hardware sound card and the ALSA virtual sound card.  Maybe another reason
+to re-use the Merging work.
+
+> What I do not have at hand right now, is any other AES67 equipment.
+
+If you have a Windows machine you can use the ALC Windows virtual sound
+card if you have a supported Intel NIC with hardware timestamp support, or
+you can use the Lawo Windows virtual sound card which supports software
+timestamping and will work on any network card.  I tried out the demo
+version of the Lawo card and was able to transfer audio from one Windows
+machine to another (using an external master clock created by transferring
+NTP time using linuxptp on a small linux machine).
+The demo version of the Lawo software only runs for 15 minutes at a time
+and has to be restarted.  The paid version costs about 200 dollars/euros.
+
+Cymatic Audio are working on what should be a relatively affordable
+Ravenna interface.  It was originally said to be available in fall of
+2016, but is now almost a year and a half late because of re-design
+undertaken after feedback from the first beta users.  Now said to be
+available "by the end of the year."
+https://www.cymaticaudio.com/products/networking-products/unode-m42
+
+The existing Cymatic 24 channel interface was just reduced in price
+considerably, it has a Ravenna option card available.  More expensive but
+available now:
+https://www.cymaticaudio.com/products/networking-products/audiolan-option-card
+
+This card I found on eBay is said by the developer to have been checked
+out with the Lawo virtual sound card:
+http://hasseb.fi/shop2/index.php?route=product/product&product_id=62
+That device is pretty limited, it has a single connector which you have to
+configure as either input or output, it cannot operate as a full duplex
+device.
+Only a little over 100 euro, so much less expensive than the Cymatic
+device, much less a Merging NDAC or Hapi.
+
+> Who has AES67 equipment and would possibly be willing to assist, at least
+> in testing once time is there?
+
+I am willing to assist.  I do not yet have AES67 equipment, but I am
+considering what to get.  I may start with that inexpensive Hasseb device
+if it appears that the Cymatic 4 channel device will be delayed again.
+
+-- 
+Chris Caudle
+
+1506630119.14622_0.ltw:2, <6089cee3abe4f33500a19c70f1c31807.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Cannot use real-time scheduling (RR/89)(1: Operation not permitted)</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Cannot use real-time scheduling (RR/89)(1: Operation not permitted)</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1372259468.3198_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1372340980.3582_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1372262141.7750_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 26 Jun 2013 17:55:33 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Bob van Loosen </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>James Dunn
+<a href='../1372258298.1138_0.ltw:2,a/index.html'>[Jack-Devel] Cannot use real-time scheduling (RR/89)(1: Operation not permitted) </a></td></tr>
+</table>
+<pre>
+I'm not sure how systemd works, but for starting at boot you can use 
+ulimit as root to set the realtime priority permissions, then start 
+jackd as a user using su or sudo from the same bash instance.
+
+For example:
+
+#!/bin/bash
+ulimit -r 99
+su myuser /usr/bin/jackd -R -P89 -dalsa -dhw:0 -r44100 -p128 -n3
+
+Regards,
+
+Bob.
+
+On 26-06-13 16:51, James Dunn wrote:
+&gt; I'm trying to start jackd with a systemd script on Arch Linux but I'm 
+&gt; having a problem with RT scheduling.
+&gt;
+&gt; When I start jack from the command line it works fine:
+&gt;
+&gt; $ /usr/bin/jackd -R -P89 -dalsa -dhw:0 -r44100 -p128 -n3
+&gt; jackdmp 1.9.9.5
+&gt; Copyright 2001-2005 Paul Davis and others.
+&gt; Copyright 2004-2012 Grame.
+&gt; jackdmp comes with ABSOLUTELY NO WARRANTY
+&gt; This is free software, and you are welcome to redistribute it
+&gt; under certain conditions; see the file COPYING for details
+&gt; no message buffer overruns
+&gt; no message buffer overruns
+&gt; no message buffer overruns
+&gt; JACK server starting in realtime mode with priority 89
+&gt; audio_reservation_init
+&gt; Acquire audio card Audio0
+&gt; creating alsa driver ... hw:0|hw:0|128|3|44100|0|0|nomon|swmeter|-|32bit
+&gt; configuring for 44100Hz, period = 128 frames (2.9 ms), buffer = 3 periods
+&gt; ALSA: final selected sample format for capture: 16bit little-endian
+&gt; ALSA: use 3 periods for capture
+&gt; ALSA: final selected sample format for playback: 32bit integer 
+&gt; little-endian
+&gt; ALSA: use 3 periods for playback
+&gt; ^CJack main caught signal 2
+&gt; Released audio card Audio0
+&gt; audio_reservation_finish
+&gt;
+&gt; But if try to start it with a systemd script that contains the same 
+&gt; command it runs, but with the following error (which makes it sound 
+&gt; really bad!):
+&gt;
+&gt; $ sudo systemctl status jack
+&gt; jack.service - JACK
+&gt; Loaded: loaded (/usr/lib/systemd/system/jack.service; disabled)
+&gt; Active: active (running) since Wed 2013-06-26 14:44:33 BST; 1s ago
+&gt; Main PID: 4491 (jack)
+&gt; CGroup: name=systemd:/system/jack.service
+&gt; &#x251C;&#x2500;4491 /bin/sh /usr/lib/systemd/scripts/jack
+&gt; &#x2514;&#x2500;4492 /usr/bin/jackd -R -P89 -dalsa -dhw:0 -r44100 -p128 -n3
+&gt;
+&gt; Jun 26 14:44:34 instrument jack[4491]: audio_reservation_init
+&gt; Jun 26 14:44:34 instrument jack[4491]: Acquire audio card Audio0
+&gt; Jun 26 14:44:34 instrument jack[4491]: creating alsa driver ... 
+&gt; hw:0|hw:0|128|3|44100|0|0|nomon|swmeter|-|32bit
+&gt; Jun 26 14:44:34 instrument jack[4491]: configuring for 44100Hz, period 
+&gt; = 128 frames (2.9 ms), buffer = 3 periods
+&gt; Jun 26 14:44:34 instrument jack[4491]: ALSA: final selected sample 
+&gt; format for capture: 16bit little-endian
+&gt; Jun 26 14:44:34 instrument jack[4491]: ALSA: use 3 periods for capture
+&gt; Jun 26 14:44:34 instrument jack[4491]: ALSA: final selected sample 
+&gt; format for playback: 32bit integer little-endian
+&gt; Jun 26 14:44:34 instrument jack[4491]: ALSA: use 3 periods for playback
+&gt; Jun 26 14:44:34 instrument jack[4491]: Cannot use real-time scheduling 
+&gt; (RR/89)(1: Operation not permitted)
+&gt; Jun 26 14:44:34 instrument jack[4491]: AcquireSelfRealTime error
+&gt;
+&gt; It is run as a user that is assigned to the audio group, not as root. 
+&gt; Also, the user has the following permissions in 
+&gt; /etc/security/limits.d/99-audio.conf:
+&gt;
+&gt; @audio - rtprio 99
+&gt; @audio - memlock unlimited
+&gt;
+&gt; How can I enable real-time scheduling from a systemd script?
+&gt;
+&gt; thanks
+&gt; James
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1372259468.3198_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1372340980.3582_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1372262141.7750_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1372262141.7750_0.ltw:2,a&nbsp;&lt;51CB0EF5.7060905 at gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

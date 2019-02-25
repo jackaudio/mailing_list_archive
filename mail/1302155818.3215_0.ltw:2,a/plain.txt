@@ -1,0 +1,38 @@
+Date:        Thu, 07 Apr 2011 07:57:49 +0200
+From:        Clemens Ladisch  <[hidden] at ladisch dot de>
+To:          Devin Anderson <[hidden] at charityfinders dot com>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Devin Anderson Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2 (1302141387.3226_0.ltw:2,a)
+Follow-Up:   Devin Anderson Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2 (1302156970.5658_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2
+
+Devin Anderson wrote:
+> When I first did research for writing this driver, I was looking
+> through the ALSA kernel code, and noticed that the default behavior
+> for the 'drain' method (when a driver doesn't set its own rawmidi
+> 'drain' method) is to sleep for 50 milliseconds, and then return,
+> regardless of whether blocking I/O is used or not.  So, one of the
+> things I did with the 'alsarawmidi' driver is to call:
+> 
+>     snd_rawmidi_params_set_avail_min(rawmidi, params, 1);
+
+This already is the default value.
+
+> ... to make the driver wake up when any bytes are written to a port,
+> and to avoid calling `snd_rawmidi_drain` completely.
+
+The avail_min parameter controls only wakeups of the application.
+
+The drain method is used only with output devices to wait for all data
+in ALSA's buffer to be written to the device.  The only situation where
+you would want to call it is when closing the device, where ALSA already
+calls it automatically.
+
+
+Regards,
+Clemens
+
+1302155818.3215_0.ltw:2,a <4D9D525D.5030000 at ladisch dot de>
+________________________________________________________________________________
+

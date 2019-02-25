@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How to use jackd as a 'system-wide' server?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How to use jackd as a 'system-wide' server?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1526052400.31471_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1526071322.23738_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1526068997.20853_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Fri, 11 May 2018 22:02:30 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Ruslan N. Marchenko </span> &lt;[hidden] at ruff dot mobi&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Christophe Lohr &lt;[hidden] at cegetel dot net&gt;, [hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Christophe Lohr
+<a href='../1525960273.9511_0.ltw:2,/index.html'>Re: [Jack-Devel] How to use jackd as a 'system-wide' server? </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Christophe Lohr
+<a href='../1526071630.24020_0.ltw:2,/index.html'>Re: [Jack-Devel] How to use jackd as a 'system-wide' server? </a></td></tr>
+</table>
+<pre>
+Am Donnerstag, den 10.05.2018, 15:50 +0200 schrieb Christophe Lohr:
+&gt; 
+&gt; Unfortunately I still have errors when I place a call to this
+&gt; asterisk
+&gt; channel:
+&gt;     ../..
+&gt;     -- Executing [6000@default:5] JACK("SIP/6007-00000003", "") in
+&gt; new stack
+&gt; [May 10 13:34:25] NOTICE[2899][C-00000003]: app_jack.c:192
+&gt; log_jack_status: Client Open Status: Failure, Server Error
+&gt;   == Spawn extension (default, 6000, 5) exited non-zero on
+&gt; 'SIP/6007-00000003'
+&gt;   ../..
+&gt; 
+&gt; How can I get more log messages from the jackd server?
+&gt; 
+Long time ago I was using Jack2 as a system-wide service on HTPC
+running Ubuntu using following upstart script
+////
+start on runlevel [2345] or local-filesystems
+stop on runlevel [!2345]
+emits audio-bus
+
+console log
+
+env HOME=/root
+
+pre-start script
+if [ ! -f /run/dbus/.env ]; then
+  eval `dbus-launch --auto-syntax`
+  echo "export DBUS_SESSION_BUS_PID=$DBUS_SESSION_BUS_PID" &gt;
+/run/dbus/.env
+  echo "export DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS" &gt;&gt;
+/run/dbus/.env
+  chmod 600 /run/dbus/.env
+fi
+end script
+
+post-start script
+. /run/dbus/.env
+jack_control start
+if [ -f /etc/default/jackd ]; then
+  awk '/^[esdri]/{system("jack_control "$0)}' /etc/default/jackd
+  awk '/^ /{system("jack_load "$0)}' /etc/default/jackd
+  awk '/^&gt;/{  
+        system("jack_connect "$2":capture_1 "$3":playback_1");
+        system("jack_connect "$2":capture_2 "$3":playback_2");
+  }' /etc/default/jackd
+fi
+end script
+
+post-stop script
+. /run/dbus/.env
+if [ -f /etc/default/jackd ]; then
+  awk '/^ /{system("jack_unload "$1)}' /etc/default/jackd
+fi
+jack_control exit
+end script
+\\\\
+upstart is now a history but the principle should be the same I guess.
+systemd allows you even to have user-level session initiation, so
+should be much mroe flexible in this regard.
+
+The key point back then was /run/dbus/.env - that one allowed me to
+join same DBus session where JackDBus was spawned.
+
+Then each application which was going to use Jack should be started
+with .env file loaded populating the environment variables.
+
+You can ignore /etc/default/jackd - that one was my custom recipe file
+which pre-loaded required modules and made required connections at the
+early start.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1526052400.31471_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1526071322.23738_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1526068997.20853_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1526068997.20853_0.ltw:2,&nbsp;&lt;7783da3e070550bc161ce6205da8d45d56fe4efa.camel at ruff dot mobi&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

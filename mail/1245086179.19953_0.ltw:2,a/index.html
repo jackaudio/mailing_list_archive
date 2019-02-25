@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [LAD] jack2's dbus name</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [LAD] jack2's dbus name</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1245078232.4976_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1245091080.899_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1245086179.19953_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 15 Jun 2009 10:16:27 -0700 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fernando Lopez-Lezcano </span> &lt;[hidden] at ccrma dot Stanford dot EDU&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Lennart Poettering &lt;[hidden] at 0pointer dot de&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt;, Linux Audio Developers &lt;[hidden] at lists dot linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Lennart Poettering
+<a href='../1245076681.2457_0.ltw:2,a/index.html'>Re: [LAD] jack2's dbus name </a></td></tr>
+</table>
+<pre>
+On Mon, 2009-06-15 at 16:37 +0200, Lennart Poettering wrote:
+&gt; On Mon, 15.06.09 15:34, St&#xE9;phane Letz ([hidden]) wrote:
+&gt; 
+&gt; &gt;&gt; On Mon, 15.06.09 11:01, St&#xE9;phane Letz ([hidden]) wrote:
+&gt; &gt;&gt;
+&gt; &gt;&gt;&gt;&gt; I was just thinking, when jack2 finished initialization it takes a
+&gt; &gt;&gt;&gt;&gt; name on the session bus, right?
+&gt; &gt;&gt;&gt;
+&gt; &gt;&gt;&gt; Not sure about what you mean by " it takes name on the session bus". 
+&gt; &gt;&gt;&gt; I hope Nedko can answer better here.
+&gt; &gt;&gt;
+&gt; &gt;&gt; I simply mean it calls dbus_bus_request_name()
+&gt; &gt;&gt; resp. org.freedesktop.DBus.RequestName to acquire a service name n the
+&gt; &gt;&gt; session bus, such as org.jack.foo.bar.
+&gt; &gt;
+&gt; &gt; We recently had a strong debate on JACK dev list about the way DBus  
+&gt; &gt; could/should be used with JACK. 
+&gt; 
+&gt; Yes, I noticed.
+&gt; 
+&gt; &gt; What I'm personally trying to achieve is a more "flexible" way (compared 
+&gt; &gt; to what is currently a bit hard-coded in JAKC2 SVN) so that a DBus 
+&gt; &gt; control component can be coded as a "plugin" to be possibly loaded in 
+&gt; &gt; JACK server process. This new plugin model allows to keep basically 2 
+&gt; &gt; ways of using JACK server :  the "old way" (typically starting the jackd 
+&gt; &gt; server using Qjackctl control application) or the new way using DBus 
+&gt; &gt; based control applications (after the DBus control plug-in has been 
+&gt; &gt; properly loaded in JACK server).  (Keeping the "old-way" is also 
+&gt; &gt; important on others platforms JACK2 runs on.)
+&gt; 
+&gt; Distributions will certainly enable the D-Bus code in JACK if they
+&gt; ship it. So, I have no problem with depending on a dbus'ified jack for
+&gt; this logic to work. 
+
+&gt;From a packagers' (for Fedora/Planet CCRMA) point of view the future
+dbus-capable jack should be able to be used without dbus support as well
+as with it _without_ having to recompile it (that is without having to
+repackage it differently). For an example of non-dbus usage, I may want
+to start jack on a remote host where there is no desktop session at the
+moment and thus dbus is not usable. 
+
+&gt; &gt; If this new "control plugin" model is finally accepted by JACK  
+&gt; &gt; community, then we'll distribute/package JACK2 compiled with the 1)  
+&gt; &gt; option, so that it (at least) cooperates with PulseAudio. But 2) would  
+&gt; &gt; then be optional, so PA can not rely on the DBus control plug-in to  
+&gt; &gt; always be present.
+&gt; &gt;
+&gt; &gt; The 1) code uses  "org.freedesktop.ReserveDevice1.AudioXX" name, and 2) 
+&gt; &gt; optional DBus plugin uses "org.jackaudio.service" name. If we want to 
+&gt; &gt; implement your proposal, the we would need to request another name in  1) 
+&gt; &gt; part, is that correct?
+&gt; 
+&gt; I think org.jackaudio.service should be fine. I don't think this
+&gt; automatic logic needs to work on non-D-Bus jack builds. 
+
+I would change the wording to "on jack instances that are not using
+dbus" (ie: whether you use dbus or not should not depend on the build). 
+
+-- Fernando
+
+
+&gt; As I see it
+&gt; you don't need to make any changes on jack for this to work. All I
+&gt; need is the guarantee that by the time the service name is registered
+&gt; on the bus jack is fully accessible. Otherwise we had a race here: if
+&gt; PA looks for the org.jackaudio.service name to appear on the bus and
+&gt; then imemdiately connects to it while jack isn't fully accessible yet
+&gt; PA would fail.
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1245078232.4976_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1245091080.899_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1245086179.19953_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1245086179.19953_0.ltw:2,a&nbsp;&lt;1245086187.14095.26.camel at localhost dot localdomain&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

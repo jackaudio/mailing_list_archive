@@ -1,0 +1,75 @@
+Date:        Tue, 23 Oct 2012 10:14:22 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          [hidden] at basstech dot net
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: undersys [Jack-Devel] jack consuming large amounts of CPU time (1350972683.23764_0.ltw:2,a)
+Follow-Up:   Jonathan Woithe Re: [Jack-Devel] jack consuming large amounts of CPU time (1351118917.18140_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack consuming large amounts of CPU time
+
+Hi undersys,
+
+On 10/23/2012 08:11 AM, undersys wrote:
+> Hi All,
+> 
+> I hope someone can give me some guidance with Jack.
+> 
+> I have Jack set up. All seems to work fine. I can record and playback fine etc.
+> My issues starts when I leave Jack running and not doing anything.
+> 
+> It eats CPU % continually. Making my system quite overloaded until I restart Jack. 
+
+Is it just jackd or are there any jack-clients active when this happens?
+e.g. some reverb effects that just process silence..
+
+> Is there something I can check or do? 
+
+yes, and most likely yes.
+
+> I'd really like to have jack running all the time if possible.
+
+[..]
+> Device :- Roland Edirol UA-25EX
+
+Is this device directly connected to the PC or is there a USB hub in
+between? Is it the sole device on the USB-port?
+
+This is an unusual problem - never heard of it, so you have to provide
+more information. With what parameters do you start jackd ('ps axwu |
+grep jackd' will tell, or you can copy/paste it from qjackctl's log
+window if you use qjackctl to launch jack). What kernel are you running
+('uname -a').
+
+Run top and see if it's indeed jackd that has the high CPU load and not
+some jack-client.
+
+
+Some more advanced methods which may or may not make sense:
+
+You can launch jackd in verbose mode and check its log.
+
+Run 'htop'. That can display CPU usage per process and thread as well as
+process priority. -> find out if it is indeed jackd itself and its RT
+thread (sched fifo, negative priority number) that causes the issue.
+
+check 'cat /proc/interrupts' if your USB interface shares an IRQ with
+some other devices..
+
+
+and some shots in the dark:
+
+Maybe some power-saving kicks in. In particular CPU halt states and/or
+bus freq scaling don't go well with jackd. Disable them in the BIOS
+(look for sth like EIST, C1E-halt states).
+
+If that does not help, disable CPU freq scaling (not in the BIOS, but on
+the system; replace the Linux 'ondemand governor' with the 'performance
+governor') - it depends on your distribution and desktop env how to best
+do that..
+
+Cheers!
+robin
+
+1350980079.4145_0.ltw:2,a <508651DE.4010809 at gareus dot org>
+________________________________________________________________________________
+

@@ -1,0 +1,85 @@
+Date:        Mon, 23 Oct 2017 11:09:06 -0500
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          Philippe Bekaert <[hidden] at gmail dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+
+Subject:     Re: [Jack-Devel] AES67 / SMPTE ST 2110-30
+
+On Mon, October 23, 2017 4:32 am, Philippe Bekaert wrote:
+> ALC Networx and audinate (several times) concerning patent issues
+
+My limited understanding is that the original Dante protocol is or was
+covered by a patent regarding the non-standard clocking method they used,
+but Ravenna specifically uses only IEEE and IETF specifications which
+should be not covered by any current patents, with the exception of
+features which should be part of the hardware (e.g. if the Ethernet
+adapter vendor is licensing a patent for some hardware feature we should
+not need to care).  I have not heard of any patents asserted against IEEE
+1588-2008, and protocols like RTP and RTCP have been implemented for many
+years by browsers and media players, so I think there should be no patents
+there.
+
+> many choices for the implementation of each of the required components
+> (full implementation generic libraries, or ad hoc pieces of open source
+
+My preference would be re-use anything available, days are too short to
+re-implement software which is already working.  That presumes that a
+library for what is needed is well maintained, and that the function is
+not so simple that understanding how to use the library is not more work
+than just implementing for the jack driver.
+
+One thing that will influence what libraries you may choose to use is
+whether you want to make the software cross platform or linux only.  My
+thinking there is that there are virtual sound card implementations for
+Windows and Mac OS already, so jack on Windows and Mac OS can use the
+existing sound system interface.
+If you implement as linux only, you could potentially take certain
+shortcuts such as requiring that the user install linuxptp and synchronize
+the system clock to the audio PTP domain first.  That way you could use
+the system clock as the clock for scheduling the net driver.
+
+> Right now, I'm using the free merging AES67 sound card driver on a
+> macbook pro to generate AES67 streams, and later also to receive.
+
+I do not have a Mac, so I did not even think of that. That is a good
+choice, essentially the equivalent of the free Lawo R3lay driver I was
+testing on Windows.  The only disadvantage I can see is the driver is
+limited in what buffer sizes and sample rates it supports, so you can only
+test a subset of what is possible to support, but definitely should allow
+getting all the basic work completed with just software implementations on
+each end.
+
+> I'm running ptp4l (hardware timestamping support, on a server) or ptpd
+> (if you don't have hw ts - on my laptop)
+
+I believe ptp4l should also support software timestamp.
+I can run ptp4l on my workstation to synchronize to my BeagleBone ptp
+master, and ethtool reports that there is no PTP hardware clock available:
+
+Time stamping parameters for enp3s4f0:
+Capabilities:
+        software-transmit     (SOF_TIMESTAMPING_TX_SOFTWARE)
+        software-receive      (SOF_TIMESTAMPING_RX_SOFTWARE)
+        software-system-clock (SOF_TIMESTAMPING_SOFTWARE)
+PTP Hardware Clock: none
+Hardware Transmit Timestamp Modes:
+        off                   (HWTSTAMP_TX_OFF)
+        on                    (HWTSTAMP_TX_ON)
+Hardware Receive Filter Modes:
+        none                  (HWTSTAMP_FILTER_NONE)
+        ptpv1-l4-event        (HWTSTAMP_FILTER_PTP_V1_L4_EVENT)
+        ptpv2-l4-event        (HWTSTAMP_FILTER_PTP_V2_L4_EVENT)
+        ptpv2-l2-event        (HWTSTAMP_FILTER_PTP_V2_L2_EVENT)
+
+I am continuing to copy the jack-devel mail list for now, hopefully there
+are some others who will be interested in participating, if not eventually
+we can take this to a private distribution until something is ready for
+wider testing.
+
+
+-- 
+Chris Caudle
+
+1508774960.2042_0.ltw:2, <821461fcce422293ac981725cae94dce.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

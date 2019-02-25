@@ -1,0 +1,58 @@
+Date:        Sat, 26 Dec 2015 16:38:28 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          JACK devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: John Emmas Re: [Jack-Devel] jack dsp load calculation (1451142645.1418_0.ltw:2,a)
+Follow-Up:   John Emmas Re: [Jack-Devel] jack dsp load calculation (1451147237.5755_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack dsp load calculation
+
+On 12/26/2015 04:10 PM, John Emmas wrote:
+> On 26/12/2015 14:41, Robin Gareus wrote:
+>> I like Nedko's idea: Allow to query all: min, average, max  over a long
+>> time compared to the process-cycle (think second or seconds).
+>>
+> 
+> Hmm...  I didn't get that email for some reason.  But yes - as a feature
+> update, that sounds promising.  I'm just pointing out that (a) the
+> averaging mechanism / hybrid approach is NOT the underlying cause of the
+> problem you described - and (b) in Mixbus and Ardour, we can already
+> make a solution which wouldn't need us to tinker with Jack.  i.e. the
+> following strategy instead of our current one:-
+> 
+>       if ( the_client->got_notified_about_an_xrun() ) {
+>             //  We know that an xrun occurred since we last checked
+>             //  the CPU load - so do something to accommodate that.
+
+Why are x-runs (100% usage not) included in the statistics?
+
+>             //  and then reset the notification flag
+>             reset_the_xrun_notification_flag ();
+>       } else {
+>             //  No xrun was encountered - so we can update normally...
+>             update_cpu_load ();
+
+What does "update_cpu_load ();" do?
+
+>       }
+> 
+> That would be very simple to implement and I honestly think we should
+> try that first, before tinkering too much with Jack.
+
+Ardour/Mixbus has an explicit x-run counter since April 2015. Except the
+x-run counter is user-resettable (in the toolbar). But the problem goes
+back further. We've been pushing it off because it's mainly a detail and
+I expected longer discussions...
+
+
+My criticism is that jack's currently algorithm does not satisfy the
+criteria: "an x-run implies 100% reported load".
+
+How can we justify buffer over/under-runs if there is time left to
+process the buffer?
+
+best,
+robin
+
+1451144317.3107_0.ltw:2,a <567EB474.4030205 at gareus dot org>
+________________________________________________________________________________
+

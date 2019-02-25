@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] S24_3LE</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] S24_3LE</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1376249826.8570_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1376321595.16631_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1376252572.13005_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 11 Aug 2013 22:22:39 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Anders Tornvig </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1376249826.8570_0.ltw:2,/index.html'>Re: [Jack-Devel] S24_3LE </a></td></tr>
+</table>
+<pre>
+Ok thanks. I think I should have said dynamic range when I said resolution.
+I was definitely not talking about frequency resolution but the number of
+values you have to represent a range like -1 to 1.
+
+Anyway my example should be illustrative of the differencen between n-point
+fixed and n-point float. If one tone max out the range, there are no
+decimal points left to represent an added low-level tone. For instance, you
+could add a tone with amp 1.234*10^3 to another with amp 3.000*10^0. A
+fixed-point presentation could use the exponent bits to represent the
+low-level tone slightly better. No?
+
+I agree that 24 bit ints are fully contained in 32 bit floats, and my
+preference here is cosmetic, I admit, to speak the language of my audio
+interface : ).
+
+br, Anders
+
+Ps I'm very familiar with nyquist... low-level audio implementation, not as
+much...
+Den 11/08/2013 21.36 skrev "Paul Davis" &lt;[hidden]&gt;:
+
+&gt; my answer probably wasn't clear.
+&gt;
+&gt; the ability to correctly sample different frequencies is dependent only on
+&gt; sample rate.
+&gt;
+&gt; dynamic range depends on bit depth, but floating point sample formats have:
+&gt;
+&gt;    (a) the same dynamic range as signed 24 bit integer with ZERO losss of
+&gt; precision
+&gt;    (b) essentially infinite dynamic range if you are willing to live with
+&gt; some loss of precision
+&gt;
+&gt; so you don't ever gain by switching from float to 24 bit integer. you
+&gt; don't gain switching the other way, except:
+&gt;
+&gt;    * dedicated FP h/w (e.g. SSE) purposely designed to parallelize
+&gt; floating point operations
+&gt;    * if the sum of your signals exceeds 0dBFS, you don't clip in floating
+&gt; point format
+&gt;
+&gt; these are fairly significant benefits
+&gt;
+&gt;
+&gt;
+&gt;
+&gt; On Sun, Aug 11, 2013 at 3:23 PM, Paul Davis &lt;[hidden]&gt;wrote:
+&gt;
+&gt;&gt; resolution has nothing to do with bit depth, only with sample rate. basic
+&gt;&gt; signal processing theory, nyquist, etc.
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; On Sun, Aug 11, 2013 at 3:12 PM, Anders Tornvig &lt;[hidden]&gt;wrote:
+&gt;&gt;
+&gt;&gt;&gt; Hi Paul, thanks for your rapid answer!
+&gt;&gt;&gt;
+&gt;&gt;&gt; Ok I see. Float if I want the jack api.
+&gt;&gt;&gt;
+&gt;&gt;&gt; The wordlengths we operate with today may make the discussion less
+&gt;&gt;&gt; relevant, but I don't understand the benefit of adding resolution to
+&gt;&gt;&gt; something which was not converted correspondingly.
+&gt;&gt;&gt;
+&gt;&gt;&gt; Say you have a low- and a high-frequency tone added together. Say the lf
+&gt;&gt;&gt; tone amplitude is 1000 times that of the hf tone. I happen to be only
+&gt;&gt;&gt; interested in the low-amplitude hf tone but the lf tone "steals" the
+&gt;&gt;&gt; resolution to represent it. And that resolution changes with the level of
+&gt;&gt;&gt; the lf tone! Am I right?
+&gt;&gt;&gt;
+&gt;&gt;&gt; With integers I know what resolution I have, no more, no less.
+&gt;&gt;&gt;
+&gt;&gt;&gt; Best, Anders
+&gt;&gt;&gt; Den 11/08/2013 16.03 skrev "Paul Davis" &lt;[hidden]&gt;:
+&gt;&gt;&gt;
+&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; On Sun, Aug 11, 2013 at 7:11 AM, Anders Tornvig &lt;
+&gt;&gt;&gt;&gt; [hidden]&gt; wrote:
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt; Dear list,
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt; I'm writing a full-duplex program (2in/2out) which will output
+&gt;&gt;&gt;&gt;&gt; something, record it as a block of data (1024-3268 samples), analyze it and
+&gt;&gt;&gt;&gt;&gt; decide what to output next. I'm on Ubuntu, at the moment with a UA-25ex USB
+&gt;&gt;&gt;&gt;&gt; audio interface, speaking S24_3LE.
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;&gt; The Jack API looks fantastic except for one thing: I prefer working
+&gt;&gt;&gt;&gt;&gt; with integers and not float. In ALSA I can set the sample format to
+&gt;&gt;&gt;&gt;&gt; SND_PCM_FORMAT_S24_3LE and then I can give it data in that format directly,
+&gt;&gt;&gt;&gt;&gt; 3 bytes per sample per channel. On the capture side, I receive nice 24-bit
+&gt;&gt;&gt;&gt;&gt; integers.
+&gt;&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; You should know that almost all audio software on almost every platform
+&gt;&gt;&gt;&gt; these days using floating point. Even platforms that used to use fixed
+&gt;&gt;&gt;&gt; point (e.g. protools DSP boxes) now use floating point.
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; Adding a new data type to JACK is not particularly hard if it is
+&gt;&gt;&gt;&gt; intended only for client-to-client communication. Adding a new data type to
+&gt;&gt;&gt;&gt; JACK that involves the backends is a major undertaking.
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;  You really should try to get over your attachment to integers - they
+&gt;&gt;&gt;&gt; are fundamentally inappropriate for working with audio, something it has
+&gt;&gt;&gt;&gt; taken the industry 10-20 years to realize but is now accepted by almost
+&gt;&gt;&gt;&gt; everyone.
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt; --p
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;&gt;&gt;
+&gt;&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1376249826.8570_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1376321595.16631_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1376252572.13005_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1376252572.13005_0.ltw:2,a&nbsp;&lt;CAMeZe4Hruey_=p2nuieVH+74MvfntXC=svQ+=fzj2JbfAq65LA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

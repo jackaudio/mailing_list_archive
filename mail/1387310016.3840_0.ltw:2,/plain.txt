@@ -1,0 +1,75 @@
+Date:        Tue, 17 Dec 2013 20:53:26 +0100
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Lucio Crusca <[hidden] at sulweb dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Lucio Crusca [Jack-Devel] routing alsa through jack (1387306286.29776_0.ltw:2,)
+Follow-Up:   Lucio Crusca Re: [Jack-Devel] routing alsa through jack (1387340690.15205_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] routing alsa through jack
+
+On 12/17/2013 07:51 PM, Lucio Crusca wrote:
+> Hello everybody,
+
+Hi Lucio,
+
+> I'm new here and I'm not a Jack developer, but I couldn't find any users 
+> mailing lists and this page [1] says that «If you're doing anything with jack, 
+> you need to be on this list», so I assumed users are welcome here...
+
+yes, it's called jack-devel, but caters for users, too.
+
+[..snip..]
+
+> Now I'd like to make a conference call with Skype (Alsa only, I don't want to 
+> add pulseaudio) and record it using my Jack toy. I need to record both mic and 
+> output, obviously.
+
+[..snip..]
+
+> My solution involves snd_aloop.
+
+Entirely appropriate. That approach works just fine here with older
+versions of skype that support plain ALSA (I think newer versions of
+skype are pulse only, but I don't know. I'm still using skype 2.2.0.25 I
+just tested, still works). It gets me sound out of flash or any other
+non-jack app.
+
+Did you find
+http://alsa.opensrc.org/Jack_and_Loopback_device_as_Alsa-to-Jack_bridge
+? It's somewhat verbose, but a very nice article with complete
+step-by-step instructions and background information.
+
+> $ aplay -f FLOAT_LE -D hw:9 /usr/share/sounds/alsa/Front_Right.wav
+> Warning: format is changed to S16_LE
+
+Long story short: You cannot write directly to the loop-hardware once
+alsa_in/out are connected. You'll have to use an 'aggregated' device or
+alsa-plug configured in a $HOME/.asoundrc (or similar).
+
+Here 'aplay -d aduplex /usr/share/sounds/alsa/Front_Right.wav'
+works (but that's also the default) so just aplay .../file.wav
+
+I use zita-ajbridge which is a drop-in replacement for alsa_in/out but
+that's just a detail.
+
+Here my ~/.asoundrc and a script to launch the bridge, which works here:
+
+asoundrc: http://robin.linuxaudio.org/tmp/asoundrc-loopback
+
+ zita-a2j -L -d hw:Loopback,1,0 -j cloop -n 2 -p 256
+ zita-j2a -L -d hw:Loopback,1,1 -j ploop -n 2 -p 256
+ sleep 1
+ jack_connect cloop:capture_1 system:playback_1 &>/dev/null
+ jack_connect cloop:capture_2 system:playback_2 &>/dev/null
+ jack_connect system:capture_1 ploop:playback_1 &>/dev/null
+ jack_connect system:capture_2 ploop:playback_2 &>/dev/null
+
+A more complex example and the details are described in the alsa wiki
+article linked above.
+
+HTH,
+robin
+
+1387310016.3840_0.ltw:2, <52B0ABB6.8010109 at gareus dot org>
+________________________________________________________________________________
+

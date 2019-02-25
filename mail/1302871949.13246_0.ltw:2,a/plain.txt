@@ -1,0 +1,35 @@
+Date:        Fri, 15 Apr 2011 08:52:17 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          [hidden] at chriscaudle dot org
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Chris Caudle Re: [Jack-Devel] is this latency coming from ALSA, jack, or ardour? (1302753506.17346_0.ltw:2,a)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] is this latency coming from ALSA, jack, or ardour? (1302889842.18085_0.ltw:2,a)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] is this latency coming from ALSA, jack, or ardour? (1302891615.21639_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] is this latency coming from ALSA, jack, or ardour?
+
+On Wed, Apr 13, 2011 at 11:57 PM, Chris Caudle <[hidden]> wrote:
+
+> It also brings up a question of digital interfaces.  If I use the digital
+> out from the card with external ADC and DAC, that is additional latency
+> that the card has no way to know about. Is there anyway to tell JACK (or
+> Ardour) about the additional latency so that it can be automatically
+> compensated like it is when the analog interfaces of the card are used?
+
+Same as with any card: you create a *physical* loopback from an output
+to an input, and then use jdelay, or (with the most recent releases of
+JACK) jack_iodelay (same program, different name) to measure the
+"unreported" latency involved in the loopback routing. The output from
+the program is not tremendously obvious in terms of how to use it.
+
+To get a useful value, multiple frames/period by the periods/buffer
+value. Subtract this from the number shown by jack_iodelay. Divide by
+two.
+Then give this value to the JACK backend with the -I and -O flags,
+which specify "system input latency" and "system output latency".
+
+--p
+
+1302871949.13246_0.ltw:2,a <BANLkTinynSGMzWkf39=_VvJLoCbpuPO7Hw at mail dot gmail dot com>
+________________________________________________________________________________
+

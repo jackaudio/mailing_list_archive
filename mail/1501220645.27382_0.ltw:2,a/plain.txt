@@ -1,0 +1,31 @@
+Date:        Fri, 28 Jul 2017 07:43:37 +0200
+From:        Hermann Meyer  <[hidden] at web dot de>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Yuri [Jack-Devel] Zombified process without any CPU load (1501217096.23592_0.ltw:2,a)
+Follow-Up:   Yuri Re: [Jack-Devel] Zombified process without any CPU load (1501222263.29414_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Zombified process without any CPU load
+
+Am 28.07.2017 um 04:58 schrieb Yuri:
+> Jack thread only connects with the actual client code through the 
+> process() callback.
+
+You need at least connect a shutdown callback
+
+void
+jack_shutdown (void *arg)
+{
+     // clean up your client
+     exit (1);
+}
+
+     /* tell the JACK server to call `jack_shutdown()' if
+        it ever shuts down, either entirely, or if it
+        just decides to stop calling us.
+     */
+
+jack_on_shutdown (client, jack_shutdown, 0);
+
+1501220645.27382_0.ltw:2,a <46386ced-9d82-2ef6-f728-d4a3dbded979 at web dot de>
+________________________________________________________________________________
+

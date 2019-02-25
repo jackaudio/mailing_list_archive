@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Compiling jack2 in mixed mode</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Compiling jack2 in mixed mode</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1467469713.9546_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1467482657.23000_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1467482292.22498_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 02 Jul 2016 17:58:00 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1467467161.7077_0.ltw:2,/index.html'>Re: [Jack-Devel] Compiling jack2 in mixed mode </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1467482657.23000_0.ltw:2,/index.html'>Re: [Jack-Devel] Compiling jack2 in mixed mode </a></td></tr>
+</table>
+<pre>
+On Sat, Jul 02, 2016 at 09:45:48AM -0400, Paul Davis wrote:
+ 
+&gt; context switches are not free. their cost varies depending on the size of
+&gt; the working set of the process (the amount of memory touched by the
+&gt; process, notably during the JACK process() callback).
+&gt; 
+&gt; they might vary from &lt;10 usecs to as much as 500usecs (the lowest possible
+&gt; number is dependent on your CPU; the upper bound depends on the clients)
+&gt; 
+&gt; 100 * 100 usecs = 10msecs
+&gt; 
+&gt; so, you've just used 10msecs of the time available for the process
+&gt; callback. That's enormous (quite possibly larger than the actual time
+&gt; available).
+
+True, assuming you have single linear chain of 100 clients, and
+each step involves a context switch.
+
+In practice there are two factors that mitigate this problem:
+
+1. Parts of the graph may run in parallel. And SMP systems
+   are more or less standard today.
+
+2. Linear chains could be in the same process. In that case,
+   depending on implementation, you don't even need a thread
+   switch.
+
+Exploiting both conditions at the same time requires some
+intricate logic, but it's certainly possible. I have a
+'proof of concept' actually running. The big remaining
+question that needs to be resolved before this gets turned
+into something real is if I want to support existing Jack
+clients (via a replacement libjack on top of the new API).
+Doing that complicates things quite a bit, but I haven't
+abandoned the idea.
+
+Ciao,
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1467469713.9546_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1467482657.23000_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1467482292.22498_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1467482292.22498_0.ltw:2,a&nbsp;&lt;20160702175800.GA113313 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

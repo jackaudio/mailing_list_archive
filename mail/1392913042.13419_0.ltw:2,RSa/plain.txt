@@ -1,0 +1,73 @@
+Date:        Thu, 20 Feb 2014 17:17:13 +0100
+From:        [hidden] at danieletorelli dot net <[hidden] at danieletorelli dot net
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] jack-trauma for audio over IP (1393593133.13100_0.ltw:2,a)
+
+Subject:     [Jack-Devel] jack-trauma for audio over IP
+
+Hello,
+
+my name is Daniele and I'm quite new to this ML, even if I played
+around with JACK for some time now.
+
+I'd like to share with who's interested a small JACK client I
+wrote with my friend and colleague Andrea Lusuardi and called JACK
+Trauma, in order to hear more opinions and possibly improve it.
+
+It's all here: https://bitbucket.org/torelizer/jack-trauma
+or also https://github.com/torelizer/jack_trauma
+
+Despite the name (that's a long story) it's a simple tool to relay JACK
+channels over IP, in a way similar to Jacktrip but with some different
+design choices.
+
+We based the transmission on UDPLite, and we made it focused on low
+latency, and wanting to provide the possibility for the user to send
+every channel to a specific IP address, allowing for one-to-many
+configurations. This feature is not currently there in the code you see
+(even if it's achieavable with small modifications) because we only
+added it in the Python module we derived from this, that hasn't already
+been published because it's still quite "dirty" but will come soon.
+Multicast addresses can be used as well anyway, and it does the same
+job better in most normal cases.
+
+The way it works is simply one channel -> one buffer -> one packet, and
+that's it, of course it requires JACK to be running with the same
+period size on the sender and the receiver(s).
+It's mainly focused on having good performances on a small LAN, with
+traffic conditions not "extreme" and with average values of packet loss
+and delay.
+The approach with packet loss is brutal, which means there is none,
+it's still good for listening but maybe not so great for recording.
+
+So far it has been successfully tested sending up to 64 channels, with
+JACK using a period size down to 64 (on a dedicated gigabit LAN and
+using I7's).
+Running multiple instances when sending a lot of channels is also
+possible and generally better. Generally speaking, given how it
+works an increase in a number of channels makes it more sensible to
+network delays, and this is actually measurable with tests on localhost
+playing with tc.
+
+We also tested it on wireless LAN, where obviously the story is quite
+different, but if using no more than two channels in a one-to-one
+link, with JACK having a period size of 512, it's fairly usable in
+low traffic conditions.
+
+We haven't done a very precise latency measurement yet but basic
+listening tests are very promising (on Ethernet of course).
+
+So, that's it, we'll be working on improving it and we are thinking
+about a GUI and possibly a LV2 plugin version when we'll have time.
+
+If anybody is interested, any feedback is welcome so we can make it
+better!
+
+-- 
+Daniele Torelli
+----------------------
+www.danieletorelli.net
+
+1392913042.13419_0.ltw:2,RSa <9b9ab9bc05224cf2829bab202a2529a4 at danieletorelli dot net>
+________________________________________________________________________________
+

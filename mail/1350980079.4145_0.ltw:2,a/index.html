@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack consuming large amounts of CPU time</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack consuming large amounts of CPU time</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1350976315.30129_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1351032514.28700_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1350980079.4145_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 23 Oct 2012 10:14:22 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at basstech dot net </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>undersys
+<a href='../1350972683.23764_0.ltw:2,a/index.html'>[Jack-Devel] jack consuming large amounts of CPU time </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Jonathan Woithe
+<a href='../1351118917.18140_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack consuming large amounts of CPU time </a></td></tr>
+</table>
+<pre>
+Hi undersys,
+
+On 10/23/2012 08:11 AM, undersys wrote:
+&gt; Hi All,
+&gt; 
+&gt; I hope someone can give me some guidance with Jack.
+&gt; 
+&gt; I have Jack set up. All seems to work fine. I can record and playback fine etc.
+&gt; My issues starts when I leave Jack running and not doing anything.
+&gt; 
+&gt; It eats CPU % continually. Making my system quite overloaded until I restart Jack. 
+
+Is it just jackd or are there any jack-clients active when this happens?
+e.g. some reverb effects that just process silence..
+
+&gt; Is there something I can check or do? 
+
+yes, and most likely yes.
+
+&gt; I'd really like to have jack running all the time if possible.
+
+[..]
+&gt; Device :- Roland Edirol UA-25EX
+
+Is this device directly connected to the PC or is there a USB hub in
+between? Is it the sole device on the USB-port?
+
+This is an unusual problem - never heard of it, so you have to provide
+more information. With what parameters do you start jackd ('ps axwu |
+grep jackd' will tell, or you can copy/paste it from qjackctl's log
+window if you use qjackctl to launch jack). What kernel are you running
+('uname -a').
+
+Run top and see if it's indeed jackd that has the high CPU load and not
+some jack-client.
+
+
+Some more advanced methods which may or may not make sense:
+
+You can launch jackd in verbose mode and check its log.
+
+Run 'htop'. That can display CPU usage per process and thread as well as
+process priority. -&gt; find out if it is indeed jackd itself and its RT
+thread (sched fifo, negative priority number) that causes the issue.
+
+check 'cat /proc/interrupts' if your USB interface shares an IRQ with
+some other devices..
+
+
+and some shots in the dark:
+
+Maybe some power-saving kicks in. In particular CPU halt states and/or
+bus freq scaling don't go well with jackd. Disable them in the BIOS
+(look for sth like EIST, C1E-halt states).
+
+If that does not help, disable CPU freq scaling (not in the BIOS, but on
+the system; replace the Linux 'ondemand governor' with the 'performance
+governor') - it depends on your distribution and desktop env how to best
+do that..
+
+Cheers!
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1350976315.30129_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1351032514.28700_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1350980079.4145_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1350980079.4145_0.ltw:2,a&nbsp;&lt;508651DE.4010809 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

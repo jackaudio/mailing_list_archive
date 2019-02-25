@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack 0.120 - ALSA backend</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack 0.120 - ALSA backend</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302980606.25884_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303047253.22998_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303037298.3718_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 17 Apr 2011 10:48:04 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>torbenh
+<a href='../1302966386.30389_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 0.120 - ALSA backend </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1303047253.22998_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3 </a></td></tr>
+</table>
+<pre>
+On Sat, Apr 16, 2011 at 05:06:07PM +0200, torbenh wrote:
+&gt; On Sat, Apr 16, 2011 at 09:47:18AM +0000, Fons Adriaensen wrote:
+&gt; &gt; A second quick question: have there been changes to
+&gt; &gt; the ALSA backend recently ?
+&gt; 
+&gt; the diff is attached.
+&gt; i dont really see anything that might cause it.
+&gt; 
+&gt; the most possible i am currently seeing is 
+&gt; http://trac.jackaudio.org/changeset/4126
+&gt; 
+&gt; i dont have a loopback here.
+&gt; but if the problem is easily reproducible, you could just bisect it.
+&gt; 
+&gt; http://eu.kernel.org/pub/software/scm/git/docs/git-bisect.html
+&gt; 
+&gt; i updated the master branch on
+&gt; git://hochstrom.endofinternet.org/jack.git
+&gt; 
+&gt; git bisect start
+&gt; git bisect bad
+&gt; git bisect good 0.118.0 
+&gt; 
+&gt; should get you going.
+ 
+Unfortunately I have already put more time into this than
+I can afford at the moment. The problem seems to be easy
+to reproduce (the procedure below never fails for me),
+it affects Jack's core functionality, so I'd expect the
+Jack devs to look into it. But apart from your reply 
+it doesn't seem to be taken seriously.
+
+ 
+&gt; &gt; I can now trigger the problem reported before quite
+&gt; &gt; easily.
+&gt; &gt; 
+&gt; &gt; 1. Start jack using the ALSA backend and with -n 3.
+&gt; &gt; 
+&gt; &gt; 2. Start and wire up jack_iodelay. Make the required
+&gt; &gt;    external loopback.&#xA0;There is already a chance that
+&gt; &gt;    it will show the latency for -n 2 instead of the
+&gt; &gt;    expected one. In any case leave it running.
+&gt; &gt; 
+&gt; &gt; 3. Start a second jack client, one that will not 
+&gt; &gt;    exit cleanly but trigger a 'subgraph time out'
+&gt; &gt;    when termintated with ctl-C. Jack_iodelay itself
+&gt; &gt;    will do fine. No need to connect its ports.
+&gt; &gt; 
+&gt; &gt; 4. Terminate the second app. There is a good chance
+&gt; &gt;    that the measured delay will switch between the
+&gt; &gt;    expected values for -n 2 and -n 3.
+&gt; &gt; 
+&gt; &gt; 5. When the latency is the -n 2 value, check that
+&gt; &gt;    the signal is still passing via the external
+&gt; &gt;    loopback by disconnecting it for a second.
+&gt; &gt; 
+&gt; &gt; 6. Repeat 3,4,5 to taste.
+&gt; 
+&gt; So it randomly siwtches between 2 and 3 ?
+
+It more or less alternates between the two, with
+some random element being involved as well.
+
+As posted before, what happens is that after a
+subgraph timeout (which is reported) sometimes
+the alsa device is restarted (as it should be),
+and sometimes (when in the '-n 3' state) it
+isn't. Since in the same cycle there was no
+driver-&gt;write() (as the result of the timeout),
+things continue to work but with a period shift
+between playback and capture, as if '-n 2'. 
+When a new timeout occurs in that state it will
+trigger a stop/start, restoring the original
+conditions. So the net result is that the system
+almost alternates between the two states.
+
+The key to solving this will be to find out why
+the subgraph timeout does not always trigger a
+restart. I suspect some race condition in the 
+error checking, but I'm not at all familiar with
+those parts of the code.
+
+Ciao,
+
+-- 
+FA
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1302980606.25884_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303047253.22998_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303037298.3718_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1303037298.3718_0.ltw:2,a&nbsp;&lt;20110417104803.GA18082 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,81 @@
+Date:        Sat, 25 Oct 2014 22:20:12 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Athanasios Silis <[hidden] at gmail dot com>
+Cc:          Developers JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Athanasios Silis [Jack-Devel] a command line midi controller mixer for jack? (1414251346.20314_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] a command line midi controller mixer for jack?
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 10/25/2014 05:35 PM, Athanasios Silis wrote:
+> hello everyone, I am setting up a headless master audio
+> workstation. what I want is upon boot to start the jack server (and
+> netmanger) , some applications and do a few connections between
+> them. now the connections are easy to do with jack_connect , but I
+> would like to insert a mixer in the middle of all these connections
+> and control sound levels and routing from a midi controller, in
+> fact the controller will be the BEHRINGER BCR2000.
+> 
+> It is possible to use jack_mixer as a mixer but it does not offer
+> command line operation and I would have to have a vnc server
+> running in order to fire it up.
+
+..or some dummy X-server, xvfb for example.
+
+> Is there another application suited for this specific situation?
+
+hardour [1] - the headless version of ardour3 comes to mind.
+
+You prepare an Ardour3 session (mixer mappings, plugins, BCR control
+mappings etc) on a machine with desktop. Then copy that session to the
+headless machine and load it in hardour.
+
+ecasound [2] may be an option as well, but I don't know how easy or
+otherwise it is to bind BCR2K controls to it.
+
+
+Other than those, there are a few hackable solutions possible: Pure
+Data [3] for example (Pd can run headless). A small supercollider [4]
+or csound [5] script can do the trick as well. Most elegant is
+probably FAUST (compiled to standalone jack app) [6]. Personally I'd
+probably use supercollider: easy and quick to do midi bindings and
+very reliable.
+
+Also writing a small jack client that just does gain adjustments is
+not too hard and there's probably some almost ready code out therein
+some drawer that would work with minor adjustments if you don't mind
+getting your hands a bit dirty.
+
+HTH,
+robin
+
+[1] https://github.com/Ardour/ardour/tree/master/headless
+[2] http://nosignal.fi/ecasound/
+
+[3] http://puredata.info/
+[4] http://supercollider.sourceforge.net/
+[5] http://csounds.com/
+[6] http://faust.grame.fr/
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJUTAX1AAoJEKCQvOAs9X8EACYP/jkLDRIHJCdBiU6ndWFWu+dI
+CXludBgQyybddJKREIzdJj4Pd1yyQ5oirk71KnzALGqLykKLVF99SoAxpyj+ZkuM
+jjPepU48uWuwBUBmtJN4nGl8HBcXUm5W09K7M+0CeIpUw4Z81DAVVfIBF85geOTd
+XZu/5lXZFolNtHqVsqVC3+5Zud6DshKCcuPDuw2oWjZssWlV++ZDi5BnwPAC+joP
+O5NGlEolQ9pPWWsq6h185ooHLz06avfPL8GaSoPDrrosusOU8GaPb3MblMnYueG7
+oZ1Rd7ieDmISaiZKpcJ65a25qJLOS3yQpaB2UV3YcMowFhzWQ0pPg7fswIhnbzPJ
+Mf0MHzFmUqbJRba7fDkg7UXjQ3+XSLQNsBnUhKuwfCARrCiCK2qAIiyLs7I0LRDK
+L2yhwDe+02XFUjRMIzxt60OKobNGBXUtPewHPrSVqzZF8+Q8aL6x/m8e8mTaO61V
+w7F6SGNw6ihRT+p5oNYNdFByX+2mHeR6qpRZx6M+46fc8iJABiNU2aKg6le8DQIC
+aV20jFVY+C/syworluSV7GyaPpUBNIpcudcWwf99jMiQfhnOnfArbw+q7JXTj1Uq
+P8WeQpo4Vs8q+0lHOVgKq5jYisM2gHm8MhSN/o1ZCsiUeRcY699bD4jNwGml52dR
+++7rl+MTAfliZR2vv20Y
+=EnRZ
+-----END PGP SIGNATURE-----
+
+1414268427.31528_0.ltw:2, <544C05FC.9030801 at gareus dot org>
+________________________________________________________________________________
+

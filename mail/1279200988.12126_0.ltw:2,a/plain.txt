@@ -1,0 +1,175 @@
+Date:        Thu, 15 Jul 2010 15:36:03 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Ralf Mardorf <[hidden] at alice-dsl dot net>
+Cc:          [hidden] at lists dot linuxaudio dot org
+
+Subject:     Re: [LAD] Tests directly routing pc's midi-in to midi-out
+
+On 07/15/2010 02:45 PM, Ralf Mardorf wrote:
+> On Thu, 2010-07-15 at 13:45 +0200, Robin Gareus wrote:
+>> On 07/15/2010 01:07 PM, Ralf Mardorf wrote:
+>>> On Thu, 2010-07-15 at 12:55 +0200, Clemens Ladisch wrote:
+>>>> Ralf Mardorf wrote:
+>>>>> - instead of dev.hpet.max-user-freq=64 I'll try 1024 or 2048 as Robin
+>>>>> mentioned
+>>>>
+>>>> This parameter will not have any effect on anything because there is no
+>>>> program that uses the HPET timers from userspace. 
+>>
+>> That'd be correct if Ralf would stick to 'amidiplay' and friends for his
+>> tests.
+> 
+> While at least one friend throw his Apple MacOs through the window. I'm
+> not kidding. Modern computers + music + my friends = not good. I've got
+> two kinds of friends, the once who say I shouldn't use a modern computer
+> and the others who say, I should buy Nuendo and expensive hardware. And
+> btw. I don't have got 1000 friends, but just a handful.
+> If I would ask my neighbours to listen, they would be fine with bad
+> timing, regarding to their habits, listening to the radio at prime time.
+
+Took me a while to catch that drift. I meant friends of 'amidiplay'
+(eg 'amidirecord', 'aseqdump', etc) with the aim to keep things simple
+for testing.
+
+"..and friends" is an English idiom; sorry to put you off track.
+
+> Anyway, I could ask people to listen, but I'm sure this would be
+> useless.
+> 
+>> There are a couple of audio-tools who can use either RTC or HPET for
+>> timing, although most of them need an option to explicitly enable it.
+>>
+>>>> When high-resolution
+>>>> timers are used by ALSA, this is done inside the kernel where there is
+>>>> no limit on the maximum frequency.
+>>
+>> Thanks for that explanation. It makes perfect sense.
+>> I take it the same must be true for dev.rtc.max-user-freq as well.
+>>
+>> BTW. Do you know the unit of these values?
+>>   cat /sys/class/rtc/rtc0/max_user_freq
+>>   cat /proc/sys/dev/hpet/max-user-freq
+>> are they Hz?
+>>
+>> linux-2.6/Documentation/hpet.txt does not mention it at all and
+>> linux-2.6/Documentation/rtc.txt hints it's Hz but does not explicitly
+>> say so.
+>>
+>>>> Regards,
+>>>> Clemens
+>>>
+>>> IIRC someone on jack-devel mailing list had issues when using mplayer
+>>> with the value 64 and it was solved when using the value 1024. But as I
+>>> mentioned before, for my USB MIDI there was a difference between system
+>>> timer and hr timer, but there was no difference for the value 64 and
+>>> 1024, when using hr timer.
+>>>
+>>> Btw. I don't understand what a maximum frequency in the context does
+>>> mean. If 64 or 1024 should have impact, what would be the result?
+>>>
+>>> System timer for a kernel-rt is set up to 1000Hz and hr timer is at
+>>> 1000000000Hz.
+>>>
+>>> What is 'max-user-freq' for?
+>>
+>> It limits the maximum frequency at which user-space applications can
+>> [request to] receive "wakeup calls" from the hr-timer.
+>>
+>> see also the "Timers" thread on LAD last November:
+>> http://linuxaudio.org/mailarchive/lad/2009/11/7/161647
+> 
+> Okay, what ever user-space might be, 
+
+It's the opposite of "kernel-space" :)
+http://en.wikipedia.org/wiki/User_space
+
+> I assume regarding to the
+> explanations it's unimportant for rt. And as mentioned by the text of
+> the link, I can confirm that at least my USB MIDI is better when using
+> hr timer.
+> 
+> I'll test amidiplay, but again, playing all MIDI instruments at the same
+> isn't the major problem, perhaps just for me, resp. for people with
+> 'golden ears'.
+
+Lets try something very simple:
+
+ONE)
+- Take a very simple midi-file.
+- Use 'aplaymidi' to send it from your PC to your external midi-drum
+machine. - Use your drum-synth's "klick" or "woodblock" sound or sth
+very dry with a good attack.
+- do a quick ear-test if you can hear midi-jitter?
+- capture the audio-output of the external-midi-synth with arecord.
+
+Rewind and do it again.
+Post the two files and the used .mid on a web-server or some drop-box.
+
+If you want to check yourself: Align the first-beat of the captured
+audio files in a multi-track audio-editor. While it will involve a bit
+of manual labor to quantify the jitter. It'll at least be solid evidence.
+
+
+TWO)
+- launch an external MIDI-metronome (eg your Atari ST)
+- connect it to your PC
+- use 'arecordmidi' to generate a .mid file from it.
+
+Repeat at least once and post the two midi files somewhere for us to
+download.
+
+
+THREE)
+  midi-metronom -> PC -> external-synth ==> audio
+
+This combines ONE+TWO. just use 'aconnect[gui]' to use
+your PC as MIDI-THRU. and 'arecord' to record audio that comes
+from your drum-synth.
+
+Note, at the moment we're not interested in latency, but in jitter.
+The ticks in the recorded audio file _should be_ at identical intervals
++- jitter.
+
+The output of
+  cat /proc/asound/timers
+and
+  cat /proc/asound/version
+might be interesting
+
+Is that about right? Comments anyone?
+
+> The major issue is sync to audio recordings of MIDI instruments, while
+> doing audio recordings of other, resp. the same instruments again.
+> 
+> I e.g. do only have one DX7 and one Matrix-1000 and my TG33 (with vector
+> control) is broken, hence I can't use all outputs, but one stereo output
+> of the TG33.
+> 
+> I wish to be able to record a synth several times. This means that even
+> inaudible jitter will become audible, for a production.
+> 
+> Of course I won't record one drum after the other from any of my drum
+> modules, because this just would result in more noise, but recording the
+> snare or kick separated to other drum samples is needed, when doing the
+> mastering by Linux and using a compressor like JAMin.
+> 
+> Accumulation of jitter, caused by recording one instrument after the
+> other is breaking the groove.
+> 
+>>
+>>> Cheers!
+>>>
+>>> Ralf
+>>>
+>>>
+>> best,
+>> robin
+> 
+> :)
+> 
+> Ralf
+> 
+
+1279200988.12126_0.ltw:2,a <4C3F0EC3.9080703 at gareus dot org>
+________________________________________________________________________________
+

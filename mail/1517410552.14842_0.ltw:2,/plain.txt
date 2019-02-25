@@ -1,0 +1,111 @@
+Date:        Wed, 31 Jan 2018 15:55:16 +0100
+From:        Christian Affolter  <[hidden] at purplehaze dot ch>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Kjetil Matheussen Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device (1517408484.12409_0.ltw:2,)
+Follow-Up:   Thomas Brand Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device (1517430228.12361_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Capture problems with jack2 on Axia-Alsa device
+
+On 31.01.2018 15:20, Kjetil Matheussen wrote:
+> On Wed, Jan 31, 2018 at 3:08 PM, Christian Affolter
+> <[hidden] <mailto:[hidden]>> wrote:
+> 
+>     On 31.01.2018 11:42, Kjetil Matheussen wrote:
+>     > On Wed, Jan 31, 2018 at 11:29 AM, Christian Affolter
+>     > <[hidden] <mailto:[hidden]>
+>     <mailto:[hidden] <mailto:[hidden]>>>
+>     wrote:
+>     >
+>     >
+>     >     Yes, it's a proprietary driver and I don't have access to the source
+>     >     code. I could contact the vendor and ask if they observed the same or a
+>     >     similar issue already.
+>     >     However, I'm wondering what arecord and jackd-dummy/alsa_in are doing
+>     >     different compared to jackd-alsa.
+>     >
+>     >
+>     > Sorry if this is not relevant (I'm not quite following what's
+>     > happening), but could
+>     > it be that the difference can be explained by different alsa paremeters set
+>     > by arecord and jack? Have you tried to run "arecord -L" and find the most
+>     > low-level device to record from (which jack probably uses).
+>     >
+>     > For instance by running something like "arecord -D iec958:CARD=M2496,DEV=0" 
+>     > (my soundcard).
+>     >
+>     > If that is the case, then it's probably the default alsa device that
+>     > does something magic
+>     > when accessing a more low-level device.
+> 
+>     I ran both, arecord and jackd with hw:0 initially. I re-ran the capture
+>     again with "arecord -D default:CARD=Axia ...", which didn't make any
+>     difference (the recording sounds correct).
+> 
+>     For the record, here is the ALSA capture PCM and device list:
+> 
+> 
+> Maybe jack will work if you give it the same parameters that arecord
+> uses. I.e. compare
+> the content of  /proc/asound/card0/pcm0p/sub0/hw_params (or a similarly
+> named file)
+> when running arecord and when running jack.
+> 
+> Also, maybe it works to record in jack if you change audio from "duplex"
+> to "capture only".
+
+BINGO and thank you so much for this pointer!
+
+If I start jackd in capture-only mode with only two channels, the
+capturing finally works as expected:
+
+jackd -d alsa -d hw:0 -C -i 2
+
+Interestingly, the different period size of 4096 vs. 1024 doesn't seems
+to have any impact (I first tried to run with -p 4096 as well).
+
+Below are the HW parameters of the ALSA device, during different states.
+
+# hw_params during arecord
+cat /proc/asound/card0/pcm0c/sub0/hw_params
+
+access: RW_INTERLEAVED
+format: S32_LE
+subformat: STD
+channels: 2
+rate: 48000 (48000/1)
+period_size: 4096
+buffer_size: 16384
+
+
+# hw_params during jackd -d alsa -d hw:0
+# jackd -d alsa
+cat /proc/asound/card0/pcm0c/sub0/hw_params
+
+access: MMAP_INTERLEAVED
+format: S32_LE
+subformat: STD
+channels: 8
+rate: 48000 (48000/1)
+period_size: 1024
+buffer_size: 2048
+
+
+# hw_params during jackd -d alsa -d hw:0 -C -i 2
+cat /proc/asound/card0/pcm0c/sub0/hw_params
+
+access: MMAP_INTERLEAVED
+format: S32_LE
+subformat: STD
+channels: 2
+rate: 48000 (48000/1)
+period_size: 1024
+buffer_size: 2048
+
+
+
+Thank you everyone for your valuable help!
+Chris
+
+1517410552.14842_0.ltw:2, <2be79759-b389-8650-5150-d4202f8f19c1 at purplehaze dot ch>
+________________________________________________________________________________
+

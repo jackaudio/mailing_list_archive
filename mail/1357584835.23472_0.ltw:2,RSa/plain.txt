@@ -1,0 +1,31 @@
+Date:        Mon, 07 Jan 2013 18:53:30 +0000
+From:        John Emmas  <[hidden] at tiscali dot co dot uk>
+To:          JACK List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357573896.30617_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357585560.24569_0.ltw:2,RSa)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357589471.31159_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357599288.11033_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)
+
+On 7 Jan 2013, at 15:50, Stéphane Letz wrote:
+
+> 
+> Not yet on master, but on a development branch
+> 
+
+Okay, I found it.  Sadly it doesn't compile with MSVC.  The reason is the use of the sizeof operator.  For example, the declaration for type 'jack_double' evaluates to this for MSVC:-
+
+        typedef __declspec(align(sizeof(double))) double jack_double;
+
+and the problem is that sizeof() isn't evaluated by the preprocessor (it gets evaluated later) so the alignment size is unknown at this point.
+
+In any case, I'm not sure how this strategy leads to portable struct packing (or to put it another way, it might be working in the ARM compiler but I suspect it's probably working by accident).  Different structs (and even the fields within a struct) will have different alignment.  Of course, that's theoretically do-able - but it seems unlikely that the ARM compiler could make sense of this complicated, variable packing arrangement whilst at the same time, failing to understand 1-byte packing.
+
+Are we sure that __attribute__((__packed__)) isn't just broken in the ARM compiler?  That seems the most likely explanation for what Robin observed.
+
+John
+
+1357584835.23472_0.ltw:2,RSa <BC88F349-313C-44FD-B08E-2B33267E9BD7 at tiscali dot co dot uk>
+________________________________________________________________________________
+

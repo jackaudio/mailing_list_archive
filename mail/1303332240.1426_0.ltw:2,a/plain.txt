@@ -1,0 +1,148 @@
+Date:        Wed, 20 Apr 2011 22:42:05 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] non-callback API (1303329638.28752_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] non-callback API (1303337062.10769_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] non-callback API
+
+Le 20 avr. 2011 à 22:00, Fons Adriaensen a écrit :
+
+> On Wed, Apr 20, 2011 at 04:41:33PM +0200, Stéphane Letz wrote:
+>> 
+>> Le 20 avr. 2011 à 16:20, Gabriel M. Beddingfield a écrit :
+>> 
+>>> 
+>>> 
+>>> On Wed, 20 Apr 2011, Stéphane Letz wrote:
+>>> 
+>>>>> I just meant that you get signalled to start processing audio whether you are waiting for the signal or not.
+>>>> 
+>>>> Ahah and how that? ((-:
+>>> 
+>>> OK, so if it's time for me to process audio and I have yet to call jack_cycle_wait()... what happens until I call it?
+>>> 
+>>> -gabriel
+>> 
+>> The semaphore get signaled right, and as soon as the thread calls jack_cycle_wait, it will return.
+>> 
+>> Nervermind, probably we agree... but we don't understand each other.
+> 
+> 
+> It's actually quite simple.
+> 
+> In the first implementation (which I proposed) there was no jack_cycle_signal(),
+> just jack_cycle_wait(), and a very simple correspondence between the transitions
+> in each mode:
+> 
+> Jack calls your callback   <----->   jack_cycle_wait() returns
+> the callback returns       <----->   you call jack_cycle_wait()
+> 
+> This just means that calls and returns are swapped, return values 
+> become call arguments and vice versa. You could (and probably
+> still can) even switch between the two modes in single client.
+> I used to have one doing that randomly:
+> 
+> int jack_process_callback (int nframes, void *userarg)
+>    // the one given to jack_set_process_callback()
+> {
+>    while (true)
+>    {
+>        process(nframes);
+>        if (randomint() & 1)
+>            break;
+>        else     
+>            nframes = jack_cycle_wait(0);
+>    }
+>    return 0;
+> }  
+> 
+> void process(int nframes)
+>    // the real processing function
+> {
+>    // do your stuff
+> }  
+> 
+> 
+> On Jack's side, there was something like this which handles
+> both modes and doesn't care which one the client uses:
+> 
+> void client_thread_main(void)
+> {
+>    int retval = 0;
+>    while (retval == 0)
+>    {
+>        nframes = jack_cycle_wait(retval);
+>        if (nframes)
+>            retval = user_process_callback(nframes, userarg);
+>        else
+>            break;
+>    }
+> }
+> 
+> int jack_cycle_wait(int retval)
+> {
+>    if (retval)
+>        return 0;
+>    wait_for_trigger_from_engine();
+>    return nframes;
+> } 
+> 
+> 
+> It can instructive to follow the flow of control
+> starting with client_thread_main()
+> 
+> 
+> Jack_client_signal() was added later. The original 
+> meaning of jack_cycle_wait() was "I'me done with
+> this cycle AND the next Jack client can run now".
+> Jack_client_signal() splits off the second part of
+> this, and leaves the first to jack_cycle_wait().
+> 
+> I don't like very much this implementation. It breaks
+> the symmetry of the original one. The equivalences now
+> become:
+> 
+> Jack calls your callback   <----->   jack_cycle_wait() returns
+> the callback returns       <----->   you call jack_cycle_signal()
+>                                     and jack_cycle_wait()  
+> 
+> A cleaner implementation would be to either:
+> 
+> - require jack_cycle_signal() also before returning in
+>  the callback, but this would break the existing API,
+> 
+> - or make jack_cycle_wait() perform the equivalent of
+>  jack_cycle_signal() if that was not called before -
+>  this would automatically do the same for a return
+>  from the callback. 
+> 
+> 
+> HTH,
+> 
+> -- 
+> FA
+> 
+
+
+I thin, the point of having jack_cycle_wait() and jack_cycle_signal() was to be able to write:
+
+
+while(true)
+{
+	jack_cycle_wait()
+
+	// Do some work the require the new input buffers and produce output buffers
+
+	 jack_cycle_signal()  // transfer control to next client in the graph *ASAP* (especially important in a multi-core case when next clients can start running)
+
+	// Possibly do some more work before suspending again until next cycle
+
+}
+
+Stéphane 
+
+1303332240.1426_0.ltw:2,a <6122C555-7B15-4082-8A5C-4C1890A8B912 at grame dot fr>
+________________________________________________________________________________
+

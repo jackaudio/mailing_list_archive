@@ -1,0 +1,138 @@
+Date:        Wed, 07 Mar 2012 17:56:40 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Rui Nuno Capela <[hidden] at rncbc dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Rui Nuno Capela Re: [Jack-Devel] Compiling QjackCtl 0.3.8 on Windows (1331139001.16654_0.ltw:2,a)
+Follow-Up:   Rui Nuno Capela Re: [Jack-Devel] Compiling QjackCtl 0.3.8 on Windows (1331141062.19826_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Compiling QjackCtl 0.3.8 on Windows
+
+Le 7 mars 2012 à 17:50, Rui Nuno Capela a écrit :
+
+> On 03/07/2012 04:18 PM, Stéphane Letz wrote:
+>> 
+>> Le 7 mars 2012 à 15:57, Rui Nuno Capela a écrit :
+>> 
+>>> On 03/07/2012 12:39 PM, Stéphane Letz wrote:
+>>>> 
+>>>> Le 2 mars 2012 à 17:00, Rui Nuno Capela a écrit :
+>>>> 
+>>>>> On 03/02/2012 01:22 PM, Stéphane Letz wrote:
+>>>>>> 
+>>>>>> Hi all,
+>>>>>> 
+>>>>>> The binary version of  QjackCtl included in JACK for Windows
+>>>>>> package is now quite old and a bit buggy. I need to compile the
+>>>>>> latest version.
+>>>>>> 
+>>>>>> Has anybody succeeded in compiling QjackCtl 0.3.8 on WIndows?
+>>>>>> 
+>>>>>> As I understand src.pri  and config.h have to be setup correctly.
+>>>>>> Anybody with a version of those files I could reuse? Can
+>>>>>> QTCreator be used?
+>>>>>> 
+>>>>>> Thanks in advance for any info on how to setup the compilation
+>>>>>> environement and build the application.
+>>>>>> 
+>>>>> 
+>>>>> hi Stephane, you should know this better ;)
+>>>>> 
+>>>>> but, ntl
+>>>>> 
+>>>>> edit the files here attached, rewrite those placeholders with the
+>>>>> windows thing, like drive:\directory\to\whatever
+>>>>> 
+>>>>> </path/to/jack/includes>  </path/to/portaudio/includes>
+>>>>> </path/to/jack/libs>  </path/to/portaudio/libs>
+>>>>> 
+>>>>> disclaimer: these have been NOT tested (i don't do windoze for
+>>>>> ages:)) but i guess it gets plain str8 fwd to use qtcreator
+>>>>> anywhere,
+>>>>> 
+>>>>> yada yada -- rncbc aka Rui Nuno Capela [hidden]
+>>>> 
+>>>> 
+>>>> Thanks a lot Rui.
+>>>> 
+>>>> I finally succeeded compiling the project directly from QT Creator
+>>>> (which is just fine...). The resulting QjackCtl works fine, but for
+>>>> some reason the start logic has changed a bit. if a just put "jackd
+>>>> -S" in server path, then QjackCtl tries to start
+>>>> "c:/Windows/system32/jackd.exe", which is wrong. I would like
+>>>> QjackCtl to just use the jackd.exe that is located in the same folder
+>>>> where QjackCtl is. This was working this way before. I can use a
+>>>> complete path, but this is not so practical.
+>>>> 
+>>>> Is there a way to get back to the old way? An option at compilation
+>>>> time? Or will I need to hack the "start jackd" code?
+>>>> 
+>>> 
+>>> gosh! lookout for those #ifdef WIN32's in qjackctlMainForm.cpp
+>>> 
+>>> most suspicious are that kind that appears in
+>>> qtractorMainForm::startJack() ... for which a lookup through the PATH
+>>> environment variable takes place when the server executable path (nee
+>>> server prefix on svn trunk) is given in relative terms ("jackd" vs.
+>>> "drive:/path/to/jackd.exe"
+>>> 
+>>> byee
+>>> --
+>>> r
+>> 
+>> OK . Basically commenting this block, it works again.
+>> 
+>> if (fi.isRelative()) {
+>> 	#if defined(WIN32)
+>> 		const char chPathSep = ';';
+>> 		if (fi.suffix().isEmpty())
+>> 			sCommand += ".exe";
+>> 	#else
+>> 		const char chPathSep = ':';
+>> 	#endif
+>> 		const QString sPath = ::getenv("PATH");
+>> 		QStringList paths = sPath.split(chPathSep);
+>> 		QStringListIterator iter(paths);
+>> 		while (iter.hasNext()) {
+>> 			const QString&  sDirectory = iter.next();
+>> 			fi.setFile(QDir(sDirectory), sCommand);
+>> 			if (fi.isExecutable()) {
+>> 				sCommand = fi.filePath();
+>> 				break;
+>> 			}
+>> 		}
+>> 	}
+>> 
+> 
+> you should not comment that block, it is of use on non-windoze platforms :/ maybe it's just missing the ".exe" suffix ...
+> 
+> 
+>> But now I have a "non systematic" crash when I quit QjackCtl with the server running. It crashes in  qjackctlMainForm::jackCleanup , for instance in :
+>> 
+>> 	appendMessages(tr("JACK was stopped")
+>> 			+ formatExitStatus(m_pJack->exitCode()));
+>> 
+>> or when deleting the m_pJack.
+>> 	
+>> Basically it sees the m_pJack is just NULL . Here is a backtrace.
+>> 
+> 
+> what's really crashing? qjackctl or jackd(.exe) ??
+
+See the trace. qjackctl is crashing.
+> 
+> 
+> i guess the jackd process termination logic in qjackctl/windows is actually fubar then.
+> 
+> maybe it just worked long time ago by sheer luck ;) nb. win2k was the last of the winnt flavours i've tried in a barely serious way; subtle changes have sure been /broken a lot/ since then :S
+> 
+> byee
+
+So what am I supposed to do?
+
+Thanks.
+
+Stéphane 
+
+1331139420.17339_0.ltw:2,a <4AA2F531-7208-4519-A897-D831578ECD83 at grame dot fr>
+________________________________________________________________________________
+

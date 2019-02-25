@@ -1,0 +1,189 @@
+Date:        Sun, 30 Jun 2013 10:41:51 +0930
+From:        Ron  <[hidden] at debian dot org>
+To:          Adrian Knoth <[hidden] at drcomp dot erfurt dot thur dot de>, [hidden] at bugs dot debian dot org
+Cc:          Robin Gareus <[hidden] at gareus dot org>, [hidden] at jackaudio dot org, Debian Multimedia Maintainers <[hidden] at lists dot alioth dot debian dot org>
+In-Reply-To: Adrian Knoth Re: [Jack-Devel] netjack2 + opus custom modes + debian (1372527427.8053_0.ltw:2,a)
+Follow-Up:   Robin Gareus Re: Bug#686777: netjack2 + opus custom modes + debian (1372670150.10938_0.ltw:2,a)
+Follow-Up:   Robin Gareus Bug#686777: netjack2 + opus custom modes + debian (1372670298.11184_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] Bug#686777: netjack2 + opus custom modes + debian (1372689632.2294_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: Bug#686777: netjack2 + opus custom modes + debian (1372689653.2299_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Bug#686777: netjack2 + opus custom modes + debian (1372689738.2355_0.ltw:2,a)
+
+Subject:     Bug#686777: netjack2 + opus custom modes + debian
+
+Hi,
+
+So the background (that's been missing from the BTS up until now) is
+that shortly after Robin initially reported this bug, he also contacted
+us upstream and we had a fairly detailed discussion on IRC about all the
+various issues.  Since Debian was in freeze there wasn't much going to
+happen with the package right then, and it wasn't clear at the end of
+the discussion whether netjack was still going to use the custom modes
+after all.
+
+But it is time now to decide on this soon, so I got in touch with Robin
+again yesterday to see what constraints we really have to work with.
+
+My understanding of the background prior to that is that Robin had some
+discussion with some of the developers at FOMS, who at the time suggested
+the custom modes probably would be appropriate for the use described to
+them.
+
+The later discussion on IRC however (including the developers who were
+at FOMS) was much less conclusive, and it wasn't at all clear after that,
+that the need to do this outweighed the costs, both in general, and to
+jack specifically.
+
+The custom modes are not interoperable with anything else, nor are they
+a part of the codec standard, but they do exist in the code for people
+with very specialised needs in 'closed' applications, where the need for
+oddball frame sizes strongly outweighs any other considerations of
+interoperability, or codec performance (the latter being both in the
+sense of processing resources *and* more importantly audio quality).
+
+
+My understanding at present is that the primary (only?) reason that
+netjack is using custom modes is so that it can use 64 sample frames
+which shaves ~1ms of latency off the usual 2.5ms (120 sample) minimum
+frame size for normal opus modes.  We didn't quite get to the bottom
+of all of that before Robin had to leave, so at present my only
+understanding of the reason for that is that "pro audio equipment"
+can operate with lower latencies than normal sound cards which makes
+this desirable.
+
+What I still don't understand though is why if you are using Pro audio
+equipment the degradation in audio quality that this would bring (which
+is significant) would be acceptable for that use?  You'd need to stream
+at much higher bitrates than normal to recover even some of that, and
+even then there are many quality enhancements in the encoder that only
+apply to the normal modes, which are completely bypassed in the custom
+modes.  And even without those, quality will still suffer compared to
+the more normal analysis frame sizes used by this codec, just by virtue
+of the tiny window size.  Even 2.5ms frames have notably lower quality
+than the default 20ms ones do.  Non-standard 1.3ms frames are at a
+considerable disadvantage here for high fidelity reproduction.
+
+The 'normal' latency of Opus is orders of magnitude lower than anything
+which can even approach it for quality, but even it has both hands tied
+behind its back when it only has 64 samples to work its magic on.
+
+Which basically makes the question become: "If you are using Pro audio
+equipment and ~1ms of latency does make a difference to you, then
+wouldn't a lossless transport mode be more appropriate for that anyway?"
+
+
+Which isn't exactly the original question that we need to answer here,
+but it is relevant to that, since netjack is the only thing that I'm
+aware of that's likely to want support for custom modes from the distro
+packages.  So the question of whether it's actually gaining any real
+benefit from this is the key to knowing whether we even need to consider
+supporting custom modes in the distro in the foreseeable future. 
+
+The upstream developers have reaffirmed that they definitely do not
+want to enable the custom modes by default in what they release, so
+even if we do override that here for the .debs, there'll still be a
+question of our compatibility with other distros and users.
+
+
+Re Jonas's remarks:
+
+> In my opinion the best option so far is for libopus to enable custom
+> modes: Primary aim in Debian is to enable most possible features - being
+> fastest possible has lower priority so can wait until done properly.
+>
+> ...and convenience code copies is explicitly discouraged in Policy, so
+> range far lower on the list!
+
+I concur with this, which is why I revisited the question of whether
+we would even need to with Robin.  And the other upstream developers
+agree that should we really need to, enabling this for the packages
+is probably the preferred option (unless we really can think of some
+better way instead).
+
+There isn't really a "wait until done properly" about this though,
+the penalties are largely inherent in the extra complexity this adds.
+
+Part of the catch here is that while enabling this will not break
+ABI, disabling it again will, so this is very much a one-way decision
+which I'd like to not make until we are certain there will be no
+turning back from it, or second thoughts, or regrets over mistakes
+that could be remedied now in better ways instead.
+
+
+On Sat, Jun 29, 2013 at 07:36:57PM +0200, Adrian Knoth wrote:
+> Ron, what do you think about the following?
+> 
+> Instead of using embedded copies in jackd1/2, let's build two flavours
+> of OPUS from a single source package.
+
+We discussed this option upstream to try and find a solution that might
+work like this, but it's not simple.  Mainly because the custom modes
+are not a simple superset of the normal builds.  They add some API
+functions, but it also changes the behaviour of some existing functions.
+
+> Just sketching now:
+> 
+> libopus0 will provide /usr/lib/libopus.so.0 (business as usual)
+> libopus-custom-0 will provide /usr/lib/libopus-custom.so.0
+
+The big problem with this is that both of those will provide all of
+the functions that libopus.so.0 does, only some of the symbols with
+the same names will have different implementations in the -custom one.
+
+Which means that when jack links to -custom, and jill links to -vanilla,
+and then some high level audio app or desktop environment or whatever
+links to both jack and jill ...   hilarity is likely to ensue.
+
+> In addition, we'll keep libopus-dev and introduce libopus-custom-dev
+> containing the additional files and a dependency on libopus-custom-0.
+> 
+> All packages will be co-installable, since no file conflict will occur.
+
+There can be no file conflict, but there will be symbol conflicts.
+
+> In jackd1/2, we'll build-depend on libopus-custom-dev and link against
+> libopus-custom instead of libopus.
+> 
+> It's certainly a bit of work on your side (building two binary sets from
+> the same source). OTOH, at least CDBS supports flavours out of the box,
+> we use it in ardour to build ardour (generic), ardour-i686 (SSE) and
+> ardour-altivec.
+
+I'm not worried about the work (it's not much), or being able to package
+multiple flavours (I've done this before for various things too).
+
+Mostly I'm worried that we don't make a decision that could later blow up
+in our faces and/or be very difficult to unwind, for reasons that turn out
+to never have been warranted at all.  And that we will be 'forking' away
+incompatibly for other distros, at least for a while if not forever.
+
+So right now I'm basically interested in 2 questions:
+
+ - Can jack really make a case for needing this in a way that actually
+   delivers real benefits to jack users.  (Robin has said that this is
+   also 'complicated', but I still don't fully understand why yet).
+   Or would it be better off only using Opus in cases where 2.5ms of
+   latency is acceptable (or even more where quality is more important
+   than the lowest possible latency) - and providing lossless transport
+   where extreme low latency is required (which I know it already does).
+
+ - And if the answer to the above is yes, the custom modes really are a
+   clear advantage for some particular use case, what the least worst way
+   to do that in the distro may be.
+
+
+Good answers to all of my uncertainties above are most welcome :)
+I would like to resolve this fairly quickly once we are all sure we
+have a firm grip on the relevant facts and do actually know the best
+result to be aiming for here.
+
+
+  Thanks!
+  Ron
+
+-- 
+To unsubscribe, send mail to [hidden].
+
+1372555278.32301_0.ltw:2,a <20130630011150.GK14785 at audi dot shelbyville dot oz>
+________________________________________________________________________________
+

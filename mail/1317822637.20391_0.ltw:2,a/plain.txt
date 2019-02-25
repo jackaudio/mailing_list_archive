@@ -1,0 +1,77 @@
+Date:        Wed, 05 Oct 2011 06:50:03 -0700
+From:        John Swenson  <[hidden] at comcast dot net>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Tobias Hoffmann [Jack-Devel] netjack1 / netjack2 (1317680292.24150_0.ltw:2,a)
+Follow-Up:   Tobias Hoffmann Re: [Jack-Devel] netjack1 / netjack2 (1318029062.7000_0.ltw:2,a)
+Follow-Up:   Robin Gareus Re: [Jack-Devel] netjack1 / netjack2 (1318431629.16054_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] netjack1 / netjack2
+
+Hi Tobias,
+I actually did this a while back. I used netjack2 implemented in an 
+FPGA. I used a wiznet ethernet chip to deal with the low level protocol 
+stuff, the only thing it doesn't do is DHCP, so I just used static IP to 
+make it easier. I did implement the master in the FPGA. For details I 
+just read the source code and figured out what parts of it I wanted to 
+implement. If you are just building a simple one to one system you can 
+leave out a LOT of the jack stuff itself and just implement the netjack 
+protocol. One advantage of doing the master is that you can set the 
+sample rate to what you want and build a low jitter oscillator for that 
+frequency. Of course its best if that is the same frequency used by 
+whatever is the slave.
+
+Things only get tricky if both master and slave have their own clocks. 
+For example if the slave is an ADC plugged into a mic, it can get 
+tricky. But if the slave is playing back a file there is no "local 
+clock" in the slave. In the system I put together the slave was purely 
+software so there was no problem with clock syncing, the master just had 
+the main clock driving the DAC and the FPGA.
+
+I haven't looked at netjack1 in detail. When I started this project 
+netjack1 was not being supported and netjack2 ran on multiple platforms 
+so that is the way I went.
+
+John S.
+
+
+On 10/3/2011 3:17 PM, Tobias Hoffmann wrote:
+> Hi,
+>
+> as I've seen, there has already been a lot of discussion involving jack,
+> ethernet and fpga implementations.
+> AFAICS good timing (word-clock, low jitter) is hard stuff.
+>
+> My current issues are much more mundane, so here they go:
+> 1. It is my understanding, that netjack (as slave) is one of simplest
+> audio-over-ip protocols (others being dante, ravenna, etc,...),
+> especially for fpga implementations, is this correct? (or would it be
+> better to start with something else?)
+> 2. Is there any concise ("RFC-like") documentation of the netjack1
+> and/or netjack2 protocol (i.e. control packets, data packets)?
+> 3. "Is netjack1 or netjack2 the way to go?"
+> (Beyond knowing that netjack2 has discovery and advanced fragmentation
+> support?)
+>
+> Regards,
+> Tobias
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+>
+> ---------------------------------------------------------------------------------------------------
+>
+> Text inserted by Panda IS 2011:
+>
+> This message has NOT been classified as spam. If it is unsolicited mail
+> (spam), click on the following link to reclassify it:
+> http://localhost:6083/Panda?ID=pav_11221&SPAM=true&path=C:\Documents%20and%20Settings\JohnNChris\Local%20Settings\Application%20Data\Panda%20Security\Panda%20Internet%20Security%202011\AntiSpam
+>
+> ---------------------------------------------------------------------------------------------------
+>
+>
+>
+
+1317822637.20391_0.ltw:2,a <4E8C608B.7070606 at comcast dot net>
+________________________________________________________________________________
+

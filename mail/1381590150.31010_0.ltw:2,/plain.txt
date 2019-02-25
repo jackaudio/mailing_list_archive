@@ -1,0 +1,120 @@
+Date:        Sat, 12 Oct 2013 17:07:49 +0200
+From:        Christian Schoenebeck  <[hidden] at crudebyte dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] major change in jack1 MIDI handling (1381577873.23446_0.ltw:2,)
+Follow-Up:   Paul Davis Re: [Jack-Devel] major change in jack1 MIDI handling (1381591973.32168_0.ltw:2,)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] major change in jack1 MIDI handling (1381593827.850_0.ltw:2,)
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] major change in jack1 MIDI handling (1381596086.2631_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] major change in jack1 MIDI handling
+
+On Saturday 12 October 2013 13:37:44 Paul Davis wrote:
+> It is more stable at lower latencies. Jack2 in sync mode has often had
+> quirks that Jack1 (which only has sync mode) doesn't seem to suffer from.
+
+So far I did not encounter any issues at low latencies, neither in sync, nor 
+async mode with JACK2. @Stéphane, were there any reports?
+
+However nowadays, since also ARM and even microcontroller units provide multi 
+cores, the async mode becomes more and more beneficial and important than the 
+sync mode anyway.
+
+> From my perspective, the major feature that Jack2 has is that it has
+> Windows support and better OS X support than Jack1, and a developer
+> (Stephane) who has some reason(s) to be willing to support these to some
+> extent at least. It is hard to imagine who is going to bring Windows
+> support to Jack1, or the many improvements and fixes in CoreAudio support
+> that Stephane has added to Jack2.
+
+Actually I don't had those advantages in mind at all. Especially since there 
+is still no ASIO support on Windows, which could be added quite easily though.  
+Since i.e. the ASIO driver C++ classes of LinuxSampler could be adjusted for 
+JACK2's code base on probably one day. We discussed that before.
+
+> Are there bug reports for these dead locks? I am on #jack on IRC 24/7 and I
+> have not seen reports of deadlocks or lower CPU idle load for years, if
+> ever. Deadlocks were a problem with Tschak, which is why it did not land.
+
+The last dead lock fix for JACK1 was commited by you 6 days ago:
+https://github.com/jackaudio/jack1/commit/29785c4a257b1cb3ef1129e17d2a416ccfc073ce
+However I have to add that this particular example is a bit unfair, since this 
+particular code part is not protected in JACK2 by lock guard's either yet. 
+However the point is, with C++ (lock guard & recursive mutex) you can 
+eliminate such bugs once and for all. And most parts of JACK2 are already 
+protected this way. Even if JACK1 was totally dead lock free, as soon as new 
+features are added, such bugs can easily be re-introduced on C level, even if 
+the respective developer is a very well experienced one. And avoiding them (or 
+fixing them) costs time, sometimes a lot, which is unnecessary.
+
+You know what I mean, there are a lot of other common bugs on C level, which 
+can be easily eliminated with C++ and appropriate design patterns.
+
+> This is a matter of opinion. Torben and myself found the Jack2 code to be
+> complex and coded in a rather different idiom of C++ than we are used to -
+> there is nothing wrong with this, but it has a real world effect of meaning
+> that we didn't want to work on it. I just added a whole new API to Jack1 in
+> a couple of days. I didn't run into any real problems (though I can
+> certainly understand that other developers may have the same kind of
+> response to the Jack1 codebase that I do to Jack2's).
+
+I was not referring to implementation details. I totally agree that the JACK2 
+code base could be simplified significantly. However the point is, bringing 
+JACK2 to some point which would be acceptable for you as well, could be 
+achieved in reasonable time (requiring that there are no emotional causes 
+involved). However the other way around is impossible. Because you will never 
+achieve the same quality on C level. And it is not like Stéphane or other 
+"JACK2 developers" were closed-minded to compromises. ;-)
+
+Actually I watched for a long time how Stéphane and others worked hard for 
+this C++ implementation of JACK to become adopted. And it was always just 
+neglected by people because of ideological reasons (C-only, code style, 
+copyright).
+
+If there are any rational benefits to find in JACK1 over JACK2, which I don't 
+see at this point though, they could be addressed easily. But if you just say 
+"JACK2 is Ok, but not yet what I want" as reason to totally ignore it, ... how 
+could there ever be a joint community ever again with that attitude?
+
+> That said, I am not particularly interested in maintaining Jack1 either,
+> but would like to move forward with a new implementation that attempts to
+> combine the best of both worlds. I have no idea if I (or anyone else) will
+> find the time to do this. The idea would be to code something in C++,
+
+Right, then we would have a 3rd concurrent JACK server implementation and a 
+3rd developer camp fighting with each other, because of certain JACK1 
+developers' desire to stick with C. ;-) So it might probably not even solve 
+the overall situation, because the main problem currently is the missing 
+willingness to find a consensus.
+
+> My recent work on Jack1 was triggered by the "threat" that an overly
+> specific new API would get added to JACK2 in spite of years of calling for
+> a more generic approach (metadata). There have been discussions for several
+> years about a metadata API for JACK, and significant discussion on IRC from
+> time to time. An API for this has now been implemented (which also covers
+
+That explains why you added this API, but not why you added it to JACK1. ;-) 
+Just kidding. However if I saw it correctly, this new API still does not 
+provide a way to associate data (like an application icon) to a jack client.
+
+> logically defensible position, but it is reality. Jack1 has already
+> vanished as the default JACK used by most people, so if you're upset about
+> continued work on Jack1, rest assured that it will likely take place in
+> obscurity given Linux distribution's decisions to adopt Jack2 as "jack".
+
+I doubt that JACK1 will vanish that soon. I have the impression that your 
+opinion is such influential in the community, that it would prevent that. And 
+often misinformations are spread about JACK2 (like just seen today), which 
+also explains why many people continue using JACK1.
+
+However the situation is very exhausting for both developers and end users, 
+and I hope that you probably use your influence to find some consensus among 
+this split camp in future. Because fact is, the overall situation is very 
+stuck right now. And it's just getting worse day by day. Now we might even get 
+two completely different API sets soon.
+
+CU
+Christian
+
+1381590150.31010_0.ltw:2, <201310121707.49771.schoenebeck at crudebyte dot com>
+________________________________________________________________________________
+

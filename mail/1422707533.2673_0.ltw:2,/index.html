@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Dispersing MIDI messages: one to multiple</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Dispersing MIDI messages: one to multiple</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1422706891.1720_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1422785790.21931_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1422707533.2673_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 31 Jan 2015 12:32:06 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Harry van Haaren </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Happy &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Marjan Mrak &lt;[hidden] at gmail dot com&gt;, JACK &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Happy
+<a href='../1422685006.17488_0.ltw:2,/index.html'>Re: [Jack-Devel] Dispersing MIDI messages: one to multiple </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Happy
+<a href='../1422785790.21931_0.ltw:2,/index.html'>Re: [Jack-Devel] Dispersing MIDI messages: one to multiple </a></td></tr>
+</table>
+<pre>
+@Christian Schoenebeck wrote:
+- Good point about JACK MIDI input implementation, etc.
+
+Yes, exactly.
+I'll add the following re Hardware MIDI / software MIDI, just for
+completeness and future reference.
+
+On Sat, Jan 31, 2015 at 6:16 AM, Happy &lt;[hidden]&gt; wrote:
+&gt; For whatever it is worth, many older devices any even modern devices
+&gt; (For example I can guarantee it for the Roland TR-8, released in 2014)
+&gt; still apply running status on their MIDI outs.
+Yes indeed: and it makes sense for *hardware* MIDI units to do so. The
+MIDI cable[1] runs at a baud rate of 31250, which limits the amount of
+messages that can be sent over the cable in a certain time-period.
+Using running-status increases the amount of events that can be sent.
+
+On the software side, having running status is a bad idea: the 4 bytes
+duplicated to have a status per message is well worth spending, if
+consideration is given to ease of implementation of MIDI code.
+
+So in a best-of-both-worlds, hardware uses running status (as the
+hardware you mention does), and software always includes the status
+byte, so implementations check the first byte of the message and
+easily deal with it.
+
+As Christian noted, this is exactly what JACK does - MIDI input
+drivers add the running status byte to messages that did not include a
+status byte, and provides the JACK MIDI graph (and hence all JACK
+clients) with normalized "status byte included" MIDI messages.
+
+Cheers, -Harry
+
+[1] Note that an actual 5 pin DIN MIDI cable is meant: USB MIDI
+generally runs at 115200 baud, allowing many more events per unit
+time.
+
+-- 
+
+http://www.openavproductions.com
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1422706891.1720_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1422785790.21931_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1422707533.2673_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1422707533.2673_0.ltw:2,&nbsp;&lt;CAKudYbMf4PPEyTvXs1TYCvnoHhv_r3BQ49v9GpcYxtZs7pg+JQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

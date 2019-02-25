@@ -1,0 +1,47 @@
+Date:        Mon, 07 Jan 2013 14:10:48 -0600
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          JACK List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: John Emmas Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357584835.23472_0.ltw:2,RSa)
+Follow-Up:   John Emmas Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357595948.6019_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)
+
+On Mon, January 7, 2013 12:53 pm, John Emmas wrote:
+> course, that's theoretically do-able - but it seems unlikely that the ARM
+> compiler could make sense of this complicated, variable packing
+> arrangement whilst at the same time, failing to understand 1-byte packing.
+
+The compiler understands, the programmer is confused.
+
+My understanding of the ARM processor architecture is that the compiler
+will pack things in whatever manner you request (possibly generating
+warnings), and then it is up to the programmer to make sure that no data
+elements will be place on byte boundaries which do not match the native
+data size alignment.
+
+I hope I am not spreading misinformation here, but my understanding of ARM
+was that this section from the wikipedia article on data structure
+alignment does not generally apply:
+http://en.wikipedia.org/wiki/Data_structure_alignment
+"Most RISC processors will generate an alignment fault when a load or
+store instruction accesses a misaligned address. This allows the operating
+system to emulate the misaligned access using other instructions. For
+example, the alignment fault handler might use byte loads or stores (which
+are always aligned) to emulate a larger load or store instruction."
+
+The ARM article has this note:
+http://en.wikipedia.org/wiki/ARM_processor#Architecture
+"No support for misaligned memory accesses (although now supported in
+ARMv6 cores, with some exceptions related to load/store multiple word
+instructions)."
+
+If you use 1 byte packing, unless you pick your data members and the order
+of those members carefully, you are likely to end up with misaligned data
+members.  Accessing those misaligned members will then cause an exception.
+
+-- 
+Chris Caudle
+
+1357589471.31159_0.ltw:2,a <4c00e73dc4ab932709a1f064240bd2a3.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

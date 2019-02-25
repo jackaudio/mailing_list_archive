@@ -1,0 +1,53 @@
+Date:        Wed, 16 Dec 2009 10:43:57 +0100
+From:        Tim Blechmann  <[hidden] at klingt dot org>
+To:          [hidden] at lists dot linuxaudio dot org
+In-Reply-To: Sean Bolton Re: [LAD] Atomic Operations (1260922312.1710_0.ltw:2,a)
+Follow-Up:   Olivier Guilyardi Re: [LAD] Atomic Operations (1260985863.18794_0.ltw:2,a)
+
+Subject:     Re: [LAD] Atomic Operations
+
+>>> this was discussed at some considerable length on jack-devel last  
+>>> year, IIRC.
+>>> for single reader/single writer ringbuffers, i believe that we
+>>> concluded that memory barriers are not necessary.
+>>
+>> No, to me the conclusion was: we can't programmatically prove that  
+>> memory
+>> barriers are needed (even on the most vulnerable architectures),  
+>> but the theory
+>> say that they are, and they should be added for correctness.
+> 
+> My understanding matches Olivier's.  Intel processors have strong memory
+> ordering, and so on them the jack ringbuffer is safe without memory
+> barriers. However, some PPC processors, and SPARC V9s under linux  
+> (but not
+> Solaris), use weak memory ordering, and on them, the jack ringbuffer  
+> code
+> can theoretically fail.
+
+exactly, the issue may not appear on x86, because of its memory
+consistency, weakly-ordered machines will need some barriers ...
+
+
+> See the "ring buffer memory barriers" discussion on jack-devel back in
+> October of last year for more information; in particular, this article
+> by Paul E. McKenney is very helpful:
+> 
+> http://www.linuxjournal.com/article/8211
+
+memory-barriers.txt of the linux kernel documentation is interesting as
+well ...
+
+cheers, tim
+
+-- 
+[hidden]
+http://tim.klingt.org
+
+Contrary to general belief, an artist is never ahead of his time but
+most people are far behind theirs.
+  Edgar Varèse
+
+1260956688.26220_0.ltw:2,a <4B28ABDD.2030001 at klingt dot org>
+________________________________________________________________________________
+

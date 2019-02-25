@@ -1,0 +1,52 @@
+Date:        Tue, 22 Aug 2017 18:17:18 -0700
+From:        Yuri  <[hidden] at rawbw dot com>
+To:          Malik Costet <[hidden] at malikc dot neomailbox dot net>, [hidden] at lists dot jackaudio dot org
+In-Reply-To: Malik Costet Re: [Jack-Devel] Jack: "Too many servers already active" (1503449218.31342_0.ltw:2,)
+Follow-Up:   Yuri Re: [Jack-Devel] Jack: "Too many servers already active" (1503452369.2224_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Jack: "Too many servers already active"
+
+On 08/22/17 17:45, Malik Costet wrote:
+> Do you have any indication which filesystem/location JACK would be
+> looking for the condition? Could it also be a case of flag misuse?
+
+
+Looking again, ENOSPC is returned by jack_register_server. 
+jack_register_server simulates the error ENOSPC when it can't find a 
+free slot in the shared memory table.
+
+The table allows up to MAX_SERVERS=8 servers. It appears that shared 
+memory isn't deleted when the last process using it quits, and it got 
+polluted with bogus data.
+
+Jack appears to use shared memory at "/jack-shm-registry".
+
+
+I recently saw such situation on FreeBSD with another app, 
+supercollider. Creating shared memory was failing there, no apps were 
+using it. Not sure if this is a bug in kernel that it isn't 
+automatically free when users die. But Jack could at least test if pids 
+registered there are alive.
+
+
+In short, no quick solution for you. Jack needs to be fixed. It needs to 
+detect that pids recorded in the table are dead and invalidate them.
+
+
+I propose the following fix.
+
+The line:
+
+ > if (jack_shm_header->server[i].pid == 0) {
+
+changes to
+
+ > if (jack_shm_header->server[i].pid == 0 || 
+kill(jack_shm_header->server[i].pid, 0) != 0) {
+
+
+Yuri
+
+1503451048.1005_0.ltw:2, <167a92c9-2581-2c77-3174-1086cd0f6478 at rawbw dot com>
+________________________________________________________________________________
+

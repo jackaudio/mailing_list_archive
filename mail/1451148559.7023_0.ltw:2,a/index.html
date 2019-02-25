@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack dsp load calculation</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack dsp load calculation</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1451148469.6978_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1451149004.7391_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1451148559.7023_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 26 Dec 2015 17:49:11 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>John Emmas &lt;[hidden] at tiscali dot co dot uk&gt;, JACK devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>John Emmas
+<a href='../1451147237.5755_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack dsp load calculation </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Emmas
+<a href='../1451151957.31921_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack dsp load calculation </a></td></tr>
+</table>
+<pre>
+On 12/26/2015 05:27 PM, John Emmas wrote:
+&gt; On 26 Dec 2015, at 15:38, Robin Gareus wrote:
+&gt; 
+&gt;&gt;
+&gt;&gt; My criticism is that jack's currently algorithm does not satisfy the
+&gt;&gt; criteria: "an x-run implies 100% reported load".
+&gt;&gt;
+&gt;&gt; How can we justify buffer over/under-runs if there is time left to
+&gt;&gt; process the buffer?
+&gt;&gt;
+&gt; 
+&gt; Huh? You've already pointed out that any value higher than 95% gets
+&gt; reported verbatim (i.e. without getting factored into any averaging). So
+&gt; why will 100% not get reported correctly?
+
+Where did I say that?
+
+This is not true. There is always a low-pass filter after the cut and
+averaging. Please read my email again and maybe also the code that've
+linked in the original email.
+
+&gt; The problem here is that Ardour's DSP printout is NOT intended to
+&gt; highlight xruns (not in any sense). It's simply a display (in green)
+&gt; which turns to red when the value gets worryingly high.
+
+No, The problem at hand is that *JACK* reports some mostly useless value.
+
+If you want a more abstract description: Two correlated variables are
+used to create a single read-out.
+
+The discussion is about jack's mechanism - not the policy applied by
+application display.
+
+I was under the impression that jack only provides mechanisms. The
+current implementation of the load calculation in libjack however does
+make assumptions and does not provide raw data (which an application can
+then later use to whatever ends..)
+
+&gt; BUT... it only gets updated once every second. And since the display
+&gt; isn't (currently) affected in any way by xruns, if an xrun happens to
+&gt; occur in between 2 updates it can go unreported (as far as that DSP
+&gt; reading is concerned). Removing Jack's averaging won't fix that problem.
+&gt;
+&gt; HOWEVER... Ardour already has a mechanism for registering xruns. So
+&gt; if we want xruns to get reflected somehow in that DSP printout, we can
+&gt; already achieve that within Ardour. It's not necessary to modify Jack.
+
+No we cannot. jack currently does not provide data to allow that. it
+reports some tainted average value.
+
+I still have not heard a good justification for libjack doing that, nor
+an explanation how to interpret that value and how one can use it.
+
+Why should jack report a percentage if we need to resort to hand-wavey
+explanations: "yeah the average is low, but you still get occasional
+x-runs..."?
+
+if there's an average we should provide a variance or stddev with the
+average.
+
+2c,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1451148469.6978_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1451149004.7391_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1451148559.7023_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1451148559.7023_0.ltw:2,a&nbsp;&lt;567EC507.7010206 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

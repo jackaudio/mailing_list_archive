@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1301784023.2092_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1301835748.21814_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1301819485.24480_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 03 Apr 2011 10:30:49 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Devin Anderson &lt;[hidden] at charityfinders dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Devin Anderson
+<a href='../1301784023.2092_0.ltw:2,a/index.html'>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1301870446.21797_0.ltw:2,a/index.html'>Re: [Jack-Devel] Proposal: JACK MIDI API extension for system exclusive messages </a></td></tr>
+</table>
+<pre>
+Le 3 avr. 2011 &#xE0; 00:40, Devin Anderson a &#xE9;crit :
+
+&gt; On Fri, Apr 1, 2011 at 12:37 PM, Paul Davis &lt;[hidden]&gt; wrote:
+&gt; 
+&gt;&gt; the question is whether the
+&gt;&gt; complexity of your proposal (i'm not actually scoring it, just noting
+&gt;&gt; that its more complex than doing nothing :) is balanced by the
+&gt;&gt; real-world instances of this sort of case.
+&gt; 
+&gt; I'd like to make a second proposal that incorporates some parts of the
+&gt; first proposal, but isn't as complex (I hope).
+&gt; 
+&gt; This proposal assumes that the jack_midi_event_t struct would not need
+&gt; to be modified in order for the 'buffer' member to reference shared
+&gt; memory.  My reading on shared memory indicates that this is okay, but
+&gt; I can't be totally sure because I don't have a thorough understanding
+&gt; of the internals of JACK.
+&gt; 
+&gt; The advantage of this proposal is that JACK clients wouldn't need to
+&gt; change what they're doing right now.  MIDI events can continue to be
+&gt; processed in the same manner they're processed now.  The 'size' member
+&gt; of 'jack_midi_event_t' objects would contain the size, regardless of
+&gt; whether the 'buffer' member holds a blob or not.
+&gt; 
+&gt; The disadvantage is that clients would have access to shared memory
+&gt; segments associated with MIDI buffers created by other clients.
+&gt; Perhaps changing the jack_midi_event_t buffer member to be of type
+&gt; 'const jack_midi_data_t *' would be helpful, but that will break some
+&gt; clients.
+&gt; 
+&gt; To start, we'd keep functionality for creating and destroying MIDI
+&gt; blobs, only a MIDI blob is now a 'jack_midi_data_t *' that points to a
+&gt; segment of shared memory:
+&gt; 
+&gt;   jack_midi_data_t *
+&gt;   jack_midi_blob_create(jack_client_t *client, size_t size);
+&gt; 
+&gt;   void
+&gt;   jack_midi_blob_free(jack_midi_data_t *blob);
+&gt; 
+&gt; MIDI buffers need to be taught how to enqueue blobs.  The 'size'
+&gt; argument specifies the amount of the blob that contains an actual
+&gt; message:
+&gt; 
+&gt;   int
+&gt;   jack_midi_event_write_blob(void *port_buffer, jack_nframes_t time,
+&gt;                              const jack_midi_data_t *blob, size_t size);
+&gt; 
+&gt; Dealing with references to blobs is a little different than the first
+&gt; proposal.  The JACK server would need a way to map shared
+&gt; 'jack_midi_data_t *' objects to reference counts.
+&gt; 
+&gt; We need to know if a particular 'jack_midi_data_t *' is a blob:
+&gt; 
+&gt;    int
+&gt;    jack_midi_is_blob(const jack_midi_data_t *data);
+&gt; 
+&gt; (Perhaps this should take a 'port_buffer' argument too.  Not sure.)
+&gt; 
+&gt; A client can acquire and release references to blobs if the client
+&gt; needs to access the blob for more than one cycle, or in a separate
+&gt; thread:
+&gt; 
+&gt;    int
+&gt;    jack_midi_blob_acquire(jack_client_t *client, const jack_midi_data_t *data);
+&gt; 
+&gt;    int
+&gt;    jack_midi_blob_release(jack_client_t *client, const jack_midi_data_t *data);
+&gt; 
+&gt; (Maybe the client arguments aren't necessary.)
+&gt; 
+&gt; Finally, we have callbacks to let clients know when a blob has no more
+&gt; clients using the blob:
+&gt; 
+&gt;   typedef void (*JackMIDIBlobCallback)(jack_midi_data_t *blob, void *arg);
+&gt; 
+&gt;   int
+&gt;   jack_set_midi_blob_callback(jack_client_t *client,
+&gt;                               JackMIDIBlobCallback midi_blob_callback,
+&gt;                               void *arg);
+&gt; 
+&gt; I think this is a lot simpler for clients.  I'm interested in knowing
+&gt; what sort of challenges this presents for JACK 1 and JACK 2.
+&gt; 
+&gt; Thanks,
+&gt; 
+&gt; -- 
+&gt; Devin Anderson
+&gt; devin (at) charityfinders (dot) com
+&gt; 
+
+Can I suggest that you put the proposal on a wiki page here ?
+
+http://trac.jackaudio.org/
+
+Il would be easier then to follow the different versions.
+
+Thanks.
+
+St&#xE9;phane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1301784023.2092_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1301835748.21814_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1301819485.24480_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1301819485.24480_0.ltw:2,a&nbsp;&lt;3693B93B-D854-4597-9CC2-3B4C2346EC82 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

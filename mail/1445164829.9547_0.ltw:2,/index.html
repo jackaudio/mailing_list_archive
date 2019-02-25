@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Client timeout from jackd1 when calling get_all_connections from set_port_registration_callback</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Client timeout from jackd1 when calling get_all_connections from set_port_registration_callback</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1444318817.20403_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1445164951.9620_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1445164829.9547_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 18 Oct 2015 15:40:15 +0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Mike Kazantsev </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Mike Kazantsev
+<a href='../1445164951.9620_0.ltw:2,/index.html'>Re: [Jack-Devel] Client timeout from jackd1 when calling get_all_connections from set_port_registration_callback </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1445170570.15003_0.ltw:2,/index.html'>Re: [Jack-Devel] Client timeout from jackd1 when calling get_all_connections from set_port_registration_callback </a></td></tr>
+</table>
+<pre>
+Hello,
+
+
+I have a question:
+
+Is it expected that calling "get_all_connections(port)" from a port
+registration callback in libjack can cause client being timed-out by
+jackd1?
+
+See more detailed test-case description and error output below.
+
+
+I was creating an app where JACK (used only jackd1) manager code would
+connect/disconnect JACK ports as they appear or disappear, with the
+assumption that it'd be the only app managing jack connections
+on-the-fly.
+
+Fairly obvious (expected) way to do it seem to be:
+
+* Init client.
+* Run "set_port_registration_callback(my_callback)".
+* Enumerate all current ports, create all connections between these.
+
+* On every port registration callback:
+  * Run "get_all_connections(port)".
+  * connect() to ports which should-be - but not yet - connected.
+  * disconnect() from ports that should not be connected, but got
+    returned from that call.
+
+But when I tried doing that, it seems that running
+"get_all_connections(port)" causes (unexpected) error when port with
+same name appears for the second time during app lifecycle.
+
+I.e. starting jackd1 as "jackd -d dummy", then starting the client,
+then running "alsa_out -d hw:CARD=SB", stopping alsa_out and running it
+again, causes the client to time-out.
+
+Error message in client (from libjack, I think):
+
+  cannot read result for request type 10 from server (Connection reset by peer)
+  cannot send event response to engine (Broken pipe)
+  cannot continue execution of the processing graph (Bad file descriptor)
+  jack_client_thread: graph error - exiting from JACK
+
+jackd output when this happens:
+
+  timeout waiting for client test-client to handle a port registered event
+  cannot send port registration notification to test-client (Resource temporarily unavailable)
+
+One complication here is that I'm using not a C client, but a python
+CFFI wrapper around it (see links below), which seem to translate API
+pretty much verbatim from what I see in doxygen docs.
+But I can't be sure it's not an issue with the wrapper, of course.
+
+I've attached the python code that 100% reliably reproduces this
+behavior on this machine, and on clean a Debian Jessie VM.
+
+Running "get_all_connections(port)" anywhere outside of that callback
+seem to resolve (or work around) the issue.
+
+
+I wasn't able to find any reference to the issue (i.e. something like
+"you should not do that!") in the docs or the google, and python module
+author can't confirm (see links below) whether it's an API bug/feature
+or a problem with python module itself.
+
+So the question is basically whether it's expected behavior of jack API
+(and maybe is or should-be documented somewhere), or totally
+unexpected, and likely an issue with python module?
+
+
+Python API wrapper module:
+  https://github.com/spatialaudio/jackclient-python/
+
+Related issue I've opened with the python API wrapper module:
+  https://github.com/spatialaudio/jackclient-python/issues/30
+
+
+Python (python2) code to reproduce the issue (also attached to this mail):
+  http://hastebin.com/dehubayeyo.py
+
+Code link above also contains instructions on how to run it to
+reproduce the issue.
+
+This code depends on python jack client module linked above, which can
+be built/installed with e.g. "pip2 install --user jack-client"
+(to ~/.local/, "pip" script is usually packaged in distros as
+"python2-pip" [arch] or "python-pip" [debian]).
+
+
+Would appreciate any suggestions. Thanks!
+
+
+-- 
+Mike Kazantsev // fraggod.net
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1444318817.20403_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1445164951.9620_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1445164829.9547_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1445164829.9547_0.ltw:2,&nbsp;&lt;20151018154015.3f4a7b5a at malediction&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,57 @@
+Date:        Sat, 03 Nov 2012 20:40:20 -0400
+From:        Ian Malone  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Ian Malone Re: [Jack-Devel] jackdbus no method requestrelease and separate capture and playback devices (1351990649.22910_0.ltw:2,a)
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] jackdbus no method requestrelease and separate capture and playback devices (1352021596.2482_0.ltw:2,a)
+
+Subject:     [Jack-Devel] jackdbus no method requestrelease and separate capture and playback devices
+
+Hi,
+
+I'm trying to get a Jack DBUS setup working on Fedora 18, attached is
+my current jack/conf.xml, I'm using jack_control to send the control
+messages and QJackCtl to monitor the jack output.
+
+At the moment I'm having two issues. One is a failure to get
+pulseaudio to release the audio device:
+Sat Nov  3 20:08:11 2012: Starting jack server...
+Sat Nov  3 20:08:11 2012: JACK server starting in realtime mode with priority 60
+Sat Nov  3 20:08:11 2012: control device hw:1
+Sat Nov  3 20:08:11 2012: control device hw:1
+Sat Nov  3 20:08:11 2012: [1m[31mERROR: Failed to acquire device
+name : Audio1 error : Method "RequestRelease" with signature "i" on
+interface "org.freedesktop.ReserveDevice1" doesn't exist
+[0m
+Sat Nov  3 20:08:11 2012: [1m[31mERROR: Audio device hw:1 cannot be
+acquired...[0m
+Sat Nov  3 20:08:11 2012: [1m[31mERROR: Cannot initialize driver[0m
+Sat Nov  3 20:08:11 2012: [1m[31mERROR: JackServer::Open() failed with -1[0m
+Sat Nov  3 20:08:11 2012: [1m[31mERROR: Failed to open server[0m
+
+If pulse is running but doesn't have the device then jack starts okay
+and the sink/source modules get loaded.
+
+The other problem is that I have separate capture and playback
+devices, but when jackdbus starts successfully (when pulse isn't
+holding the devices), both connections are to whatever interface is
+set as 'device'. Setting 'device' to 'none' just gets me
+DBus exception: org.jackaudio.Error.Generic: Failed to open server
+
+It seems having "device" unset might allow that, but once it is set it
+can't be cleared (short of manually removing it from the conf.xml).
+Not being able to unset the device might be a limitation of
+jack_control (don't know enough about the dbus python api to fix
+that), but possibly having the capture and playback devices explicitly
+set means they should override the device setting?
+
+Any advice on either of these?
+
+-- 
+imalone
+http://ibmalone.blogspot.co.uk
+* Attachment: '1351989629.21384_0.ltw:2,a/files/conf.xml'
+content-type: text/xml
+
+1351989629.21384_0.ltw:2,a <CAL3-7Mp8s+AjHFHvPDZ33fcL_Cr=_-LbXqkmw3mbGt3QSPT+Nw at mail dot gmail dot com>
+________________________________________________________________________________
+

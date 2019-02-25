@@ -1,0 +1,50 @@
+Date:        Fri, 02 Feb 2018 07:45:51 -0800
+From:        Michael  <[hidden] at gmail dot com>
+To:          StÃ©phane Letz <[hidden] at grame dot fr>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: StÃ©phane Letz Re: [Jack-Devel] MacOS support (1517568080.2817_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] MacOS support
+
+> Let me explain once again, and hopefully the last one ((-;
+> 
+> - we (at Grame) did a port of JACK1 C code base back in 2004-2005. This was actually more a prof of concept since we had to use very low-level mach specific primitives to make it work on OSX. 
+> 
+> - at the same time we also developed this JackRouter JACK<==>CoreAudio bridge, a user-land audio device that allows any CoreAudio application to become a JACK client. We packaged JACK1 + JackRouter in the early version of the JackOSX tool. 
+> 
+> - we started the  « rewrite JACK code base in C++, and work on the multi-processor model in 2005, on OS X first. This work was presented at LAC 2005. Port of this new code base on Linux was done later, then Windows starting in 2006. 
+> 
+> - since C++ JACK code base was cleaner (my personal point of view of course..), more portable, and much more stable on OSX… we decide to put it in next versions of JackOSX tool.  This C++ code base became JACK2 at some point.
+> 
+> - at some point  (I don’t know exactly when) macports packagers decided, without consulting the JACK community at all... to package JACK1 in macport. This was actually a very poor idea. For years people could either install JACK1 from macport, or install everything (that is tools for users + all the stuff needed for developers...) using JackOSX. This was the recipe for all kind of hairy problems...
+> 
+> - JackRouter could be used by any CoreAudio application and also *be selected as the audio default device* in the OS X system (so to be used be applications like iTunes or Quicktime) up to OS X 10.8 (or 10.9, not sure anymore..). This « JackRouter as the default audio device »  broke at that time, for several technical reasons. One is that Apple decided to progressively raise their security model (sandbox model...whatever), and second was that the JackRouter driver model become obsolete. It would have to be entirely rewritten with the new recommended CoreAudio user-land driver model. I never had time to really estimate if the new model could 1) fit with JACK server/client model and all the needs in low-level OS primitives like sockets, shared memory, process synchronization.. 2) could really solve the « JackRouter use when selected as the audio default device » issue.
+
+I have Jack router working in 10.9.5 as the default audio device. Yes, there were sandbox issues, but the small set of changes needed for the sandbox file was just that: small.
+
+Add to the end of system.sb:
+
+;;; local additions for Jack
+  (allow network*
+         (regex #"/private/tmp/jack_.*"))
+  (allow file-write* 
+         (regex #"/private/tmp/jack_.*"))
+  (allow mach-lookup
+         (global-name-regex "jack_mach_sem.*"))
+  (allow ipc-sysv-sem)
+  (allow ipc-posix-shm-read*
+         (ipc-posix-name-regex "/jack-.*"))
+  (allow ipc-posix-shm-write*
+         (ipc-posix-name-regex "/jack-.*"))
+  (allow file-read*
+         (regex #"/Library/Audio/Plug-Ins/Components/JACK-insert.component.*"))
+
+
+> 
+> - I had to solve a specific issue in 10.10 (I think ?) when mach semaphore primitive could not be used anymore, and we have to switch to Posix Semaphore. After this change JACK2 continued to work up to 10.13 High Sierra, but without this « JackRouter as the audio default device » . This last development is now in JackOSX 0.92_b3.
+
+I was not aware that there was a new version of Jack that worked in 10.10. In any event, working as the default audio device is the key goal. Very few programs let me specify an output device.
+
+1517586391.26401_0.ltw:2, <C7D3D12F-9297-4E32-B2BD-8475A5B19BA5 at gmail dot com>
+________________________________________________________________________________
+

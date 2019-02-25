@@ -1,0 +1,68 @@
+Date:        Sat, 25 Feb 2012 21:10:08 +0100
+From:        [hidden] at linutronix dot de <[hidden] at linutronix dot de
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] jack1 version jack2 public headers comparison (1330106139.4689_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack1 version jack2 public headers comparison
+
+On Fri, Feb 24, 2012 at 06:55:23PM +0100, Stéphane Letz wrote:
+> 
+> Le 24 févr. 2012 à 18:36, [hidden] a écrit :
+> 
+> >>> Reworked :
+> >>> ==========
+> >>> 
+> >>> /jackctl_sigmask_t *
+> >>> jackctl_setup_signals(
+> >>>    unsigned int flags);
+> >>> 
+> >>> void
+> >>> jackctl_wait_signals(
+> >>>    jackctl_sigmask_t * signals);
+> >> 
+> >> can you or nedko explain the need for this change? again, since its
+> >> for the control API the issue is not that significant but i recall
+> >> that this part of the API attracted some significant criticism from
+> >> torben.
+> > 
+> > This stuff is not necessary.
+> > the signal handling is an implementation detail, and should be hidden
+> > below the control api.
+> > 
+> > jack1 controlapi.c is doing it correctly. 
+> > please switch jack2 to doing the same thing.
+> 
+> I don't see the difference in the code... Can you explain more?
+
+jack_setup_signals() blocks all signals, because the threads which
+jackctl_server_start() creates dont want to reply to signals.
+
+then jack_wait_signals() reactivates them.
+
+these function names are completely misleading.
+
+just look where jack1 would be blocking the signals, and where jack2 is
+doing it.
+
+
+
+-- 
+Mit freundlichen Grüßen
+Torben Hohn
+
+Linutronix GmbH
+
+Standort: Bremen
+
+Phone: +49 421 166 73 41 ; Fax.: +49 7556 919 886
+mailto: [hidden]
+Firmensitz / Registered Office: D-88690 Uhldingen, Auf dem Berg 3
+Registergericht / Local District Court: Freiburg i. Br., HRB Nr. / Trade
+register no.: 700 806;
+
+Geschäftsführer / Managing Directors: Heinz Egger, Thomas Gleixner
+
+1330200628.23770_0.ltw:2,a <20120225201007.GA18457 at lxhb dot hb dot de>
+________________________________________________________________________________
+

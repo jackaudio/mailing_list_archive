@@ -1,0 +1,34 @@
+Date:        Mon, 17 Nov 2014 23:04:26 -0500
+From:        Tim E. Real  <[hidden] at rogers dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   Paul Davis Re: [Jack-Devel] Notifications timing (1416283813.20120_0.ltw:2,)
+
+Subject:     [Jack-Devel] Notifications timing
+
+Our app uses inter-thread messaging to safely time, to the RT thread, 
+ critical modifications, instead of using say non-blocking atomic-safe 
+ lists and so on.
+
+I read Jack1 notifies the client from the RT thread, and Jack2 uses a 
+ separate notification thread.
+
+So it seems with Jack1, say inside a port connect callback, we /could/ 
+ directly modify our local structures (routing lists) which our process 
+ callback depends on, without delay and safe and since it's all done 
+ in the same thread.
+
+But with Jack2, what is the situation?
+If the above operation is not a good idea with Jack2, how can we avoid
+ delay associated with say, messaging another thread just to have that thread
+ message our RT audio thread to do some safe modifications? (We do this now.)
+Dangerous that our process callback might come along and attempt to use
+ our local structures before we 'handled' the notification in another thread?
+Will the process callback 'interrupt' the notification thread or occur very 
+ (too) close to it?
+
+Thanks for any clarification.
+Tim.
+
+1416283489.19739_0.ltw:2, <4294039.daEYubhb8J at col-desktop>
+________________________________________________________________________________
+

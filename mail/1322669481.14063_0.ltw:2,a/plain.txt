@@ -1,0 +1,72 @@
+Date:        Wed, 30 Nov 2011 16:09:38 +0000
+From:        Neil C Smith  <[hidden] at neilcsmith dot net>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          jack-devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] jack_free from when? and a couple of other things (1322661938.32074_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] jack_free from when? and a couple of other things (1322670605.16231_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack_free from when? and a couple of other things
+
+Hi Paul,
+
+Thanks for your email.
+
+On 30 November 2011 14:03, Paul Davis <[hidden]> wrote:
+> On Wed, Nov 30, 2011 at 6:23 AM, Neil C Smith <[hidden]> wrote:
+>
+>> OK.  The reason I asked is because JNAJack is a fairly
+>> straightforward, but OOP, mapping of the Jack API.  Almost all
+>> functions that require a client are mapped to methods on a client
+>> object.  This is one of a small set of functions that don't map neatly
+>> that way because you're not restricted to the ports from the client
+>> you pass in.
+>
+> the only apps that would be affected that potential restriction are
+> those that want to offer generic connection utilities.
+>
+> if you're not such an app, you don't need to care about the
+> possibility to use ports from other clients. if you ARE such an app,
+> you will be glad to have the possibility in place. if you want JNAJack
+> clients to be unable to play that role, feel free to impose the
+> restriction. otherwise, your API needs to take this into account, and
+> creating two different kinds of clients seems like overkill to me.
+
+The idea is not to impose restrictions - that was my main reason for
+writing JNAJack and not working with JJack in the first place.
+
+If you see the docs for the two classes
+
+Jack - http://java-audio-utils.googlecode.com/hg/javadoc/jnajack/org/jaudiolibs/jnajack/Jack.html
+JackClient - http://java-audio-utils.googlecode.com/hg/javadoc/jnajack/org/jaudiolibs/jnajack/JackClient.html
+
+you'll notice that the bulk of the JACK functions that take a client
+pointer are now methods on JackClient.  However, the wrapper to
+jack_connect is within the main Jack class, and that's where I intend
+on keeping it.  As you'll see, the current release doesn't require a
+client to be passed in - JNAJack uses its own hidden client.  This was
+causing problems and a load of extra code in making sure the hidden
+client was always valid, and so I've deprecated this approach, and
+moved to requiring a JackClient object be passed in.  This is far
+better for the user of the API to manage, and fits better within the
+aim of a transparent (if OOP) mapping of JACK.
+
+I just want to document why that parameter is required.  Initially
+(and possibly naively) it seemed superfluous.  Taking a stab in the
+dark at answering my own question, can I assume it's there because
+it's possible to have multiple servers running and the lib needs to
+know which server to ask to connect ports on?
+
+btw - don't suppose you've got a Jack1 version number for jack_free support?
+
+Thanks and best wishes,
+
+Neil
+
+-- 
+Neil C Smith
+Artist : Technologist : Adviser
+http://neilcsmith.net
+
+1322669481.14063_0.ltw:2,a <CAHvRSodysCuwpAgBZJMQDi9KeFbcypmZfqpRiY=bAavrH42jVw at mail dot gmail dot com>
+________________________________________________________________________________
+

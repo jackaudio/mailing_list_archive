@@ -1,0 +1,45 @@
+Date:        Sun, 29 Jan 2012 17:05:03 -0500
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          John Rigg <[hidden] at jrigg dot co dot uk>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: John Rigg [Jack-Devel] Compiling 0.121.3 on Debian Wheezy amd64 (1327874444.17185_0.ltw:2,a)
+Follow-Up:   John Rigg Re: [Jack-Devel] Compiling 0.121.3 on Debian Wheezy amd64 (1327935439.12881_0.ltw:2,a)
+Follow-Up:   Mathis Ahrens Re: [Jack-Devel] Compiling 0.121.3 on Debian Wheezy amd64 (1327942256.24507_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Compiling 0.121.3 on Debian Wheezy amd64
+
+On Sun, Jan 29, 2012 at 5:05 PM, John Rigg <[hidden]> wrote:
+> I just compiled JACK 0.121.3 on a Debian Wheezy (testing) amd64 system
+> and ran into a minor glitch. I configured with --prefix=/usr
+> which installed libjack etc. in /usr/lib64 (which AFAIK didn't
+> exist until jack was installed). On testing jackd reported that it
+> couldn't find libjack.  Copying the libs into /usr/lib fixed it.
+>
+> Any ideas why libjack etc. went in /usr/lib64 instead of /usr/lib?
+
+some distributions do that. there's been widespread disagreement on
+the correct target dir for 64 bit libs for years.
+
+unfortunately, the configure.ac file right now has this semi-hard-coded:
+
+----------------------------------
+# We need to establish suitable defaults for a 64-bit OS
+libnn=lib
+case "${host_os}" in
+    linux*)
+    case "${host_cpu}" in
+	x86_64|mips64|ppc64|sparc64|s390x)
+        libnn=lib64
+	;;
+    esac
+---------------------------------
+
+you can override with with --libdir at the ./configure step, but it
+really needs someone to suggest the right rule to determine which dir
+to use.
+
+--p
+
+1327874713.17274_0.ltw:2,a <CAFa_cKmNiZsx2VLTHajQ_QZ3iiua_qWuuEY6vGw-dCgb+2LPNA at mail dot gmail dot com>
+________________________________________________________________________________
+

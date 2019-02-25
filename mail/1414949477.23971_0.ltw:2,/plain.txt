@@ -1,0 +1,42 @@
+Date:        Sun, 02 Nov 2014 18:31:07 +0100
+From:        Cédric Schieli  <[hidden] at gmail dot com>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Paul Davis Re: [Jack-Devel] Multi-user desktop integration (1414948007.23198_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Multi-user desktop integration
+
+2014-11-02 18:06 GMT+01:00 Paul Davis <[hidden]>:
+
+> The first solution that comes to mind is to make this system-wide server
+>> run in promiscuous mode, so I've exported JACK_PROMISCUOUS_SERVER globally
+>> (in /etc/environment). Problem: for this to work, the server and every
+>> single Jack application (including the pulse-jack bridge) must be running
+>> with a 0000 umask, which sounds a bit scary to me.
+>>
+>
+> should not be the case. should be fixed if it is the case.
+>
+
+Yes it is. Without touching the umask, both the server side sockets (for
+requests) and the client side sockets (for notifications) are created with
+the default umask which usually is 0022 so they will not be writable by the
+other side if its not the same user. Same is true for semaphores and shm
+segments. Only the shm registry had its permissions explicitly set to 0666.
+
+multi-user JACK is not something i'm particularly interested in but perhaps
+> other people will feel differently.
+>
+> i'm also fairly sure that the ALSA loopback device is a better method for
+> Pulse<=>JACK interaction than the pulse JACK sink/sources.
+>
+
+You're probably right about ALSA loopback. I'll try it out. But this
+doesn't change the picture a lot. All the multi-user Jack related issues
+would still be present.
+
+Thanks.
+
+1414949477.23971_0.ltw:2, <CAM-ziR4X6O93gT2uP7V47K=cCcanh33g2BJFxbgRVsPMwT_e0g at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] [PATCH] Don't start pcm if its already RUNNING</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] [PATCH] Don't start pcm if its already RUNNING</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1435495659.23104_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1435839646.26541_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1435772743.21199_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 01 Jul 2015 19:45:31 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> [hidden] at fake-box dot com </span> &lt;[hidden] at fake-box dot com </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+</table>
+<pre>
+A few months ago we'd digged jackd code in #alsa IRC trying to find why itfails with "ALSA: could not start playback (File descriptor in bad state)"when run on top "type bluetooth" pcm. The reason was in a single line (both in jack1/drivers/alsa/alsa_driver.cand jack2/linux/alsa/alsa_driver.c):&amp;nbsp; if ((err = snd_pcm_start (driver-&amp;gt;playback_handle)) &amp;lt; 0) {which always fails after snd_pcm_mmap_commit() filling the buffer,because pcm's already in RUNNING state and can't be started again:&amp;gt; http://www.alsa-project.org/alsa-doc/alsa-lib/pcm.html&amp;gt; For playback, if samples in ring buffer is equal or greater than&amp;gt; the start threshold parameters and the stream is not running,&amp;gt; the stream will be started automaticallyThe following small patch fixes it for both jack1 and jack2:--- alsa_driver.c+++ alsa_driver.c&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; &amp;nbsp;@@ -1055,7 +1055,8 @@ alsa_driver_start (alsa_driver_t *driver&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; driver-&amp;gt;user_nperiods&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; * driver-&amp;gt;frames_per_cycle);&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; &amp;nbsp;-&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; if ((err = snd_pcm_start (driver-&amp;gt;playback_handle)) &amp;lt; 0) {+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; if (snd_pcm_state(driver-&amp;gt;playback_handle) != SND_PCM_STATE_RUNNING+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; &amp;amp;&amp;amp; (err = snd_pcm_start (driver-&amp;gt;playback_handle)) &amp;lt; 0) {&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; jack_error ("ALSA: could not start playback (%s)",&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; snd_strerror (err));&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; return -1;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1435495659.23104_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1435839646.26541_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1435772743.21199_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1435772743.21199_0.ltw:2,&nbsp;&lt;20150701174531.78595542120 at h2306620 dot stratoserver dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

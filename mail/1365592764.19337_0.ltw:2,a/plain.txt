@@ -1,0 +1,59 @@
+Date:        Wed, 10 Apr 2013 13:19:18 +0200
+From:        Pawel  <[hidden] at wp dot pl>
+To:          jack-devel <[hidden] at lists dot jackaudio dot org>
+
+Subject:     Re: [Jack-Devel] Graph callback and client state
+
+Dnia Šroda, 10 Kwietnia 2013 12:46 Peter Nelson <[hidden]> napisa³(a) 
+> On Tue, 2013-04-09 at 15:51 -0400, Paul Davis wrote:
+> > 
+> > 
+> > On Tue, Apr 9, 2013 at 3:33 PM, Harry van Haaren
+> > <[hidden]> wrote:
+> >         On Tue, Apr 9, 2013 at 7:45 PM, Stéphane Letz <[hidden]>
+> >         wrote:
+> >         > You can never be sure that ports returned by jack_get_ports
+> >         are always valid
+> >         
+> >         
+> >         
+> >         Any chance that adding a flag,  "JackPortIsActive" to
+> >         JackPortFlags allows the functionality to be implemented?
+> >         
+> >         On activation, the JACK server marks all of the client owned
+> >         ports as "active".
+> >         
+> >         Patchbay managers etc call jack_port_flags() and can query if
+> >         its an "active" port or not?
+> >         
+> > 
+> > there is always a race ... sometime between when you get the ports and
+> > when you use the information, ports could be added, removed or become
+> > inactive.
+> 
+> Of course its possible that the port is removed in the mean time. In
+> that case there is absolutely no problem because there is no need to
+> care about a non-existent port because you can't (dis)connect it anyway.
+> 
+> This 'problem' manifests in vastly more complex connection management
+> code, as connection managers have to additionally monitor that their
+> connection attempt worked and may have to repeatedly retry making the
+> connection later because it still may not be active yet.
+> 
+> If inactive ports are not listed then connection managers may simply
+> fire & forget the connect request. If the port no longer exists, so
+> what, it can't be connected anyway.
+> 
+> Of course making this change doesn't fix all problems, but it does help
+> one. Surely that's an advantage? 
+
+Exactly ;-)
+
+Harry's idea is also valid - we can know is port is active and for example mark it "gray". It's not a problem that this info would be outdated - we already accept this approach in other API calls. As was said by Paul and Stephane - even port name could be outdated on this time i.e. when we call jack_get_ports , we must humbly accept scenario where in some other thread this port is just right now removed ;-) ... but this shouldn't stop us to TRY process this port - because then it will be 
+paranoid ;-)
+
+Xj
+
+1365592764.19337_0.ltw:2,a <51654ab63d7d24.82720689 at wp dot pl>
+________________________________________________________________________________
+

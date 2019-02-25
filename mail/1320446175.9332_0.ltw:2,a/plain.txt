@@ -1,0 +1,42 @@
+Date:        Fri, 04 Nov 2011 18:35:30 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Andreas Degert <[hidden] at papyrus-gmbh dot de>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] (1320339784.19943_0.ltw:2,a)
+Follow-Up:   hermann Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] (1320470430.23460_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash]
+
+On Thu, Nov 3, 2011 at 1:02 PM, Paul Davis <[hidden]> wrote:
+> On Thu, Nov 3, 2011 at 12:28 PM, Andreas Degert <[hidden]> wrote:
+>
+>> Thanks for solving the problem (especially Nedko).
+
+alas, the problem is not solved.
+
+it turns out that gcc on OS X supports a feature related to weak
+linkage but not the same as it. specifically, gcc on darwin supports
+__attribute__((__weak_import__)) which is not the same as
+__attribute__((__weak__))
+
+in reality, there is no support on Linux for what is described in the
+JACK header files. it just so happens that building with -fPIC happens
+to work, but more as a side-effect than anything intentional. __weak__
+is designed as way to refer to symbols used by one library but
+obtained from another, not symbols used by an executable and obtained
+from a library. __weak_import__ on gcc-osx does what we actually want.
+
+this is very confusing situation that will take some time to sort out.
+-fPIC is a potential solution, and apparently has some potential
+benefits because it allows the run time linker more freedom to
+optimize memory layout. but i don't think that it should be *the*
+solution.
+
+its very unfortunate that the binutils chain on linux has not acquired
+the functionality that was added on OS X.
+
+--p
+
+1320446175.9332_0.ltw:2,a <CAFa_cKkyX6eq92WHfzM2P82rbgxQm8PTrUc-GH9U36xHRSXXNw at mail dot gmail dot com>
+________________________________________________________________________________
+

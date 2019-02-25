@@ -1,0 +1,70 @@
+Date:        Fri, 05 Aug 2011 16:35:42 +0200
+From:        torbenh  <[hidden] at gmx dot de>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz [Jack-Devel] Jack session API implementation in jack2 (1311327981.9831_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack session API implementation in jack2
+
+On Fri, Jul 22, 2011 at 11:46:09AM +0200, Stéphane Letz wrote:
+> Hi, 
+> 
+> Looking at Jack session API implementation in jack2 (the goal being to add support for internal server clients also...) I see at least two issues:
+> 
+> - if a client calls jack_session_notify and a client fails to answer what happens? As far as I understand the code the initial jack_session_notify call will possibly block infinitely in the "while(true)" loop...
+> 
+> int Read(JackChannelTransaction* trans)
+>     {
+>         CheckRes(JackResult::Read(trans));
+>         while (true) {
+>             JackSessionCommand buffer;
+> 
+>             CheckRes(trans->Read(buffer.fUUID, sizeof(buffer.fUUID)));
+>             if (buffer.fUUID[0] == '\0')
+>                 break;
+> 
+>             CheckRes(trans->Read(buffer.fClientName, sizeof(buffer.fClientName)));
+>             CheckRes(trans->Read(buffer.fCommand, sizeof(buffer.fCommand)));
+>             CheckRes(trans->Read(&(buffer.fFlags), sizeof(buffer.fFlags)));
+> 
+>             fCommandList.push_back(buffer);
+>         }
+>         return 0;
+>     }
+
+well... a client not calling jack_session_reply and still living, will
+hold back the reply.
+we might add a timeout for this.
+right now, the only solution is killing the offending client.
+
+feel free to propose a better interface for the SM interface. We didnt
+declare it stable anyways.
+
+> 
+> - if a first client calls jack_session_notify and a second one does jack_session_notify before the first "asynchronous server/clients round trip" is finished, the code here JackEngine.cpp line 942 is called AFAICS: 
+> 
+>    if (fSessionPendingReplies != 0) {
+>         JackSessionNotifyResult res(-1);
+>         res.Write(socket);
+>         jack_log("JackEngine::SessionNotify ... busy");
+>         return;
+>     }
+> 
+> Agin don't this code finally enter the possibly blocking Read given just before?
+
+No it doesnt.
+
+> 
+> Comments? How this design can be improved?
+> 
+> Thanks.
+> 
+> Stephane 
+> 
+
+-- 
+torben Hohn
+
+1312554973.27743_0.ltw:2,a <20110805143542.GA23575 at siel dot b>
+________________________________________________________________________________
+

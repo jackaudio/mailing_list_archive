@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[SOLVED] Re: [Jack-Devel] jack1 git FTBFS</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[SOLVED] Re: [Jack-Devel] jack1 git FTBFS</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1429528815.23572_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1429845866.29378_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1429530622.25848_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 20 Apr 2015 13:41:47 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> J&#xF6;rn Nettingsmeier </span> &lt;[hidden] at stackingdwarves dot net&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Adrian Knoth &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt;, Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Adrian Knoth
+<a href='../1429526923.21086_0.ltw:2,/index.html'>Re: [Jack-Devel] jack1 git FTBFS </a></td></tr>
+</table>
+<pre>
+On 04/20/2015 12:48 PM, Adrian Knoth wrote:
+&gt; On 04/20/15 12:26, J&#xF6;rn Nettingsmeier wrote:
+&gt;
+&gt;&gt; metadata.c:202:15: error: 'DB' has no member named 'exists'
+&gt;&gt;           if (db-&gt;exists (db, NULL, &amp;d_key, 0) == DB_NOTFOUND) {
+&gt;&gt;                 ^
+&gt;
+&gt; Weird. Should be there. Did you check db.h (the system-wide file)? Mine
+&gt; clearly has it.
+&gt;
+&gt;&gt; metadata.c:322:29: error: 'DBC' has no member named 'get'
+&gt;&gt;           while ((ret = cursor-&gt;get(cursor, &amp;key, &amp;data, DB_NEXT)) ==
+&gt;&gt; 0) {
+&gt;&gt;                               ^
+&gt;
+&gt; Same here:
+&gt;
+&gt; struct __dbc {
+&gt; [..]
+&gt;          /* DBC PUBLIC HANDLE LIST BEGIN */
+&gt;          int (*close) __P((DBC *));
+&gt; }
+&gt;
+&gt; It's clearly there.
+&gt;
+&gt; So either your include file is broken or it's not taken into
+&gt; consideration.
+&gt;
+&gt; You can pass -E to the gcc call (manually) and redirect the output to a
+&gt; file, so you get the preprocessor out. Maybe as simple as this:
+&gt;
+&gt; /* foo.c */
+&gt; #include &lt;db.h&gt;
+&gt;
+&gt;
+&gt; gcc - E foo.c
+&gt;
+&gt; And there, you should see all the expanded struct __db{,c,t} things.
+&gt;
+&gt;
+&gt; Good luck with hunting this down. ;)
+
+
+Thanks, that was the critical piece of information. Turns out I had two 
+versions of the Berkeley database installed (4.5 and 4.8), but only 4.5 
+had the developer package. Manually adding 4.8-devel fixed things, and 
+of course such a situation would fool all auto* magic and lead to weird 
+stuff down the road...
+
+
+All best,
+
+
+J&#xF6;rn
+
+
+
+-- 
+J&#xF6;rn Nettingsmeier
+Lortzingstr. 11, 45128 Essen, Tel. +49 177 7937487
+
+Meister f&#xFC;r Veranstaltungstechnik (B&#xFC;hne/Studio)
+Tonmeister VDT
+
+http://stackingdwarves.net
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1429528815.23572_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1429845866.29378_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1429530622.25848_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1429530622.25848_0.ltw:2,&nbsp;&lt;5534E5FB.1040700 at stackingdwarves dot net&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,43 @@
+Date:        Thu, 15 Aug 2013 14:27:27 +0200
+From:        Anders Tornvig  <[hidden] at gmail dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Harry van Haaren Re: [Jack-Devel] Stopping jack from callback (1376570094.14660_0.ltw:2,a)
+Follow-Up:   Adrian Knoth Re: [Jack-Devel] Stopping jack from callback (1376571212.15466_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Stopping jack from callback
+
+Hi all,
+
+I'm counting how many times I have been in the process_callback and I would
+like to stop immediately after the, say, 100th visit.
+
+At the moment I increment a variable and a while loop in the main function
+checks it every second. The problem is that jack keeps going to the
+callback until I check and see that the variable has gone above 100. So I
+may get into the callback 103, 114, or something else, times depending on
+my buffer length.
+
+Some code says more than a thousand lines of words:
+...
+int process (jack_nframes_t nframes, void *arg) {
+   DPOAE *dpoae = (DPOAE *)arg;
+   dpoae->m++;
+}
+...
+int main (void) {
+   ...
+   jack_set_process_callback (client, process, &dpoae);
+   ...
+   while(dpoae.m<100) sleep (1);
+   jack_client_close (client);
+   ...
+}
+
+And this code does _not_ do what I want. What is the right way to make it
+stop right after the 100th call of process.
+
+Best, Anders
+
+1376569676.14314_0.ltw:2,a <CAMeZe4HSAfHY49-L2zAvq5je+oVuDS_zdbkBXYX78wVbte1ENA at mail dot gmail dot com>
+________________________________________________________________________________
+

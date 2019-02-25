@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack won't start on boot</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack won't start on boot</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1499551239.22701_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1499594352.8075_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1499569420.10378_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 09 Jul 2017 05:03:22 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Hermann Meyer </span> &lt;[hidden] at web dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>alex &lt;[hidden] at gmail dot com&gt;, [hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>alex
+<a href='../1499544823.15626_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack won't start on boot </a></td></tr>
+</table>
+<pre>
+Am 08.07.2017 um 22:13 schrieb alex:
+&gt;
+&gt;
+&gt; On 07/08/2017 11:05 PM, Ralf Mardorf wrote:
+&gt;&gt; On Sat, 8 Jul 2017 19:11:31 +0300, alex wrote:
+&gt;&gt;&gt; I've tried launching it with cron
+&gt;&gt; With cron and an init script? There still could be a race condition,
+&gt;&gt; even if you added "killall -9".
+&gt;&gt; 
+&gt; Don't know, the only two ways I know of launching stuff on boot is 
+&gt; either via cron and rc.local. I'm no Linux guru so there's probably 
+&gt; stuff I'm ignorant of.
+
+
+I would go for a systemd service to do that, given that you distro is 
+systemd based.
+
+[Unit]
+Description=JACK startup on boot.
+After=sound.target
+
+[Service]
+User=USERNAME
+Environment="XDG_RUNTIME_DIR=/run/user/USERID"
+ExecStart=path/to/your/script
+
+[Install]
+WantedBy=multi-user.target
+
+were USERNAME needs to be replaced with your username, and USERID with 
+your ID, get it with
+
+id -u $(logname)
+
+then save the file into
+
+/usr/lib/systemd/system/jack.service
+
+and run
+
+systemctl enable jack.service
+systemctl daemon-reload
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1499551239.22701_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1499594352.8075_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1499569420.10378_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1499569420.10378_0.ltw:2,a&nbsp;&lt;47efff83-7776-cd54-d9f7-df92c2d5dcec at web dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,56 @@
+Date:        Tue, 15 Feb 2011 15:44:30 +0100
+From:        Valerio Pilo  <[hidden] at akhela dot com>
+To:          "[hidden] at lists dot jackaudio dot org List" <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1297787398.15689_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client
+
+Hi guys; thanks a lot for your invaluable support! The patch, unfortunately, 
+does nothing to fix or even improve the problem, which appears being 
+completely unrelated to killing  clients...
+
+Let me explain. We did never try booting up our ARM box and just leaving JACK 
+running without any clients connected, until yesterday. It happened by chance 
+and we noticed that JACK *was already blocked*! We didn't connect any client 
+to it yet!
+
+I've tried to better pinpoint the problem, and here's what I've found:
+
+First: ALSA docs specify error codes for some pcm_snd_* functions used by 
+jacks' ALSA driver - that is -EPIPE, -EINTR and -ESTRPIPE - but in a couple 
+occasions you use the defined values without the minus. I've attached a patch, 
+"fix-ALSA-error-codes.patch", to fix this.
+
+The actual problem wasn't fixed by this patch so I kept trying and adding 
+debug messages. JACK starts up and hums away until an xrun occurs. As soon as 
+this happens, the driver breaks. The reason is that it tries to perform 
+recovery (by restarting the driver) but it makes no effect because it ends up 
+in an infinite loop within JackAlsaDriver::Read() ! 
+There, alsa_driver_wait returns 0, the "goto retry;" runs it again, the xrun 
+code is ran again, and alsa_driver_wait returns 0 again, entering an infinite 
+loop.
+
+I'm attaching two patches, both with a lot of added log messages (and also the 
+previously explained patch)  to help understand what was going on.
+The first version ("without-recovery") only adds debugging. A test run with it 
+is linked at Pastebin: http://jackd.pastebin.com/JTswYfLd . the second one 
+also attempts to fix the issue using ALSA's snd_pcm_recover(), and a test run 
+of it is linked here: http://jackd.pastebin.com/2iifw6Gh .
+With the recovery in place the issue is still present, but seemingly better 
+identifiable, because JackAlsaDriver simply gets stuck within the poll() call 
+in alsa_driver_wait() .
+
+At the moment this is as far as I've got with the debugging. Do you have any 
+idea or suggestion?
+
+Thanks - immensely - in advance.
+* Attachment: '1297781103.1912_0.ltw:2,a/files/fix-ALSA-error-codes.patch'
+content-type: text/x-patch
+* Attachment: '1297781103.1912_0.ltw:2,a/files/with-recovery.patch'
+content-type: text/x-patch
+* Attachment: '1297781103.1912_0.ltw:2,a/files/without-recovery.patch'
+content-type: text/x-patch
+
+1297781103.1912_0.ltw:2,a <201102151544.30373.valerio.pilo at akhela dot com>
+________________________________________________________________________________
+

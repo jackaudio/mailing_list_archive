@@ -1,0 +1,59 @@
+Date:        Tue, 11 Dec 2012 12:56:04 -0600
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   John Rigg Re: [Jack-Devel] ALSA PCM multi plugin and xruns (1355254039.507_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] ALSA PCM multi plugin and xruns
+
+On Tue, December 11, 2012 12:25 pm, Paul Davis wrote:
+> my understanding is that word clock sync is all-or-nothing. you're
+either
+> precisely in sync or not at all.
+
+I would think absolute worst case would be two different model cards, and
+there is some ambiguity about when relative to the clock edge the sample
+is available.  That should result in at most a +/- 1 sample difference
+between the buffers of the two cards at any particular time, not multiple
+periods difference.
+
+Is the difference seen when the event occurs a 1 period difference, or
+multiple periods?  Could it be as simple as the second card not flagging
+the period of data as available until the last frame is latched, and there
+being some fraction of a sample clock difference between when the first
+card flags a period is ready and when the second card flags a period  is
+ready?
+I would have guessed that just the latency in servicing the interrupt
+would have allowed the second card time to catch up, but maybe the current
+processors are so fast that when the first card interrupts, the first card
+and second card can be checked and the lack of data ready in the second
+card flagged before the second card has had time to catch up.  That
+difference between cards, if it exists, should be on the order of some
+fraction of the 20 microsecond sample period.
+
+Probably  not a useful line of investigation, unless it can be reconciled
+with the later message from John Riggs:
+> BTW on my main system with 3 x ice1712 cards there's a
+> common clock supplying all three cards simultaneously.
+> It also shows the same xrun messages from jackd when
+> using pcm_multi.
+
+My understanding of John's system is that he has three identical cards,
+and has physically modified the hardware so that they all operate from a
+single oscillator feeding the ice1712 chips on the cards.  I don't see how
+it could apply to that system.  Possibly there is an ambiguity in that
+case with startup because of differences in reset timing to the individual
+cards, in which case the cards would be locked in frequency, but might
+have a fixed offset in the number of frames in the buffers at any
+particular time.
+
+If that is the case, then the proper solution would be for ALSA to check
+the status of each card that is part of the multi device, and not flag the
+multi device as ready for the next read or write until all of the physical
+devices are ready.  AND instead of OR.
+
+-- 
+Chris Caudle
+
+1355252216.29961_0.ltw:2, <c514edf7296a5623036b384966e37f51.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

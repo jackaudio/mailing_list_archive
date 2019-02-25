@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Wineasio on OSX</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Wineasio on OSX</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1337515187.30622_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1337516076.31940_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1337515994.31830_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 20 May 2012 13:12:48 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Peter L Jones </span> &lt;[hidden] at drealm dot info&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Steve Schow
+<a href='../1337111865.29791_0.ltw:2,a/index.html'>[Jack-Devel] Wineasio on OSX </a></td></tr>
+</table>
+<pre>
+Hi Steve,
+
+Have you tried JackWASIO?
+
+-- Peter
+
+On 15/05/2012 20:57, Steve Schow wrote:
+&gt; I'm trying to build wineasio 0.90 on osx.  So far can't get past some ELF assember code injection which I believe is a work around for COM.  Somehow whatever is in wineasio's asio.c file is not compatible with Mac.  Anyone have an idea how I might fix this?
+&gt; 
+&gt; Here is the compiler error and below that the code I think causing the problem:
+&gt; 
+&gt; Error:
+&gt; 
+&gt; gcc -c -I. -I/usr/include -I/Users/sjs/wine/wine-1.5.4/include -I/Users/sjs/wine/wine-1.5.4/include/wine -I/Users/sjs/wine/wine-1.5.4/include/wine/windows    -m32 -g -O2 -D__WINESRC__ -D_REENTRANT -fPIC -Wall -pipe -fno-strict-aliasing -Wdeclaration-after-statement -Wwrite-strings -Wpointer-arith -o asio.o asio.c
+&gt; {standard input}:36:Unknown pseudo-op: .type
+&gt; {standard input}:36:Rest of line ignored. 1st junk character valued 95 (_).
+&gt; {standard input}:38:Unknown pseudo-op: .cfi_startproc
+&gt; {standard input}:43:Unknown pseudo-op: .cfi_endproc
+&gt; {standard input}:44:Unknown pseudo-op: .previous
+&gt; {standard input}:48:Unknown pseudo-op: .type
+&gt; 
+&gt; 
+&gt; Code:
+&gt; 
+&gt; /* ASIO drivers (breaking the COM specification) use the Microsoft variety of
+&gt;  * thiscall calling convention which gcc is unable to produce.  These macros
+&gt;  * add an extra layer to fixup the registers. Borrowed from config.h and the
+&gt;  * wine source code.
+&gt;  */
+&gt; 
+&gt; /* From config.h */
+&gt; #define __ASM_DEFINE_FUNC(name,suffix,code) asm(".text\n\t.align 4\n\t.globl " #name suffix "\n\t.type " #name suffix ",@function\n" #name suffix ":\n\t.cfi_startproc\n\t" code "\n\t.cfi_endproc\n\t.previous");
+&gt; #define __ASM_GLOBAL_FUNC(name,code) __ASM_DEFINE_FUNC(name,"",code)
+&gt; #define __ASM_NAME(name) name
+&gt; #define __ASM_STDCALL(args) ""
+&gt; 
+&gt; /* From wine source */
+&gt; #ifdef __i386__  /* thiscall functions are i386-specific */
+&gt; 
+&gt; #define THISCALL(func) __thiscall_ ## func
+&gt; #define THISCALL_NAME(func) __ASM_NAME("__thiscall_" #func)
+&gt; #define __thiscall __stdcall
+&gt; #define DEFINE_THISCALL_WRAPPER(func,args) \
+&gt;     extern void THISCALL(func)(void); \
+&gt;     __ASM_GLOBAL_FUNC(__thiscall_ ## func, \
+&gt;                       "popl %eax\n\t" \
+&gt;                       "pushl %ecx\n\t" \
+&gt;                       "pushl %eax\n\t" \
+&gt;                       "jmp " __ASM_NAME(#func) __ASM_STDCALL(args) )
+&gt; #else /* __i386__ */
+&gt; 
+&gt; #define THISCALL(func) func
+&gt; #define THISCALL_NAME(func) __ASM_NAME(#func)
+&gt; #define __thiscall __cdecl
+&gt; #define DEFINE_THISCALL_WRAPPER(func,args) /* nothing */
+&gt; 
+&gt; #endif /* __i386__ */
+&gt; 
+&gt; /* Hide ELF symbols for the COM members - No need to to export them */
+&gt; #define HIDDEN __attribute__ ((visibility("hidden")))
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1337515187.30622_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1337516076.31940_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1337515994.31830_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1337515994.31830_0.ltw:2,a&nbsp;&lt;jpan40$dd0$1 at dough dot gmane dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

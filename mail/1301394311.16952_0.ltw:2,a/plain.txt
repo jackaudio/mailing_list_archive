@@ -1,0 +1,65 @@
+Date:        Tue, 29 Mar 2011 03:24:55 -0700
+From:        James Warden  <[hidden] at yahoo dot com>
+To:          Robin Gareus <[hidden] at gareus dot org>, [hidden] at xs4all dot nl
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: [hidden] at xs4all dot nl Re: [Jack-Devel] Transcoding clients for jack ? (1301363410.7989_0.ltw:2,a)
+Follow-Up:   Robin Gareus Re: [Jack-Devel] Transcoding clients for jack ? (1301432773.19739_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Transcoding clients for jack ?
+
+> > 3 years old and almost forgotten: `jack-stdout`
+> > http://rg42.org/oss/jackstdout/
+> >
+> >   jack-stdout system:capture_1
+> system:capture_2 \
+> >   | oggenc -r -R 48000 -B 16 -C 2 - \
+> >   > /tmp/my.ogg
+> >
+> > just pipe to sox, aacplusenc, lame, ffmpeg,..
+> >
+> > It's realtime-safe. However: if the internal
+> ringbuffer (64k
+> > stereo-samples - 256kBytes) and the unix-pipe (on
+> Linux: 64kBytes) fill
+> > up, samples will be dropped from the ringbuffer (and
+> you'll get error
+> > messages to stderr.) - The buffers are large enough
+> for most tasks. The
+> > CPU's the limit. YMMV.
+> >
+> > HTH,
+> > robin
+> >
+> 
+> 
+
+works fine here. Just need to replace jack_client_new("") by jack_client_open(...) in the source code. Here is a quick patch:
+
+
+===========
+--- jack-stdout.c~      2011-03-29 12:05:49.945775001 +0200
++++ jack-stdout.c       2011-03-29 12:07:37.840775001 +0200
+@@ -279,11 +279,12 @@
+ {
+        jack_client_t *client;
+        jack_thread_info_t thread_info;
++       jack_status_t jstat;
+ 
+        memset (&thread_info, 0, sizeof (thread_info));
+        thread_info.rb_size = 16384 * 4; //< make this an option
+ 
+-       if ((client = jack_client_new ("jstdout")) == 0) {
++       if ((client = jack_client_open ("jstdout", JackNoStartServer, &jstat)) == 0) {
+                fprintf (stderr, "jack server not running?\n");
+                exit (1);
+        }
+==================
+
+Thanks for the tip, I did not know that tool :)
+
+Cheers!
+J.
+
+1301394311.16952_0.ltw:2,a <436972.30813.qm at web39324 dot mail dot mud dot yahoo dot com>
+________________________________________________________________________________
+

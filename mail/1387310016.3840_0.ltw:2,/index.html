@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] routing alsa through jack</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] routing alsa through jack</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1387306286.29776_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1387340690.15205_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1387310016.3840_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 17 Dec 2013 20:53:26 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Lucio Crusca &lt;[hidden] at sulweb dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Lucio Crusca
+<a href='../1387306286.29776_0.ltw:2,/index.html'>[Jack-Devel] routing alsa through jack </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Lucio Crusca
+<a href='../1387340690.15205_0.ltw:2,/index.html'>Re: [Jack-Devel] routing alsa through jack </a></td></tr>
+</table>
+<pre>
+On 12/17/2013 07:51 PM, Lucio Crusca wrote:
+&gt; Hello everybody,
+
+Hi Lucio,
+
+&gt; I'm new here and I'm not a Jack developer, but I couldn't find any users 
+&gt; mailing lists and this page [1] says that &#xAB;If you're doing anything with jack, 
+&gt; you need to be on this list&#xBB;, so I assumed users are welcome here...
+
+yes, it's called jack-devel, but caters for users, too.
+
+[..snip..]
+
+&gt; Now I'd like to make a conference call with Skype (Alsa only, I don't want to 
+&gt; add pulseaudio) and record it using my Jack toy. I need to record both mic and 
+&gt; output, obviously.
+
+[..snip..]
+
+&gt; My solution involves snd_aloop.
+
+Entirely appropriate. That approach works just fine here with older
+versions of skype that support plain ALSA (I think newer versions of
+skype are pulse only, but I don't know. I'm still using skype 2.2.0.25 I
+just tested, still works). It gets me sound out of flash or any other
+non-jack app.
+
+Did you find
+http://alsa.opensrc.org/Jack_and_Loopback_device_as_Alsa-to-Jack_bridge
+? It's somewhat verbose, but a very nice article with complete
+step-by-step instructions and background information.
+
+&gt; $ aplay -f FLOAT_LE -D hw:9 /usr/share/sounds/alsa/Front_Right.wav
+&gt; Warning: format is changed to S16_LE
+
+Long story short: You cannot write directly to the loop-hardware once
+alsa_in/out are connected. You'll have to use an 'aggregated' device or
+alsa-plug configured in a $HOME/.asoundrc (or similar).
+
+Here 'aplay -d aduplex /usr/share/sounds/alsa/Front_Right.wav'
+works (but that's also the default) so just aplay .../file.wav
+
+I use zita-ajbridge which is a drop-in replacement for alsa_in/out but
+that's just a detail.
+
+Here my ~/.asoundrc and a script to launch the bridge, which works here:
+
+asoundrc: http://robin.linuxaudio.org/tmp/asoundrc-loopback
+
+ zita-a2j -L -d hw:Loopback,1,0 -j cloop -n 2 -p 256
+ zita-j2a -L -d hw:Loopback,1,1 -j ploop -n 2 -p 256
+ sleep 1
+ jack_connect cloop:capture_1 system:playback_1 &amp;&gt;/dev/null
+ jack_connect cloop:capture_2 system:playback_2 &amp;&gt;/dev/null
+ jack_connect system:capture_1 ploop:playback_1 &amp;&gt;/dev/null
+ jack_connect system:capture_2 ploop:playback_2 &amp;&gt;/dev/null
+
+A more complex example and the details are described in the alsa wiki
+article linked above.
+
+HTH,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1387306286.29776_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1387340690.15205_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1387310016.3840_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1387310016.3840_0.ltw:2,&nbsp;&lt;52B0ABB6.8010109 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

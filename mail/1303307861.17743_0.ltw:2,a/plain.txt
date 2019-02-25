@@ -1,0 +1,38 @@
+Date:        Wed, 20 Apr 2011 15:56:51 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          "Gabriel M dot Beddingfield" <[hidden] at gmail dot com>
+Cc:          Jack-Devel <[hidden] at lists dot jackaudio dot org>, Dan Muresan <[hidden] at gmail dot com>
+In-Reply-To: Gabriel M. Beddingfield Re: [Jack-Devel] non-callback API (1303306811.15827_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] non-callback API
+
+Le 20 avr. 2011 à 15:39, Gabriel M. Beddingfield a écrit :
+
+> 
+> 
+> On Wed, 20 Apr 2011, Dan Muresan wrote:
+> 
+>> OK. Actually process() taking too long would be equivalent to the code
+>> between cycle_wait() and cycle_signal() taking too long, right?
+>> Instead I'm asking about the other half -- the code between
+>> cycle_signal() and cycle_wait() taking too long.
+> 
+> It would be equivalent to doing the extra work (taking the extra time) at the beginning of your process() -- i.e. the same thing.  You'll zombie.
+> 
+> From the time that jack signals you to the time that you signal jack... that's the critical time.  If you take too long, you will cause xruns and you're client may be disconnected (zombie).
+> 
+> Strictly speaking, cycle_wait() is irrelevent.  
+
+???
+
+Have you *ever* looked at how this function is implemented?
+
+jack_cycle_wait() is the one that *blocks* until it gets resumed by the previous client in the graph, jack_cycle_signal() gives control to the next clients in the graph (by signaling their input semaphore) 
+
+Both functions have to be used in a given cycle.
+
+Stéphane 
+
+1303307861.17743_0.ltw:2,a <40723653-B9B8-4F83-9BD2-1D5D905D3516 at grame dot fr>
+________________________________________________________________________________
+

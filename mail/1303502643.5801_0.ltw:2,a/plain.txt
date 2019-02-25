@@ -1,0 +1,74 @@
+Date:        Fri, 22 Apr 2011 22:33:57 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] Call for testing of MIDI Drivers in JACK 2 (1303483920.2491_0.ltw:2,a)
+Follow-Up:   Devin Anderson Re: [Jack-Devel] RFC: driver descriptor helpers (1303503302.7154_0.ltw:2,a)
+
+Subject:     [Jack-Devel] RFC: driver descriptor helpers
+
+Stéphane Letz <[hidden]> writes:
+
+> Le 22 avr. 2011 à 15:35, Nedko Arnaudov a écrit :
+>
+>> Stéphane Letz <[hidden]> writes:
+>> 
+>>> Le 22 avr. 2011 à 09:59, Devin Anderson a écrit :
+>>> 
+>>>> On Thu, Apr 21, 2011 at 11:17 PM, Stéphane Letz <[hidden]> wrote:
+>>>>> Le 22 avr. 2011 à 06:53, Devin Anderson a écrit :
+>>>>>> I think I figured it out.  'jack_ringbuffer_reset' gained a 'memset()'
+>>>>> 
+>>>>> Ah yes, this probably comes from the merge of my old "libjacknet branch...
+>>>> 
+>>>> The fix is now in the 'newer-midi' branch.  Merge at your convenience. :)
+>>>> 
+>>>> Let me know if you encounter any more problems.
+>>>> 
+>>> Merge done.
+>> 
+>> I had to do some fixes [1][2] in trunk because I dont have
+>> celt. ladi-experimental now is suitable for creating ladish
+>> studio (or room project) for measuring the MIDI latency/jitter.
+>> 
+>> The second changeset suggests that we can have few helper functions for
+>> creating and filling parameter arrays. The current approach has proven
+>> to be error-prone. If you agree, I'd be happy to create such helpers and
+>> change the drivers to use them.
+>
+> Sure. Please do.
+
+http://repo.or.cz/w/jack2.git/shortlog/refs/heads/driver-descriptor-helpers
+http://repo.or.cz/w/jack2.git/commitdiff/a9e4628340a0fe4d36cc0e684c71af16a4e3717d
+
+I've tested only on Linux and only the alsa drivers. E.g., i've not
+built the ffado/firewire, macos, windows and solaris specific code. I
+have some access to macos and windows machine but I don't have access to
+solaris. Please tell me if I'm expected to setup build evirnment for
+macos and windows. Btw, we can setup a buildbot [1] with buildslaves for
+different platforms. Given that the xcode/codeblocks builds are
+scriptable...
+
+Devin, I saw a comment in the alsarawmidi code about you not being sure
+whether its parameters can be set. They can be set through
+jackdbus. ladiconf shows empty parameter list for alsarawmidi.
+
+I've noticed some problems with the parameter initialization code:
+
+ 1. There is some inconsistency with boolean parameters. We should set
+    the .i union member but there are/were some places where other
+    union member is accessed. The true/false constants are not fixed. In
+    different places we have 0/1, true/false and TRUE/FALSE.
+
+ 2. CoreAudio adapter and driver had uninitialized default values for
+   the 'P', 'C' and 'd' parameters. I've initialized them to empty
+   strings.
+
+[1] http://buildbot.net/
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 7862B9E45D1B58ED>
+
+1303502643.5801_0.ltw:2,a <87sjtaullm.fsf_-_ at nuntu dot spacelabs dot org>
+________________________________________________________________________________
+

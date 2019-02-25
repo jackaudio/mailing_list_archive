@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack2 build error - Debian 7 amd64</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack2 build error - Debian 7 amd64</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1402228038.26103_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1402240708.5069_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1402233093.30822_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 08 Jun 2014 15:11:09 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Adrian Knoth </span> &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>[hidden] at jrigg dot co dot uk
+<a href='../1402228038.26103_0.ltw:2,a/index.html'>[Jack-Devel] Jack2 build error - Debian 7 amd64 </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>John Rigg
+<a href='../1402240708.5069_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack2 build error - Debian 7 amd64 </a></td></tr>
+</table>
+<pre>
+On Sun, Jun 08, 2014 at 12:54:04PM +0100, [hidden] wrote:
+
+&gt; I just did a git pull from Jack2 on GitHub and tried compiling it on Debian
+&gt; stable amd64. The build fails. I previously built it on May 25th and it was
+&gt; fine.
+
+First and foremost, let me point out that current jack2 git compiles
+fine on Debian unstable.
+
+I didn't bother to try on Debian 7 (stable), but since you've compiled
+libsndfile yourself, I have the gut feeling that it is more specific to
+your local setup than a generic problem.
+
+
+&gt; (.text+0x2ac): undefined reference to `FLAC__stream_encoder_process_interleaved'
+
+This is pretty clear. For some reasons, symbols from libflac were
+referenced but later not linked against. This could either be due to
+indirect linking or API mismatch (no idea if the FLAC API has changed
+recently).
+
+You can try this patch, but no guarantees (completely untested):
+
+
+diff --git a/example-clients/wscript b/example-clients/wscript
+index fbf8999..01cea83 100644
+--- a/example-clients/wscript
++++ b/example-clients/wscript
+@@ -41,6 +41,7 @@ def configure(conf):
+  
+     if conf.is_defined('HAVE_SNDFILE'):
+         conf.env['LIB_SNDFILE'] = ['sndfile']
++        conf.env['LIB_FLAC'] = ['flac']
+ 
+     conf.check_cfg(package='celt', atleast_version='0.5.0', args='--cflags --libs', mandatory=False)
+ 
+@@ -120,7 +121,7 @@ def build(bld):
+             prog.env.append_value("LINKFLAGS", "")
+             prog.use += ['SNDFILE']
+         if bld.env['IS_LINUX']:
+-            prog.use += ['RT', 'SNDFILE']
++            prog.use += ['RT', 'FLAC', 'SNDFILE']
+         if bld.env['IS_SUN']:
+             prog.use += ['RT', 'SNDFILE']
+         if bld.env['IS_WINDOWS']:
+
+
+
+
+Cheers
+
+-- 
+mail: [hidden]  	http://adi.thur.de	PGP/GPG: key via keyserver
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1402228038.26103_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1402240708.5069_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1402233093.30822_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1402233093.30822_0.ltw:2,a&nbsp;&lt;20140608131109.GG7384 at ltw dot loris dot tv&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

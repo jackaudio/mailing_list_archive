@@ -1,0 +1,75 @@
+Date:        Sun, 03 Jul 2016 10:55:01 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis Re: [Jack-Devel] graph simplification using mathematics? (1467507316.16198_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] graph simplification using mathematics?
+
+On Sat, Jul 02, 2016 at 08:55:04PM -0400, Paul Davis wrote:
+
+> There are all kinds of cool ideas for how to do things inside a single
+> process - Faust is one of them. The inter-application stuff is really a
+> different ball of wax. Fons sounds as if he has some interesting insights
+> there, but it would be hard to integrate them into any host that wants to
+> be able to run without JACK.
+
+Not at all, and this was even an explicit design goal.
+
+I'll try to explain how this works. 
+There are three types of 'clients'. All three use essentially
+the same API, only some options are different.
+
+The first type is entirely equivalent to a Jack client as we
+know it. It has a process callback and ports. Such clients
+can run in parallel in same way as in Jack2, you can also
+have more than one in a process, but that doesn't change
+the way they are handled. Nothing new here.
+
+The second and third types you'd use to create a complex
+application consisting of an arbitrary graph of modules
+in a single process, e.g. a DAW. 
+
+You first create an 'outer client'. Such a client has ports,
+but it doesn't have a process callback. Instead it will
+encapsulate the internal multithreaded scheduler of the
+application. To the end user (e.g. in qjackctl) it just
+looks like the first type.
+
+Next you create the modules, which are the third type. The
+open() just takes one additional parameter: a reference to
+the outer client. Otherwise the API is exactly the same,
+you define a callback and create ports. The difference
+is that these ports are not visible externally. They can
+be used (by the application code only) in two ways: you
+can connect them to other internal modules, or map them
+to a port of the outer client. By doing the latter the
+module becomes visible to the outer scheduler (but not
+to the end user). The outer and internal scheduler work
+together in such a way as if there were only one, seeing
+the entire combined graph. At the same time, everything
+that can be handled by the internal scheduler will be
+taken care of locally, without any additional overhead
+or context switches.
+
+Now if the application doesn't want to be a 'Jack client'
+but e.g. use ALSA directly, it still uses an internal
+scheduler with the same API, and instead of mapping
+internal (module) ports to the externally visible ones
+of the outer client, it maps them to channels of the ALSA
+interface. To the end user it just looks the same. To the
+application, the only difference is that all external
+triggers will always arrive at the same time, at the
+start of an ALSA period. 
+
+Ciao,
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+
+1467543311.476_0.ltw:2,a <20160703105501.GB82955 at linuxaudio dot org>
+________________________________________________________________________________
+

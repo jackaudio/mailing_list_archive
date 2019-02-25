@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Some kernel questions reg. jack</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Some kernel questions reg. jack</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1329574909.17351_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1329689768.2692_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1329660110.18797_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 19 Feb 2012 15:01:10 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at nebelschwaden dot de </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Ede Wolf
+<a href='../1329509300.27212_0.ltw:2,a/index.html'>[Jack-Devel] Some kernel questions reg. jack </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>[hidden] at nebelschwaden dot de
+<a href='../1329921554.12668_0.ltw:2,a/index.html'>Re: [Jack-Devel] Some kernel questions reg. jack </a></td></tr>
+</table>
+<pre>
+Hi Ede,
+
+On 02/17/2012 09:07 PM, Ede Wolf wrote:
+&gt; Hello,
+&gt; 
+&gt; I do have some questions regarding kernel options for a jack friendly
+&gt; kernel. I've found some information on the net, some outdated, some
+&gt; maybe not complete. I am talking about a stock vanilla kernel 3.2 with
+&gt; BFS scheduler,
+
+I've only tested BFS in the late linux-2.6. days. It performed very well
+but could not compete with RT_PREEMT under heavy load wrt low-latency
+audio. YMMV.
+
+&gt; I most likely do not need hard realtime.
+&gt; 
+&gt; While my kernels usually do run, I do not understand all options. 
+
+There's probably no one out there who can tell how _all_ those options
+affect each other and what effect they have on the system :)
+
+&gt; Not to
+&gt; get me wrong, I am not asking to get those explained at all, just would
+&gt; like to know wether those are jack relevant and should en/disabled.
+
+none of them are relevant for JACK per se; I assume you want a tuned
+reliable audio-system.
+
+&gt; So a 1000Hz timer and full preemption are quite obvious. 
+
+N/A and yes. (the 1kHZ timer is motivated mostly by MIDI I/O; I'm unsure
+if it is still relevant with jack-midi - but it won't hurt. jackd
+backends use the audio-hardware IRQ for timing; NTL ALSA-sequencer apps
+will run with less jitter with a higher precision system timer.)
+
+&gt; A tickless system is not recommended.
+
+well, no. A tickless system just replaces the periodic timer interrupt
+with on-demand interrupts. The response time is basically identical; but
+the power-consumption is drastically reduced. They system can also do
+other things instead of handling some unused timer-irq but the effect of
+that is marginal.
+
+CONFIG_NO_HZ=y
+CONFIG_HIGH_RES_TIMERS=y
+
+&gt; IIRC and also hyperthreading should be disabled in bios as well as kernel? 
+In general: no. leave it enabled.
+
+It helps to increase parallelism for I/O bound (non-CPU intensive)
+threads. It may have to be "yes" for you, because BFS may not /aware/ of
+HT features when it schedules context-switches. The scheduler needs to
+realize that the two logical CPUs belong to the same physical CPU. I
+don't know if BFS cares about that. In general one needs a shared
+runqueue per physical-CPU for HT-scheduling; yet one of the BFS features
+is to only use a single runqueue for the entire system.
+
+&gt; Same with Power management, I suppose.
+In general, yes.
+
+but it's not that simple: for maximum reliability, you want to run the
+machine as cool as possible which also produces less [fan] noise. Also
+if you're on a mobile system, with power-mgmt the battery will last much
+longer.
+
+CPU freq changes are fast enough and not an issue for audio
+applications, but PCI/PCIexpress power management can screw up
+low-latency I/O. Alas, this differs from board-to-board and
+bios-to-bios. Check if you can disable C1E halt state and EIST in the
+BIOS. Other power-management options are usually not an issue.
+
+&gt; Is that RCU stuff somehow realted to audio? What about "Enable RCU
+&gt; priority boosting". Is that recommended to be activated? And is the I/O
+&gt; scheduler of any relevance? I an mot going to record 52 tracks at once.
+
+mmh. IIRC there were (or are) implementation issues with the locking
+model of RCU WRT to low-latency. I did not follow up the details but it
+works fine and reliable with the -rt patch on i686 and x64_64 here with
+2.6.39 and 3.X
+
+CONFIG_TREE_PREEMPT_RCU=y
+CONFIG_PREEMPT_RCU=y
+CONFIG_RCU_BOOST=y
+
+
+&gt; Also I do filter access to /dev/mem below "kernel hacking". That should
+&gt; not matter, should it? Anything I might have missed?
+
+not that I'm aware of.
+
+&gt; Finally, not really kernel related, but what is about irq-balancer? I've
+&gt; attached "threadirqs" to my lilo line - there is no dedicated kernel
+&gt; option for threadirqs? - do threadirqs and irq-balancer they play well
+&gt; together or should latter one be removed?
+
+/sbin/irqbalance is a daemon. - "threadirqs" is a kernel option.
+They work in combination. However it is questionable if balancing IRQs
+on a single hyperthreaded core makes sense.
+
+You'll definitely want to use "threadirqs" to increase the priority of
+audio-device-IRQ handlers over other interrupt handlers. Rui's rtirq
+script can configure IRQ priorities during boot for kernels with
+threaded IRQ handlers.
+
+`hwlatdetect` and other tools from the "rt-tests" suite do come in handy
+to check system and kernel latencies.
+
+&gt; Hopefully this is not too off topic.
+
+it's a recurring on-topic subject at
+
+have fun,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1329574909.17351_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1329689768.2692_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1329660110.18797_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1329660110.18797_0.ltw:2,a&nbsp;&lt;4F4100A6.8070702 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

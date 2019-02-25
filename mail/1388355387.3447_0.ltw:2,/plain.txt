@@ -1,0 +1,93 @@
+Date:        Sun, 29 Dec 2013 23:16:11 +0100
+From:        Wojciech Zabolotny  <[hidden] at gmail dot com>
+To:          Jeremy Jongepier <[hidden] at autostatic dot com>
+Cc:          "[hidden] at lists dot jackaudio dot org" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Jeremy Jongepier Re: [Jack-Devel] Problems with audioadapter used with capture only interface (1388353551.2349_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Problems with audioadapter used with capture only interface
+
+On Sun, Dec 29, 2013 at 10:45 PM, Jeremy Jongepier
+<[hidden]> wrote:
+> On 12/29/2013 10:38 PM, Wojciech Zabolotny wrote:
+>> 29-12-2013 19:32, "Jeremy Jongepier" <[hidden]> napisa³(a):
+>>>
+>>> On 12/29/2013 01:27 AM, Wojciech Zabolotny wrote:
+>>>> Hi,
+>>>>
+>>>> I wanted to use jack2 with an embedded system equipped with capture
+>>>> only interface.
+>>>> I can start the server with the net backend:
+>>>
+>>> Hello Wojciech,
+>>>
+>>> Why the net backend? It seems as if you want to use the capture only
+>>> interface on a standalone embedded device.
+>>>
+>>> Best,
+>>>
+>>> Jeremy
+>>>
+>> Hi Jeremy,
+>>
+>> the whole design is a WiFi based wireless guitar system.
+>> Therefore the audio samples must be transmitted to the jack running on a PC
+>> working as a virtual amplifier and the Digital Audio Workstation.
+>> In fact I'm still considering getting rid of jack at the embedded system
+>> side. From the latency point of view the optimal solution would be to
+>> transmit the data directly from the soundcard via net to something like
+>> modified alsa_in on the PC. I have even considered making of virtual ALSA
+>> card with network input.
+>> Regards,
+>> Wojtek
+>
+> Hi Wojtek,
+>
+> Thanks for the explanation! Sounds like a cool idea. Why not run the
+> virtual amp directly on the embedded device? Not enough processing
+> power? And of course you could try using ALSA directly but from personal
+> experience I can say that using JACK might just be the easiest option.
+>
+> Best,
+>
+> Jeremy
+>
+
+Hi Jeremy,
+
+The whole idea was started as an upgrade of my old system:
+ http://www.ise.pw.edu.pl/~wzab/wireless_guitar_system/index.html
+The whole device must be small, and either attached to the guitar itself,
+or to the strap, so that the guitarist can conveniently select tone
+and make some
+settings adjustments.
+The device should also consume as small power as possible, so that it
+can work long from small and lightweight batteries.
+That's why no virtual amp in the device itself.
+Current version of hardware is available at:
+https://github.com/wzab/raspberry-pi-guitar-system-v1/tree/master/kicad-project-v1
+
+As the latency problem is essential, I'm simply afraid that in the
+configuration:
+Codec-ALSA-Jack-Net-Jack the latency will be introduced twice - in
+both jack servers.
+In the ALSA based solution, the samples could be collected and
+transferred immediately
+as they are available.
+At the receiving side, I considered either something based on snd-aloop
+with user-space application receiving data from the network
+or something like minivosc:
+https://github.com/stadaki/alsa-minivosc-src
+http://www.alsa-project.org/main/index.php/Minivosc
+The latter would be especially efficient with private kernel-space implemented
+lightweight reliable network protocol (e.g. something like what I've created for
+FPGA based DAQ systems - http://opencores.org/project,fade_ether_protocol )
+The data from virtual ALSA card will be received by standard alsa_in
+or audioadapter
+(which of course will introduce some additional latency due to synchronization).
+-- 
+Regards,
+Wojtek
+
+1388355387.3447_0.ltw:2, <CAMduVEdJ8Khr7JB=0diyfHsL5_OBO+HV865NardmVs_7ARB7wQ at mail dot gmail dot com>
+________________________________________________________________________________
+

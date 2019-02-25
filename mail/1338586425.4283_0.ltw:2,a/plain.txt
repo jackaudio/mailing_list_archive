@@ -1,0 +1,78 @@
+Date:        Fri, 01 Jun 2012 21:33:37 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Nedko Arnaudov Re: [Jack-Devel] [LAU] jack2 turned verbose (1338584714.2523_0.ltw:2,a)
+Follow-Up:   Robin Gareus Re: [Jack-Devel] [LAU] jack2 turned verbose (1338621426.3051_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [LAU] jack2 turned verbose
+
+On Sat, Jun 02, 2012 at 12:04:52AM +0300, Nedko Arnaudov wrote:
+ 
+> The default value of "verbose" is set to 10, the default value of
+> "realtime-priority". libdbus has checks for boolean values that gets
+> triggered because 10 is neither true (1) not false (0).
+
+How are these checks done ?
+
+I tried this:
+
+
+int main (int ac, char *av [])
+{
+    int i;
+
+    union
+    {
+        bool b;
+        int  i;
+    } X;
+
+    puts ("");
+    for (i = 0; i < 5; i++)
+    {
+        X.i = i;
+        if (X.b) puts ("true");
+        else     puts ("false");
+    }
+
+    puts ("");
+    for (i = 0; i < 5; i++)
+    {
+        X.i = i;
+        if      (X.b == true)   puts ("true");
+        else if (X.b == false)  puts ("false");
+        else                    puts ("Neither true or false");
+    }
+
+    return 0;
+}
+
+which prints: 
+
+false
+true
+true
+true
+true
+
+false
+true
+true
+true
+true
+
+And this makes me think that if libdbus tests for 0 or 1 it
+is doing the wrong thing (TM).
+
+Ciao,
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+
+1338586425.4283_0.ltw:2,a <20120601213337.GA5314 at linuxaudio dot org>
+________________________________________________________________________________
+

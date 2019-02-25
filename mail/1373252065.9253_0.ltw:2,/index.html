@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Questions on tuning netjack performance</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Questions on tuning netjack performance</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1373180002.4917_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1373253098.9901_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1373252065.9253_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 07 Jul 2013 20:54:14 -0600 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Dan Swain </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1373180002.4917_0.ltw:2,/index.html'>Re: [Jack-Devel] Questions on tuning netjack performance </a></td></tr>
+</table>
+<pre>
+Thanks St&#xE9;phane! That did the trick :-)
+
+
+On Sun, Jul 7, 2013 at 12:52 AM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+
+&gt;
+&gt; Le 7 juil. 2013 &#xE0; 08:00, Dan Swain &lt;[hidden]&gt; a &#xE9;crit :
+&gt;
+&gt; &gt; Dear all,
+&gt; &gt;
+&gt; &gt; I've been searching for ways to improve the 'latency' of netjack. Thanks
+&gt; to quite a few threads and online documents, I finally managed to get -l 1
+&gt; working with the netjack driver (I didn't realise the order of switches
+&gt; were as significant as they are).
+&gt; &gt;
+&gt; &gt; The lowest latency I've managed to find is with this -l 1 switch, and
+&gt; also without -S, although since my discovery I've not tried sync. Would
+&gt; this make a difference?
+&gt;
+&gt; -S (synchronous) on the slave allows the salve to better handle network
+&gt; timing jitter, so I would recommend -S on slave side.
+&gt;
+&gt; &gt;
+&gt; &gt; I did try -l 0, but it made my slave machine eventually fall behind in
+&gt; an expected way (I tried to break it, and it did :-) ).
+&gt; &gt;
+&gt; &gt; I've not been able to find success in the -p switch, so I began to
+&gt; wonder if this was driver specific (i.e. portaudio), or if again the
+&gt; ordering of the switches is important. If so, where should it be placed?
+&gt;
+&gt;
+&gt; jackd -d net -h gives:
+&gt;
+&gt; jackdmp comes with ABSOLUTELY NO WARRANTY
+&gt; This is free software, and you are welcome to redistribute it
+&gt; under certain conditions; see the file COPYING for details
+&gt;         -a, --multicast-ip      Multicast address, or explicit IP of the
+&gt; master (default: 225.3.19.154)
+&gt;         -p, --udp-net-port      UDP port (default: 19000)
+&gt;         -M, --mtu       MTU to the master (default: 1500)
+&gt;         -C, --input-ports       Number of audio input ports. If -1, audio
+&gt; physical input from the master (default: -1)
+&gt;         -P, --output-ports      Number of audio output ports. If -1, audio
+&gt; physical output from the master (default: -1)
+&gt;         -i, --midi-in-ports     Number of MIDI input ports. If -1, MIDI
+&gt; physical input from the master (default: -1)
+&gt;         -o, --midi-out-ports    Number of MIDI output ports. If -1, MIDI
+&gt; physical output from the master (default: -1)
+&gt;         -c, --celt      Set CELT encoding and number of kBits per channel
+&gt; (default: -1)
+&gt;         -n, --client-name       Name of the jack client (default:
+&gt; 'hostname')
+&gt;         -s, --auto-save         Save/restore connection state when
+&gt; restarting (default: false)
+&gt;         -l, --latency   Network latency (default: 5)
+&gt;
+&gt; ==&gt; -p is for "UDP port"
+&gt;
+&gt; &gt;
+&gt; &gt; So far, my command line looks like this (the slave is on a Windows
+&gt; machine):
+&gt; &gt;
+&gt; &gt; jackd -R -d net -l 1 -i 1 -C 0 -P 8 -n VST
+&gt; &gt;
+&gt; &gt; I hope that provides enough information to work from, but please let me
+&gt; know if you have further questions!
+&gt; &gt;
+&gt; &gt; Thanks in advance!
+&gt; &gt;
+&gt; &gt; Dan
+&gt;
+&gt; I would suggest to add -S.
+&gt;
+&gt; St&#xE9;phane
+&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1373180002.4917_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1373253098.9901_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1373252065.9253_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1373252065.9253_0.ltw:2,&nbsp;&lt;CABhkv4NUesxCcPPoFUrmNrUSJg916CvviCiGfU9W3MRfjS06oA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

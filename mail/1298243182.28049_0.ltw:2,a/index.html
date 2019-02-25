@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How to sync non-audio actions to JACK audio?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How to sync non-audio actions to JACK audio?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298237778.17520_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298281949.29387_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298243182.28049_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 21 Feb 2011 00:05:54 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Slavko Glamo&#x10D;anin </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Felix Homann &lt;[hidden] at web dot de&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Felix Homann
+<a href='../1298063859.2943_0.ltw:2,a/index.html'>[Jack-Devel] How to sync non-audio actions to JACK audio? </a></td></tr>
+</table>
+<pre>
+You can use a ringbuffer to trigger events outside the jack processing
+thread (see the jack examples for ringbuffer usage). If you are using SDL
+you can just push events to its main processing thread.
+
+As for video, at 60fps thats 16ms per frame, jack processing callback should
+be under 10ms usually, so that gives you ample time to manipulate video.
+You can calculate which frame to display or something like that in the
+processing callback and communicate this with other threads via a ringbuffer
+(if sending video commands like play, position), or just writing to a
+currentFrame type variable, which you read when displaying video (in another
+thread).
+
+This is more of a threading implementation thing, if you're using SDL you
+should be ok:)
+
+Regards,
+Slavko
+
+On Fri, Feb 18, 2011 at 9:59 PM, Felix Homann &lt;[hidden]&gt; wrote:
+
+&gt; Hi again,
+&gt;
+&gt; here's another question for a better understanding of JACK.
+&gt;
+&gt; I want to sync non-audio actions as sample accurate as possible to a sound
+&gt; file. For example, video playback or as in my case, I want to trigger some
+&gt; actions via OSC (Open Sound Control) instead of MIDI.
+&gt;
+&gt; Say, my process() callback has just written N audio frames to an output
+&gt; buffer. I want to call some function as exactly as possible when frame
+&gt; number n  (with 0 &lt; = n &lt;= N) is "played". When is frame number n actually
+&gt;  "played" after process() was called? What means are there in the JACK API
+&gt; to sync external non-audio actions to audio? Are there some examples for
+&gt; best practices?
+&gt;
+&gt; Kind regards,
+&gt;
+&gt; Felix
+&gt; 
+&gt; Jack-Devel mailing list
+&gt; [hidden]
+&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298237778.17520_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298281949.29387_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298243182.28049_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1298243182.28049_0.ltw:2,a&nbsp;&lt;AANLkTikwsKQNEBPrAoEjocdfHSz+CU0UGttBV9cSP7CS at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

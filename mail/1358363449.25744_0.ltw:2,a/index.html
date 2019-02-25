@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Console based software EQ for jack</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Console based software EQ for jack</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1358353059.14919_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1358363880.26054_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1358363449.25744_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 17 Jan 2013 06:10:35 +1100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Patrick Shirkey </span> &lt;[hidden] at boosthardware dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Stefan Stefanov
+<a href='../1358349962.9908_0.ltw:2,a/index.html'>Re: [Jack-Devel] Console based software EQ for jack </a></td></tr>
+</table>
+<pre>
+On Thu, January 17, 2013 2:25 am, Stefan Stefanov wrote:
+&gt; Thanks for the suggestion but I have to rethink how to accomplish this.
+&gt;
+&gt; Let me describe my set-up and what I have tried till now.
+&gt; I'm using Archlinux with pure systemd.
+&gt; I wrote my custom jack.service and jackd is started at system boot:
+&gt;
+&gt; My jack.service (also discussed here a couple weeks ago):
+&gt; [Unit]
+&gt; Description=JACK
+&gt; After=sound.target
+&gt;
+&gt; [Service]
+&gt; User=stefan
+&gt; ExecStart=/usr/bin/jackd -P 85 -d alsa -P hw:2,0 -r 96000 -n 3 -p 256
+&gt; LimitMEMLOCK=infinity
+&gt; LimitRTPRIO=infinity
+&gt;
+&gt; [Install]
+&gt; WantedBy=multi-user.target
+&gt;
+&gt; My mpd.conf is configured to use jack:
+&gt; ...
+&gt; audio_output {
+&gt;        type             "jack"
+&gt;        name             "JACK Audiolab MDAC"
+&gt;        device           "hw:2,0"
+&gt;        format           "*:24_3:2"
+&gt;        mixer_type       "disabled"
+&gt; }
+&gt; ...
+&gt;
+&gt; This is my current set-up and I'm very happy with it :)
+&gt;
+&gt;
+&gt; As you can see above mpd uses hard-coded connection to jack and
+&gt; it do real connection when my mpd-client (running on another machine)
+&gt; starts playing (hit "Play" button)
+&gt;
+&gt; (1) mpd -&gt; jackd
+&gt;
+&gt; Now, I have to include jackeq in the middle of the (1) connection. So,
+&gt; I wrote another systemd service - for jackeq:
+&gt; [Unit]
+&gt; Description=JackEQ
+&gt; Requires=jack.service
+&gt; After=jack.service
+&gt;
+&gt; [Service]
+&gt; Type=simple
+&gt; User=stefan
+&gt; ExecStart=/usr/bin/jackeq -d
+&gt;
+&gt; [Install]
+&gt; WantedBy=multi-user.target
+&gt;
+&gt; Then I start jackeq.service.
+&gt; To make the connections to jackeq I use:
+&gt;
+&gt; Music Player Daemon:left -&gt; jackEQ:c.1-in-L
+&gt; jackEQ:c.1-out-L -&gt; system:playback_1
+&gt; Music Player Daemon:right -&gt; jackEQ:c.1-in-R
+&gt; jackEQ:c.1-out-R -&gt; system:playback_2
+&gt;
+&gt;
+&gt; jack_connect Music\ Player\ Daemon:left jackEQ:c.1-in-L
+&gt; jack_connect Music\ Player\ Daemon:right jackEQ:c.1-in-R
+&gt;
+&gt; jack_connect jackEQ:c.1-out-L system:playback_1
+&gt; jack_connect jackEQ:c.1-out-R system:playback_2
+&gt;
+&gt; This way I get:
+&gt; (2) mpd -&gt; jackeq -&gt; jackd
+&gt;
+&gt; and I'm able to use jackeq, but only statically.
+&gt; Statically means that cannot adjust of bass and treble during playback,
+&gt; but just load values (for bass and treble) from jackeq.conf file
+&gt; located in my $HOME (same as Roland Mas suggests).
+&gt;
+
+I'm open to suggestions on how to handle feedback for adjusting the
+control values that will work for your use case.
+
+&gt;
+&gt; The main problem is that connection (1) is always created (from mpd I
+&gt; think)
+&gt; when the playback starts from mpd-client and I have to disconnect it
+&gt; every time before I make connection (2).
+&gt;
+
+You should be able to tell mpd not to autoconnect to jack i/o when it
+starts or conversely to connect directly to jackEQ if it is already
+running.
+
+
+
+
+&gt;
+&gt;
+&gt; 2013/1/16 Patrick Shirkey &lt;[hidden]&gt;:
+&gt;&gt;
+&gt;&gt; On Wed, January 16, 2013 8:03 pm, Stefan Stefanov wrote:
+&gt;&gt;&gt; Hello
+&gt;&gt;&gt;
+&gt;&gt;&gt; My music server is headless (no graphical environment).
+&gt;&gt;&gt; I'm using mpd + JACK to play music.
+&gt;&gt;&gt; Now I need some software equalizer (JACK based of course), but running
+&gt;&gt;&gt; in daemon mode.
+&gt;&gt;&gt;
+&gt;&gt;&gt; JackEQ is the application I currently installed. It could be run in
+&gt;&gt;&gt; daemon mode like that:
+&gt;&gt;&gt; $ jackeq -d
+&gt;&gt;&gt;
+&gt;&gt;&gt; But I don't understand how to use it further more:
+&gt;&gt;&gt; - how to connect it (to mpd in my case) ?
+&gt;&gt;
+&gt;&gt; IIRC ,you can connect the channels via jack_connect
+&gt;&gt;
+&gt;&gt;&gt; - how to adjust bass and treble ?
+&gt;&gt;
+&gt;&gt; To the best of my knowledge you are the first person who has publicly
+&gt;&gt; expressed an interest in having this functionality. Hence it doesn't
+&gt;&gt; exist
+&gt;&gt; yet :-)
+&gt;&gt;
+&gt;&gt; I'm happy to spend some time on it if you have some ideas for how to
+&gt;&gt; achieve it for your use case.
+&gt;&gt;
+&gt;&gt;
+&gt;&gt; --
+&gt;&gt; Patrick Shirkey
+&gt;&gt; Boost Hardware Ltd
+&gt;&gt; 
+&gt;&gt; Jack-Devel mailing list
+&gt;&gt; [hidden]
+&gt;&gt; http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+&gt;
+
+
+--
+Patrick Shirkey
+Boost Hardware Ltd
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1358353059.14919_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1358363880.26054_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1358363449.25744_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1358363449.25744_0.ltw:2,a&nbsp;&lt;56795.5.12.188.139.1358363435.squirrel at boosthardware dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

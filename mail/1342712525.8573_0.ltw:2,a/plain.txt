@@ -1,0 +1,72 @@
+Date:        Thu, 19 Jul 2012 08:41:55 -0700
+From:        Basil Nutmeg  <[hidden] at li95-58 dot members dot linode dot com>
+To:          Stéphane Letz <[hidden] at grame dot fr>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Stéphane Letz Re: [Jack-Devel] packed data structures in jack2 (1342673701.13088_0.ltw:2,a)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] packed data structures in jack2 (1342713274.9801_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [Jack-Devel] packed data structures in jack2 (1342713471.10064_0.ltw:2,a)
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] packed data structures in jack2 (1342722001.23467_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] packed data structures in jack2
+
+On Thu, Jul 19, 2012 at 06:54:41AM +0200, Stéphane Letz wrote:
+> The point to pack memory is to allow a 64 bits server to be used with 32 bits clients or the contrary. Since shared memory is going to be used by "both sides", the only safe way we found was to use packed memory struct.
+
+Ah, thanks, I see now. I see how putting packed on everything does make
+this easier. However, it also makes the code unusable on some platforms
+and slow on others. Would you be open to alternative approaches here? I'd
+be willing to do some work to help out.
+
+For example, here's one idea:
+
+/*
+ * To facilitate sharing data between 32-bit and 64-bit processes, we
+ * use types that are fully aligned (aligned to their size), to avoid
+ * differences in alignment rules. This macro facilitates creating
+ * specially-aligned versions of basic types for this purpose.
+ *
+ * For example,
+ *
+ *     declare_aligned_type(int64_t);
+ *
+ * declares a typedef aligned_int64_t to be an int64_t that is always
+ * aligned to an 8-byte boundary (assuming sizeof(int64_t) is 8...).
+ */
+#define declare_aligned_type(T) \
+    typedef T aligned_##T __attribute__((aligned(sizeof(T))))
+
+declare_aligned_type(char);
+declare_aligned_type(int64_t);
+/* ... and more */
+
+/* And so, for example: */
+
+/* While this type has a different layout between 32-bit and 64-bit... */
+struct A {
+  char x;
+  int64_t i;
+};
+
+/* ... this type has the same layout between 32-bit and 64-bit. */
+struct A_with_alignment {
+  aligned_char x;
+  aligned_int64_t i;
+};
+
+This would require more code changes than the packed approach, but it
+seems like it'd be pretty tolerable.
+
+As another idea would be to have a source file which simply includes all
+the important headers and is compiled with -Wpadded and maybe even
+-Werror, to catch any mistakes.
+
+You could even do both, for added safety.
+
+What do you think? Or, if you don't like these approaches, is there
+anything else you might consider?
+
+-- Basil
+
+1342712525.8573_0.ltw:2,a <20120719154155.GB27528 at li95-58 dot members dot linode dot com>
+________________________________________________________________________________
+

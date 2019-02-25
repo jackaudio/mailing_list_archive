@@ -1,0 +1,63 @@
+Date:        Tue, 28 Jan 2014 17:57:02 -0600
+From:        franklyn berry  <[hidden] at mindspring dot com>
+To:          Adi Knoth <[hidden] at drcomp dot erfurt dot thur dot de>
+Cc:          [hidden] at lists dot jackaudio dot org
+
+Subject:     Re: howto: jackdbus && jack_control
+
+-----Original Message-----
+>From: Adrian Knoth <[hidden]>
+>On Tue, Jan 28, 2014 at 11:30:41AM -0600, franklyn berry wrote:
+>
+>> <powerpc: ubuntu 12.04; opus-1.1; jack-1.9.9.5; ffado-2.1>
+>
+>I assume it's a hand-rolled jackd. If so, I remember a Debian bug report
+>claiming the same alignment issue on ppc32 as seen on ARM:
+>
+>     http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=728710
+
+Thanks, Adrian. I'll try and track that change. In the meantime, I've
+made some minor progress. 
+
+I've verified the DBUS registration of server, jack_control client, and its
+exec'd child. All have ID's and report methods in the dbus logs.
+
+I've tracked it <the lack of 'server started' signal BACK to dbus; and subsequent
+error timeout> down to this snippet from common/JackControlAPI.cpp:
+
+SERVER_EXPORT bool
+jackctl_server_open(
+    jackctl_server *server_ptr,
+    jackctl_driver *driver_ptr)
+{
+    JSList * paramlist = NULL;
+...
+        server_ptr->engine = new JackServer(
+            server_ptr->sync.b,
+            server_ptr->temporary.b,
+            server_ptr->client_timeout.i,
+            server_ptr->realtime.b,
+            server_ptr->realtime_priority.i,
+            server_ptr->port_max.ui,
+            server_ptr->verbose.b,
+            (jack_timer_type_t)server_ptr->clock_source.ui,
+            server_ptr->name.str)
+... 
+seems to execute.
+<I just sprinkled some "jack_info()" outputs to jackdbus.log to see where it blew up.>
+ 
+But when "coerced" into this ?function pointer?
+
+        rc = server_ptr->engine->Open(driver_ptr->desc_ptr, paramlist);
+
+a bus error dumps core before the calling function can complete, and return.
+
+I'm not a programmer, but I'm guessing that the '->Open' might need to be
+re-typed? The trouble <for my skill level> is that I cannot find the original
+function prototype to see how its defined. 
+
+--frankb
+
+1390953432.28171_0.ltw:2, <29170403.1390953423217.JavaMail.root at elwamui-karabash dot atl dot sa dot earthlink dot net>
+________________________________________________________________________________
+

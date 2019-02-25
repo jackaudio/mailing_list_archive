@@ -1,0 +1,43 @@
+Date:        Sun, 10 Nov 2013 03:23:48 +0000
+From:        Kaspar Bumke  <[hidden] at gmail dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+
+Subject:     [Jack-Devel] ARM: Alignment, Atomicity
+
+Hey all,
+
+so after some further investigation I can report that the reason I was
+encountering alignment traps on some version of jackd1 and not on
+others was because the ones that were working were compiled with "-O0"
+and the broken ones with other optimisation levels (versions compiled
+with -O1,2,3 & s encounter alignment traps). Defining the
+POST_PACKED_STRUCTURE as empty did not seem to help.
+
+Any insights into why this would be, whether this could be a problem,
+even with versions compiled with -O0  and what needs to be done to fix
+it are appreciated. Given that undefining the POST_PACKED_STRUCTURE
+did not help I guess it bears further investigation into where this is
+occurring. I had started to investigate this but set -O0 along with -g
+and suddenly my problem had disappeared. I have another go soon. I
+guess it is also possible that this is a bug in gcc's optimisation?
+
+After having spent considerable time watching the make output text
+scroll by during repeated compiles I actually started to read it (!)
+and noticed the warnings about atomicity from
+config/cpu/generic/atomicity.h [1].
+
+Are atomic functions in this case not used? Are they needed? Could I
+copy the operations jack2 seems to use for ARM [2] to jack1?
+
+Thanks in advance for any thoughts and insights.
+
+Ciao,
+
+Kaspar
+
+[1]https://github.com/jackaudio/jack1/blob/master/config/cpu/generic/atomicity.h#L23
+[2]https://github.com/jackaudio/jack2/blob/master/linux/JackAtomic_os.h#L75
+
+1384053858.23977_0.ltw:2,a <CAB+dmjhYUA61WgF2B6o3h=nuZ8T0j-bCHanwE2naur3POKbnFQ at mail dot gmail dot com>
+________________________________________________________________________________
+

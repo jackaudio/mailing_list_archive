@@ -1,0 +1,99 @@
+Date:        Mon, 18 May 2009 16:57:13 +0100
+From:        Rui Nuno Capela  <[hidden] at rncbc dot org>
+To:          Nedko Arnaudov <[hidden] at arnaudov dot name>
+Cc:          Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>, JACK Developers <[hidden] at jackaudio dot org>
+In-Reply-To: Nedko Arnaudov Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments (1242659373.3273_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments (1242663064.9693_0.ltw:2,a)
+Follow-Up:   Nedko Arnaudov Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments (1242663379.10495_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments
+
+On Mon, May 18, 2009 16:08, Nedko Arnaudov wrote:
+> Fons Adriaensen <[hidden]> writes:
+>
+>> On Mon, May 18, 2009 at 05:13:19PM +0300, Nedko Arnaudov wrote:
+>>
+>>
+>>> Fons I think we can both read C code, right?
+>>>
+>>>
+>>> From posix/JackPosixServerLaunch.cpp, line 166:
+>>>
+>>>
+>>> static int start_server(const char* server_name, jack_options_t
+>>> options) {
+>>> if ((options & JackNoStartServer) || getenv("JACK_NO_START_SERVER")) {
+>>>  return 1; }
+>>>
+>>>
+>>> #if defined(JACK_DBUS)
+>>> return start_server_dbus(server_name); #else
+>>> ....
+>>> jackd fork/exec stuff ....
+>>>
+>>
+>> I can read this and it can mean different things.
+>>
+>>
+>> - This code is not involved in what happens
+>> - The value of the options argument is wrong.
+>>
+>
+> It is involved in what happenes. At least from what I've got about the
+> problem you have.
+>
+> You have installed jack package that does not work well with
+> qjackctl (dbus enabled one). Your application autostarted jack server
+> through dbus. But you havent configured it. QJackCtl is dbus ignorant. You
+> should not use qjackctl with jackdbus system. Unless you know what you are
+> doing. Or unless qjackctl gets jackdbus support.
+>
+> jackdrc style commandline options for jackd are for jackd. They are not
+> used for jackdbus. They cant be used for jackdbus. Because of the object
+> activation works in all distributed object systems I know. This includes
+> DCOM and D-Bus.
+>
+>
+>>> presence of process with "jackdbus auto' commandline those not mean
+>>> that *server* is started. This is the dbus service, not the jack
+>>> server running.
+>>
+>> I know that. The fact remains that when the 'jackdus auto'
+>> daemon is running a jackd is started whenever qjackctl is started. You
+>> can go on to deny this, but that doesn't change the facts.
+>
+> So you complain about qjackctl missing support for jackdbus? Having that
+> will be nice :)
+>
+
+from where i stand, qjackctl does not need jackdbus support whatsoever.
+it's kind of the other way around, if i may say. and the way around is not
+about qjackctl per se, but to plain old good command-line jackd.
+
+fwiw, qjackctl just runs the jackd server as documented and interfaces to
+libjack through its plain client api. it has been doing this for years and
+rightly so, imo.
+
+however, by having jackdbus in the picture and when everybody would think
+it would be the holy grail, it is breaking all that instead just because
+it wants to rule the game on its own. it's doing it with complete
+disregard to what long time qjackctl/jackd users have been thought. that's
+disgraceful to say the least.
+
+i strongly believe that all this trouble is a matter or something that
+just has been overlooked on the jackdbus development, that is, a
+misinterpretation, a bug that can be squashed right away once it's
+perfectly identified.
+
+however, if all that is due on a jackdbus design decision instead, then i
+am sorry, i'll digress. a completely new qjackctl has to be written from
+the ground up. just don't ask me to do it, at least anytime soon :)
+
+cheers
+-- 
+rncbc aka Rui Nuno Capela
+[hidden]
+
+1242662259.8170_0.ltw:2,a <30829.213.58.131.130.1242662233.squirrel at www dot rncbc dot org>
+________________________________________________________________________________
+

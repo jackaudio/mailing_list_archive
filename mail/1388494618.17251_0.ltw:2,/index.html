@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] [PATCH 2/3] add usage() to jack_midi_dump</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] [PATCH 2/3] add usage() to jack_midi_dump</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1388429095.6639_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388494618.17252_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388494618.17251_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 31 Dec 2013 13:56:46 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1388494618.17252_0.ltw:2,/index.html'>[Jack-Devel] [PATCH 0/3] modernizing jack-midi-dump </a></td></tr>
+</table>
+<pre>
+Signed-off-by: Robin Gareus &lt;[hidden]&gt;
+---
+ example-clients/midi_dump.c |   28 ++++++++++++++++++++++++++--
+ 1 file changed, 26 insertions(+), 2 deletions(-)
+
+diff --git a/example-clients/midi_dump.c b/example-clients/midi_dump.c
+index 092af99..451c826 100644
+--- a/example-clients/midi_dump.c
++++ b/example-clients/midi_dump.c
+@@ -101,6 +101,28 @@ static void wearedone(int sig) {
+ 	keeprunning = 0;
+ }
+ 
++static void usage (int status) {
++	printf ("jack_midi_dump - JACK MIDI Monitor.\n\n");
++	printf ("Usage: jack_midi_dump [ OPTIONS ] [CLIENT-NAME]\n\n");
++	printf ("Options:\n\
++  -a        use absoute timestamps relative to application start\n\
++  -h        display this help and exit\n\
++  -r        use relative timestamps to previous MIDI event\n\
++\n");
++	printf ("\n\
++This tool listens for MIDI events on a JACK MIDI port and prints\n\
++the message to stdout.\n\
++\n\
++Note that this tool is not realtime-safe. The events are printed\n\
++directly from the process() callback!\n\
++\n\
++If no client name is given it defaults to 'midi-monitor'.\n\
++\n\
++See also: jackd(1)\n\
++\n");
++  exit (status);
++}
++
+ int
+ main (int argc, char* argv[])
+ {
+@@ -112,8 +134,10 @@ main (int argc, char* argv[])
+ 	int cn = 1;
+ 
+ 	if (argc &gt; 1) {
+-		if (!strcmp(argv[1], "-a")) { time_format = 1; cn = 2; }
+-		if (!strcmp(argv[1], "-r")) { time_format = 2; cn = 2; }
++		if      (!strcmp (argv[1], "-a")) { time_format = 1; cn = 2; }
++		else if (!strcmp (argv[1], "-r")) { time_format = 2; cn = 2; }
++		else if (!strcmp (argv[1], "-h")) { usage (EXIT_SUCCESS); }
++		else if (argv[1][0] == '-')       { usage (EXIT_FAILURE); }
+ 	}
+ 
+ 	if (argc &gt; cn) {
+-- 
+1.7.10.4
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1388429095.6639_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1388494618.17252_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1388494618.17251_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1388494618.17251_0.ltw:2,&nbsp;&lt;1388494607-1336-3-git-send-email-robin at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

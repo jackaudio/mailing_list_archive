@@ -1,0 +1,40 @@
+Date:        Mon, 19 Dec 2011 01:44:43 +0200
+From:        Nikos Chantziaras  <[hidden] at arcor dot de>
+To:          [hidden] at jackaudio dot org
+In-Reply-To: Clemens Ladisch Re: [Jack-Devel] Can't bring F/P below 128 (1324248850.12599_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Can't bring F/P below 128
+
+On 12/19/2011 12:53 AM, Clemens Ladisch wrote:
+> Nikos Chantziaras wrote:
+>> I was using a very old and very cheap Soundblaster Live 24-bit PCI.
+>> That card uses a CA0106 chip, ... in JACK (using JACK2 now), I could
+>> use an F/P setting of 64 without suffering from XRUNs.
+>>
+>> I recently got a new mainboard, which came with a recent on-board
+>> sound chip, an ALC892 from Realtek.
+>
+> The interesting part is the HDA controller (part of the chipset).
+>
+>> it's impossible to use 64 F/P on it.  [...] It's not like I get too
+>> many XRUNs at 64 and lower, but rather I can't get anything else than
+>> just a static buzz noise.
+>
+> It's likely that the HDA controller uses a larger burst size to save
+> power, and that it is too large for this small a period size.  If I've
+> read the Intel documentation correctly, is uses packets of at most
+> 128 *bytes*, so in theory, it should work.  However, it might be
+> worthwhile to try reducing it.  Please try the patch below.
+>[...]
+> +	azx_sd_writew(azx_dev, SD_FIFOSIZE, 0x1f);
+> [...]
+
+Just booted a kernel with the above change applied.  Sounds still works 
+fine, but there's no improvement.  Though dmesg now spits this out:
+
+hda-intel: IRQ timing workaround is activated for card #0. Suggest a 
+bigger bdl_pos_adj.
+
+1324252219.15218_0.ltw:2,a <jcltsr$f40$3 at dough dot gmane dot org>
+________________________________________________________________________________
+

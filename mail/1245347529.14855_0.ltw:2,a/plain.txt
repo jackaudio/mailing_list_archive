@@ -1,0 +1,41 @@
+Date:        Thu, 18 Jun 2009 13:51:52 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          [hidden] at lists dot jackaudio dot org, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>, Stéphane Letz <[hidden] at grame dot fr>
+In-Reply-To: Lennart Poettering Re: [LAD] [Jack-Devel] jack2's dbus name (1245342112.31614_0.ltw:2,a)
+Follow-Up:   Lennart Poettering Re: [LAD] [Jack-Devel] jack2's dbus name (1245350776.24740_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] jack2's dbus name
+
+On Thu, Jun 18, 2009 at 12:21 PM, Lennart Poettering <[hidden]>wrote:
+
+>
+>
+> This is a bit more complex than you might think. Jack's thread
+> management is very unflexible and insists on controlling the entire
+> thread life cycle, only calling into client code in very few
+> occasions.
+
+
+You might want to check out the more recent API additions:
+
+jack_cycle_wait()
+jack_cycle_signal()
+
+which were created for precisely the sort of reasons you are describing.
+
+
+>
+> Of course it would great if JACK would be more flexible with its RT
+> loop handling. What I am missing is basically a way to
+> asynchronously/lock-free trigger execution of a callback function in
+> the RT loop at a suitable place. By a "suitable place" I mean that the
+> RT loop delays execution of this callback until a time where its
+> impact would be minimal, i.e. right after a completed process() and a
+> quick verification that the next process() cycle is still a bit away.
+
+
+e.g. right after jack_cycle_signal()
+
+1245347529.14855_0.ltw:2,a <eb4b5e1d0906181051m5bded0d6td0cca18f1d334593 at mail dot gmail dot com>
+________________________________________________________________________________
+

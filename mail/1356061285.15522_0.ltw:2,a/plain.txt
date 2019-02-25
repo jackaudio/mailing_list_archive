@@ -1,0 +1,41 @@
+Date:        Thu, 20 Dec 2012 19:41:16 -0800
+From:        Robert M. Riches Jr.  <[hidden] at jacob21819 dot net>
+To:          [hidden] at lists dot jackaudio dot org
+
+Subject:     [Jack-Devel] zero-mode semaphores; system:capture never appearing on slave
+
+Thanks for all the suggestions about the mismatch problem between
+Mageia 2's 1.9.8 and TinyCore's 1.9.7.  After building a system
+with compilation tools, Python, OpenSSL, and ALSA dev in order to
+compile JACK, I got a 1.9.8 compiled for TinyCore, and things are
+much better.  That even gave me a jack_wait binary that Mageia
+omits.
+
+Two problems remain with the NetJACK2 setup:
+
+1) Sometimes, apparently around 10-20% of the time, the slave
+side gets a /dev/shm/sem.jack_sem.${uid}_... file that appears
+several seconds after its siblings, and the latecomer has zero
+permissions, which causes lots of 'permission denied' errors.  It
+appears that was the root cause of a lot of the jack_lsp failing
+to start the client.  Any idea what would create such a file?
+For now, I do an 'rm -f' on that path before attempting to start
+anything on the slave side.
+
+2) On the slave side, JACK port "system:capture" never appears.
+With 1.9.6-1.9.7, it would pretty reliably appear after at few
+seconds.  For now, I can ignore the capture side and just do
+playback.  Was "system:capture" supposed to go away in 1.9.8?
+
+I'm using command options that _should_ open two playback and two
+capture channels.  Come to think of it, on the master side, only
+the playback channels exist.  Might this be due to the master
+side not opening the capture ports?
+
+Thanks,
+
+Robert Riches
+
+1356061285.15522_0.ltw:2,a <20121221034116.46C7A1858C2 at one dot localnet>
+________________________________________________________________________________
+

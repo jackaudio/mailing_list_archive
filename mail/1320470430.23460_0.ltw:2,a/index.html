@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash]</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash]</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1320465451.13849_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1320482839.13108_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1320470430.23460_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 05 Nov 2011 06:19:44 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> hermann </span> &lt;[hidden] at web dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1320446175.9332_0.ltw:2,a/index.html'>Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1320482839.13108_0.ltw:2,a/index.html'>Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Andreas Degert
+<a href='../1320485341.17511_0.ltw:2,a/index.html'>Re: [Jack-Devel] [Fwd: Re: [Guitarix-developer] jack session crash] </a></td></tr>
+</table>
+<pre>
+Am Freitag, den 04.11.2011, 18:35 -0400 schrieb Paul Davis:
+&gt; in reality, there is no support on Linux for what is described in the
+&gt; JACK header files. it just so happens that building with -fPIC happens
+&gt; to work, but more as a side-effect than anything intentional. __weak__
+&gt; is designed as way to refer to symbols used by one library but
+&gt; obtained from another, not symbols used by an executable and obtained
+&gt; from a library. __weak_import__ on gcc-osx does what we actually want.
+&gt; 
+&gt; this is very confusing situation that will take some time to sort out.
+&gt; -fPIC is a potential solution, and apparently has some potential
+&gt; benefits because it allows the run time linker more freedom to
+&gt; optimize memory layout. but i don't think that it should be *the*
+&gt; solution. 
+
+A workaround for the situation, witch suite our needs much better was
+mention in the first post of this thread.
+
+andreas wrote :
+&gt;         To solve the problem for guitarix, I had to make some ugly
+&gt;         constructions:
+&gt;         
+&gt;          - the functions must never be used directly (or you will get
+&gt;            a PLT entry so that dlsym() will only reflect the state
+&gt;         while
+&gt;            building the executable)
+&gt;         
+&gt;          - define typedefs for the function pointers that must be kept
+&gt;            in sync with the definitions of the functions in the jack
+&gt;         header
+&gt;         
+&gt;          - define global variables that are initialized with the
+&gt;         function
+&gt;            addresses via dlsym().
+&gt;         
+&gt;         Example:
+&gt;         
+&gt;         typedef char *(*jack_client_get_uuid_type)(jack_client_t *);
+&gt;         
+&gt;         jack_client_get_uuid_type jack_client_get_uuid_fp =
+&gt;             reinterpret_cast&lt;jack_client_get_uuid_type&gt;(
+&gt;                 dlsym(RTLD_DEFAULT, "jack_client_get_uuid"));
+&gt;         
+
+but I really don't understand why we didn't just add the functionality
+to the lib. (like St&#xE9;phane has done it for jack2)
+
+greets
+hermann
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1320465451.13849_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1320482839.13108_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1320470430.23460_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1320470430.23460_0.ltw:2,a&nbsp;&lt;1320470384.2219.21.camel at box&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

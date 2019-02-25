@@ -1,0 +1,184 @@
+Index: common/JackEngine.cpp
+===================================================================
+--- common/JackEngine.cpp	(revisione 4125)
++++ common/JackEngine.cpp	(copia locale)
+@@ -231,7 +231,7 @@
+                 fMutex.Lock();
+ 
+         } else {
+-            jack_log("JackEngine::NotifyClient: no callback for event = %ld", event);
++//             jack_log("JackEngine::NotifyClient: client %s has no callback for event = %ld", client->GetClientControl()->fName, event);
+         }
+     }
+ }
+Index: linux/alsa/JackAlsaDriver.cpp
+===================================================================
+--- linux/alsa/JackAlsaDriver.cpp	(revisione 4125)
++++ linux/alsa/JackAlsaDriver.cpp	(copia locale)
+@@ -1316,7 +1316,11 @@
+ 			driver->poll_late++;
+ 		}
+ 
++jack_info( "Starting poll with timeout: %d", driver->poll_timeout );
+ 		poll_result = poll (driver->pfd, nfds, driver->poll_timeout);
++jack_info( "Poll ended, need capture? %s - need playback? %s",
++  need_playback?"yes":"no", need_capture?"yes":"no"
++);
+ 		if (poll_result < 0) {
+ 
+ 			if (errno == EINTR) {
+@@ -1369,6 +1373,7 @@
+ 			if (driver->pfd[nfds-1].revents == 0) {
+ 				/* we timed out on the extra fd */
+ 
++        jack_info ("timed out on the extra fd");
+ 				*status = -4;
+ 				return -1;
+ 			} 
+@@ -1379,6 +1384,7 @@
+             if (driver->pfd[nfds-1].revents != POLLIN) {
+                 jack_error("driver->pfd[nfds-1].revents == POLLIN");
+             }
++        jack_info ("quit point 1");
+ 			return (driver->pfd[nfds-1].revents == POLLIN) ? 0 : -1;
+ 		}
+ 
+@@ -1392,6 +1398,7 @@
+ 			}
+ 
+ 			if (revents & POLLERR) {
++        jack_info("Poll error (1)!!!");
+ 				xrun_detected = TRUE;
+ 			}
+ 
+@@ -1415,6 +1422,7 @@
+ 			}
+ 
+ 			if (revents & POLLERR) {
++        jack_info("Poll error (2)!!!");
+ 				xrun_detected = TRUE;
+ 			}
+ 
+@@ -1435,13 +1443,14 @@
+ 			*status = -5;
+ 			return 0;
+ 		}		
+-
++jack_info( "cycle ended, need capture? %s - need playback? %s", need_playback?"yes":"no", need_capture?"yes":"no");
+ 	}
+ 
+ 	if (driver->capture_handle) {
+ 		if ((capture_avail = snd_pcm_avail_update (
+ 			     driver->capture_handle)) < 0) {
+ 			if (capture_avail == -EPIPE) {
++        jack_info("Broken pipe during capture");
+ 				xrun_detected = TRUE;
+ 			} else {
+ 				jack_error ("unknown ALSA avail_update return"
+@@ -1457,6 +1466,7 @@
+ 		if ((playback_avail = snd_pcm_avail_update (
+ 			     driver->playback_handle)) < 0) {
+ 			if (playback_avail == -EPIPE) {
++        jack_info("Broken pipe during playback");
+ 				xrun_detected = TRUE;
+ 			} else {
+ 				jack_error ("unknown ALSA avail_update return"
+@@ -1469,7 +1479,9 @@
+ 	}
+ 
+ 	if (xrun_detected) {
++    jack_info ("*** about to recover from xrun");
+ 		*status = alsa_driver_xrun_recovery (driver, delayed_usecs);
++    jack_info ("*** recovered from xrun");
+ 		return 0;
+ 	}
+ 
+@@ -1492,6 +1504,7 @@
+ 	   periods.
+ 	*/
+ 
++  jack_info ("final quit point");
+ 	return avail - (avail % driver->frames_per_cycle);
+ }
+ 
+@@ -1535,6 +1548,7 @@
+     */
+ 
+     if (nframes > driver->frames_per_cycle) {
++        jack_error ("ALSA: read framecount too high! %d out of %d max", nframes, driver->frames_per_cycle );
+         return -1;
+     }
+ 
+@@ -1558,6 +1572,7 @@
+                     (snd_pcm_uframes_t *) &contiguous,
+                     (snd_pcm_uframes_t *) 0,
+                     (snd_pcm_uframes_t *)&offset, 0) < 0) {
++            jack_error ("ALSA: alsa_driver_read() - unable to obtain channel addresses" );
+             return -1;
+         }
+ 
+@@ -1589,7 +1604,7 @@
+                                         offset, contiguous)) < 0) {
+          
+             jack_error ("ALSA: could not complete read of %"
+-            		PRIu32 " frames: error = %d\n", contiguous, err);
++            		PRIu32 " frames: error %d (%s)\n", contiguous, err,  snd_strerror(err));
+             return -1;
+         }
+ 
+@@ -1629,6 +1644,7 @@
+     }
+ 
+     if (nframes > driver->frames_per_cycle) {
++        jack_error ("ALSA: alsa_driver_write() - framecount too high! %d out of %d max", nframes, driver->frames_per_cycle );
+         return -1;
+     }
+ 
+@@ -1677,6 +1693,7 @@
+                     (snd_pcm_uframes_t *) 0,
+                     (snd_pcm_uframes_t *) &contiguous,
+                     0, (snd_pcm_uframes_t *)&offset) < 0) {
++            jack_error ("ALSA: alsa_driver_write() - unable to obtain channel addresses" );
+             return -1;
+         }
+ 
+@@ -1728,10 +1745,13 @@
+         if ((err = snd_pcm_mmap_commit (driver->playback_handle,
+                                         offset, contiguous)) < 0) {
+             jack_error ("ALSA: could not complete playback of %"
+-            		PRIu32 " frames: error = %d", contiguous, err);
+-            if (err != EPIPE && err != ESTRPIPE)
++            		PRIu32 " frames: error %d (%s)", contiguous, err,  snd_strerror(err));
++            if (err != -EPIPE && err != -ESTRPIPE)
++            {
++                jack_error ("ALSA: aborting" );
+                 return -1;
+         }
++        }
+ 
+         nframes -= contiguous;
+         nwritten += contiguous;
+@@ -2331,7 +2351,10 @@
+     nframes = alsa_driver_wait((alsa_driver_t *)fDriver, -1, &wait_status, &fDelayedUsecs);
+  
+     if (wait_status < 0)
++    {
++        jack_log("JackAlsaDriver::Read() - aborting, got wait_status of = %ld", wait_status);
+         return -1;		/* driver failed */
++    }
+ 
+     if (nframes == 0) {
+         /* we detected an xrun and restarted: notify
+Index: linux/alsa/usx2y.c
+===================================================================
+--- linux/alsa/usx2y.c	(revisione 4125)
++++ linux/alsa/usx2y.c	(copia locale)
+@@ -622,7 +622,7 @@
+ 					offset, nframes_)) < 0) {
+ 		jack_error ("ALSA/USX2Y: could not complete playback of %"
+ 			    PRIu32 " frames: error = %d", nframes_, err);
+-		if (err != EPIPE && err != ESTRPIPE)
++		if (err != -EPIPE && err != -ESTRPIPE)
+ 			return -1;
+ 	}
+ 

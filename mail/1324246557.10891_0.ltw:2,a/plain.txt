@@ -1,0 +1,82 @@
+Date:        Sun, 18 Dec 2011 16:15:46 -0600
+From:        Gabriel Beddingfield  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Paul Davis [Jack-Devel] The Situation(s) With JACK (1323349512.4356_0.ltw:2,Sa)
+Follow-Up:   Florian Paul Schmidt Re: [Jack-Devel] The Situation(s) With JACK (1324289474.21284_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] The Situation(s) With JACK
+
+I've been avoiding this thread... *sigh*....  It wasn't quite the 
+free-for-all I feared, though. :-)
+
+On 12/08/2011 07:04 AM, Paul Davis wrote:
+> I do have a proposal for how this is going to stop, but before I put
+> it forward, I would like to first see if there are any other ideas
+> floating around on the mailing list that have not come up when I've
+> discussed this situation on IRC. Once any discussion about this email
+> settles down, I'll outline my proposal (whatever it ends up being at
+> that point).
+
+I've seen your proposal, and it's good.  However, here's a different idea...
+
+The idea of JACK as a UNIX-ey IPC like grep/awk/sed is an impossible 
+dream.  (But, it's a beautiful dream!)  I, personally, have abandoned 
+this dream and now worship at the church of everything-is-a-plugin. :-)
+
+One reason that it's impossible is that we discovered that we *don't* 
+need jackd to be "do one thing and do it well."  We found that we need 
+jackd to be a centralising, unifying, ubiquitous, overwhelming force for 
+audio setups (for both desktop and specialised uses).  It's no longer a 
+cool RT IPC between two apps, it's now also a session manager, transport 
+master, sound card driver (for firewire), API, etc.  It bears much more 
+resemblance to the Linux kernel than it does a character stream.
+
+Suppose that the vision of JACK were re-cast.  Suppose it were stripped 
+down to fit into a plugin-ey world:
+
+IPC:
+
+   * The IPC would become a specification for sharing
+     audio and midi data in a RT-context.  No API, no
+     network protocols.
+
+   * If you must have a transport, specify the IPC and
+     not the API.
+
+API:
+
+   * The jackd server becomes an API tool like the
+     glib event loop.  The host application uses it
+     as a tool to implement its internal audio logic.
+
+   * The jackd kernel would be re-cast/optimised for
+     parallel processing.
+
+   * Things like the transport, session management,
+     etc. would be left to the host and/or plugin
+     API to deal with.
+
+   * Would provide a reference API for utilizing the
+     IPC above.
+
+   * Port management is the domain of the plugin API.
+
+   * Consider dropping or forking the specialized
+     driver support.  (However, this may be
+     unreasonable.)
+
+   * Consider having a plugin framework for extending
+     the JACK API.  (But this may be better left to
+     the plugin API.
+
+   * Prefer the LV2 plugin API.
+
+AND AS FOR PLUGINS:
+
+   * Do one thing and do it really well... :-)
+
+-gabriel
+
+1324246557.10891_0.ltw:2,a <4EEE6612.7060105 at gmail dot com>
+________________________________________________________________________________
+

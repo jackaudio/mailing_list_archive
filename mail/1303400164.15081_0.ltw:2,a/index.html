@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] jack_port_get_buffer segfaults</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] jack_port_get_buffer segfaults</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303396327.7728_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303401395.17702_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303400164.15081_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 21 Apr 2011 10:33:34 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Gabriel M. Beddingfield </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Dan Muresan &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Dan Muresan
+<a href='../1303393333.1712_0.ltw:2,a/index.html'>[Jack-Devel] jack_port_get_buffer segfaults </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Dan Muresan
+<a href='../1303401395.17702_0.ltw:2,a/index.html'>Re: [Jack-Devel] jack_port_get_buffer segfaults </a></td></tr>
+</table>
+<pre>
+On Thu, 21 Apr 2011, Dan Muresan wrote:
+
+&gt; I keep getting segfaults inside a process thread (non-callback model)
+&gt; when calling jack_port_get_buffer. Is it possible that Jack zombifies
+
+Just curious... any reason for using the non-callback model? 
+You still have to have a dedicated thread, right?  What's 
+the benefit of doing non-callback?
+
+&gt; back"? I.e. can this happen without any on_shutdown or
+&gt; port_registration notifications delivered to the application?
+
+Yeah, you should be getting an on_shutdown, if you set the 
+callback.
+
+&gt;    jack_nframes_t nframes = jack_cycle_wait (jclient);
+&gt;    if (nframes &lt;= 0 || zombified) break;
+
+FYI, nframes is unsigned, so `nframes &lt;= 0` is equiv. to 
+`nframes == 0`
+
+&gt;    if (nframes &gt; 0) {
+&gt;      struct sembuf sops1 = { .sem_num = 0, .sem_op = nframes, .sem_flg = 0 };
+&gt;      semop (jbufavail_sem, &amp;sops1, 1);
+&gt;    }
+
+Did you try removing this to see if it's the problem?  (But 
+it looks OK to me)
+
+&gt; In theory this should be immune to anything the non-realtime threads
+&gt; do, but in practice I get zombifications (and segfaults) often enough.
+&gt; Any ideas on what I might be missing?
+
+This code looks fine to me.  Looks like something else is 
+afoot.
+
+For starters... what are your jack settings?
+
+-gabriel
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303396327.7728_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303401395.17702_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303400164.15081_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1303400164.15081_0.ltw:2,a&nbsp;&lt;alpine.DEB.1.10.1104211022540.32613 at localhost dot localdomain&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

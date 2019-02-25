@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303037298.3718_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303080124.23336_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303047253.22998_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 17 Apr 2011 13:33:50 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1303037298.3718_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 0.120 - ALSA backend </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>torbenh
+<a href='../1303135901.23184_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3 </a></td></tr>
+</table>
+<pre>
+On Sun, Apr 17, 2011 at 10:48:04AM +0000, Fons Adriaensen wrote:
+ 
+&gt; &gt; So it randomly siwtches between 2 and 3 ?
+&gt; 
+&gt; It more or less alternates between the two, with
+&gt; some random element being involved as well.
+&gt; 
+&gt; As posted before, what happens is that after a
+&gt; subgraph timeout (which is reported) sometimes
+&gt; the alsa device is restarted (as it should be),
+&gt; and sometimes (when in the '-n 3' state) it
+&gt; isn't. Since in the same cycle there was no
+&gt; driver-&gt;write() (as the result of the timeout),
+&gt; things continue to work but with a period shift
+&gt; between playback and capture, as if '-n 2'. 
+&gt; When a new timeout occurs in that state it will
+&gt; trigger a stop/start, restoring the original
+&gt; conditions. So the net result is that the system
+&gt; almost alternates between the two states.
+
+I found out a bit more.
+
+1. It seems the ALSA device restart is triggered by
+an error condition in alsa_driver_wait() and not
+by the engine.
+
+2. OTOH the engine, when there is subgraph timeout,
+(in this case due to an app not closing down cleanly)
+will not call driver-&gt;write() for the current cycle. 
+
+With -n 3, (2) can happen without (1), as as far as
+ALSA is concerned there is no problem - it still has
+almost a complete period before anything overruns.
+
+Now to keep things in sync either each cycle must be
+completed fully, including writing to the ALSA device,
+or the device must be restarted. This really should
+be enforced 'by design' but it isn't.
+
+There seem to be two solutions: 
+
+A. Make sure the ALSA device is restarted when the
+engine does not complete the cycle. This would 
+negate any advantage there is to using -n 3, the
+whole point of it is that an occasional single cycle
+taking a bit too long is not fatal.
+
+B. Always complete the cycle by calling driver-write().
+
+
+Ciao,
+
+-- 
+FA
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303037298.3718_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303080124.23336_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303047253.22998_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1303047253.22998_0.ltw:2,a&nbsp;&lt;20110417133350.GB18082 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

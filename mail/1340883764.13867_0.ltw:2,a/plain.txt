@@ -1,0 +1,48 @@
+Date:        Thu, 28 Jun 2012 13:42:32 +0200
+From:        Robin Gareus  <[hidden] at gareus dot org>
+To:          Eric Renrut <[hidden] at gmail dot com>
+Cc:          [hidden] at jackaudio dot org
+In-Reply-To: Eric Renrut Re: [Jack-Devel] Why does jack change the sampling rate? (1340853245.17191_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Why does jack change the sampling rate?
+
+On 06/28/2012 05:13 AM, Eric Renrut wrote:
+> is there anything I can do to get jack to
+> capture at a sample rate of 8khz, mono and using 16 or 8 bit samples?
+
+Hi Eric,
+
+I don't think there is.
+
+If you need the live signal in some other jack-app or output it again in
+real-time: you can use two plugins: a low-pass filter at 4Hz and a
+bit-decimator.
+
+Steve Harris has written LADSPA plugins for that [1] (they have been
+ported to LV2 plugins, too). Just fire-up jack-rack or your favorite
+JACK-plugin-host..
+
+If you need 8Hz, 8bit files you can resample them after recording; there
+are lots of tools and GUIs that can do that (basically every audio-file
+editor) and a commandline utils like `sndfile-resample` or `sox`. The
+latter can actually do both at the same time: resample & decimate.
+
+If you want to record them in one step (no intermediate file,
+post-processing), you can use pipe the live-audio from jack into `sox`:
+
+jack-stdout system:capture_1 \
+| sox -b 16 -r 44100 -t raw -e signed -c 1 - \
+      -b 8 -r 8k /tmp/recording_8bit_8kHz.wav
+
+Above command-pipe records channel 1, re-samples and decimate before
+writing to disk. Note: jack is assumed to run at 44.1kHz. By default
+jack-stdout writes 16bit signed integer raw audio.
+
+HTH,
+robin
+
+[1] http://plugin.org.uk/ladspa-swh/docs/ladspa-swh.html#tth_sEc2.26
+
+1340883764.13867_0.ltw:2,a <4FEC4328.3070307 at gareus dot org>
+________________________________________________________________________________
+

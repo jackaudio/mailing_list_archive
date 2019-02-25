@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [LAD] [Jack-Devel] jack2's dbus name</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [LAD] [Jack-Devel] jack2's dbus name</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1245347529.14855_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1245420203.11776_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1245350776.24740_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 18 Jun 2009 20:45:31 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Lennart Poettering </span> &lt;[hidden] at 0pointer dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Paul Davis &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org, Linux Audio Developers &lt;[hidden] at lists dot linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Paul Davis
+<a href='../1245347529.14855_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] jack2's dbus name </a></td></tr>
+</table>
+<pre>
+On Thu, 18.06.09 13:51, Paul Davis ([hidden]) wrote:
+
+&gt; On Thu, Jun 18, 2009 at 12:21 PM, Lennart Poettering &lt;[hidden]&gt;wrote:
+&gt; 
+&gt; &gt;
+&gt; &gt;
+&gt; &gt; This is a bit more complex than you might think. Jack's thread
+&gt; &gt; management is very unflexible and insists on controlling the entire
+&gt; &gt; thread life cycle, only calling into client code in very few
+&gt; &gt; occasions.
+&gt; 
+&gt; 
+&gt; You might want to check out the more recent API additions:
+&gt; 
+&gt; jack_cycle_wait()
+&gt; jack_cycle_signal()
+&gt; 
+&gt; which were created for precisely the sort of reasons you are describing.
+
+That sounds like it was what I need. 
+
+So, how would I use this? I figure something like this:
+
+&lt;snip&gt;
+void* my_thread(void*arg) {
+    for (;;) {
+        n = jack_cycle_wait(client);
+        process_my_data(n);
+        jack_cycle_signal(client, 0);
+        do_my_other_work_if_there_is_any();
+    }
+}
+
+jack_set_process_thread(client, foo_func);
+&lt;/snip&gt;
+
+Is that the rough idea? Hmm, with the other RT loops I have in PA I
+usually just dispatch a single my own events and then immediately
+check the IO device again, possibly dealing with the IO stuff first,
+and only after finishing that I dispatch the next of my own events and
+immediately check for IO again. That way I make sure that IO always
+takes priority over dispatching those events. i.e. something along the
+lines of:
+
+&lt;snip&gt;
+void *my_thread(void *arg) {
+    for (;;) {
+        n = how_much_shall_i_process();
+        if (n &gt; 0) {
+            process_my_data(n);
+            continue;
+        }
+        n = how_many_events_to_dispatch();
+        if (n &gt; 0) {
+            process_one_event();
+            continue;
+        }
+        wait_for_io();
+}
+&lt;/snip&gt;
+
+So, to map this to JACK, I would prefer if jack_cycle_wait() would
+also exist in a non-blocking variant. i.e. something that can return 0
+if there's nothing to process, but doesn't necessarily wait.
+
+(we probably should stop the cross-posting, though)
+
+Lennart
+
+-- 
+Lennart Poettering                        Red Hat, Inc.
+lennart [at] poettering [dot] net
+http://0pointer.net/lennart/           GnuPG 0x1A015CC4
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1245347529.14855_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1245420203.11776_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1245350776.24740_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1245350776.24740_0.ltw:2,a&nbsp;&lt;20090618184531.GA20535 at tango dot 0pointer dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [LAD] [Jack-Devel] New proposal for the jackd/jackdbus mess</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [LAD] [Jack-Devel] New proposal for the jackd/jackdbus mess</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1242812179.3771_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1242814845.10615_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1242813279.5623_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 20 May 2009 10:54:15 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Rui Nuno Capela </span> &lt;[hidden] at rncbc dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack devel &lt;[hidden] at lists dot jackaudio dot org&gt;, Linux Audio Developers &lt;[hidden] at lists dot linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1242812179.3771_0.ltw:2,a/index.html'>[LAD] New proposal for the jackd/jackdbus mess </a></td></tr>
+</table>
+<pre>
+On Wed, May 20, 2009 10:32, St&#xE9;phane Letz wrote:
+&gt; Hi all,
+&gt;
+&gt;
+&gt; New much simplified proposal, should be "Fons compatible", hopefully
+&gt; "Nedko compatible" (with little work), "Paul one package only
+&gt; compatible", others "keep it simple compatible"...
+&gt;
+&gt; The first "big" conceptual change compared to the current SVN state is
+&gt; this new "control IPC" scheme. That is the so called control API can be
+&gt; used on client side also. The other conceptual change is that "jackd"
+&gt; process is supposed to be an "always running" daemon that defines an IPC
+&gt; entry point to be used from "clients". This daemon does not
+&gt; "automatically" starts the server (as it does now), but will  when
+&gt; requested (either by the "jackd" code directly using C API ) or by the
+&gt; request of external control font-end using IPC.
+&gt;
+&gt;
+&gt; 1) Server side:
+&gt;
+&gt;
+&gt; - libjackserver.so contains:  server code + C control API  + "new" IPC
+&gt; control API (server side) +  C Jack API  + IPC Jack API (server side)
+&gt;
+&gt; - jackd executable is linked with libjackserver.so  (nothing new here)
+&gt;
+&gt;
+&gt; - backends (ALSA, dummy...) are linked with libjackserver.so  (nothing
+&gt; new here)
+&gt;
+&gt; - a "standalone" client (that wants to embed the server in it's
+&gt; process) is linked with libjackserver.so and directly uses the C control
+&gt; API  to control/start the server and C Jack API to be a client
+&gt; (nothing new here).
+&gt;
+&gt;
+&gt; 2) Client side:
+&gt;
+&gt;
+&gt; - libjack.so contains :  "new" IPC control API (client side) + IPC
+&gt; Jack API (client side)
+&gt;
+&gt;
+&gt; - clients are linked to libjack.so (nothing new here)
+&gt;
+&gt;
+&gt; - new control front-end (jackdbus, jackOSC...) are linked to
+&gt; libjack.so: they control the server using the IPC control API (client
+&gt; side), they can be regular clients using IPC Jack API (client side) to deal
+&gt; with connections management and so on...
+&gt;
+&gt; - a "default" centralized state for the server is always kept in ~/
+&gt; jackdrc. When a client wants to auto-start, this "default" state is used.
+&gt; (this is important to keep in mind)
+&gt;
+&gt;
+&gt; - libjack may have to start the "jackd" executable using the fork+exec
+&gt; way, or the "jackd" process is an "always running + relaunch" process (this
+&gt; has to be more defined later on...)
+&gt;
+&gt; - Qjakctl stays as a regular client, it can still start the "jackd"
+&gt; process as usual. It can keep its own way of keeping multiple
+&gt; configurations as it does now.
+&gt;
+&gt; - more sophisticated control front-end (jackdbus, jackOSC...) are now
+&gt; regular clients. They can use the IPC control API (client side) for more
+&gt; sophisticated control of the server. As regular clients, they access the
+&gt; API to control connections... and so on. The important
+&gt; thing is that those clients are *obliged* to deal with this "default"
+&gt; centralized state. Even if they deal with multiple configs in a new format
+&gt; (XML...) they are supposed to always put a "default" state in
+&gt; ~/jackdrc for the client "auto-start"  feature to continue working.
+&gt;
+&gt;
+&gt; - Ardour can still do it's server control mess on its own... ((-:
+&gt;
+&gt;
+&gt; 3) General:
+&gt;
+&gt;
+&gt; - a single jack2 package is needed. It contains the "jackd" daemon/
+&gt; server are before.
+&gt;
+&gt; - "jackdbus" is now conceptually separated from the Jack source code.
+&gt; It only uses jack.h + control.h and is linked to libjack.so as any
+&gt; regular client. It can be distributed separately as a more sophisticated
+&gt; control front-end available, or be available in the jack2 package.
+&gt;
+&gt; - old fashion users can keep their habits
+&gt;
+&gt;
+&gt; - new "D-Bus aware" guys can explore new fields...
+&gt;
+&gt;
+&gt; This scheme seems to hopefully solve most of the problems we had, and
+&gt; requires only a bit of change for the "jackdbus" front-end to continue
+&gt; working, but not much.
+&gt;
+&gt; Comments?
+&gt;
+
+no comments.
+
+St&#xE9;phane, you're a champion hero!
+
+cheers
+-- 
+rncbc aka Rui Nuno Capela
+[hidden]
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1242812179.3771_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1242814845.10615_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1242813279.5623_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1242813279.5623_0.ltw:2,a&nbsp;&lt;35280.213.58.131.130.1242813255.squirrel at www dot rncbc dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

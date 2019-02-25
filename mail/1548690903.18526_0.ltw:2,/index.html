@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Adjustable port alias limit</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Adjustable port alias limit</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1548633199.27943_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1548693797.21622_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1548690903.18526_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 28 Jan 2019 10:54:31 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Sunset Tech </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Chris Caudle
+<a href='../1548693797.21622_0.ltw:2,/index.html'>Re: [Jack-Devel] Adjustable port alias limit </a></td></tr>
+</table>
+<pre>
+Greetings! I attempted to see if there was any work or discussion on this,
+but brought up nothing, I hope I am not duplicating some effort/thought
+here.
+I recently developed a small script allowing me to assign ports to groups,
+using aliases, so that I may autoconnect these groups to ardour buses.
+However, I quickly discovered there is a limit of two aliases per port,
+which is admittedly workable, but not pleasantly so. perhaps there is a
+better method of achieving this functionality? but I wanted to continue
+using jack-matchmaker.
+So I've patched a local copy of jack2 to allocate an array for aliases per
+port, and allow its size to be specified via the compile time flag
+--aliases-per-port. However, the implementation is not the best, I needed
+to introduce a seperate version of jack_port_get_aliases, suffixed with _b,
+which can be used in conjunction a new function, jack_port_max_aliases, to
+safely retrieve aliases beyond the first two. applications using the old
+jack_port_get_aliases will still be shown only the first two aliases in the
+list. however the matching functions will match against all aliases.
+Additionally there is what looks like serialization&amp;matching code in
+JackDriver, which i have not yet attempted to patch.
+I've also patched copys of jack-matchmaker and luajack to make use of this.
+I dont imagine such functionality would be accepted into jack in its
+current state? it seems there is sort of a bind here regarding external api
+design. I would love to contribute this to jack, so i'm emailing to see
+what the possibility of that is, and if anyone has any ideas about how to
+go about it. I am willing to patch jack1 as well for it, the relevant code
+looks near identical. I would also like to dynamically manage the array
+size or string memory allocation, perhaps within the limit, as statically
+allocating even port_num*(alias_limit=8)*name_size to store mostly unused
+aliases seems rather heavy, but it looked like everything regarding ports
+is statically allocated for a reason?
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1548633199.27943_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1548693797.21622_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1548690903.18526_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1548690903.18526_0.ltw:2,&nbsp;&lt;CANYjeQydLL3Tfy+iy+EjM7zMuannxodThLAwAvB5AhAthCefaQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] alsa_in/out increasing time between record and play on second card</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] alsa_in/out increasing time between record and play on second card</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1460343076.2983_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1460463319.2031_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1460450575.2381_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 12 Apr 2016 10:42:37 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> mdrslmr </span> &lt;[hidden] at online dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>J&#xF6;rn Nettingsmeier
+<a href='../1460463319.2031_0.ltw:2,/index.html'>Re: [Jack-Devel] alsa_in/out increasing time between record and play on second card </a></td></tr>
+</table>
+<pre>
+Hi,
+
+we are running a system with two sound cards. The second sound card is
+attached to the jackd2 daemon using jack_load audioadapter.
+
+We use a script starting:
+
+aplay -q -D $channel Test-Ton.wav &amp;
+arecord -q -D $channel -f S16_LE -r 48000 -c 1 -d 8 $result/recorded.wav
+
+The resulting wav file shows that the time between the start of the recording
+and the start of the actual sound continuously increases.
+In the beginning (after starting the system up) the time difference is just about 3ms. It increases
+constantly to almost one second now
+after 8 weeks of uptime.
+
+This happens most significantly on the channels of the second sound card
+included by jack_load audioadapter and not noticeable on the first sound card.
+
+The invocation of jackd and jack_load is shown below:
+jackd -R -P59 -p 256 -d alsa --device hw:${CARDNUM_0},0 -p 512 --nperiods 3
+jack_load -i "-i4 -o4 -q1 -C5 -p512 -n3 -r48000  -d hw:${CARDNUM_1},0"\
+                                 jackadapter audioadapter
+
+jackd2 version is: 1.9.8~dfsg.4+20120529git007cdc37-5
+
+
+I'm, not sure if we a consistent set of options for jackd and
+audioadapter.
+
+Do you have a suggestion how we can set things up to prevent the
+increase in time difference between recording and playback?
+
+The absolute latency is not critical for us as long as it stays within a
+limited range.
+
+
+Best regards
+Michael
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1460343076.2983_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1460463319.2031_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1460450575.2381_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1460450575.2381_0.ltw:2,&nbsp;&lt;alpine.LNX.2.20.1604121041370.3222 at mpslxdressel dot desy dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

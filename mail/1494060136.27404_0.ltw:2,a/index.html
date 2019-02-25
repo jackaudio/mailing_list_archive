@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] How does --hwmon work?</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] How does --hwmon work?</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1494026677.24762_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1494064854.32113_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1494060136.27404_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 06 May 2017 10:41:53 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> David Kastrup </span> &lt;[hidden] at gnu dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+</table>
+<pre>
+Ralf Mardorf &lt;[hidden]&gt; writes:
+
+&gt; On Fri, 05 May 2017 19:14:52 +0200, David Kastrup wrote:
+&gt;&gt;&gt; A compromise might be to control the DAW mixer and independently to
+&gt;&gt;&gt; control the hardware mixer, too, IOW something like hdspmixer
+&gt;&gt;&gt; controlable by MIDI events. Do a lot of people need it?  
+&gt;&gt;
+&gt;&gt;Not enough if _every_ _single_ soundcard needs its own mixer
+&gt;&gt;application coded from scratch.  If one creates a common useful Jack
+&gt;&gt;API for gained connections that one mixer application can work with,
+&gt;&gt;there will certainly be enough need to provide a Midi controlled mixer
+&gt;&gt;capable of using hardware mixing where available.
+&gt;
+&gt; That's absurd, since the different sound cards provide completely
+&gt; different routing features.
+
+Which is why it makes good sense to have jackd fall back to software
+gain when the card's known controls don't allow for using hardware.
+That way you don't need specialized software to make best use of your
+hardware.
+
+&gt; If you mix a project with a DAW, then the software mixer should be
+&gt; completely separated from the hardware mixer.
+
+Because what?  We don't separate software and hardware plugins either.
+They are available as jack ports.  So why should a connection not be
+hardware where supported?
+
+&gt; If you want to get all in one, consider to just use the I/Os of an
+&gt; audio interface and to buy the right tool for that task, a separated
+&gt; mixing console [1].
+
+A separated mixing console takes a whole lot more space than a
+nanoKontrol if you are trying to get to a conference by train.
+
+I mean, I'd get the "who's gonna do it" argument.  But this is going
+more in the "let's keep things as badly interoperable as they are
+because that is the way of our fathers" direction.
+
+All I hear is "that is silly", "that is absurd", "that's not the right
+way to do things".  But no actual argument why.
+
+&gt;&gt;&gt; EQs, Reverb and delay would be nice for the hardware monitoring, too
+&gt;&gt;&gt; and indeed, proprietary software for a lot of audio interfaces
+&gt;&gt;&gt; provide this.  
+&gt;&gt;
+&gt;&gt;For hardware monitoring?  Hardly.  At driver level?  Maybe.  But then
+&gt;&gt;it's not fundamentally different to Jack plugins.
+&gt;
+&gt; Yes, hardware monitoring done with an external mixing console [1] very
+&gt; often is done by adding effects to the monitor signal, so some
+&gt; proprietary audio interface software provides this for the audio
+&gt; interface's hardware monitoring, too.
+&gt;
+&gt; The audio interface's hardware monitoring is done at driver level, while
+&gt; the software could be split to the driver and mixer software, the
+&gt; access to the hardware monitoring still is part of the driver.
+&gt;
+&gt; Jack plugins? Driver level? Jack is a sound server using a backend
+&gt; such as ALSA.
+
+Jack prefers working at realtime priority and some plugins may do so as
+well, possibly in relation to priority elevation.  Unfettered hardware
+access is not necessary for the latency aspects.
+
+&gt; I'm using hdspmixer for my RME audio interface. My Focusrite isn't
+&gt; supported, so I'm using it class compliant, without the option to have
+&gt; access to the hardware monitoring. Actually a driver for other
+&gt; Focusrite interfaces from the same series exists and I much likely
+&gt; only need to add an ID to the driver's source code and build it, to
+&gt; get access to the hardware monitoring, but I simply don't need it. A
+&gt; lot of people don't need hardware monitoring provided by the audio
+&gt; interface.
+
+Many affordable USB-level interfaces are quite more prone to xruns if
+you drive them in full duplex.  So particularly on consumer hardware
+(and that's what most people use) making use of available hardware
+monitoring solutions employing the builtin mixers would make good sense.
+
+Physical controllers are nice to use for that, and this is why software
+like Ardour supports digital controllers which can be used for mixing
+instead of a hardware mixer.  I don't see the point in maintaining
+software/hardware barriers that should only be crossed using
+hard-tailored rather than general-purpose software.
+
+-- 
+David Kastrup
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1494026677.24762_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1494064854.32113_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1494060136.27404_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1494060136.27404_0.ltw:2,a&nbsp;&lt;87vape4bse.fsf at fencepost dot gnu dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

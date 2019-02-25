@@ -1,0 +1,37 @@
+Date:        Tue, 14 Apr 2015 16:36:25 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          "[hidden] at lists dot jackaudio dot org List" <[hidden] at lists dot jackaudio dot org>
+
+Subject:     [Jack-Devel] Message to Fons (which mail seems to be currently broken ?)
+
+Hi Fons,
+
+After our discussion in LAC I did two things :
+
+- remove some log messages
+
+- allow to better control thread priority definition, basically following the model used on Linux (server_priority = N, client_priority = N-5 so that the client may use threads with a priority between client RT value and server RT value)  (see : http://comments.gmane.org/gmane.comp.audio.jackit/17931). On Windows it works like the following: 
+
+	- using the -P number below 89 make all RT thread takes THREAD_PRIORITY_TIME_CRITICAL priority
+
+	- using value more than 89 moves in the MMCSS ("Pro Audio") class where 4 values can be used (AVRT_PRIORITY_LOW, AVRT_PRIORITY_NORMAL, AVRT_PRIORITY_HIGH, AVRT_PRIORITY_CRITICAL) 
+
+	- client priority is 3 below server priority: so if 92 is used for the server, then JACK server RT thread will actually takes AVRT_PRIORITY_CRITICAL and client thread will use AVRT_PRIORITY_CRITICAL - 3 = AVRT_PRIORITY_LOW
+
+	- then the client my possibly use a value between AVRT_PRIORITY_LOW and AVRT_PRIORITY_CRITICAL for some other threads.
+
+Tell me it if works the way you need to, and if not, how we can improve the implementation.
+
+Links for the binaries here: 
+
+https://dl.dropboxusercontent.com/u/28869550/Jack_v1.9.11_32_setup.exe
+
+https://dl.dropboxusercontent.com/u/28869550/Jack_v1.9.11_64_setup.exe
+
+Thanks.
+
+Stéphane
+
+1429022201.4110_0.ltw:2, <C9BDD744-7DF7-4598-9754-5E74A214DA02 at grame dot fr>
+________________________________________________________________________________
+

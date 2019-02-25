@@ -1,0 +1,64 @@
+Date:        Mon, 18 May 2009 18:34:41 +0200
+From:        Fons Adriaensen  <[hidden] at kokkinizita dot net>
+To:          Paul Davis <[hidden] at linuxaudiosystems dot com>
+Cc:          Nedko Arnaudov <[hidden] at arnaudov dot name>, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>, JACK Developers <[hidden] at jackaudio dot org>
+In-Reply-To: Paul Davis Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments (1242663064.9693_0.ltw:2,a)
+Follow-Up:   Paul Davis Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments (1242665471.16141_0.ltw:2,a)
+Follow-Up:   Krzysztof Foltman Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments (1242683435.18073_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] more jack/qjackctl madness : some comments
+
+On Mon, May 18, 2009 at 12:10:45PM -0400, Paul Davis wrote:
+
+> the issue that qjackctl could consider is not jackdbus, or dbus in
+> general. its the JACK control API that was discussed at LAC 2008.
+> right now, qjackctl simply claims to know how to start the JACK
+> server, offers a dialog to let the user pick settings, and then
+> constructs a set of command line arguments for jackd.
+> 
+> this will continue to work forever,
+
+*** It already does not work anymore. ***
+
+I have the impression that you are missing part
+of the picture.
+
+Jack-dbus is not just an (optional) server using
+the C API and providing access to it via dbus.
+
+I don not know what exactly is happening but it
+interferes even if clients are just using the
+C API. And it breaks it. 
+
+If it were just an optional interface that e.g.
+an app such as qjackct could use to 'enhance the
+user experience' that would be perfectly fine for
+me. I would just not use it. It would also mean
+that jackd and libjack stay just the same, they
+don't have to know they are being controlled via
+dbus.
+
+But the current implementation imposes itself,
+even if clients are just trying to use the C API.
+And currently, maybe because of a bug, or by
+design, it breaks the C API.
+
+There is IMHO *no* reason why jack-dbus should
+**intercept** C API calls, start its daemon,
+and take control. As long as no client is
+accessing jack via dbus, it should just not
+be there. Those clients that want to use dbus
+can apparently launch the server just by trying
+to talk to it.
+
+
+Ciao,
+
+-- 
+FA
+
+Io lo dico sempre: l'Italia è troppo stretta e lunga.
+
+1242665040.14959_0.ltw:2,a <20090518163441.GG2953 at zita2 dot kokkinizita dot net>
+________________________________________________________________________________
+

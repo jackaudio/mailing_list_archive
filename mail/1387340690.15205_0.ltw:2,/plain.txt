@@ -1,0 +1,58 @@
+Date:        Wed, 18 Dec 2013 05:24:37 +0100
+From:        Lucio Crusca  <[hidden] at sulweb dot org>
+To:          Robin Gareus <[hidden] at gareus dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Robin Gareus Re: [Jack-Devel] routing alsa through jack (1387310016.3840_0.ltw:2,)
+Follow-Up:   Dominique Michel Re: [Jack-Devel] routing alsa through jack (1387404453.17687_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] routing alsa through jack
+
+In data martedì 17 dicembre 2013 20:53:26, hai scritto:
+> Entirely appropriate. That approach works just fine here with older
+> versions of skype that support plain ALSA (I think newer versions of
+> skype are pulse only, but I don't know. 
+
+AFAICT Skype 4 supports both Pulse and Alsa.
+
+> Did you find
+> http://alsa.opensrc.org/Jack_and_Loopback_device_as_Alsa-to-Jack_bridge
+> ? It's somewhat verbose, but a very nice article with complete
+> step-by-step instructions and background information.
+
+Yes, I did find it, but it's quite focused on a different target than simply 
+routing audio through Jack with a single sound card, and I couldn't manage to 
+distinguish the parts to be ignored in my case. When I finished doing what's 
+written there, I was stuck with no audio at all, be it Alsa or Jack. I must 
+have done something wrong, but I can't tell what because I wasn't 
+understanding most of the things I was doing.
+
+> Long story short: You cannot write directly to the loop-hardware once
+> alsa_in/out are connected. 
+
+I'd say "oviously" here, except I didn't realize it myself... I think I took 
+the opposite for granted because snd_aloop creates two soundcards, so I 
+assumed I could lock one with Jack and the other with Alsa.
+
+> asoundrc: http://robin.linuxaudio.org/tmp/asoundrc-loopback
+
+Ok, I don't want to make the loop be the default device, for the time being: 
+this way if something goes wrong i can just stop jackd and everything keeps 
+working through Alsa. Should I avoid or change the last part ("pcm.!default") 
+of that asoundrc then?
+
+> 
+>  zita-a2j -L -d hw:Loopback,1,0 -j cloop -n 2 -p 256
+>  zita-j2a -L -d hw:Loopback,1,1 -j ploop -n 2 -p 256
+>  sleep 1
+>  jack_connect cloop:capture_1 system:playback_1 &>/dev/null
+>  jack_connect cloop:capture_2 system:playback_2 &>/dev/null
+>  jack_connect system:capture_1 ploop:playback_1 &>/dev/null
+>  jack_connect system:capture_2 ploop:playback_2 &>/dev/null
+
+I assume I could also make connections through the patchbay in qjackctl 
+instead of using jack_connect, right? It's a more trial-and-error friendly 
+method for the beginners...
+
+1387340690.15205_0.ltw:2, <1536755.xCOZm48Ui4 at fx>
+________________________________________________________________________________
+

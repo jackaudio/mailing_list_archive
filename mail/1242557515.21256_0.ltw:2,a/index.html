@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [LAD] [Jack-Devel] more jack/qjackctl madness</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [LAD] [Jack-Devel] more jack/qjackctl madness</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1242555657.18382_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1242559233.22384_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1242557515.21256_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 17 May 2009 11:48:57 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Rui Nuno Capela </span> &lt;[hidden] at rncbc dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Linux Audio Users &lt;[hidden] at lists dot linuxaudio dot org&gt;, Linux Audio Developers &lt;[hidden] at lists dot linuxaudio dot org&gt;, JACK Developers &lt;[hidden] at jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1242545806.1739_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] more jack/qjackctl madness </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Fons Adriaensen
+<a href='../1242560416.23177_0.ltw:2,a/index.html'>Re: [LAD] [Jack-Devel] more jack/qjackctl madness </a></td></tr>
+</table>
+<pre>
+St&#xE9;phane Letz wrote:
+&gt;&gt; To whom it may concern: (again)
+&gt;&gt;
+&gt;&gt; Jackdmp 1.9.2, Qjackctl 0.3.4
+&gt;&gt;
+&gt;&gt; I do the following:
+&gt;&gt;
+&gt;&gt; - Log in.
+&gt;&gt; - Start a jack app.
+&gt;&gt; - The app starts jackd, but using the wrong card,
+&gt;&gt;   and things don't work as expected.
+&gt;&gt;
+&gt;&gt; Questions:
+&gt;&gt;
+&gt;&gt;  1. Which parameters are used for such an autostart ?
+&gt;&gt;     Certainly not the ones in ~/.jackdrc, these would
+&gt;&gt;     have been correct.
+&gt;&gt;  2. Qjackctl also ignores ~/.jackdrc, so what is the
+&gt;&gt;     purpose of this file ?
+&gt;&gt;
+&gt;&gt; - I terminate the app. Check with ps, there is no
+&gt;&gt;   more jackd running.
+&gt;&gt; - I start qjackctl. It immediately shows a running
+&gt;&gt;   jackd, but his has restarted the previous wrong one.
+&gt;&gt; - Click Stop, Start in qjackctl. Get the same wrong
+&gt;&gt;   jackd again.
+&gt;&gt; - Verify qjackctl's Setup window. This shows the
+&gt;&gt;   settings for the right jackd, while it is running
+&gt;&gt;   another one.
+&gt;&gt;
+&gt;&gt; This is *madness*
+&gt;&gt;
+&gt;&gt; One more: you can't terminate qjackctl without
+&gt;&gt; terminating jackd as well. Why not ? Killing
+&gt;&gt; qjackctl does the right thing.
+&gt;&gt;
+&gt;&gt; A request to the jackdmp and qjackctl devs:
+&gt;&gt;
+&gt;&gt;    PLEASE REMOVE THAT DBUS MADNESS
+&gt;&gt;
+&gt;&gt; Ciao,
+&gt;&gt;
+&gt; 
+&gt; Fons,
+&gt; 
+&gt; I really appreciate your feedback...,  but AFAICS Qjackctl is
+&gt; *absolutely* not using the DBUS layer!
+&gt; 
+&gt; With jackdmp/jack2 compiled with default settings (that is *not* using
+&gt; the --dbus at configure step), then it should absolutely behave as jack1
+&gt; was behaving.
+&gt; 
+&gt; And I guess Rui can better answer the points concerning "~/.jackdrc,"
+&gt; and son on.
+&gt; 
+
+qjackctl only writes to ~/.jackdrc *iif* you opt to (see Setup/Misc/Save
+JACK audio server configuration). otherwise it *never* makes use of that
+file ie. it never auto-starts jackd implicitly; it only does start jackd
+explicitly if none is found running atm.
+
+if you really want several jackd server running simultaneously you'll
+have to take use of the JACK_DEFAULT_SERVER environment variable to tell
+qjackctl which server it will refer to. in fact, that is the only tricky
+way for you to have several qjackctl instances running as well.
+
+Stephane is right, qjackctl makes no use of the d-bus interface in
+jackaudio.org domain, although the latest in qjackctl cvs has some d-bus
+stuff of its own (rncbc.org domain) and only serves for
+starting/stopping qjackctl control--found useful for example to any
+system suspend/resume script you may think of.
+
+otoh, the only other jack application i know of that writes to
+~/.jackdrc is ardour; have a look at your use case when starting jackd
+from behind ardour's open session dialog...
+
+cheera
+-- 
+rncbc aka Rui Nuno Capela
+[hidden]
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1242555657.18382_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1242559233.22384_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1242557515.21256_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1242557515.21256_0.ltw:2,a&nbsp;&lt;4A0FEB99.3080505 at rncbc dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

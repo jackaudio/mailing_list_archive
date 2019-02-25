@@ -1,0 +1,52 @@
+Date:        Wed, 25 Jul 2018 10:50:43 -0500
+From:        Chris Caudle  <[hidden] at chriscaudle dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Moritz Balters [Jack-Devel] Jack crushes after 60 min running without problems (1532512133.12038_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Jack crushes after 60 min running without problems
+
+On Wed, July 25, 2018 4:48 am, Moritz Balters wrote:
+> I have a problem with Jack running on my Rapi 3:
+
+Do you mean a Rasberry Pi 3 device?
+That is the processor, but what is the audio device? I wasn't aware
+Rasberry Pi had built in audio, is that new for the 3 device, or did 
+earlier devices have that as well?
+Show the output of aplay -l to see how the device is detected.
+
+This looks unusual:
+> Jack: capture device hw:1
+> Jack: playback device hw:0
+
+Different devices for capture and playback is strange.
+How did you even specify that?  What is the startup command line you use
+for jackd?
+
+> configuring for 32000Hz, period = 128 frames (4.0 ms), buffer = 6 periods
+
+128 frames and 6 periods is an unusual configuration, have you tried 256
+frames and 3 periods?
+
+> JackEngine::XRun: client = MHA was not finished, state = Running
+
+What client is this (MHA)?  This error message means that the client MHA
+did not  finish processing the audio in the amount of time allocated.
+
+> Does anyone has an idea what the reason for this behavior could be?
+
+Seems like the application you are using cannot maintain the audio
+processing.
+Try larger period size like 256 or 512 or even 1024 if you are not running
+something which is very latency sensitive.  Are you using this for real
+time music production (guitar effects, soft synthesizer application), or
+just audio playback?   If just for audio playback you should be able to 
+use 1024 without any problem.  For something like a guitar effects
+processor you would probably want lower latency, but even then 256 may be
+OK.
+
+-- 
+Chris Caudle
+
+1532533875.6681_0.ltw:2, <1ab310e9d55f5483fcd4bb70dde000b0.squirrel at email dot powweb dot com>
+________________________________________________________________________________
+

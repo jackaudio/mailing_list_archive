@@ -1,0 +1,77 @@
+Date:        Sun, 21 Aug 2016 10:08:24 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Markus Grabner Re: [Jack-Devel] fractional frame rates for alsa_in and alsa_out (1471553210.28318_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] fractional frame rates for alsa_in and alsa_out
+
+On Thu, Aug 18, 2016 at 10:46:27PM +0200, Markus Grabner wrote:
+
+> 1.) Out of the box, zita-a2j/j2a wouldn't start at all with my device
+> since no exact (integer) frame rate could be set. I therefore did the
+> same exercise as with alsa_in/out to support fractional frame rates
+> (see attached file "zita-exact-rate.patch"). I hoped it would also
+> converge faster to the correct frame rate if a correct initial value
+> was given, which I could indeed observe occasionally, but on average
+> there was no difference in convergence time.
+
+There shouldn't be. The settling time is determined by the loop
+bandwidth. 
+
+Which distro are you using ? Zita-alsa-pcmi is *not* part of
+zita-ajbridge, it's a separate library, used by a number of other
+apps.
+
+Anyway, your patch would mean an incompatible change to the API,
+and that's not going to happen. I'll see if and how I can support
+fractional sample rates in another way. 
+
+Anyway, even set_rate_near() takes an int as parameter, so there
+is no point in using a float, except for the test 
+
+  rate_num != _fsamp * rate_den
+
+but this will fail anyway unless you are lucky and _fsamp is
+an _exact_ floating point representation of num / den.
+
+So the solution could be to use set_rate_near() and replace
+the test with something more robust.
+
+
+> 2.) After having fixed the initialization issue, I noticed that
+> after a couple of minutes zita_a2j/j2a stop working with the message
+> "Detected excessive timing errors, waiting 10 seconds." and would
+> not recover from this. I added some additional debugging output
+> and tracked this issue down to the point that the problem occurs
+> immediately after the internal timer (lower 28 bits of the jack 
+> timestamp) overflows.
+
+That's very likely just a coincidence. I'm pretty sure the code
+handles the mod 2^28 format correctly, but I'll verify this again.
+
+> Therefore I modified the code such that the full 64 bit jack
+> timestamp is used wherever possible (see attached file
+> "zita-jacktime.patch") to get rid of overflow issues (well,
+> almost, the jack timer overflows after more than half a million
+> years :-).
+
+Assuming it starts at zero.
+
+The reduction to 28 bits requires extra code, which means it was
+not done without reason. One reason is that I want the loop
+calculations to be independent of details such as the format of
+the timers used, and use consistent units (seconds).
+
+
+Ciao,
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+
+1471774114.15194_0.ltw:2,a <20160821100824.GA62737 at linuxaudio dot org>
+________________________________________________________________________________
+

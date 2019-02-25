@@ -1,0 +1,36 @@
+Date:        Thu, 10 Mar 2016 18:41:19 +0100
+From:        Xavier Mendez  <[hidden] at jmendeth dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+Follow-Up:   Filipe Coelho Re: [Jack-Devel] Netjack crashes, alignment broken recently (1457694363.16240_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Netjack crashes, alignment broken recently
+
+Just compiled the latest jackd2, and when using Netjack both manager and 
+driver crash after sending parameters. I traced back to this change from 
+02f74a659, which modifies the network parameter struct:
+
+--- a/common/JackNetTool.h
++++ b/common/JackNetTool.h
+@@ -94,9 +94,9 @@ namespace Jack
+-        char fName[JACK_CLIENT_NAME_SIZE];
+-        char fMasterNetName[JACK_SERVER_NAME_SIZE];
+-        char fSlaveNetName[JACK_SERVER_NAME_SIZE];
++        char fName[JACK_CLIENT_NAME_SIZE+1];
++        char fMasterNetName[JACK_SERVER_NAME_SIZE+1];
++        char fSlaveNetName[JACK_SERVER_NAME_SIZE+1];
+
+That extra byte for the NUL terminator breaks the alignment, and somehow 
+causes some ints to be sent as little-endian:
+
+     Sample rate : 12288000 frames per second
+     Period size : 131072 frames per period
+
+Reverting the three lines seems to resolve the problem. I don't really 
+see the use for having the NUL terminator go through the network...
+
+What do you think?
+Xavi
+
+1457631690.8217_0.ltw:2,a <56E1B1BF.5090300 at jmendeth dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] dropped midi messages on os x using the IAC driver? at a loss!</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] dropped midi messages on os x using the IAC driver? at a loss!</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1332031366.26680_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1332036706.27099_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1332036585.20231_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 17 Mar 2012 22:09:19 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Iain Duncan &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Iain Duncan
+<a href='../1332029279.25290_0.ltw:2,a/index.html'>[Jack-Devel] dropped midi messages on os x using the IAC driver? at a loss! </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Iain Duncan
+<a href='../1332100098.3751_0.ltw:2,a/index.html'>Re: [Jack-Devel] dropped midi messages on os x using the IAC driver? at a loss! </a></td></tr>
+</table>
+<pre>
+you can use jack_midi_dump (it may only be in the jack1 tools
+directory, but it will work with jack2 just as well) to track what
+MIDI data shows up at your JACK port(s).
+
+On 3/17/12, Iain Duncan &lt;[hidden]&gt; wrote:
+&gt; Hi folks, I'm sure this isn't a jack bug or it would have been noticed ages
+&gt; ago, but I'm hoping someone has some advice on how to figure out what the
+&gt; heck's going on.
+&gt;
+&gt; I have a jack app, it sends out midi. Seems to be fine about 99% of the
+&gt; time, and maybe once every hundred messages, a midi message gets dropped. I
+&gt; am sending out the messages using jack_midi_event_reserve, and that seems
+&gt; ok, can't imagine it would work 99% of the time if I'm doing it wrong.  I
+&gt; have some debug printf showing that my app thinks it's written the dropped
+&gt; message to the jack midi buffer.
+&gt;
+&gt; Using jack pilot, I have my app routed to the IAC loopback driver on os x,
+&gt; and I have a vst synth (Zebra2) playing on a channel in Reaper. I also have
+&gt; a midi monitor open spying on the output. The dropped messages are printed
+&gt; in my app, and then don't show up in the midi monitor. So I guess either:
+&gt;
+&gt; - they aren't really going out from my app
+&gt;
+&gt; - or are they aren't really getting through the IAC driver.
+&gt;
+&gt; - or something else I can't fathom.
+&gt;
+&gt; Does anyone have any experience with midi message loss on os x? Suggestions
+&gt; on how to figure this out or even how to debug it would be luverly. I'm
+&gt; pretty new to Jack, OS X, IAC, the works. :-/
+&gt;
+&gt; Below is the code for how the messages are going out in case I did
+&gt; something dumb!
+&gt;
+&gt; Thanks
+&gt; Iain
+&gt;
+&gt;     ... in the jack process audio callback method
+&gt;
+&gt;     // grab our output buffers, needs to happen each time process is called
+&gt;     int num_audio_ports = NUM_AUDIO_PORTS;
+&gt;     sample_t *audio_output_bufs[ num_audio_ports ];
+&gt;     for( int port_index=0; port_index &lt; NUM_AUDIO_PORTS; port_index++ ){
+&gt;         audio_output_bufs[ port_index ] = (sample_t *)
+&gt; jack_port_get_buffer( audio_out_ports[port_index], nframes);
+&gt;     }
+&gt;     for(jack_nframes_t frame_index=0; frame_index &lt; nframes; frame_index++){
+&gt;         // get midi and audio output for each port
+&gt;         // the redundant layer is to keep jack types out of the engine code
+&gt;         DataFloat audio_samples[NUM_AUDIO_PORTS];
+&gt;         int num_midi_messages_from_engine;
+&gt;         // call the engine's process method
+&gt;         // writes num_audio_ports samples into audio_samples
+&gt;         // writes num_midi_messages_from_engine 3 char midi messages into
+&gt; midi_from_engine_buf
+&gt;         engine-&gt;processSample(audio_samples, num_audio_ports,
+&gt;             midi_from_engine_buf, num_midi_messages_from_engine );
+&gt;
+&gt;         // if the engine wrote midi output data, send them out
+&gt;         for( int i=0; i &lt; num_midi_messages_from_engine; i++ ){
+&gt;             //cout &lt;&lt; "Midi messages from engine: " &lt;&lt;
+&gt; num_midi_messages_from_engine &lt;&lt; "\n\n";
+&gt;             // reserve 3 chars of space from the midi out port buffer as
+&gt; the per note buf
+&gt;             midi_out_msg_buf = jack_midi_event_reserve(midi_out_port_buf,
+&gt; frame_index, 3);
+&gt;             // copy the midi message, jack will send this out
+&gt;             midi_out_msg_buf[0] = midi_from_engine_buf[ (i * 3) + 0 ];
+&gt;             midi_out_msg_buf[1] = midi_from_engine_buf[ (i * 3) + 1 ];
+&gt;             midi_out_msg_buf[2] = midi_from_engine_buf[ (i * 3) + 2 ];
+&gt;             printf("    - sending jack midi message: %i %i %i\n",
+&gt; midi_from_engine_buf[ (i * 3) + 0 ],
+&gt;                 midi_from_engine_buf[ (i * 3) + 1 ],  midi_from_engine_buf[
+&gt; (i * 3) + 2 ]);
+&gt;
+&gt;         }
+&gt;
+&gt;         // copy the audio samples from my buff to the jack buff
+&gt;         for( int port_index=0; port_index &lt; NUM_AUDIO_PORTS; port_index++ ){
+&gt;             audio_output_bufs[port_index][frame_index] =
+&gt; (sample_t)audio_samples[port_index];
+&gt;         }
+&gt;     }
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1332031366.26680_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1332036706.27099_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1332036585.20231_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1332036585.20231_0.ltw:2,a&nbsp;&lt;CAFa_cK=A+OOMeaM2G5+_7_1c-genRPMpcsv5uP0ks6=RmunhmA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

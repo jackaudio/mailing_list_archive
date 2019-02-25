@@ -1,0 +1,74 @@
+Date:        Tue, 15 Feb 2011 17:29:28 +0100
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          Valerio Pilo <[hidden] at akhela dot com>, torbenh Hohn <[hidden] at gmx dot de>
+Cc:          "[hidden] at lists dot jackaudio dot org List" <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Valerio Pilo Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1297781103.1912_0.ltw:2,a)
+Follow-Up:   torbenh Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1297788752.18400_0.ltw:2,a)
+Follow-Up:   Valerio Pilo Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client (1297842576.1424_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client
+
+Le 15 févr. 2011 à 15:44, Valerio Pilo a écrit :
+
+> Hi guys; thanks a lot for your invaluable support! The patch, unfortunately, 
+> does nothing to fix or even improve the problem, which appears being 
+> completely unrelated to killing  clients...
+
+Well the real problem is that the ALSA backend returns an error (-1) that is considered "non recoverable" by the upper layer (the JackAudioDriver::ProcessSync function), then the wrapper ALSA backend thread is just stopped. When this wrapper thread is not running anymore, no client can connect anymore. 
+
+Now the *reason* the ALSA backend returns an error may be caused by several different events:
+
+- either an issue in ALSA backend code (the thing you're trying to debug)
+
+- or a "late graph" occurrence (for instance by killing a client in synchronous mode, that was not correctly handled, the AUDIO_DRIVER.diif patch from yesterday was supposed to fix this specific issue.
+
+
+> 
+> Let me explain. We did never try booting up our ARM box and just leaving JACK 
+> running without any clients connected, until yesterday. It happened by chance 
+> and we noticed that JACK *was already blocked*! We didn't connect any client 
+> to it yet!
+
+So it means the ALSA backend and/or the interaction with the upper layer (the JackAudioDriver::ProcessSync function) still has an issue.
+
+
+> I've tried to better pinpoint the problem, and here's what I've found:
+> 
+> First: ALSA docs specify error codes for some pcm_snd_* functions used by 
+> jacks' ALSA driver - that is -EPIPE, -EINTR and -ESTRPIPE - but in a couple 
+> occasions you use the defined values without the minus. I've attached a patch, 
+> "fix-ALSA-error-codes.patch", to fix this.
+
+OK, JACK1 has the same issue. I guess this should be fixed in JACK1 ALSA backend also (Torben ?)
+
+> 
+> The actual problem wasn't fixed by this patch so I kept trying and adding 
+> debug messages. JACK starts up and hums away until an xrun occurs. As soon as 
+> this happens, the driver breaks. The reason is that it tries to perform 
+> recovery (by restarting the driver) but it makes no effect because it ends up 
+> in an infinite loop within JackAlsaDriver::Read() ! 
+> There, alsa_driver_wait returns 0, the "goto retry;" runs it again, the xrun 
+> code is ran again, and alsa_driver_wait returns 0 again, entering an infinite 
+> loop.
+> 
+> I'm attaching two patches, both with a lot of added log messages (and also the 
+> previously explained patch)  to help understand what was going on.
+> The first version ("without-recovery") only adds debugging. A test run with it 
+> is linked at Pastebin: http://jackd.pastebin.com/JTswYfLd . the second one 
+> also attempts to fix the issue using ALSA's snd_pcm_recover(), and a test run 
+> of it is linked here: http://jackd.pastebin.com/2iifw6Gh .
+> With the recovery in place the issue is still present, but seemingly better 
+> identifiable, because JackAlsaDriver simply gets stuck within the poll() call 
+> in alsa_driver_wait() .
+> 
+> At the moment this is as far as I've got with the debugging. Do you have any 
+> idea or suggestion?
+> 
+
+Not at this time... I would need to go again deep in the ALSA backend.. and it's interaction with JackAudioDriver. Not too much time this week. Can we work on that next week? We could also do some debugging session o #jack channel on Freenode.
+
+Stéphane
+
+1297787398.15689_0.ltw:2,a <2032F3DD-333C-4904-B141-9C3BA6346CA3 at grame dot fr>
+________________________________________________________________________________
+

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303301688.5149_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303304733.11391_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303304501.10932_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 20 Apr 2011 09:01:27 -0400 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Paul Davis </span> &lt;[hidden] at linuxaudiosystems dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Fons Adriaensen &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Fons Adriaensen
+<a href='../1303295934.25911_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 0.120 incorrect error recovery for -n 3 </a></td></tr>
+</table>
+<pre>
+On Wed, Apr 20, 2011 at 6:38 AM, Fons Adriaensen &lt;[hidden]&gt; wrote:
+
+&gt; A driver-&gt;write_zeros() would be useful anyway. When I started looking
+
+driver-&gt;null_cycle() is close.
+
+&gt; I can't help but feel that the whole ALSA backend is overly complicated.
+&gt; For example I still have no idea what the 'extra_fd' stuff in wait() is
+&gt; about :-) The wait() code in libclalsadrv (which is very similar to the
+&gt; backend) doesn't have it and works OK. Same about the 'linux poll bug'.
+
+the extra_fd stuff comes from original design where we did something a
+bit closer to ASIO. when waiting on the graph, we would actually wait
+on the graph AND the device. if the graph finishes first, we hear
+about it on extra_fd. if the device is ready again first, we are able
+to discover that we've timed out much sooner and more "efficiently"
+than if we wait for the graph then check the device. i believe that
+we've removed the possibility to use this from the command line. it
+was a much "stricter" test of RT, and generally wasn't very useful.
+
+the linux poll bug was a genuine bona fide error in the kernel. if you
+look again, you'll see that its not part of the ALSA backend, but part
+of the engine. as the comment says:
+
+/* Linux kernels somewhere between 2.6.18 and 2.6.24 had a bug
+   in poll(2) that led poll to return early. To fix it, we need
+   to know that that jack_get_microseconds() is monotonic.
+*/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303301688.5149_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303304733.11391_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303304501.10932_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1303304501.10932_0.ltw:2,a&nbsp;&lt;BANLkTimUdgmOX69F_+-npgeZH5DV4myuGA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

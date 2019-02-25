@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4384) for Windows 64 and 32 bits</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4384) for Windows 64 and 32 bits</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305098881.29253_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1305112230.26490_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1305107704.15992_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 11 May 2011 11:54:36 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> St&#xE9;phane Letz </span> &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Devin Anderson &lt;[hidden] at charityfinders dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>Jack Developers &lt;[hidden] at lists dot jackaudio dot org&gt;, Peter L Jones &lt;[hidden] at drealm dot info&gt; </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Devin Anderson
+<a href='../1305163900.13146_0.ltw:2,a/index.html'>Re: [Jack-Devel] Installers for Jack 1.9.8 (SVN 4384) for Windows 64 and 32 bits </a></td></tr>
+</table>
+<pre>
+Le 10 mai 2011 &#xE0; 23:16, Devin Anderson a &#xE9;crit :
+
+&gt; On Tue, May 10, 2011 at 1:35 AM, St&#xE9;phane Letz &lt;[hidden]&gt; wrote:
+&gt; 
+&gt;&gt;&gt; 3.) Trying JACK with different process and thread priorities (I'm not
+&gt;&gt;&gt; sure if Windows users can adjust the priorities of their
+&gt;&gt;&gt; processes/threads)
+&gt;&gt; 
+&gt;&gt; Well the new MMCSS option (activated with priority over 90 and on
+&gt;&gt; systems that support it [Vista, Seven probably] is supposed to help
+&gt;&gt; for that.
+&gt; 
+&gt; I think it does help some.
+&gt; 
+&gt;&gt; And when not available all real-time threads (audio, midi) gets
+&gt;&gt; THREAD_PRIORITY_TIME_CRITICAL which is the best that can be
+&gt;&gt; done.
+&gt; 
+&gt; This *might* be part of the problem.  The MIDI threads should get a
+&gt; higher priority than the JACK client threads, but they're all getting
+&gt; the same high priority right now.  Also, I'm not sure what priority
+&gt; the MIDI input threads get, as they're created by the WinMM library,
+&gt; and not by JACK.
+&gt; 
+&gt; With the 'alsarawmidi' driver on Linux, this is solved by getting the
+&gt; current JACK realtime priority and adding 1 to get the MIDI thread
+&gt; priority.  On Windows, the solution isn't so straightforward because
+&gt; there are process priorities *and* thread priorities, and a higher
+&gt; priority can't be set by simply adding 1 to the current realtime
+&gt; priority.
+&gt; 
+&gt; The -P switch just doesn't make much sense on Windows.
+&gt; 
+&gt; If I had the time and a Windows development environment, I would
+&gt; create a proposal to alter the -P switch for Windows and add a new
+&gt; priority switch for process priority.
+&gt; 
+&gt; *OR*, perhaps a level of indirection should be created for changing
+&gt; thread priorities that has operating system specific code underneath.
+&gt; Using the number system isn't very straightforward, especially because
+&gt; it doesn't really work outside of Linux.  Something like:
+&gt; 
+&gt; enum JackThreadPriority {
+&gt;    // JACK audio thread
+&gt;    PRIORITY_AUDIO,
+&gt;    // JACK callbacks
+&gt;    PRIORITY_CALLBACK,
+&gt;    // JACK MIDI thread that communicates directly with hardware
+&gt;    PRIORITY_MIDI_TERMINAL,
+&gt; 
+&gt;    // More priorities here ...
+&gt; };
+&gt; 
+&gt; int
+&gt; JackThreadInterface::AcquireRealTime(JackThreadPriority priority);
+&gt; 
+&gt; int
+&gt; JackThreadInterface::AcquireSelfRealTime(JackThreadPriority priority);
+&gt; 
+&gt; ... would allow JACK to be tweaked over time to do the right thing
+&gt; with threads of different priorities on different platforms.
+&gt; 
+&gt; -- 
+&gt; Devin Anderson
+&gt; devin (at) charityfinders (dot) com
+&gt; 
+
+That seems a good "theoritical" idea, but I'm still not sure it can be done in practice. The thing is that on each system JACK2 runs on, the underlying scheduling system is different, especially for real-time threads. POSIX system (Linux, Solaris) are probably the most flexible (with a precise setup of priority), but on OSX there is only a single class for RT threads and RT thread interleaving can be "somewhat" controled. On Windows the situation seems even worse, and I still don't know if there is a way to setup different classes of RT threads, and control thread interleaving the correct way. The situation is maybe only: Windows in not an OS suitable for "hard" RT stuff...
+
+BTW there was an interesting conference on a related subject at LAC 2011
+
+http://lac.linuxaudio.org/2011/?page=program&amp;mode=list&amp;details=1
+
+12:00 Low-Latency Audio on Linux by Means of Real-Time Scheduling (Tommaso Cucinotta)
+
+The video should be online in a few days hopefully.
+
+St&#xE9;phane 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1305098881.29253_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1305112230.26490_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1305107704.15992_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1305107704.15992_0.ltw:2,a&nbsp;&lt;783531B2-7D4F-4DCF-9D5E-C3580BC00C76 at grame dot fr&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

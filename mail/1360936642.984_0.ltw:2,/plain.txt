@@ -1,0 +1,37 @@
+Date:        Fri, 15 Feb 2013 08:57:06 -0500
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          aCOSwt <[hidden] at orange dot fr>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: aCOSwt [Jack-Devel] Trying to understand jackd's threads (1360929598.20853_0.ltw:2,)
+Follow-Up:   aCOSwt Re: [Jack-Devel] Trying to understand jackd's threads (1360951138.18068_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Trying to understand jackd's threads
+
+On Fri, Feb 15, 2013 at 7:00 AM, aCOSwt <[hidden]> wrote:
+
+> After launching jackd the following way under a linux-3.6.11 :
+>
+> /usr/bin/jackd -P89 -m -dalsa -dhw:3 -r44100 -p256 -n3 -P -z
+>
+
+jackd --version is important here.
+
+chrt as well as ps tell me that I get 5 threads :
+>
+> - 3 of them following a SCHED_OTHER policy,
+>
+
+threads handling server requests and other non-realtime-constrained stuff.
+
+
+> - 2 of them following a SCHED_FIFO policy,
+> The first of these two having an rt-prio of 99 and the other one 89 !
+>
+
+the watchdog and message queue threads are higher priority than the
+"process" thread which actually does the core work (wait for backend, run
+process cycle, repeat).
+
+1360936642.984_0.ltw:2, <CAFa_cKk8sXJKgC1ZR-u1o3mWNiNwGCd-txtHLpzfajireMDRng at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] jack1: jack_transport does not work as master</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] jack1: jack_transport does not work as master</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1435772743.21199_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1435844301.31879_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1435839646.26541_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 02 Jul 2015 14:20:26 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Tobias Hoffmann </span> &lt;[hidden] at thax dot hardliners dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1435844301.31879_0.ltw:2,/index.html'>Re: [Jack-Devel] jack1: jack_transport does not work as master </a></td></tr>
+</table>
+<pre>
+Hi,
+
+I'm still using debian's jackd1/libjack0 package (0.124.1) and have not 
+tried to reproduce this with git master yet (at least, I haven't seen an 
+obvious fix in the commit log since 0.124.1).
+
+In one terminal window I run  jack_showtime.
+In the other window I do:
+
+jack_transport
+ &gt; tempo 96        # just in case
+ &gt; master
+ &gt; play                 # does not
+
+jack_showtime correctly shows the state, but no BBT information. From my 
+own client I know that jack_position_t::valid==0.
+
+Some testing revealed that the timebase() callback in tools/transport.c 
+is *not called at all*, although jack_set_timebase_callback is called 
+and returns without error.
+- But everything works fine when I switch to the jack2 stack...
+
+And in some cases, when switching between/enabling/disabling different 
+Transport masters,
+jack_position_t::valid retains the JackPositionBBT flag (and stale 
+information) -- but no-one updates them any more...
+
+Maybe related: I've seen some strange values (*very* large negative 
+number) for bar_start_tick when using ardour4.1.
+The very first time (and after rewind?) it contains 0.0 and is not 
+updated. A quick glance into the ardour source code reveals that this 
+field is not implemented yet. I could probably live with that.
+BUT: After stopping+starting the playback, these strange values 
+appear... How can I know whether some value in this field is usable at 
+all -- except for some heuristics?
+
+Back to the original topic... in both cases the jack_position_t struct 
+contains stale/random values, instead of starting from a "clean" base -- 
+maybe memset(,0,) is all that is needed here?
+
+   Tobias
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1435772743.21199_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1435844301.31879_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1435839646.26541_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1435839646.26541_0.ltw:2,&nbsp;&lt;55952C8A.6010600 at thax dot hardliners dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,83 @@
+Date:        Thu, 07 Apr 2016 19:57:14 +0800
+From:        Kenneth Fields  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+Follow-Up:   David Nielson Re: [Jack-Devel] Noisy Signal - Fragmented Data (1460031707.30198_0.ltw:2,)
+Follow-Up:   Chris Caudle Re: [Jack-Devel] Noisy Signal - Fragmented Data (1460343076.2983_0.ltw:2,)
+
+Subject:     [Jack-Devel] Noisy Signal - Fragmented Data
+
+Hi all,
+I’ve been having a constant noisy signal lately using jacktrip 1.1 and jack audio 0.92 beta3 on El Capitan.
+No noise running locally; but always from U.S. to China on ipv6. We’ve even had trouble with initializing an 
+8 channel stream; had to go with 4. Never had this trouble before.
+
+The connection is virtually jitter-less with 0 packet loss and 80M in the clear.
+
+doing some experiments with jacktrip and Wireshark today - all on the local network.
+I find that with larger data chunks (over about 1500k), the packets can be fragmented 2 or 3 times or more.
+Where does the fragmenting happen, on sender side? In transit?
+Would the machine ever have any problem ‘reassembling” the chunks?
+
+Thanks,
+Ken
+
+
+
+
+
+stereo 48k 24bit connection:
+buffer 512
+3 FRAGS
+
+OVER IPV6
+
+315345	2454.541857	2001:da8:22b:1506:12dd:b1ff:febd:8a2e	2001:da8:22b:1506:ca2a:14ff:fe34:2beb	IPv6	1510	IPv6 fragment (off=0 more=y ident=0xf68b8b47 nxt=17)		
+315346	2454.541861	2001:da8:22b:1506:12dd:b1ff:febd:8a2e	2001:da8:22b:1506:ca2a:14ff:fe34:2beb                    IPv6	1510         IPv6 fragment (off=1448 more=y ident=0xf68b8b47 nxt=17)  
+315347	2454.541863	2001:da8:22b:1506:12dd:b1ff:febd:8a2e	2001:da8:22b:1506:ca2a:14ff:fe34:2beb	UDP	262	         4464 → 4464  Len=3088	4464	4464
+
+
+OVER IPV4
+
+488313	2895.589371	10.1.8.32	10.1.8.39	                                                                IPv4 1514	Fragmented IP protocol (proto=UDP 17, off=0, ID=2841) [Reassembled in #488315]		
+488314	2895.589383	10.1.8.32	10.1.8.39									IPv4	1514        Fragmented IP protocol (proto=UDP 17, off=1480, ID=2841) [Reassembled in #488315]		
+488315	2895.589385	10.1.8.32	10.1.8.39									UDP 170	        4464 → 4464  Len=3088	4464	4464
+
+
+[3 IPv4 Fragments (3096 bytes): #744530(1480), #744531(1480), #744532(136)]
+    [Frame: 744530, payload: 0-1479 (1480 bytes)]
+    [Frame: 744531, payload: 1480-2959 (1480 bytes)]
+    [Frame: 744532, payload: 2960-3095 (136 bytes)]
+    [Fragment count: 3]
+    [Reassembled IPv4 length: 3096]
+    [Reassembled IPv4 data: 117011700c18119cc7a5b325e02f050002a7000203180200...]
+
+
+
+MONO 44k 16 bit, buffer 128 - NO FRAGS
+
+878806	3832.932229	10.1.8.39	10.1.8.32	UDP	314	4464 → 4464  Len=272	4464	4464
+
+1006386	4103.078745	2001:da8:22b:1506:ca2a:14ff:fe34:2beb	2001:da8:22b:1506:12dd:b1ff:febd:8a2e	UDP	334	4465 → 4465  Len=272	4465	4465
+
+
+STEREO 16 bit, buffer 128 - NO FRAGS
+
+1088352	4253.388686	2001:da8:22b:1506:ca2a:14ff:fe34:2beb	2001:da8:22b:1506:12dd:b1ff:febd:8a2e	UDP	590	4464 → 4464  Len=528	4464	4464
+
+
+Buffer 256 16bit - NO FRAGS
+
+1267127	4884.016193	2001:da8:22b:1506:ca2a:14ff:fe34:2beb	2001:da8:22b:1506:12dd:b1ff:febd:8a2e	UDP	1102	4469 → 4469  Len=1040	4469	4469
+
+Buffer 256 24bit - 2 FRAGS
+
+1326725	5095.511528	2001:da8:22b:1506:ca2a:14ff:fe34:2beb	2001:da8:22b:1506:12dd:b1ff:febd:8a2e	IPv6	1510	IPv6 fragment (off=0 more=y ident=0x486bd035 nxt=17)		
+1326726	5095.511529	2001:da8:22b:1506:ca2a:14ff:fe34:2beb	2001:da8:22b:1506:12dd:b1ff:febd:8a2e	UDP	174	4471 → 4471  Len=1552	4471	4471
+
+
+1528363	5497.529358	10.1.8.32	10.1.8.39															IPv4	1514	Fragmented IP protocol (proto=UDP 17, off=0, ID=a448) [Reassembled in #1528364]		
+1528364	5497.529361	10.1.8.32	10.1.8.39															UDP	114	4473 → 4473  Len=1552	4473	4473
+
+1460030251.27316_0.ltw:2, <23DB0425-4861-4AF4-BCB1-0912995DEBA4 at gmail dot com>
+________________________________________________________________________________
+

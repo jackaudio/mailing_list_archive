@@ -1,0 +1,36 @@
+Date:        Sun, 09 Nov 2014 08:20:36 -0500
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Matt Flax <[hidden] at flatmax dot org>
+Cc:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Matt Flax [Jack-Devel] xruns and server effects (1415535118.13801_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] xruns and server effects
+
+On Sun, Nov 9, 2014 at 7:11 AM, Matt Flax <[hidden]> wrote:
+
+> Hi there,
+>
+> I was wondering for both Jack1 and Jack2 ...
+>
+> If a client xruns, does this effect the output to the underlying audio
+> driver or are they autonomous ?
+> If a client xruns, does this effect the other clients, or are they in
+> their own threads ?
+>
+
+
+(1) xruns are not defined with respect to clients. It is the server that
+detects an xrun using its own internal timing mechanism(s). An xrun means
+that the entire JACK graph is late, and does not explicitly identify any
+particular client. JACK1 resets the audio device when there is an xrun.
+
+(2) since clients are autonomous processes, they do not share threads. But
+in JACK2, the server may be "managing" clients from more than 1 thread. The
+default mode of operation in JACK2 doesn't really care much about xruns, so
+clients that take too long really don't affect anything else very much.
+Using sync mode in JACK2 changes this. In JACK1 the server manages all
+clients from a single thread.
+
+1415539244.15891_0.ltw:2, <CAFa_cKmiw-bJhYT=Dx+PG+=-jY86Yjjt7dgc6=sj5jpVDxgDjA at mail dot gmail dot com>
+________________________________________________________________________________
+

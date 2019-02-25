@@ -1,0 +1,35 @@
+Date:        Thu, 21 Apr 2011 18:56:22 +0300
+From:        Dan Muresan  <[hidden] at gmail dot com>
+To:          "Gabriel M. Beddingfield" <[hidden] at gmail dot com>
+Cc:          [hidden] at jackaudio dot org
+In-Reply-To: Gabriel M. Beddingfield Re: [Jack-Devel] jack_port_get_buffer segfaults (1303400164.15081_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack_port_get_buffer segfaults
+
+Ah, I figured what my problem was -- I improperly synchronized the
+process thread with the rest of the initialization code. So I was
+getting a race condition and the process thread would sometimes access
+un-initialized memory. Basic stuff :(
+
+> Just curious... any reason for using the non-callback model? You still have
+> to have a dedicated thread, right?  What's the benefit of doing
+
+You can signal workers outside the "critical section" delimited by
+cycle_wait() ... cycle_signal () (the equivalent of the process()
+callback). That's a little bit safer I figure. Even a semaphore
+implies a context switch.
+
+I think  with a process thread you could even use a mutex / CV to
+signal worker threads (which is much easier to clean up than SysV
+semaphores.)
+
+> This code looks fine to me.  Looks like something else is afoot.
+
+Right. Thanks and sorry for the noise :)
+
+
+-- Dan
+
+1303401395.17702_0.ltw:2,a <BANLkTikLdDZtRsXeBVjNTBoSZP=9G-LrDQ at mail dot gmail dot com>
+________________________________________________________________________________
+

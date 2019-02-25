@@ -1,0 +1,50 @@
+Date:        Mon, 07 Jan 2013 06:58:45 -0500
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          John Emmas <[hidden] at tiscali dot co dot uk>
+Cc:          JACK Mailing List <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: John Emmas Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357558249.9018_0.ltw:2,a)
+Follow-Up:   John Emmas Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility) (1357561954.12537_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JACK 1.9.10 to test (for 64/32 bits compatibility)
+
+On Mon, Jan 7, 2013 at 6:30 AM, John Emmas <[hidden]> wrote:
+
+>
+> On 7 Jan 2013, at 10:06, Stéphane Letz wrote:
+>
+> >
+> > AFAICS, the point is *not* 1-byte packing, but the resulting alignment
+> of the given field...
+> >
+>
+> No Stephane - 1-byte packing is essential if there's a possibility that
+> the server and its clients might get built using different compilers.
+>
+
+I repeat my belief that attempting to support this goal is not sensible
+when at least two of the "target" compilers (a) handle alignment quite
+differently (b) have different target processors available (c) have
+different conceptions of "standards". On the other hand, I understand the
+goal and think that it is correct too - telling users that client A cannot
+work with Jack-built-with-foo because A was built with compiler bar is
+pretty horrendous. The conflict between these two things is ugly.
+
+I think that you (John) are missing the issue with alignment. It is not
+that gcc on ARM cannot implement single-byte packing. The problem is that
+the processor will raise an exception when attempting to load or store
+values when this alignment violates the rules for the processor. whether an
+exception is raised depends on the load/store instructions which in turn
+depends on the data types. It is not a compiler error but a programmer
+error to request/force byte-aligned packing of data types that cannot be
+byte aligned. Pointer aliasing and/or union-based access in C requires the
+compiler to assume that the developer knows what they are doing (modern gcc
+can warn about the issues in some cases). The same issue was true on the
+DEC Alpha in the early 1990s, and caused exactly the same kinds of
+development problems. I remember many entirely legal C/C++ programs that
+would crash and burn on the alpha because they failed to heed alignment
+requirements (often by forcing the compiler to ignore them).
+__attribute__((packed)) means, in part, "i know what i am doing".
+
+1357559936.11316_0.ltw:2,a <CAFa_cKkSdo9WyqsOWwjEzBdh854dQb4bxkkEa5-6Jg867r0ZrQ at mail dot gmail dot com>
+________________________________________________________________________________
+

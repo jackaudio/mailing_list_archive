@@ -1,0 +1,44 @@
+Date:        Mon, 13 Jun 2016 19:34:07 +0000
+From:        Fons Adriaensen  <[hidden] at linuxaudio dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Markus Grabner [Jack-Devel] fractional frame rates for alsa_in and alsa_out (1465769110.21086_0.ltw:2,a)
+Follow-Up:   Markus Grabner Re: [Jack-Devel] fractional frame rates for alsa_in and alsa_out (1471553210.28318_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] fractional frame rates for alsa_in and alsa_out
+
+On Mon, Jun 13, 2016 at 12:04:30AM +0200, Markus Grabner wrote:
+
+> A while ago I initiated work on a Linux driver for Line6 devices
+> (now under sound/usb/line6 in the Linux kernel tree). Some of these
+> devices have weird sample rates (39062.5Hz, derived from the 10MHz
+> USB clock divided by 256). The alsa_in and alsa_out jack clients
+> are convenient tools to use such Line6 devices together with more
+> standardized hardware operating at, e.g., 48kHz. However, alsa_in
+> only supports integer sample rates, and even after a couple of minutes,
+> alsa_in doesn't detect the correct resampling factor 1.2288 (48000/39062.5),
+> but still reports the initial approximated value 1.228816 (48000/39062).
+> Admittedly, the error isn't too big, but is larger than the error of
+> high-quality crystal oscillators. And, after all, why use an approximation
+> if we know better?
+
+You could try zita-a2j and j2a (which are also provided by Jack1 as
+internal clients) - they should have no problem syncing.
+
+Anyway, the small initial error doesn't matter at all since these
+programs will sync to the *actual* sample rate. The nominal value
+is just a starting point, and the rounding error (approx 0.0013%
+for your example) is much smaller than the random error that can
+be expected between any two devices.
+
+Ciao,
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+
+1465846457.31417_0.ltw:2,a <20160613193407.GC64725 at linuxaudio dot org>
+________________________________________________________________________________
+

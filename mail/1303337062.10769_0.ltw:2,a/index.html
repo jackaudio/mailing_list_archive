@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] non-callback API</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] non-callback API</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303332240.1426_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303349797.31160_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303337062.10769_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 20 Apr 2011 22:03:59 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>St&#xE9;phane Letz &lt;[hidden] at grame dot fr&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>St&#xE9;phane Letz
+<a href='../1303332240.1426_0.ltw:2,a/index.html'>Re: [Jack-Devel] non-callback API </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>St&#xE9;phane Letz
+<a href='../1303364465.15335_0.ltw:2,a/index.html'>Re: [Jack-Devel] non-callback API </a></td></tr>
+</table>
+<pre>
+On Wed, Apr 20, 2011 at 10:42:05PM +0200, St&#xE9;phane Letz wrote:
+ 
+&gt; I thin, the point of having jack_cycle_wait() and jack_cycle_signal() was to be able to write:
+&gt; 
+&gt; 
+&gt; while(true)
+&gt; {
+&gt; 	jack_cycle_wait()
+&gt; 
+&gt; 	// Do some work the require the new input buffers and produce output buffers
+&gt; 
+&gt; 	 jack_cycle_signal()  // transfer control to next client in the graph *ASAP* (especially important in a multi-core case when next clients can start running)
+&gt; 
+&gt; 	// Possibly do some more work before suspending again until next cycle
+&gt; 
+&gt; }
+
+
+That is correct. But it should be possible to do exactly
+the same when using the callback mode:
+
+int process_callback(int nframes, void *arg)
+{
+    // Do some work.
+    // ...
+    // Input buffer are no longer required, output buffers
+    // are ready.
+
+    jack_cycle_signal(); // Allows the next client to run.
+
+    // Do some other work.
+
+    return 0
+}
+
+which mutatis mutandis is the equivalent of your example using
+the callback mode.
+
+The only requirement for this to work is that returning from the
+callback and calling jack_cycle_wait() are exactly equivalent,
+that is either:
+
+1. They both require jack_cycle_signal() to be called before, or
+
+2. They don't, or
+
+3. They do the equivalent of jack_cycle_signal() if that was not
+   already called.
+
+Currently, returning from the callback does the equivalent of
+calling jack_cycle_signal(), while calling jack_cycle_wait()
+doesn't (in my original proposal it did.). A clean implementation
+would give them exactly the same semantics, and to preserve the
+original callback API that would mean (3). In other words, using
+jack_cycle_signal() should be optional in either mode.
+
+
+Ciao,
+
+-- 
+FA
+
+ 
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1303332240.1426_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1303349797.31160_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1303337062.10769_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1303337062.10769_0.ltw:2,a&nbsp;&lt;20110420220359.GC672 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

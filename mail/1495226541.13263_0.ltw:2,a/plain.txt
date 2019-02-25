@@ -1,0 +1,34 @@
+Date:        Fri, 19 May 2017 13:42:05 -0700
+From:        Michael  <[hidden] at gmail dot com>
+To:          JACK <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Markus Seeber Re: [Jack-Devel] Status of the jackaudio.org homepage and releases (good news) (1495120179.8840_0.ltw:2,)
+Follow-Up:   Josh Junon Re: [Jack-Devel] Using Jack in 10.10 and later? (1495229311.17230_0.ltw:2,a)
+
+Subject:     [Jack-Devel] Using Jack in 10.10 and later?
+
+So has anyone gotten Jack to work as a default device in 10.10 or later?
+
+To repost, to make Jack work as an audio device for almost everything in 10.9.5 (and sadly, I can only say almost everything), I had to put this in /System/Library/Sandbox/Profiles/system.sb (goes at the end)
+
+;;; local additions for Jack
+  (allow network*
+         (regex #"/private/tmp/jack_.*"))
+  (allow file-write* 
+         (regex #"/private/tmp/jack_.*"))
+  (allow mach-lookup
+         (global-name-regex "jack_mach_sem.*"))
+  (allow ipc-sysv-sem)
+  (allow ipc-posix-shm-read*
+         (ipc-posix-name-regex "/jack-.*"))
+  (allow ipc-posix-shm-write*
+         (ipc-posix-name-regex "/jack-.*"))
+  (allow file-read*
+         (regex #"/Library/Audio/Plug-Ins/Components/JACK-insert.component.*"))
+
+Additionally, after logging in, and starting up Jack, I have to kill coreaudiod (for some reason, Jack has to be running for this to start up with Jack support), and then kill and restart Jack itself (otherwise it can't seem to register itself with the active coreaudiod).
+
+From what I understand of the 10.10 security system, editing that file needs to be in single user mode, not even as root in normal mode.
+
+1495226541.13263_0.ltw:2,a <C92002EE-1CB5-4048-AC3D-01BFD7BE83CA at gmail dot com>
+________________________________________________________________________________
+

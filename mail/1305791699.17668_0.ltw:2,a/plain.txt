@@ -1,0 +1,64 @@
+Date:        Thu, 19 May 2011 08:54:36 +0100
+From:        Rui Nuno Capela  <[hidden] at rncbc dot org>
+To:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Arnold Krille Re: [Jack-Devel] JackSession - feedback (1305758897.8637_0.ltw:2,a)
+Follow-Up:   Nedko Arnaudov Re: [Jack-Devel] JackSession - feedback (1305793187.21553_0.ltw:2,a)
+Follow-Up:   torbenh Re: [Jack-Devel] JackSession - feedback (1305794587.24349_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] JackSession - feedback
+
+ On Thu, 19 May 2011 00:47:57 +0200, Arnold Krille 
+ <[hidden]> wrote:
+> On Thursday 19 May 2011 00:10:26 Rui Nuno Capela wrote:
+>> adding horror to tragedy, qjackctl wipes out everything under an
+>> existing directory after prompting for any jack-session save 
+>> process. so
+>> when you agree to save and replace over that, and there's where it 
+>> comes
+>> to tragedy then horror, all media content will be toast!
+>
+> You fixed this bug in qtractor, but what about other apps? Wouldn't 
+> it be
+> easier to have some kind of versioning inside the qjackctls session 
+> format,
+> where each version gets its own version and old versions are only
+> removed when
+> the new ones are saved okay? And apps are only responsible to 
+> copy/move/link
+> all the data belonging to their session.
+>
+
+ this is kind of specific to this qtractor-session file format (.qtz 
+ bundle) where all live media content is unzipped below the jack-session 
+ subdirectory...
+
+ when you save and replace a jack-session directory you'll be wiping out 
+ all content either from disk (qjackctl) or from sight (pyjacksm renames 
+ the old directory iirc) so you'll end with a broken qtractor-session 
+ state file anyway.
+
+ afaict, on the jack-session protocol, applications are not responsible 
+ to copy, move or link their data anyway as they never know whether 
+ they're replacing any previously existing jack-session directory or 
+ not--from their pov it's all a brand new jack-session coming up.
+
+ a /highly/ responsible jack-session manager would do better to create a 
+ temporary session directory first, then call all apps to store their 
+ data there and only after that it would rename the old and new 
+ jack-session directories, or copy, move or link all stored application 
+ state data from thereafter. qjackctl might try this in the future :)
+
+ anyways, qtractor's tragic issue has been solved by regression to old 
+ and regular session state file format, which refers to all media content 
+ as found on their original file-system location, ie. relative to 
+ qtractor-session directory, which must *not* be the same as the 
+ jack-session directory at all. lesson learned :)
+
+ cheers
+-- 
+ rncbc aka Rui Nuno Capela
+ [hidden]
+
+1305791699.17668_0.ltw:2,a <8feb0c7994e3f1565861f7632fccf98b at www dot rncbc dot org>
+________________________________________________________________________________
+

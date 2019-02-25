@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack for windows : ASIO Driver compatiblity</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack for windows : ASIO Driver compatiblity</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1389619514.16513_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1389716974.18912_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1389710321.7850_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Tue, 14 Jan 2014 15:38:30 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jean Ibarz </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Chris Caudle
+<a href='../1389716974.18912_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack for windows : ASIO Driver compatiblity </a></td></tr>
+</table>
+<pre>
+&gt;
+&gt; Message: 5
+&gt; Date: Wed, 08 Jan 2014 22:21:10 +0100
+&gt; From: Peter Ginneberge &lt;[hidden]&gt;
+&gt; To: [hidden]
+&gt; Subject: Re: [Jack-Devel] Jack for windows : ASIO Driver compatiblity
+&gt; Message-ID: &lt;[hidden]&gt;
+&gt; Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+&gt;
+&gt;  &gt; Furthermore, ASIO4ALL doesn't show the JackRouter in the soundcard
+&gt; list too.
+&gt;
+&gt; You should try the other way around, select ASIO4ALL as the "interface"
+&gt; in Jack control. Note however that using ASIO4ALL will "lock down" your
+&gt; soundcard (exclusive mode), meaning you won't be able to use any device
+&gt; that doesn't support ASIO while ASIO4ALL is active.
+&gt;
+&gt;  &gt; - foobar with ASIO plugin (driver JackRouter is listed but when
+&gt;  &gt; trying to play a song the software cannot use correctly the driver)
+&gt;
+&gt; Never tried Foobar, so no idea what the problem might be. I know for
+&gt; instance that Traktor requires a minimum of 256 frames/period. Maybe
+&gt; Foobar has a similar problem.
+&gt;
+
+I tried to debug using some printf and recompiling the JackRouter driver.
+It seems the foobar call the driver functions :
+
+init()
+getsamplerate()
+nothing more.... (it should call the createbuffers() function)
+
+I don't know why foobar stop here the communication with the driver. I also
+took a look to the ASIO DSK, and it seems everything is ok in the
+JackRouter driver implementation, in my mind the problem is not about
+JackRouter but about the foobar additionnal component that allows to use
+ASIO drivers.
+
+So I got a fast looking on how to build a foobar component (to try to build
+a component especially for using the JackRouter driver), because the ASIO
+component is not open source, but I get compilation errors about symbols
+and/or linkings and I don't really know how to solve them.
+
+Furthermore, revolving the foobar problem wouldn't be enough for me as I
+NEED to make the driver work for at least one measurement software
+(preferably HolmImpulse, but Room EQ Wizard would also make the trick).
+
+
+&gt;  &gt; - windows media player
+&gt;
+&gt; WMP does not support ASIO at all. WMP only works with devices listed in
+&gt; the system's Playback devices.
+&gt;
+
+I found an ASIO plugin for windows media player but couldn't make it work,
+is it a fake ?!?
+
+
+&gt; Something to try is using VAC (Virtual Audio Cable) but it's a hassle to
+&gt; set up correctly in my experience.
+
+You can send WMP to VAC and then set VAC as the input device in Jack
+&gt; control. Through the Jack Connection window (in Jack Control), you can
+&gt; then route the "input" (being VAC) to whatever device listed there.
+&gt;
+&gt; regards,
+&gt; Peter
+&gt;
+
+Well I thought VAC was running an internal clock ? How can it be
+synchronised with the sound card sampling rate ?
+
+
+
+I am know trying to learn how to build a kernel driver, to try to make a
+virtual driver as VAC, but connected to jack server as a client and
+transfering data at the same rate as the jack server (so synchronised with
+my soundcard).
+
+I downloaded samples about miniaudio drivers, but after comiling them I get
+a .sys file, and I don't really know what to do about it. I tried SrvMan
+(service manager) to create a service using the .sys file, but when I try
+to start the service I get an error that the driver has been blocked and
+couldn't be launch.
+
+So I am now trying to use VisualDDK, but I have to create a VirtualMachine
+for deployment test, and go back from VStudio 2012-2013 to Vstudio 2010 as
+earlier versions are not compatible with VisualDDK.
+
+If someone here is experienced building and testing driver a little help
+would be very appreciable for me ;)
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1389619514.16513_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1389716974.18912_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1389710321.7850_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1389710321.7850_0.ltw:2,a&nbsp;&lt;CAKEcTNmTk2Nmza_Z7LniF94G27Ucf-Dbb3qADk0rRjZG-6_eBQ at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

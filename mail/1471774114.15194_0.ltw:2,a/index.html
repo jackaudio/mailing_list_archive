@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] fractional frame rates for alsa_in and alsa_out</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] fractional frame rates for alsa_in and alsa_out</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1471690029.22627_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1472471482.21268_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1471774114.15194_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 21 Aug 2016 10:08:24 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Fons Adriaensen </span> &lt;[hidden] at linuxaudio dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Markus Grabner
+<a href='../1471553210.28318_0.ltw:2,a/index.html'>Re: [Jack-Devel] fractional frame rates for alsa_in and alsa_out </a></td></tr>
+</table>
+<pre>
+On Thu, Aug 18, 2016 at 10:46:27PM +0200, Markus Grabner wrote:
+
+&gt; 1.) Out of the box, zita-a2j/j2a wouldn't start at all with my device
+&gt; since no exact (integer) frame rate could be set. I therefore did the
+&gt; same exercise as with alsa_in/out to support fractional frame rates
+&gt; (see attached file "zita-exact-rate.patch"). I hoped it would also
+&gt; converge faster to the correct frame rate if a correct initial value
+&gt; was given, which I could indeed observe occasionally, but on average
+&gt; there was no difference in convergence time.
+
+There shouldn't be. The settling time is determined by the loop
+bandwidth. 
+
+Which distro are you using ? Zita-alsa-pcmi is *not* part of
+zita-ajbridge, it's a separate library, used by a number of other
+apps.
+
+Anyway, your patch would mean an incompatible change to the API,
+and that's not going to happen. I'll see if and how I can support
+fractional sample rates in another way. 
+
+Anyway, even set_rate_near() takes an int as parameter, so there
+is no point in using a float, except for the test 
+
+  rate_num != _fsamp * rate_den
+
+but this will fail anyway unless you are lucky and _fsamp is
+an _exact_ floating point representation of num / den.
+
+So the solution could be to use set_rate_near() and replace
+the test with something more robust.
+
+
+&gt; 2.) After having fixed the initialization issue, I noticed that
+&gt; after a couple of minutes zita_a2j/j2a stop working with the message
+&gt; "Detected excessive timing errors, waiting 10 seconds." and would
+&gt; not recover from this. I added some additional debugging output
+&gt; and tracked this issue down to the point that the problem occurs
+&gt; immediately after the internal timer (lower 28 bits of the jack 
+&gt; timestamp) overflows.
+
+That's very likely just a coincidence. I'm pretty sure the code
+handles the mod 2^28 format correctly, but I'll verify this again.
+
+&gt; Therefore I modified the code such that the full 64 bit jack
+&gt; timestamp is used wherever possible (see attached file
+&gt; "zita-jacktime.patch") to get rid of overflow issues (well,
+&gt; almost, the jack timer overflows after more than half a million
+&gt; years :-).
+
+Assuming it starts at zero.
+
+The reduction to 28 bits requires extra code, which means it was
+not done without reason. One reason is that I want the loop
+calculations to be independent of details such as the format of
+the timers used, and use consistent units (seconds).
+
+
+Ciao,
+
+-- 
+FA
+
+A world of exhaustive, reliable metadata would be an utopia.
+It's also a pipe-dream, founded on self-delusion, nerd hubris
+and hysterically inflated market opportunities. (Cory Doctorow)
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1471690029.22627_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1472471482.21268_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1471774114.15194_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1471774114.15194_0.ltw:2,a&nbsp;&lt;20160821100824.GA62737 at linuxaudio dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

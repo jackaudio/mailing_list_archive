@@ -1,0 +1,102 @@
+Date:        Thu, 18 Jun 2009 16:09:53 +0200
+From:        [hidden] at gmx dot de <[hidden] at gmx dot de
+To:          Stéphane Letz <[hidden] at grame dot fr>, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>, Jack devel <[hidden] at lists dot jackaudio dot org>
+In-Reply-To: Lennart Poettering Re: [LAD] jack2's dbus name (1245076681.2457_0.ltw:2,a)
+Follow-Up:   Lennart Poettering Re: [LAD] [Jack-Devel] jack2's dbus name (1245342112.31614_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] jack2's dbus name
+
+On Mon, Jun 15, 2009 at 04:37:09PM +0200, Lennart Poettering wrote:
+> On Mon, 15.06.09 15:34, Stéphane Letz ([hidden]) wrote:
+> 
+> > What I'm personally trying to achieve is a more "flexible" way (compared 
+> > to what is currently a bit hard-coded in JAKC2 SVN) so that a DBus 
+> > control component can be coded as a "plugin" to be possibly loaded in 
+> > JACK server process. This new plugin model allows to keep basically 2 
+> > ways of using JACK server :  the "old way" (typically starting the jackd 
+> > server using Qjackctl control application) or the new way using DBus 
+> > based control applications (after the DBus control plug-in has been 
+> > properly loaded in JACK server).  (Keeping the "old-way" is also 
+> > important on others platforms JACK2 runs on.)
+> 
+> Distributions will certainly enable the D-Bus code in JACK if they
+> ship it. So, I have no problem with depending on a dbus'ified jack for
+> this logic to work. After all crazy folks who disable the dbus support
+> in jack because they think it's an abomination probably think that PA
+> is an even worse abomination anyway, so there's not need to cater for
+> them.
+> 
+> > If this new "control plugin" model is finally accepted by JACK  
+> > community, then we'll distribute/package JACK2 compiled with the 1)  
+> > option, so that it (at least) cooperates with PulseAudio. But 2) would  
+> > then be optional, so PA can not rely on the DBus control plug-in to  
+> > always be present.
+> >
+> > The 1) code uses  "org.freedesktop.ReserveDevice1.AudioXX" name, and 2) 
+> > optional DBus plugin uses "org.jackaudio.service" name. If we want to 
+> > implement your proposal, the we would need to request another name in  1) 
+> > part, is that correct?
+> 
+> I think org.jackaudio.service should be fine. I don't think this
+> automatic logic needs to work on non-D-Bus jack builds. As I see it
+> you don't need to make any changes on jack for this to work. All I
+> need is the guarantee that by the time the service name is registered
+> on the bus jack is fully accessible. Otherwise we had a race here: if
+> PA looks for the org.jackaudio.service name to appear on the bus and
+> then imemdiately connects to it while jack isn't fully accessible yet
+> PA would fail.
+
+the existence of org.jackaudio.service object does not guarantee,
+that jackd is connectable.
+
+i guess we need a signal, which tells that a server has been started,
+but i leave this to the dbus guys.
+
+my primary concern is to have the pa jack backend fixed. 
+lennart himself said its a TOY. and it really is.
+
+i dont really understand why it works, but its pretty broken, for sure.
+
+
+static int jack_process(jack_nframes_t nframes, void *arg) {
+    struct userdata *u = arg;
+    unsigned c;
+    jack_nframes_t frame_time;
+    pa_assert(u);
+
+    /* We just forward the request to our other RT thread */
+
+    for (c = 0; c < u->channels; c++)
+        pa_assert_se(u->buffer[c] = jack_port_get_buffer(u->port[c], nframes));
+
+    frame_time = jack_frame_time(u->client);
+
+    pa_assert_se(pa_asyncmsgq_send(u->jack_msgq, PA_MSGOBJECT(u->sink), SINK_MESSAGE_RENDER, &frame_time, nframes, NULL) == 0);
+    return 0;
+}
+
+
+it needs to be decoupled using a ringbuffer.
+and maybe pulse should be running with a higher blocksize than jack ?
+
+
+
+> 
+> Lennart
+> 
+> -- 
+> Lennart Poettering                        Red Hat, Inc.
+> lennart [at] poettering [dot] net
+> http://0pointer.net/lennart/           GnuPG 0x1A015CC4
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+-- 
+torben Hohn
+http://galan.sourceforge.net -- The graphical Audio language
+
+1245336473.22396_0.ltw:2,a <20090618140953.GA12946 at siel>
+________________________________________________________________________________
+

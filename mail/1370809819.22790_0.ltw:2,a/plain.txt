@@ -1,0 +1,58 @@
+Date:        Sun, 09 Jun 2013 22:30:11 +0200
+From:        Antun Horvat  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot jackaudio dot org
+
+Subject:     [Jack-Devel] NetJack2 infinite "Waiting for master..."
+
+Hello,
+
+I have a small problem with NetJack2 setup with two Ubuntu boxes.
+It seems that whatever I do i can not establish master-slave connection
+between these two boxes. I tried to follow various tutorials but in all
+cases the end goal could not be reached and it always stops at "Waiting for
+master..."
+
+By default ubuntu ships with 1.9.9 version that through the process of hope
+i updated to 1.9.9.5 and then to 1.9.10 (git) version. In all cases the
+outcome was the same.
+
+Just to be clear i did the following things on the master and slave boxes
+to initiate the connection:
+
+$master>jackd -d alsa &
+$master>jack_load netmanager
+$slave>jackd -d net
+
+# Then i tried  on the slave, (10.125.113.194) is ip of the master
+$slave>jackd -d net  -a 10.125.113.194 # this does not succeed either
+
+
+The important thing is that when I try to add net agent locally it works on
+both machines.
+$master>jackd -d alsa&;
+$master>jack_load netmanager
+$master>jackd -n test -d net -a 127.0.0.1 # it works
+
+My current understanding is that the there is some kind of issue with
+network since it works locally. But the weird thing is that I am working
+with the slave remotly over the SSH which should imply that the boxes are
+reachable.
+Also I flushed all iptables (filter, nat and masquerade on both machines),
+so there shouldn't be an issue of fw.
+
+Also master can see broadcast packets sent from the slave
+$master> tcpdump udp port 19000 # or tcpdump multicast
+
+.. and I am using linux bridge interface that bridges linux slave box and
+mikrotik internet gateway. netstat -gn lists that netmanager has registered
+multicast ip address  on that bridge interface.
+
+It seems that everything I do is not relevant and it always stops at that
+night haunting message:
+"*Waiting for the master...*"
+
+.... so pls. could someone point me towards the master...
+
+1370809819.22790_0.ltw:2,a <CAHb5DFZXbwWjFW31dDhzWUdvUb7SnZ8-030wVabfSjyucXnTUw at mail dot gmail dot com>
+________________________________________________________________________________
+

@@ -1,0 +1,67 @@
+Date:        Fri, 01 Jun 2012 16:30:43 +0200
+From:        David Adler  <[hidden] at gmail dot com>
+To:          [hidden] at lists dot linuxaudio dot org
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: David Adler Re: [Jack-Devel] [LAU] jack2 turned verbose (1338558541.4298_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] [LAU] jack2 turned verbose
+
+On Fri, Jun 1, 2012 at 3:48 PM, David Adler wrote:
+> On Fri, Jun 1, 2012 at 2:52 PM, Robin Gareus wrote:
+>>
+
+> DEBUG verbose: on
+>
+>> add a line just after common/JackServer.cpp line 66
+>>  printf("DEBUG verbose2: %s\n",(JackGlobals::fVerbose)?"on":"off");
+>> ...
+>
+> above, your line number didn't match exactly, so we seem to have
+> different versions (1.9.7 here). Thus, I wasn't exactly sure where to
+> add the prinf() and did the following:
+>
+> ...
+>    JackServerGlobals::fUserCount = 1;     // One user
+>    printf("DEBUG verbose2: %s\n",(JackGlobals::fVerbose)?"on":"off");
+>    JackGlobals::fVerbose = verbose;
+>    printf("DEBUG verbose3: %s\n",(JackGlobals::fVerbose)?"on":"off");
+> }
+>
+> which prints:
+> DEBUG verbose2: off
+> DEBUG verbose3: on
+>
+>> A crude test for the union() hunch would be to change
+>> common/JackControlAPI.h line 53:
+>>  replace
+>>  "union jackctl_parameter_value"
+>> with
+>>  "struct jackctl_parameter_value"
+>> and compile with '-fpermissive' like this:
+>>
+>>  CXXFLAGS="-fpermissive" ./waf  configure
+>>  ./waf
+>>
+>
+> Again, mismatching line numbers. I assume you meant the line:
+> union jackctl_parameter_value verbose;
+>
+> Changing that to struct fixes both issues I reported,
+> the verbose output and exit on last client close.
+
+Oops, I read caressly and did a change to .cpp, not the header file.
+
+So what I did before (which somehow fixed the issues/suppressed
+symptoms), was changing
+"union" to "struct" in line 75 in JackControlAPI.cpp
+
+Reverted that and did the change Robin suggested, the result is the
+same, issues disappeared.
+
+
+best,
+d
+
+1338561053.7996_0.ltw:2,a <CAHsfu2usX23n_mrJvH65PebZm85PXbMcrYebdjaq_u8rhDFS7w at mail dot gmail dot com>
+________________________________________________________________________________
+

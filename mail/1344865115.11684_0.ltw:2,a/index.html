@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] US-428 @jack2</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] US-428 @jack2</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1344807228.11524_0.ltw:2,Sa/index.html'>Prev</a></td><td><a href='../1345134288.19019_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1344865115.11684_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 13 Aug 2012 15:38:21 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Adrian Knoth </span> &lt;[hidden] at drcomp dot erfurt dot thur dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Karsten Wiese
+<a href='../1344807228.11524_0.ltw:2,Sa/index.html'>[Jack-Devel] US-428 @jack2 </a></td></tr>
+</table>
+<pre>
+On 08/12/2012 11:33 PM, Karsten Wiese wrote:
+
+&gt; Hi,
+
+Hi!
+
+&gt; US-428 ticks again here with attached patch applied on top of github's
+&gt; jack2 master branch.
+
+I guess you're referring to the recent discussion on jackdevel. I was
+somewhat surprised to see a patch coming out of the blue without any
+reference to a ticket or discussion.
+
+&gt; Rename linux/alsa/usx2y.c to linux/alsa/usx2y.cpp before applying the
+&gt; patch.
+
+To get this straight: I don't like the patch in its current form. It is
+absolutely undocumented and mixes important changes with cosmetics.
+
+I'd definitely like to see this broken up into a series of patches with
+isolated functionality changes.
+
+Let's see:
+
+
+&gt; From: Karsten Wiese &lt;[hidden]&gt;
+&gt; Date: Sun, 12 Aug 2012 23:23:50 +0200
+&gt; Subject: [PATCH] US-428: Make it work
+&gt; 
+&gt; Preconditions outside of jackd:
+&gt; -1: RT-Kernel running.
+&gt; 0: Connect to a real uhci, no hub nor ehci.
+&gt;    That excludes most modern mainboards.
+&gt; 1: modprobe snd-usb-usx2y nrpacks=1
+&gt; 2: Make the uhci's irq priority high, like so:
+&gt;    chrt -fp 90 `ps --ppid 2 -o pid,rtprio,cmd|grep irq/21-u|awk '{print $1}'`
+
+This is the only way to get it working? WTF? ;)
+
+
+&gt;  linux/alsa/alsa_driver.c |   21 +++++----
+&gt;  linux/alsa/usx2y.cpp     |  106 +++++++++++++++-------------------------------
+&gt;  linux/alsa/usx2y.h       |    8 ++++
+&gt;  linux/wscript            |    3 +-
+&gt;  4 files changed, 55 insertions(+), 83 deletions(-)
+
+wscript and usx2y.h changes should clearly be two independent patches.
+
+
+&gt; @@ -982,6 +974,9 @@ alsa_driver_start (alsa_driver_t *driver)
+&gt;  	driver-&gt;poll_last = 0;
+&gt;  	driver-&gt;poll_next = 0;
+&gt;  
+&gt; +	if (driver-&gt;nt_start)
+&gt; +		return driver-&gt;nt_start(driver);
+&gt; +
+
+That's new. Why? Does it harm other ALSA devices?
+
+&gt; @@ -1513,6 +1508,9 @@ alsa_driver_wait (alsa_driver_t *driver, int extra_fd, int *status, float
+&gt;  int
+&gt;  alsa_driver_read (alsa_driver_t *driver, jack_nframes_t nframes)
+&gt;  {
+&gt; +	if (driver-&gt;read)
+&gt; +		return driver-&gt;read(driver, nframes);
+&gt; +
+
+Same issue as above.
+
+&gt;  	snd_pcm_sframes_t contiguous;
+&gt;  	snd_pcm_sframes_t nread;
+&gt;  	snd_pcm_uframes_t offset;
+&gt; @@ -1604,6 +1602,9 @@ alsa_driver_write (alsa_driver_t* driver, jack_nframes_t nframes)
+&gt;  
+&gt;  	driver-&gt;process_count++;
+&gt;  
+&gt; +	if (driver-&gt;write)
+&gt; +		return driver-&gt;write(driver, nframes);
+&gt; +
+
+And again. It at least has to be justified why the previous code was
+wrong.
+
+&gt; @@ -76,21 +80,21 @@ usx2y_driver_get_channel_addresses_playback (alsa_driver_t *driver,
+&gt;  		iso = h-&gt;hwdep_pcm_shm-&gt;playback_iso_start;
+&gt;  		if (0 &gt; iso)
+&gt;  			return 0; /* FIXME: return -1; */
+&gt; -		if (++iso &gt;= ARRAY_SIZE(h-&gt;hwdep_pcm_shm-&gt;captured_iso))
+&gt; +		if (++iso &gt;= (int)ARRAY_SIZE(h-&gt;hwdep_pcm_shm-&gt;captured_iso))
+
+Why the additional cast? I don't challenge that it might be necessary,
+but I'd like to see it mentioned in the commit message of a separate
+commit.
+
+
+&gt;  		while((bytes -= h-&gt;hwdep_pcm_shm-&gt;captured_iso[iso].length) &gt; 0)
+&gt; -			if (++iso &gt;= ARRAY_SIZE(h-&gt;hwdep_pcm_shm-&gt;captured_iso))
+&gt; +		  if (++iso &gt;= (int)ARRAY_SIZE(h-&gt;hwdep_pcm_shm-&gt;captured_iso))
+
+Same here. Indentation is correct?
+
+
+&gt; -	} else {
+&gt; +	} else
+&gt;  		iso = h-&gt;playback_iso_start;
+&gt; -	}
+&gt; +
+
+Whitespace change and cosmetics. Please separate from patches changing
+functionality.
+
+
+&gt;  			iso = 0;
+&gt;  		h-&gt;playback_iso_bytes_done = 0;
+&gt;  	} else
+&gt;  		h-&gt;playback_iso_bytes_done =
+&gt;  			*playback_avail * (driver-&gt;playback_sample_bytes * 2);
+&gt;  	h-&gt;playback_iso_start = iso;
+&gt; +	memset(playback, 0, *playback_avail * driver-&gt;playback_sample_bytes * 2);
+
+Necessary? Again, I don't doubt it, but it's not obvious.
+
+
+&gt;  	int f = 0;
+&gt; -	unsigned *u = driver-&gt;capture_addr[0];
+&gt; +	unsigned *u = (unsigned *)driver-&gt;capture_addr[0];
+
+Shouldn't this actually be uintptr_t?
+
+
+&gt; -
+&gt; +	/*
+&gt;  	VERBOSE(driver-&gt;engine,
+&gt;  		"usx2y_driver_null_cycle (%p, %i)", driver, nframes);
+&gt; -
+&gt; +	*/
+
+Relevant change or just a left-over to shut down annoying debug output
+while hacking?
+
+
+&gt; -	if (!driver-&gt;capture_handle || driver-&gt;engine-&gt;freewheeling) {
+&gt; +	if (!driver-&gt;capture_handle /*|| Jack::GetEngineControl()-&gt;freewheeling*/) {
+&gt;  		return 0;
+&gt;  	}
+
+No way this is ever going to enter the code base like this. Please clean
+up your code before submitting patches.
+
+
+&gt; -	if (!driver-&gt;playback_handle || driver-&gt;engine-&gt;freewheeling) {
+&gt; +
+&gt; +	if (!driver-&gt;playback_handle /*|| driver-&gt;engine-&gt;freewheeling*/) {
+&gt;  		return 0;
+
+As above.
+
+
+
+Cheers
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1344807228.11524_0.ltw:2,Sa/index.html'>Prev</a></td><td><a href='../1345134288.19019_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1344865115.11684_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1344865115.11684_0.ltw:2,a&nbsp;&lt;5029034D.8040100 at drcomp dot erfurt dot thur dot de&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

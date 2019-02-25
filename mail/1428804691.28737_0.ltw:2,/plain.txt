@@ -1,0 +1,94 @@
+Date:        Sun, 12 Apr 2015 12:11:14 +1000
+From:        Tim Mayberry  <[hidden] at gmail dot com>
+To:          Markus Seeber <[hidden] at spectralbird dot de>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Markus Seeber Re: [Jack-Devel] Major update of jack2 build system (1428798560.17434_0.ltw:2,)
+Follow-Up:   Stéphane Letz Re: [Jack-Devel] Major update of jack2 build system (1428821475.8208_0.ltw:2,)
+
+Subject:     Re: [Jack-Devel] Major update of jack2 build system
+
+On Sun, Apr 12, 2015 at 10:26 AM, Markus Seeber <
+[hidden]> wrote:
+
+> On 04/11/2015 07:05 PM, Karl Lindén wrote:
+> > Hi jack-devel list!
+> >
+> > [This part is technical and can be skipped, if you like]
+> > To ease packaging jack2, its build system has received a major update
+> [1]. The initial intent was to simply remove automagic dependencies (on
+> celt, opus, libsamplerate, libsndfile, readline), which are bad [2] for
+> source based distributions, such as Gentoo, but after a discussion [3] the
+> decision was taken to reimplement all options that have third-party
+> dependencies using a special option class, so that the build system by
+> default builds against foo if available, refrains from doing so if --foo=no
+> is given and if --foo=yes the dependency is hard-required. To preserve
+> backwards compatibility (and save time writing "=yes") --foo is the same as
+> --foo=yes.
+> >
+> > Apart from this change pkg-config is now used whenever possible instead
+> of only header checks. (It is bad to just check for headers without
+> checking for the accompanying library.) This eases packaging (and
+> cross-compiling) somewhat. Also the check for readline has been improved
+> (it now checks for header existence too instead of just library existence),
+> in effect making it easier to compile jack2 on binary distros (where the
+> library existence does not imply header existence). (Correct me if I'm
+> wrong; I have not compiled jack2 on a binary distro.)
+> > [End of skip part]
+> >
+> > So apart from the above points, what are the goodies for actual users?
+> Well, now users do not have to explicitly state --alsa, --firewire or such
+> to get the correct backend built since it will be automatically detected if
+> --alsa, --firewire, etc. is not given.
+> >
+> > Now the important part. Like with all big software changes, this might
+> introduce some bugs that I have not found during testing. (I did test the
+> option I could with both --foo=yes and --foo=no!) Some option have not been
+> tested at all since I lack the prerequisites, these options are --iio,
+> --portaudio and --winmme, but since all option use the same class the logic
+> should be the same, so they should work, but you can never be too sure.
+> >
+> > In conclusion, I want you to be on the lookout for bugs or weird stuff
+> (as always!) when building jack2. Report the bugs and I will do my very
+> best to squash them!
+> >
+> > Regards,
+> > Karl Lindén (lilrc)
+> >
+> > [1] https://github.com/jackaudio/jack2/pull/113
+> > [2]
+> https://wiki.gentoo.org/wiki/Project:Quality_Assurance/Automagic_dependencies
+> > [3] https://github.com/jackaudio/jack2/pull/110
+> > 
+> > Jack-Devel mailing list
+> > [hidden]
+> > http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+> >
+>
+> Is the windows specific stuff actually needed to be tested? Waf builds
+> on windows doesn't seem to work (for me) anyway. I think I remember
+> widows builds are only done with a Code::Blocks IDE project? Or does
+> anyone cross compile for windows?
+>
+
+I added the windows based waf build a few years ago for cross compiling
+jack2 on Fedora. It is not the build system used for the official windows
+builds.
+
+I now also use it for compiling on windows using MSYS2/mingw-w64 build
+environment:
+
+https://github.com/mojofunk/MINGW-packages/tree/newpkgs/mingw-w64-jack
+
+So I haven't tested it with any other configuration or with these recent
+changes, so if there is a call to remove it from the waf build I am fine
+with that.
+
+In saying that I think that MSYS2 is a pretty good environment for building
+software on windows so if there is any interest to support a MSYS2 build I
+can submit patches to fix it up.
+
+Tim
+
+1428804691.28737_0.ltw:2, <CAM2edBgEpdKpmN38uSR_+DW2WDUsuYiDt9oD9dWuDvsuTXw+xA at mail dot gmail dot com>
+________________________________________________________________________________
+

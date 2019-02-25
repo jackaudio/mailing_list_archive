@@ -1,0 +1,89 @@
+Date:        Sun, 08 Apr 2012 17:16:21 +0300
+From:        Nedko Arnaudov  <[hidden] at arnaudov dot name>
+To:          Tim Blechmann <[hidden] at klingt dot org>
+Cc:          [hidden] at jackaudio dot org
+In-Reply-To: Tim Blechmann [Jack-Devel] jack2/ubuntu issue: jack2 does not quit (1333877397.2411_0.ltw:2,a)
+Follow-Up:   Rui Nuno Capela Re: [Jack-Devel] jack2/ubuntu issue: jack2 does not quit (1333900262.15727_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] jack2/ubuntu issue: jack2 does not quit
+
+Tim Blechmann <[hidden]> writes:
+
+> after upgrading to ubuntu 12.04, jackd2 does not quit correctly:
+>
+> hitting `quit' gives me the following message:
+>
+> 11:17:31.920 Client deactivated.
+> 11:17:31.936 D-BUS: JACK server could not be stopped. Sorry
+> 11:17:31.937 ALSA connection graph change.
+> Sun Apr  8 11:17:31 2012: Client 'qjackctl' with PID 3821 is out
+> Sun Apr  8 11:17:31 2012: Stopping jack server...
+> Sun Apr  8 11:17:31 2012: Client 'system' with PID 0 is out
+> Sun Apr  8 11:17:31 2012: Client 'PulseAudio JACK Sink' with PID 2727 is out
+> Sun Apr  8 11:17:31 2012: Client 'PulseAudio JACK Source' with PID 2727 is out
+
+So you use qjackctl for controlling jackdbus...
+
+> Sun Apr  8 11:17:31 2012: ERROR: Abort!
+> Sun Apr  8 11:17:31 2012: ERROR: info.si_signo = 6
+> Sun Apr  8 11:17:31 2012: ERROR: info.si_errno = 0
+> Sun Apr  8 11:17:31 2012: ERROR: Segmentation Fault!
+> Sun Apr  8 11:17:31 2012: ERROR: info.si_signo = 11
+> Sun Apr  8 11:17:31 2012: ERROR: info.si_errno = 0
+> Sun Apr  8 11:17:31 2012: ERROR: info.si_code  = 1 (SEGV_MAPERR)
+> Sun Apr  8 11:17:31 2012: ERROR: info.si_addr  = 0x525245
+> Sun Apr  8 11:17:31 2012: ERROR: reg[00]       = 0x00007f808029a582
+> Sun Apr  8 11:17:31 2012: ERROR: reg[01]       = 0x0000000000000000
+> Sun Apr  8 11:17:31 2012: ERROR: reg[02]       = 0x00007f808029a2b8
+> Sun Apr  8 11:17:31 2012: ERROR: reg[03]       = 0x0000000000000246
+> Sun Apr  8 11:17:31 2012: ERROR: reg[04]       = 0x00007f808029a6f8
+> Sun Apr  8 11:17:31 2012: ERROR: reg[05]       = 0x0000000000413c3b
+> Sun Apr  8 11:17:31 2012: ERROR: reg[06]       = 0x0000000000000000
+> Sun Apr  8 11:17:31 2012: ERROR: reg[07]       = 0x0000000000000014
+> Sun Apr  8 11:17:31 2012: ERROR: reg[08]       = 0x0000000000525245
+> Sun Apr  8 11:17:31 2012: ERROR: reg[09]       = 0x0000000000413c4d
+> Sun Apr  8 11:17:31 2012: ERROR: reg[10]       = 0x00007f808029a3f0
+> Sun Apr  8 11:17:31 2012: ERROR: reg[11]       = 0x00007f808029a400
+> Sun Apr  8 11:17:31 2012: ERROR: reg[12]       = 0x0000000000000018
+> Sun Apr  8 11:17:31 2012: ERROR: reg[13]       = 0x0000000000000000
+> Sun Apr  8 11:17:31 2012: ERROR: reg[14]       = 0xffffffffffffffff
+> Sun Apr  8 11:17:31 2012: ERROR: reg[15]       = 0x00007f8080299d90
+> Sun Apr  8 11:17:31 2012: ERROR: reg[16]       = 0x00007f808402cdba
+> Sun Apr  8 11:17:31 2012: ERROR: reg[17]       = 0x0000000000010246
+> Sun Apr  8 11:17:31 2012: ERROR: reg[18]       = 0x0000000000000033
+> Sun Apr  8 11:17:31 2012: ERROR: reg[19]       = 0x0000000000000004
+> Sun Apr  8 11:17:31 2012: ERROR: reg[20]       = 0x000000000000000e
+> Sun Apr  8 11:17:31 2012: ERROR: reg[21]       = 0x0000000080005a27
+> Sun Apr  8 11:17:31 2012: ERROR: reg[22]       = 0x0000000000525245
+> Sun Apr  8 11:17:31 2012: ERROR: Stack trace:
+> Sun Apr  8 11:17:31 2012: ERROR:  1: 0x7f808402cdba 
+> <_IO_vfprintf+10042> (/lib/x86_64-linux-gnu/libc.so.6)
+> Sun Apr  8 11:17:31 2012: ERROR:  2: 0x7f80840ea580 
+> <__vsnprintf_chk+176> (/lib/x86_64-linux-gnu/libc.so.6)
+> Sun Apr  8 11:17:31 2012: ERROR: End of stack trace
+>
+>
+> sometimes i even have to killall -9 jackdbus ...
+
+Unfortunately, this stack trace is not very useful. You should be able
+to get backtrace of all threads by using one of the techniques described
+here:
+
+http://ladish.org/wiki/gdb_dbus_service
+
+Please provide the output of the "thread apply all bt". Enabling verbose
+log (it is a jackdbus "engine" parameter) could give additional info.
+
+I'm not sure what would be the correct approach to debug jackdbus when
+qjackctl is in the mix. In case neither Rui nor annybody else knows, you
+should be able to reproduce the crash without qjackctl, by using the
+commandline frontend to jackdbus, the jack_control script that is part
+of the distribution tarball and should be installed on your distro along
+with jackdbus itself.
+
+-- 
+Nedko Arnaudov <GnuPG KeyID: 5D1B58ED>
+
+1333894639.11569_0.ltw:2,a <87lim6z4ui.fsf at arnaudov dot name>
+________________________________________________________________________________
+

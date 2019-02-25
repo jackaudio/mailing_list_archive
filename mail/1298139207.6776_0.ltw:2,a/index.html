@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298121766.797_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298218341.11448_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298139207.6776_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 19 Feb 2011 19:13:10 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> torbenh </span> &lt;[hidden] at gmx dot de&gt; </td></tr>
+<tr><td class='col1'>To</td><td>"[hidden] at lists dot jackaudio dot org List" &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Robin Gareus
+<a href='../1298121766.797_0.ltw:2,a/index.html'>Re: [Jack-Devel] Jack 1.9.7 on ARM crashes when killing a client </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Robin Gareus
+<a href='../1298293037.17587_0.ltw:2,a/index.html'>[Jack-Devel] jackdus - was Re: Jack 1.9.7 on ARM crashes when killing a client </a></td></tr>
+</table>
+<pre>
+On Sat, Feb 19, 2011 at 02:22:26PM +0100, Robin Gareus wrote:
+&gt; On 02/18/2011 12:23 PM, torbenh wrote:
+&gt; &gt; On Thu, Feb 17, 2011 at 02:01:06PM +0100, Robin Gareus wrote:
+&gt; [..]
+&gt; &gt;&gt; 
+&gt; &gt;&gt; 
+&gt; &gt;&gt; while you're at it: Would it be unreasonable to ask looking into 
+&gt; &gt;&gt; ignoring device disconnect?  f.i. have jackd survive and not crash
+&gt; &gt;&gt; when an interface (eg ALSA-USB) goes away.
+&gt; &gt;&gt; 
+&gt; &gt;&gt; No further action should be taken by JACK (well, maybe some
+&gt; &gt;&gt; hook-script could be invoked or a d-bus command send); some 3rd
+&gt; &gt;&gt; party software could issue d-bus commands to switch backends.
+&gt; &gt; 
+&gt; &gt; i basically did this with tschack. using pyjackd this should be
+&gt; &gt; working. not well tested, as i dont have an usb soundcard with me
+&gt; &gt; very often.
+&gt; 
+&gt; I've updated jackdmp and tschack to latest svn/git and check this with a
+&gt; USB UA-25. annotated logs attached.
+&gt; 
+&gt; 
+&gt; 	tschack (git 7b7a48d)
+&gt; terminates with exit 0 if the interface goes away.
+
+you did not use pyjackd.
+the jackd binary that comes with tschack is supposed to behave excactly
+like a jackd binary should.
+i didnt add a callback to the control api yet. but pyjackd should be
+ignoring the SIGUSR2 thats sent to the process leader upon backend exit.
+
+so it probably wont exit.
+the behaviour of tschack while it doesnt have a backend, is probably not
+really nice. (there are places where it waits for a graph switch) 
+this is definitely fixable though.
+
+
+&gt; 
+&gt; 
+&gt; 	jack2d 1.9.7~svn4120 ( --classic --dbus )
+&gt; keeps running when the USB/ALSA interface goes away - it no longer
+&gt; live-locks or crashes. - All JACK clients stall.
+&gt; With the dbus-version: the backend can be changed. After switching to a
+&gt; new backend (here: internal card) JACK resumes to run nicely.
+&gt; 
+&gt; After the device had been disconnected, the current port-connections can
+&gt; no longer be queried (jack_lsp can not connect) until the backend is
+&gt; re-initialized with `jack_control sm`.
+&gt; Calling 'switch-master' re-creates the physical output ports and the
+&gt; information about previous port-connections to the outputs are lost.
+
+loss of port-connections is to be expected. its a backend switch.
+the ports might be different. recreating the correct connections, should
+be done by some kind of sessionmanager. this is out of scope for jackd.
+
+
+-- 
+torben Hohn
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1298121766.797_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1298218341.11448_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1298139207.6776_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1298139207.6776_0.ltw:2,a&nbsp;&lt;20110219181310.GB3830 at siel dot b&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

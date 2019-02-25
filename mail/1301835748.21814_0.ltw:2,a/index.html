@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] Segfault with Netone</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] Segfault with Netone</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1301819485.24480_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1301837032.24472_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1301835748.21814_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sun, 03 Apr 2011 15:02:16 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Jof Thibaut </span> &lt;[hidden] at tuxfamily dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1301837032.24472_0.ltw:2,a/index.html'>Re: [Jack-Devel] Segfault with Netone </a></td></tr>
+</table>
+<pre>
+Hi Torben, Sletz and jack-dev community,
+
+I report a segfault with jackd and netone.
+The client  crash  when  connecting to the server.
+Jack version: 1.9.7
+OS: Tango Studio based on ubuntu 10.04
+
+
+gdb jackd
+GNU gdb (GDB) 7.1-ubuntu
+Copyright (C) 2010 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later&lt;http://gnu.org/licenses/gpl.html&gt;
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+For bug reporting instructions, please see:
+&lt;http://www.gnu.org/software/gdb/bugs/&gt;...
+Reading symbols from /usr/bin/jackd...(no debugging symbols found)...done.
+(gdb) r -P 80 -d netone -p 3000 -c 30 -n 6
+Starting program: /usr/bin/jackd -P 80 -d netone -p 3000 -c 30 -n 6
+[Thread debugging using libthread_db enabled]
+jackd 1.9.7
+Copyright 2001-2005 Paul Davis and others.
+Copyright 2004-2011 Grame.
+jackd comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions; see the file COPYING for details
+[New Thread 0x7ffff3de3700 (LWP 10107)]
+no message buffer overruns
+[Thread 0x7ffff3de3700 (LWP 10107) exited]
+[New Thread 0x7ffff3de3700 (LWP 10108)]
+no message buffer overruns
+[Thread 0x7ffff3de3700 (LWP 10108) exited]
+JACK server starting in realtime mode with priority 80
+[New Thread 0x7ffff7fd3700 (LWP 10109)]
+[New Thread 0x7ffff7f52700 (LWP 10110)]
+[New Thread 0x7ffff7ed1700 (LWP 10111)]
+NetOne driver started
+[New Thread 0x7ffff5705700 (LWP 10112)]
+AutoConfig Override !!!
+AutoConfig Override: Master JACK sample rate = 44100
+AutoConfig Override: Master JACK period size is 1024
+AutoConfig Override: capture_channels_audio = 2
+AutoConfig Override: capture_channels_midi = 1
+AutoConfig Override: playback_channels_audio = 2
+AutoConfig Override: playback_channels_midi = 1
+MTU is set to 1400 bytes
+[Thread 0x7ffff7ed1700 (LWP 10111) exited]
+netxruns... duration: 23ms
+
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0x7ffff7f52700 (LWP 10110)]
+0x00007ffff5709bc3 in ?? () from /usr/lib/libcelt0.so.0
+(gdb) thread apply all bt
+
+Thread 7 (Thread 0x7ffff5705700 (LWP 10112)):
+#0  0x00007ffff6894f93 in poll () from /lib/libc.so.6
+#1  0x00007ffff78a28b9 in ?? () from /usr/lib/libjackserver.so.0
+#2  0x00007ffff78833d0 in Jack::JackPosixThread::ThreadHandler(void*) ()
+    from /usr/lib/libjackserver.so.0
+#3  0x00007ffff76299ca in start_thread () from /lib/libpthread.so.0
+#4  0x00007ffff68a170d in clone () from /lib/libc.so.6
+#5  0x0000000000000000 in ?? ()
+
+Thread 5 (Thread 0x7ffff7f52700 (LWP 10110)):
+#0  0x00007ffff5709bc3 in ?? () from /usr/lib/libcelt0.so.0
+#1  0x00007ffff570adfd in celt_decode_float () from /usr/lib/libcelt0.so.0
+#2  0x00007ffff65b22ee in ?? () from /usr/lib/jack/jack_netone.so
+#3  0x00007ffff65b2e4d in ?? () from /usr/lib/jack/jack_netone.so
+#4  0x00007ffff7885c9a in Jack::JackAudioDriver::ProcessAsync() ()
+    from /usr/lib/libjackserver.so.0
+#5  0x00007ffff7891afa in Jack::JackWaitThreadedDriver::Execute() ()
+    from /usr/lib/libjackserver.so.0
+#6  0x00007ffff78833d0 in Jack::JackPosixThread::ThreadHandler(void*) ()
+    from /usr/lib/libjackserver.so.0
+#7  0x00007ffff76299ca in start_thread () from /lib/libpthread.so.0
+#8  0x00007ffff68a170d in clone () from /lib/libc.so.6
+---Type&lt;return&gt;  to continue, or q&lt;return&gt;  to quit---
+
+
+Jof
+
+-- 
+~d&#xB0;_&#xB0;b~ Tango Studio ~d&#xB0;_&#xB0;b~
+
+http://tangostudio.tuxfamily.org/
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1301819485.24480_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1301837032.24472_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1301835748.21814_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1301835748.21814_0.ltw:2,a&nbsp;&lt;4D986FD8.3010004 at tuxfamily dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,80 @@
+Date:        Tue, 26 May 2009 09:11:49 -0400
+From:        Paul Davis  <[hidden] at linuxaudiosystems dot com>
+To:          Fernando Lopez-Lezcano <[hidden] at ccrma dot stanford dot edu>
+Cc:          Jack devel <[hidden] at lists dot jackaudio dot org>, Linux Audio Developers <[hidden] at lists dot linuxaudio dot org>
+In-Reply-To: Fernando Lopez-Lezcano Re: [LAD] New proposal for the jackd/jackdbus mess (1243294031.20386_0.ltw:2,a)
+
+Subject:     Re: [LAD] [Jack-Devel] New proposal for the jackd/jackdbus mess
+
+On Mon, May 25, 2009 at 7:27 PM, Fernando Lopez-Lezcano
+<[hidden]> wrote:
+> On Wed, 2009-05-20 at 11:20 +0100, Krzysztof Foltman wrote:
+>> Stéphane Letz wrote:
+>>
+>> > This scheme seems to hopefully solve most of the problems we had, and
+>> > requires only a bit of change for the "jackdbus" front-end to continue
+>> > working, but not much.
+>>
+>> One obvious problem is that it will be necessary to create yet another
+>> IPC protocol for control communication between libjack.so and
+>> libjackserver.so. Why not use something already proven and with existing
+>> tools like call monitor, command line interface etc. - that's why D-Bus
+>> was used in first place.
+
+Even though for the last couple of years (at least), Stephane has been
+doing a lot more work and taking on much more responsibility for JACK
+than myself, I still seem to be wearing the hat of JACK's "benign
+dictator", so I'm going to cast a couple of things in stone that I
+don't think have been made clear enough in the email discussion (not
+true on IRC, but this email exchange has also attracted a lot of
+written words).
+
+1) JACK is intentionally a multi-platform technology, and still
+attempts to use only POSIX-defined system interfaces unless the
+required components are not available or so poorly functioning that an
+alternative is required.
+
+2) Because of this, JACK itself is not going to use platform-specific
+technologies for any kind of public interfaces. JACK on OS X and
+Windows uses non-POSIX technologies but not in any way that is visible
+to a typical user or to JACK clients. This observation rules out the
+use of *any* platform-specific IPC system, whether its D-Bus,
+Microsoft's COM or various parts of the Cocoa API on OS X. The fact
+that D-Bus can be run on Windows or OS X doesn't change this - no
+developer on those platforms would consider it to be a part of those
+platforms or consider it viable to require users to install and use
+it.
+
+3) The discussions about the control API have managed to gloss over
+the specific problems that were outlined at LAC2008 (Koln) in a way
+that is probably not helpful. So I will restate my recollection of
+them here. This is why we wanted to extend the JACK API (in no
+particular order):
+
+     * better desktop integration when desired
+     * provide the ability to stop/start/reconfigure the server,
+including adding/removing/changing backends and/or devices in use
+     * enable to use of "profiles" to define startup parameters for
+the server, thus allowing any JACK client to correctly start
+           the server without a hack like ~/.jackdrc (but
+back-compatibility with ~/.jackdrc was considered important)
+     * provide an easier way to load internal clients
+     * provide a better way to present messages to the user, probably
+but not necessarily via a control application
+
+So, these are the things that need to be considered "cast in stone".
+Nothing should prevent anyone from integrating the JACK "control" and
+"configuration" APIs with D-Bus, OSC, Freedesktop.org/XDG, Cocoa, COM,
+or any other "broader" system. But such integration should not and
+will not be a part of the "JACK" implementation(s) "core". It is
+possible that we may even distribute some code  that performs this
+integration for specific protocols as part of JACK. But it should not
+be thought of as a core part of the system, merely a bridge to other
+things to make JACK a bit more useful and a bit easier to use, similar
+to the way JACK currently uses libsndfile.
+
+I will write separately on some specifics of the proposal that Stephane posted.
+
+1243343535.11306_0.ltw:2,a <eb4b5e1d0905260611w60f36b9bt7318bacd8002ad7e at mail dot gmail dot com>
+________________________________________________________________________________
+

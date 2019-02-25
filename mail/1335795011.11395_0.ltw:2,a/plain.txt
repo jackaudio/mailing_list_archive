@@ -1,0 +1,394 @@
+Date:        Mon, 30 Apr 2012 13:20:07 +0200
+From:        Stéphane Letz  <[hidden] at grame dot fr>
+To:          "Tim E. Real" <[hidden] at rogers dot com>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Tim E. Real [Jack-Devel] Intermittent internal crash (1335758166.28578_0.ltw:2,a)
+Follow-Up:   Tim E. Real Re: [Jack-Devel] Intermittent internal crash (1335820643.17468_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] Intermittent internal crash
+
+Can you test with GIt version (1.9.9) ?
+
+Thanks.
+
+Stephane 
+
+Le 30 avr. 2012 à 05:55, Tim E. Real a écrit :
+
+> Hello. I'm having a problem with Jack intermittently internally crashing
+> shortly after I create an ALSA simple port, depending on when I register 
+> various Jack callbacks and how many.
+> It happens more frequently with smaller period sizes, like 8 or 16
+> but it has been seen at 128.
+> Tested with Jack 1.9.7 and 1.9.8, with and without the -S(ync) switch,
+> with ALSA backend and seq midi driver.
+> Can you tell me what could be wrong?    Thanks. Tim.
+> 
+> http://dl.dropbox.com/u/53315356/TestAlsaJack-zip.tar.gz
+> 
+> It is a simple test program containing a main.cpp and a CMakeLists.txt
+> It creates a Jack client, then creates a simple ALSA port.
+> Important comments about the test are there.
+> (For the impatient, I've sloppy-pasted main.cpp here at the end.)
+> 
+> The problem is that Jack crashes internally upon calling some
+> sprintf. I can supply more info there if you want.
+> 
+> It all depends where I register all the Jack callbacks and how many.
+> If I attempt to register them immediately after creating the Jack client
+> but before creating the ALSA port, it crashes.
+> If I attempt to register them immediately after creating the ALSA port
+> it crashes.
+> If I attempt, from within my JackThreadInitCallback, to register all other
+> callbacks, it crashes.
+> 
+> It is not until after an artificial one second delay, after creating the 
+> ALSA port, that I see no crash after dozens of runs. 
+> 
+> Also it seems if I don't register any callbacks, or register just one or two, 
+> things are... better.
+> 
+> This what I get *if* I remove the artificial one second delay, or register
+> my callbacks after Jack client created, or move all the registrations into 
+> my JackThreadInitCallback. Notice the text corruption. 
+> Note: You need to do one of those three things if you want to see this bug.
+> 
+> Normal run:
+> -----------------
+> Init Jack...
+> Jack: JackClient::SetupDriverSync driver sem in normal mode
+> Jack: JackPosixSemaphore::Connect name = jack_sem.1000_default_MyApp
+> Jack: JackPosixSemaphore::Connect sem_getvalue 0
+> Jack: Clock source : system clock via clock_gettime
+> Jack: JackLibClient::Open name = MyApp refnum = 2
+> jack client MyApp opened.
+> Init Alsa...
+> Jack: jack_set_thread_init_callback ext_client 1b268f0 client 1b268f0 
+> jack thread init
+> sample rate changed: 44100
+> Jack: jack_set_graph_order_callback ext_client 1b268f0 client 1b268f0 
+> sleeping, do nothing...
+> Jack: jack_client_close
+> Jack: JackClient::Close ref = 2
+> Jack: JackClient::Deactivate
+> Jack: JackSocketClientChannel::Stop
+> Jack: JackPosixThread::Kill
+> Jack: JackClientSocket::Close
+> Jack: JackClientSocket::Close
+> Jack: JackPosixSemaphore::Disconnect name = jack_sem.1000_default_MyApp
+> Jack: JackLibClient::~JackLibClient
+> Jack: JackShmReadWritePtr1::~JackShmReadWritePtr1 2
+> Jack: Succeeded in unlocking 384 byte memory area
+> Jack: JackLibGlobals Destroy 1b1a050
+> Jack: ~JackLibGlobals
+> Jack: JackPosixSemaphore::Disconnect name = jack_sem.1000_default_system
+> Jack: JackPosixSemaphore::Disconnect name = jack_sem.1000_default_freewheel
+> Jack: no message buffer overruns
+> Jack: JackPosixThread::Stop
+> Jack: ThreadHandler: exit
+> Jack: JackShmReadWritePtr::~JackShmReadWritePtr 1
+> Jack: Succeeded in unlocking 1040 byte memory area
+> Jack: JackShmReadWritePtr::~JackShmReadWritePtr 0
+> Jack: Succeeded in unlocking 82246176 byte memory area
+> Jack: jack_client_close res = 0
+> done.
+> 
+> Near miss:
+> ---------------
+> Init Jack...
+> Jack: JackClient::SetupDriverSync driver sem in normal mode
+> Jack: JackPosixSemaphore::Connect name = jack_sem.1000_default_MyApp
+> Jack: JackPosixSemaphore::Connect sem_getvalue 0
+> Jack: Clock source : system clock via clock_gettime
+> Jack: JackLibClient::Open name = MyApp refnum = 2
+> jack client MyApp opened.
+> Init Alsa...
+> Jack: jack_set_thread_init_callback ext_client 24618f0 client 24618f0 
+> jack thread init
+> sample rate changed: 44100
+> Jack: jack_set_graph_order_callback ext_client 24618f0 client 24618f0 
+> sleeping, do nothing...
+> Jack: JackClient::ClientNotify ref = 1883339085 name = MyApp notify = 112
+> Jack: JackClient::ClientNotify ref = 2 name = �h��~ notify = 9
+> Jack: JackClient::ClientNotify ref = 2 name = MyApp notify = 4
+> Jack: JackClient::ClientNotify ref = 2 name = MyApp notify = 9
+> Jack: jack_client_close
+> Jack: JackClient::Close ref = 2
+> Jack: JackClient::Deactivate
+> Jack: JackSocketClientChannel::Stop
+> Jack: JackPosixThread::Kill
+> Jack: JackClientSocket::Close
+> Jack: JackClientSocket::Close
+> Jack: JackPosixSemaphore::Disconnect name = jack_sem.1000_default_MyApp
+> Jack: JackLibClient::~JackLibClient
+> Jack: JackShmReadWritePtr1::~JackShmReadWritePtr1 2
+> Jack: Succeeded in unlocking 384 byte memory area
+> Jack: JackLibGlobals Destroy 2455050
+> Jack: ~JackLibGlobals
+> Jack: JackPosixSemaphore::Disconnect name = jack_sem.1000_default_system
+> Jack: JackPosixSemaphore::Disconnect name = jack_sem.1000_default_freewheel
+> Jack: no message buffer overruns
+> Jack: JackPosixThread::Stop
+> Jack: ThreadHandler: exit
+> Jack: JackShmReadWritePtr::~JackShmReadWritePtr 1
+> Jack: Succeeded in unlocking 1040 byte memory area
+> Jack: JackShmReadWritePtr::~JackShmReadWritePtr 0
+> Jack: Succeeded in unlocking 82246176 byte memory area
+> Jack: jack_client_close res = 0
+> done.
+> 
+> Crashed:
+> -----------
+> Init Jack...
+> Jack: JackClient::SetupDriverSync driver sem in normal mode
+> Jack: JackPosixSemaphore::Connect name = jack_sem.1000_default_MyApp
+> Jack: JackPosixSemaphore::Connect sem_getvalue 0
+> Jack: Clock source : system clock via clock_gettime
+> Jack: JackLibClient::Open name = MyApp refnum = 2
+> jack client MyApp opened.
+> Init Alsa...
+> Jack: jack_set_thread_init_callback ext_client 1a478f0 client 1a478f0 
+> jack thread init
+> sample rate changed: 44100
+> Jack: jack_set_graph_order_callback ext_client 1a478f0 client 1a478f0 
+> sleeping, do nothing...
+> Jack: JackClient::ClientNotify ref = 2 name = MyApp notify = 9
+> Jack: JackClient::ClientNotify ref = 127850 name = t::Notif�g� notify = 0
+> Jack: JackClient::AddClient name = t::Notif�g�, ref = 127850 
+> *** Crashed with return code: 0 ***
+> 
+> 
+> 
+> main.cpp:
+> ==========================================
+> 
+> // 
+> --------------------------------------------------------------------------------
+> // This test program demonstrates how Jack intermittently crashes internally
+> //  after an ALSA simple port has been created.
+> // The crash happens more frequently with lower period sizes like 8 or 16, 
+> //  but has been seen with 128 size.
+> // Tested with Jack 1.9.7 and 1.9.8, with and without the -S(ync) switch,
+> //  using the ALSA backend and the seq midi driver.
+> // Be patient. The crash can occur after one run, or ten. Use small period 
+> sizes.
+> // 
+> --------------------------------------------------------------------------------
+> 
+> #include <jack/jack.h>
+> #include <alsa/asoundlib.h>
+> #include <errno.h>
+> #include <string>
+> #include <stdio.h>
+> 
+> jack_client_t* client = 0;
+> snd_seq_t* alsaSeq = 0;
+> 
+> static void jackError(const char* s)
+> {
+> fprintf(stderr,"JACK ERROR: %s\n", s);
+> }
+> 
+> static int processAudio(jack_nframes_t frames, void*)
+> {
+> printf("processAudio\n");
+> return 0;
+> }
+> 
+> static int processSync(jack_transport_state_t state, jack_position_t* pos, 
+> void*)
+> {
+> printf("processSync\n");
+> return 1;
+> }
+> 
+> static void processShutdown(void*)
+> {
+> printf("processShutdown()\n");
+> }
+> 
+> static int bufsize_callback(jack_nframes_t n, void*)
+> {
+> printf("buffersize changed %d\n", n);
+> return 0;
+> }
+> 
+> static void freewheel_callback(int starting, void*)
+> {
+> printf("freewheel_callback: starting%d\n", starting);
+> }
+> 
+> static int srate_callback(jack_nframes_t n, void*)
+> {
+> printf("sample rate changed: %d\n", n);
+> return 0;
+> }
+> 
+> static void registration_callback(jack_port_id_t, int, void*)
+> {
+> printf("registration changed\n");
+> }
+> 
+> static void client_registration_callback(const char *name, int isRegister, 
+> void*)
+> {
+> printf("client registration changed:%s register:%d\n", name, isRegister);
+> }
+> 
+> static void port_connect_callback(jack_port_id_t a, jack_port_id_t b, int 
+> isConnect, void*)
+> {
+> printf("JACK: port connections changed: A:%d B:%d isConnect:%d\n", a, b, 
+> isConnect);
+> }
+> 
+> static int graph_callback(void*)
+> {
+> printf("graph_callback()\n");
+> return 0;
+> }
+> 
+> static void timebase_callback(jack_transport_state_t /* state */,
+> jack_nframes_t /* nframes */,
+> jack_position_t* pos,
+> int /* new_pos */,
+> void*)
+> {
+> printf("Jack timebase_callback pos->frame:%u\n", pos->frame);
+> }
+> 
+> static void jack_thread_init (void* )  
+> {
+> printf("jack thread init\n");
+> // NOTE: If I attempt to register all the other Jack callbacks here, the 
+> crash still happens.
+> }
+> 
+> 
+> // 
+> ------------------------------------------------------------------------------
+> 
+> int main(int argc, char **argv) 
+> {
+> 
+> //-----------------------------------------
+> //  Initialize Jack
+> //-----------------------------------------
+> 
+> printf("Init Jack...\n");
+> 
+> jack_set_error_function(jackError);
+> 
+> jack_status_t status;
+> client = jack_client_open("MyApp", JackNoStartServer, &status);
+> if (!client) 
+> {
+> if (status & JackServerStarted)
+>     printf("jack server started...\n");
+> if (status & JackServerFailed)
+>     printf("cannot connect to jack server\n");
+> if (status & JackServerError)
+>     printf("communication with jack server failed\n");
+> if (status & JackShmFailure)
+>     printf("jack cannot access shared memory\n");
+> if (status & JackVersionError)
+>     printf("jack server has wrong version\n");
+> printf("cannot create jack client\n");
+> return 1;
+> }
+> fprintf(stderr, "jack client %s opened.\n", jack_get_client_name(client));
+> 
+> // NOTE: If I attempt to register all the Jack callbacks here, the crash 
+> still happens.
+> 
+> //-----------------------------------------
+> //  Initialize Alsa
+> //-----------------------------------------
+> 
+> printf("Init Alsa...\n");
+> int error = snd_seq_open(&alsaSeq, "hw", SND_SEQ_OPEN_DUPLEX, 
+> SND_SEQ_NONBLOCK);
+> if (error < 0) 
+> {
+> fprintf(stderr, "Could not open ALSA sequencer: %s\n",
+>   snd_strerror(error));
+> return true;
+> }
+> 
+> error = snd_seq_set_client_name(alsaSeq, jack_get_client_name(client));
+> if (error < 0) 
+> {
+> printf("Set Alsa client name failed: %s", snd_strerror(error));
+> return 1;
+> }
+> 
+> int port = snd_seq_create_simple_port(alsaSeq, "My ALSA Port 0",
+> SND_SEQ_PORT_CAP_SUBS_READ | SND_SEQ_PORT_CAP_SUBS_WRITE | 
+> SND_SEQ_PORT_CAP_READ | SND_SEQ_PORT_CAP_WRITE,
+> SND_SEQ_PORT_TYPE_APPLICATION);
+> if(port < 0) 
+> {
+> printf("Create simple Alsa port failed");
+> return 1;
+> }
+> 
+> // NOTE: If I attempt to register all the Jack callbacks here, the crash 
+> still happens.
+> 
+> for(int t = 0; t < 100; ++t)  
+> usleep(10000);
+> 
+> // NOTE: It is not until here, after the delay, that it is safe to register 
+> all the Jack callbacks. No crash seen.
+> 
+> jack_set_thread_init_callback(client, (JackThreadInitCallback) 
+> jack_thread_init, 0);
+> jack_set_process_callback(client, processAudio, 0);
+> jack_set_sync_callback(client, processSync, 0);
+> jack_on_shutdown(client, processShutdown, 0);
+> jack_set_buffer_size_callback(client, bufsize_callback, 0);
+> jack_set_sample_rate_callback(client, srate_callback, 0);
+> jack_set_port_registration_callback(client, registration_callback, 0);
+> jack_set_client_registration_callback(client, client_registration_callback, 
+> 0);
+> jack_set_port_connect_callback(client, port_connect_callback, 0);
+> jack_set_graph_order_callback(client, graph_callback, 0);
+> jack_set_freewheel_callback (client, freewheel_callback, 0);
+> 
+> //-----------------------------------------
+> //  Do nothing for several seconds
+> //-----------------------------------------
+> 
+> printf("sleeping, do nothing...\n");
+> for(int t = 0; t < 300; ++t)  
+> usleep(10000);
+> 
+> //-----------------------------
+> // Finish
+> //-----------------------------
+> 
+> error = snd_seq_delete_simple_port(alsaSeq, port);
+> if(error < 0) 
+> fprintf(stderr, "Could not delete ALSA simple port: %s\n", 
+> snd_strerror(error));
+> 
+> error = snd_seq_close(alsaSeq);  
+> if(error < 0) 
+> fprintf(stderr, "Could not close ALSA sequencer: %s\n", 
+> snd_strerror(error));
+> 
+> if (jack_client_close(client)) 
+> fprintf(stderr,"Could not close jack client: %s\n", strerror(errno));
+> 
+> printf("done.\n");
+> return 0;
+> }
+> 
+> 
+> Jack-Devel mailing list
+> [hidden]
+> http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
+
+1335795011.11395_0.ltw:2,a <6C358F75-77F0-4038-83F6-0B7E220972C2 at grame dot fr>
+________________________________________________________________________________
+

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] jackd/engine.c XRun code</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] jackd/engine.c XRun code</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1337987696.25522_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1338067963.13680_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338043202.18969_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Sat, 26 May 2012 15:46:40 +0100 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> John Rigg </span> &lt;[hidden] at jrigg dot co dot uk&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+</table>
+<pre>
+I've been looking at the XRun detection code in jackd/engine.c 
+(jack 0.121.3) to see if I could find any clues to why JACK clients
+like Ardour2 report xruns in some situations, when nothing is apparently
+wrong with the audio and the alsa driver doesn't report any xruns.
+I encounter this regularly when using ALSA pcm_multi to combine several
+sound cards into one virtual device (as described here: 
+http://www.jrigg.co.uk/linuxaudio/ice1712multi.html).
+
+Here's what appears to be the relevant section in jackd/engine.c starting
+at line 2071 (extra printfs added by me):
+
+
+static void
+jack_engine_delay (jack_engine_t *engine, float delayed_usecs)
+{
+	jack_event_t event;
+	
+	engine-&gt;control-&gt;frame_timer.reset_pending = 1;
+
+/*****************************************************************************/
+	printf("xrun_delayed_usecs %f\n", engine-&gt;control-&gt;xrun_delayed_usecs);
+	printf("max_delayed_usecs %f\n", engine-&gt;control-&gt;max_delayed_usecs);
+	printf("delayed_usecs %f\n", delayed_usecs);
+/*****************************************************************************/
+
+	engine-&gt;control-&gt;xrun_delayed_usecs = delayed_usecs;
+
+	if (delayed_usecs &gt; engine-&gt;control-&gt;max_delayed_usecs)
+		engine-&gt;control-&gt;max_delayed_usecs = delayed_usecs;
+
+	event.type = XRun;
+	
+	jack_deliver_event_to_all (engine, &amp;event);
+}
+
+
+The above code doesn't run when I use a single sound card. Running a pair
+of ice1712 based cards with pcm_multi produces a slew of printf messages
+like these, scrolling rapidly off the screen:
+
+xrun_delayed_usecs 0.000000
+max_delayed_usecs 0.000000
+delayed_usecs 0.000000
+
+The values are always zero.
+
+xrun_delayed_usecs gets initialised to 0 on line 1997.
+max_delayed_usecs gets initialised to 0 on line 1998.
+
+I couldn't find anywhere where these values get changed between
+initialisation and being used in the above code. Can this be correct?
+
+Disclaimer: I'm not an expert C programmer, so it's quite possible
+I've missed something obvious. I also haven't yet found where the value
+of delayed_usecs gets set, so any pointers would be appreciated.
+
+John
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1337987696.25522_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1338067963.13680_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1338043202.18969_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1338043202.18969_0.ltw:2,&nbsp;&lt;20120526144640.GA2847 at localhost0 dot localdomain&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,44 @@
+Date:        Fri, 09 Mar 2012 00:05:41 +1030
+From:        Jonathan Woithe  <[hidden] at just42 dot net>
+To:          Fons Adriaensen <[hidden] at linuxaudio dot org>
+Cc:          [hidden] at lists dot jackaudio dot org
+In-Reply-To: Fons Adriaensen Re: [Jack-Devel] FFADO issues after freewheeling (was: Re: update jack from 1.9.7 to 1.9.8) (1331204650.13427_0.ltw:2,a)
+Follow-Up:   Fons Adriaensen Re: [Jack-Devel] FFADO issues after freewheeling (was: Re: update jack from 1.9.7 to 1.9.8) (1331215646.28813_0.ltw:2,a)
+
+Subject:     Re: [Jack-Devel] FFADO issues after freewheeling (was: Re: update jack from 1.9.7 to 1.9.8)
+
+On Thu, Mar 08, 2012 at 11:03:57AM +0000, Fons Adriaensen wrote:
+> On Thu, Mar 08, 2012 at 09:14:43PM +1030, Jonathan Woithe wrote:
+>  
+> > In any case, what this tends to prove is that the basic layers of FFADO are
+> > just fine with freewheeling.  The question simply comes down to whether the
+> > driver in use is able to successfully restart streaming.  If they can't it's
+> > definitely a bug which needs dealing with, but it's bug in the driver rather
+> > than the FFADO infrastructure.  Obviously I'll look into the Fireface issue
+> > since I now know about it; if freewheeling causes trouble with other
+> > interfaces please let us know so they too can be investigated.
+> 
+> Why should any part of FFADO be aware of freewheeling ? 
+> Basic I/O just continues, silence is output, input is
+> discarded. The only difference is that the rest of the
+> cycle becomes independent of this.
+
+FFADO isn't aware of freewheeling as such.  However, when freewheeling is
+started the backend streaming is stopped for the reasons Paul mentioned. 
+When jack is taken out of freewheeling the backend is restarted again. 
+FFADO sees the stop/start cycle but doesn't know (or care) that this is
+because of freewheeling.
+
+I would expect that if FFADO drivers have difficulties with freewheeling it
+will generally be when jack is taken out of freewheeling mode.  Stopping the
+streaming (moving into freewheeling) is well debugged since it has to happen
+when FFADO is closed down.  It's the path involving the restart of streaming
+with previously used objects that has seen much less testing (and it's
+something I never even thought of testing until this subject came up).
+
+Regards
+  jonathan
+
+1331213775.25681_0.ltw:2,a <20120308133541.GA2733 at marvin dot atrad dot com dot au>
+________________________________________________________________________________
+

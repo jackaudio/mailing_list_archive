@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] JackTransport vs VST ppqPos</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] JackTransport vs VST ppqPos</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1368692594.19456_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1368727320.12973_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1368709457.32654_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 16 May 2013 15:02:34 +0200 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Robin Gareus </span> &lt;[hidden] at gareus dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Pawel &lt;[hidden] at wp dot pl&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>jack-devel &lt;[hidden] at lists dot jackaudio dot org&gt; </td></tr>
+</table>
+<pre>
+On 05/16/2013 06:39 AM, Pawel wrote:
+&gt; Is there any good reason to not sync BBT with frames ?
+
+Yes. Tempo maps.
+
+&gt; I made patch for jack_transport example client (actually it remove some unnecessary code ;-)
+&gt; 
+&gt; ... but I just realized that there is always one way for compute BBT 
+
+That is only true if you have a single tempo and meter for the whole
+timeline.
+
+The tempo can change in the middle of the song (accelerando,
+decellerando). The meter can change as well. You can also have multiple
+songs (or movements of the same song) on the same timeline with BBT offsets.
+
+- so Jack should do this by self, and master client should change these
+values:
+&gt;                 pos-&gt;beats_per_bar = time_beats_per_bar;
+&gt;                 pos-&gt;beat_type = time_beat_type;
+&gt;                 pos-&gt;ticks_per_beat = time_ticks_per_beat;
+&gt;                 pos-&gt;beats_per_minute = time_beats_per_minute;
+&gt; 
+&gt; 
+&gt; What do you think ?
+
+You'll need a tempo map.
+N entries like above that can be positioned at arbitrary points on the
+timeline. Furthermore, BPM can be hard or gradual.
+
+It's not a trivial task for jackd to take care of. It is also against
+design: jackd only passes information between jack-clients. The daemon
+does nothing on its own (with few exceptions).
+
+Now, if you like a challenge: tempo-ramps, flexible BBT offsets and
+arbitrary tempo/meter changes mid song is a major item on the Ardour3
+ToDo list :)
+
+best,
+robin
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1368692594.19456_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1368727320.12973_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1368709457.32654_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1368709457.32654_0.ltw:2,a&nbsp;&lt;5194D8EA.10703 at gareus dot org&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>[Jack-Devel] more ringbuffer challenges</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>[Jack-Devel] more ringbuffer challenges</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1304289351.821_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1304318070.301_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1304315076.29639_0.ltw:2,a'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Mon, 02 May 2011 15:44:08 +1000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Timothy Godfrey </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Peter Nelson
+<a href='../1304323920.6737_0.ltw:2,a/index.html'>Re: [Jack-Devel] more ringbuffer challenges </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Paul Davis
+<a href='../1304334977.19192_0.ltw:2,a/index.html'>Re: [Jack-Devel] more ringbuffer challenges </a></td></tr>
+</table>
+<pre>
+Hi,
+
+Thanks to Arnlod and Stephane for their replies to my last question
+about the jack_ringbuffer_t. The good news is that my application now
+works some of the time using the ringbuffers.
+
+My challenge at the moment is that my application suddenly 'breaks'
+after what appears to me to be a random amount of time. The symptoms
+of breaking are that the application suddenly changes from playing
+back audio to playing (something close to, but probably not strictly)
+white noise.
+
+A bit of background is probably in order to describe my problem. I am
+working on transmitting audio streams reliably and with minimum
+latency over a wireless network. I have heard of and read a bit about
+netjack1 and netjack2 (and I have used them a little bit). I haven't
+investigated thoroughly the possibility of modifying them or
+contributing to them so that they work well over wireless networks. So
+this is my signal flow from one end to another;
+
+jack_port_t -&gt; ringbuffer -&gt; application layer network payload |
+network link | application layer network payload -&gt; ringbuffer -&gt;
+jack_port-t -&gt; loudspeakers
+
+For testing I am playing back a variety of audio through pulseaudio
+jack sinks into one side of my application, across the network and
+into the other side of my application, and into the jack instance
+running on that side.
+
+As far as I can tell I have narrowed the problem down to the first
+arrow in the signal flow above: getting audio out of the jack port and
+into the ring buffer. To test this, I have created a couple of
+'loopback' ports in the transmit side of my application, and I am
+copying audio into those ports from two different 'places'. Here is
+the chunk of code, from my process() callback, that does this (BPS is
+'bytes per sample' and is defined in a header file as 4) :
+
+for (int i = 0; i &lt; 2; i++) {
+	input[i] = (jack_default_audio_sample_t*)jack_port_get_buffer(input_port[i],
+nframes);
+	jack_ringbuffer_write(rb[i], (char*)input[i], nframes * BPS);
+}
+
+
+//put a copy of the left channel of audio onto a loopback port
+memcpy(loopback1, input[0], nframes * BPS);
+
+//read back the audio data from the ringbuffer and put it onto another
+loopback port
+jack_ringbuffer_get_read_vector(rb[0], readVector);
+memcpy(loopback2, readVector[0].buf, readVector[0].len);
+memcpy(loopback2 + readVector[0].len, readVector[1].buf, readVector[1].len);
+
+
+So I am copying audio out of one of the ports into the ringbuffer,
+also copying that audio directly to an output port, and then copying
+the audio out of the ringbuffer into a another output port. (As an
+aside, I couldn't get the peek function to work well, and even with
+the method I am using as shown above the audio is a bit crap. The
+audio is still good enough though to indicate when the application
+breaks). When the application breaks The audio out of loopback1 keeps
+playing perfectly, and the audio out of loopback 2 turns into white
+noise. The white noise starts and stops with playback, and if I am
+listening to a low level signal (like something a friend gave me that
+is un-mastered), I can hear the rhythm and dynamics a bit in the quiet
+sections of the audio. These things put together lead me to believe
+that I am getting a sample 'alignment' problem. A shift one byte in
+one direction would amplify the audio by 256 (2^8). A shift one byte
+in the other direction would make the LSB from the previous sample the
+MSB of the sample I am reading. Catastrophe and disaster, in either
+case.
+
+As I understand it, the ringbuffer works with bytes, and the buffer
+pointers and count values all refer to bytes (char*). In some parts of
+my application I have observed 'mysterious' behavior from the
+ringbuffer like
+
+if(jack_ringbuffer_get_read_space(rb) &gt; nframes){
+   int bytesRead = jack_ringbuffer_read(rb, somePort, nframes);
+   print("bytesRead: %d\n", bytesRead);
+}
+
+and getting "bytesRead: 100" printed out. I put this down to the whole
+lockless phenomenon and details of execution outside the area of my
+observation. These curtailed buffer copies don't seem to be correlated
+with any audible glitches, and they don't appear to break the
+application in the way I have described, so I am not entirely sure
+what is going on there. But this leads me to wonder if there might be
+a situation in which a write or read command to a ringbuffer reads or
+writes a number of bytes that doesn't happen to fall on a sample
+boundary.
+
+So my question is, if I am using jack_default_audio_sample_t as the
+content in a ringbuffer, how can I ensure the integrity of the samples
+that span multiple bytes? Or rephrased, how can I make sure that the
+write_ptr and read_ptr are always point to the start of samples (with
+respect to each other), and ideally point to memory that is a multiple
+of 4? What is the best way of checking that the buffer is empty enough
+(for a write) or full enough (for a read): using the get_read_space
+and get_write_space functions or by get_read_vector and
+get_write_vector? (I am guessing that internally they probably do the
+same thing, but seeing as things are not working the way I would
+expect, I am happy to 'cast the net wide'.)
+
+As an aside, would this situation be helped by creating a
+parameterized ringbuffer, something like
+jack_ringbuffer_t&lt;jack_default_audio_sample_t&gt;?
+
+Any help is appreciated. Thanks for your time!
+Tim
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1304289351.821_0.ltw:2,a/index.html'>Prev</a></td><td><a href='../1304318070.301_0.ltw:2,a/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1304315076.29639_0.ltw:2,a'>Index</a></td></tr>
+</table>
+<p><small>1304315076.29639_0.ltw:2,a&nbsp;&lt;BANLkTimBOcRaqqQB65nstfvp=UQFzd5ACA at mail dot gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

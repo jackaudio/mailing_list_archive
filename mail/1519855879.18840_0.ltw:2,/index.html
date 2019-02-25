@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] The playback device hw:0 is already in use</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] The playback device hw:0 is already in use</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1519771053.15526_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1519908902.20817_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1519855879.18840_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Wed, 28 Feb 2018 22:10:47 +0000 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Tim Janes </span> &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>To</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>David Kastrup
+<a href='../1519771053.15526_0.ltw:2,/index.html'>Re: [Jack-Devel] The playback device hw:0 is already in use </a></td></tr>
+<tr><td class='col1'>Follow-Up</td><td>Bengt G&#xF6;rd&#xE9;n
+<a href='../1519908902.20817_0.ltw:2,/index.html'>Re: [Jack-Devel] The playback device hw:0 is already in use </a></td></tr>
+</table>
+<pre>
+Thanks David,
+
+I tried as you suggest, but then I loose the volume control in the 
+system tray and the volume functions keys don't work, so I loose all 
+control of the volume - so it is not an option.
+
+It all seems very intermittent, sometime I get the device in use, other 
+times I get no such device (as below) and others it works.
+
+creating alsa driver ... hw:0|hw:0|256|2|8000|0|0|nomon|swmeter|-|32bit
+control open "hw:0" (No such file or directory)
+ALSA lib pcm_hw.c:1713:(_snd_pcm_hw_open) Invalid value for card
+ALSA lib pcm_hw.c:1713:(_snd_pcm_hw_open) Invalid value for card
+ALSA: Cannot open PCM device alsa_pcm for playback. Falling back to 
+capture-only mode
+Cannot initialize driver
+JackServer::Open failed with -1
+
+My workaround for now is to start&#xA0; jackd manually and repeat until it 
+works. Occasionally it works 1st time, usually 2nd and occasionally it 
+takes 3 times. It also fits in with my requirement of needing to use it 
+at 8kHz.
+
+If jack becomes a permanent feature then I will have to revisit this but 
+for now its satisfactory.
+
+My manual startup script is as below (the non jackd commands are just to 
+try and get a clue to the problem)
+
+fuser -v /dev/snd/pcmC0D0p
+nohup jackd -d alsa -r 8000 -p 256 &amp;&gt; /tmp/jackd.log &amp;
+sleep 2
+fuser -v /dev/snd/pcmC0D0p
+ps aux |grep jackd | grep -v grep
+
+I am struggling as I have yet to locate any documentation - Can anyone 
+give me a link?
+
+Thanks for your help
+
+Tim
+
+
+On 27/02/18 22:37, David Kastrup wrote:
+&gt; Tim Janes &lt;[hidden]&gt; writes:
+&gt;
+&gt;&gt; I am new to jack and trying to setup Jack2 on Ubuntu 17.10 on a Dell
+&gt;&gt; laptop 15-5570 that uses a Realtek ALC3246 sound device.
+&gt;&gt;
+&gt;&gt; It is basically working ( I am testing it with simple_client and
+&gt;&gt; latent_client) but I think that I am doing something wrong as the
+&gt;&gt; first time I use it after booting the laptop&#xA0; I get the error.
+&gt;&gt;
+&gt;&gt; "ATTENTION: The playback device "hw:0" is already in use. Please stop
+&gt;&gt; the application using it and run JACK again"&#xA0; followed by lots of
+&gt;&gt;
+&gt;&gt; "Cannot connect to server socket err = No such file or directory"
+&gt;&gt; "Cannot connect to server request channel"
+&gt;&gt;
+&gt;&gt; fuser -v /dev/snd/pcmC0D0p shows that it is use by pulseaudio.
+&gt; Well, tell Pulseaudio to stop hogging the device.  One way is to call
+&gt; pavucontrol and turn that device's Pulseaudio profile to "Off".  Another
+&gt; is to configure Pulseaudio to not restart in the first place (create a
+&gt; .pulse/client.conf file containing
+&gt;
+&gt; autospawn = no
+&gt;
+&gt; .  You will then need to start pulseaudio manually using
+&gt;
+&gt; pulseaudio -D
+&gt;
+&gt; every time you want to use it.  One audio daemon less competing for
+&gt; realtime resources is probably not the worst idea, but I don't really
+&gt; know how much of a problem a dormant Pulseaudio can be.
+&gt;
+&gt;
+&gt;
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1519771053.15526_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1519908902.20817_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1519855879.18840_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1519855879.18840_0.ltw:2,&nbsp;&lt;ec5f7b90-a5a3-f016-1933-964590b0df0a at gmail dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

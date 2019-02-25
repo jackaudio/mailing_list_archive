@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Re: [Jack-Devel] Sending audio data over the network help</title>
+<style>
+pre {background: #fafafa; border: 1px solid #f1f2f3; font-size: 1.2em; padding: 10px; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;}
+h1 {font-size: 140%;}
+.header_table {table-layout: fixed; width: 100%;}
+.col1 {width: 120px; vertical-align: top;}
+.from {font-weight: bold;}
+</style>
+</head>
+<body>
+<h1>Re: [Jack-Devel] Sending audio data over the network help</h1>
+<table class="header_table">
+<tr><td class='col1'><a href='../1397131153.19682_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1397234583.21501_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1397159599.15907_0.ltw:2,'>Index</a></td></tr>
+<tr><td class='col1'>Date</td><td>Thu, 10 Apr 2014 14:53:07 -0500 </td></tr>
+<tr><td class='col1'>From</td><td><span class="from"> Chris Caudle </span> &lt;[hidden] at chriscaudle dot org&gt; </td></tr>
+<tr><td class='col1'>To</td><td>Jared Swets &lt;[hidden] at gmail dot com&gt; </td></tr>
+<tr><td class='col1'>Cc</td><td>[hidden] at lists dot jackaudio dot org </td></tr>
+<tr><td class='col1'>In-Reply-To</td><td>Jared Swets
+<a href='../1397082620.23667_0.ltw:2,/index.html'>Re: [Jack-Devel] Sending audio data over the network help </a></td></tr>
+</table>
+<pre>
+On Wed, April 9, 2014 5:30 pm, Jared Swets wrote:
+&gt; Here is what I am trying to do:  I want to play video games on one PC,
+&gt; and record both my MIC and Headphones from PC 1 on PC 2. I want to do
+&gt; this using as little system resources as possible on PC 1.
+
+That should be possible, but you will need to verify by using the setup
+you intend to use, i.e. recording software on the second PC, not another
+sound hardware device.
+
+The software will need to use the ASIO interface to connect to JACK,
+including the video game, which will probably be the sticking point.
+
+http://jackaudio.org/jack_on_windows
+
+If by some lucky coincidence your game supports ASIO (extremely unlikely),
+then you would start JACK specifying the correct audio hardware in the
+process, start JACK on the slave machine, start the game and audio
+recording software (ASIO was created for use with recording software, so
+finding recording software which supports ASIO should not pose a problem),
+and use the jack router to connect the game to the audio hardware outputs
+and microphone, and also connect the microphone and game audio output to
+the recording software running on the slave computer.
+
+&gt; I set up the jack server on PC 1, and patched it back on itself, and
+&gt; heard myself (loopback successful), so attempted to do the same thing
+&gt; using netjack over the network.  I thought since the loopback worked
+&gt; on PC 1 I could write directly to the audio devices on PC 2.
+&gt; Apparently not though.
+
+Not directly.  However if instead of the audio devices on PC2 you start an
+ASIO compatible recording software, use jack router on PC2 to connect the
+software to JACK, then you should be able to connect the audio hardware
+connections on PC1  to the recording software on PC2.
+
+The problem will probably come when you try to also connect the game audio
+connections to JACK on PC1.  I have never seen a game which supports ASIO,
+although I'm not a gamer so I haven't really paid close attention.
+
+&gt; I didn't want to use a full teleconferencing software (if one exists)
+&gt; to do this since I suspected the overhead would be much higher
+
+Not only that, the situation is different than what you originally
+described (connecting microphone and outputs between two computers), what
+you really want is parallel connection, the audio hardware on one computer
+should go to two places, the game and the second computer.  I don't know
+of audio conferencing software can do that or not.  Not a typical use
+case.
+
+If you were on Linux or OS X JACK would probably be OK for what you want,
+it is just a little complicated because typical software uses the WDM API
+for audio, but recording software typically uses the ASIO API so you have
+a mismatch when trying to mix recording software and other software.
+
+-- 
+Chris Caudle
+</pre>
+<table class="header_table">
+<tr><td class='col1'><a href='../1397131153.19682_0.ltw:2,/index.html'>Prev</a></td><td><a href='../1397234583.21501_0.ltw:2,/index.html'>Next</a>&nbsp;&nbsp;<a href='../../index.html#1397159599.15907_0.ltw:2,'>Index</a></td></tr>
+</table>
+<p><small>1397159599.15907_0.ltw:2,&nbsp;&lt;64a90399f72fc4374c5d0dd05fd0c444.squirrel at email dot powweb dot com&gt;</small></p>
+<!-- Created with Bash Archive Mail -->
+</body>
+</html>

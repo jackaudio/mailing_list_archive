@@ -9,6 +9,11 @@ The contents are rendered "best-effort", there is no guarantee that the archive 
 To link to a specific mail (eg. from issues):
 https://jackaudio.github.io/mailing_list_archive/mail/1517568080.2817_0.ltw:2,/index.html
 
+Or using plain text:
+https://jackaudio.github.io/mailing_list_archive/mail/1517568080.2817_0.ltw:2,/plain.txt
+
+(Browser must have set Text Encoding to 'Unicode' in order to display the text correctly)
+
 To link to a mail in the entire index:
 https://jackaudio.github.io/mailing_list_archive/index.html#1452522439.23177_0.ltw:2,a
 

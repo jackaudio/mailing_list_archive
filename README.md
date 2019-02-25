@@ -20,7 +20,7 @@ https://jackaudio.github.io/mailing_list_archive/index.html#1452522439.23177_0.l
 To subscribe to jack-devel mailing list, registere here:
 http://lists.jackaudio.org/listinfo.cgi/jack-devel-jackaudio.org
 
-Official jack-devel Mailing List Archive (starts from 2005, only for list members):
+Official jack-devel Mailing List Archive (starts from 2015, only for list members):
 http://lists.jackaudio.org/private.cgi/jack-devel-jackaudio.org/
 
 Alternative Archive at nabble.com 'Jackit':
